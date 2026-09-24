@@ -7,7 +7,7 @@
 - **State:** OPEN
 - **Author:** cooltune
 - **Created:** 2026-07-18T19:56:50Z
-- **Updated:** 2026-08-27T17:42:04Z
+- **Updated:** 2026-09-15T00:32:43Z
 - **Closed:** —
 - **Labels:** enhancement, help wanted
 
@@ -358,3 +358,13 @@ Two small things I noticed while digging, both harmless:
 - Upgrading from alpha.4 left stale TCC rows: Input Monitoring and Accessibility both reported `[DENIED]` with no prompt until I ran `tccutil reset ListenEvent com.openjoystickdriver` / `tccutil reset Accessibility com.openjoystickdriver` and relaunched.
 
 Happy to test a build once the version lands.
+
+### xsyetopz — 2026-09-15T00:32:43Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/18#issuecomment-5672841797)
+
+OpenJoystickDriver 0.5.0-beta.4 is published: https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.4
+
+The `045E:02D1` record uses the verified GIP configuration and endpoints, and the release includes the generated DriverKit transport. Please use the signed release to complete the DEXT input/output, reconnect, indicator, and rumble procedure: https://github.com/xsyetopz/OpenJoystickDriver/blob/0.5.0-beta.4/docs/testing/xbox/1537.md
+
+Keeping this issue open for signed-build hardware confirmation.

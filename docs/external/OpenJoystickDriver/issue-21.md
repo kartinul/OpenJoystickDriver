@@ -7,7 +7,7 @@
 - **State:** OPEN
 - **Author:** TanelLaas
 - **Created:** 2026-07-22T18:40:00Z
-- **Updated:** 2026-08-27T12:36:31Z
+- **Updated:** 2026-09-15T00:32:46Z
 - **Closed:** —
 - **Labels:** enhancement, help wanted
 
@@ -252,3 +252,13 @@ Try [0.5.0-beta.1](https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0
 > Should I consider setting up a community discord for my projects
 
 Definitely
+
+### xsyetopz — 2026-09-15T00:32:46Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/21#issuecomment-5672842136)
+
+OpenJoystickDriver 0.5.0-beta.4 is published: https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.4
+
+The Nacon record contains the captured GIP endpoints, disables the unsupported synthetic host-status packet, and includes the implemented framing and acknowledgement handling. Please verify continuous input, reconnect, and that no host `0x03` packet is emitted using: https://github.com/xsyetopz/OpenJoystickDriver/blob/0.5.0-beta.4/docs/testing/nacon-revolution-x.md
+
+Keeping this issue open for those hardware results.

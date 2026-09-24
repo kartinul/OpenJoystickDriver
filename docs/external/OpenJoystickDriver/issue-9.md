@@ -7,7 +7,7 @@
 - **State:** OPEN
 - **Author:** jonasw8
 - **Created:** 2026-06-09T07:59:30Z
-- **Updated:** 2026-08-25T16:22:08Z
+- **Updated:** 2026-09-15T00:32:40Z
 - **Closed:** —
 - **Labels:** enhancement, help wanted
 
@@ -140,3 +140,13 @@ I can start working on it again once Apple approves my provisioning updates beca
 [Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/9#issuecomment-5413411478)
 
 Try [0.5.0-beta.1](https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.1) and tell me if it works!
+
+### xsyetopz — 2026-09-15T00:32:40Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/9#issuecomment-5672841345)
+
+OpenJoystickDriver 0.5.0-beta.4 is published: https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.4
+
+This build includes Xbox 360 wireless receiver records, wrapped-input parsing, controller lifecycle handling, and output-packet support. Please run the direct-IOUSBHost receiver procedure and report connect, disconnect, input, and output results: https://github.com/xsyetopz/OpenJoystickDriver/blob/0.5.0-beta.4/docs/testing/xbox-360-wireless-receiver.md
+
+Keeping this issue open for hardware and macOS ownership confirmation.

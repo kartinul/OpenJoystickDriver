@@ -7,7 +7,7 @@
 - **State:** OPEN
 - **Author:** qwertychouskie
 - **Created:** 2026-06-11T01:24:28Z
-- **Updated:** 2026-08-25T16:21:50Z
+- **Updated:** 2026-09-15T00:32:41Z
 - **Closed:** —
 - **Labels:** bug, help wanted
 
@@ -34,3 +34,13 @@ I'll look into this! Thanks for your first issue. It's very helpful that people 
 [Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/11#issuecomment-5413407937)
 
 Try [0.5.0-beta.1](https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.1) and tell me if it works!
+
+### xsyetopz — 2026-09-15T00:32:41Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/11#issuecomment-5672841494)
+
+OpenJoystickDriver 0.5.0-beta.4 is published: https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.4
+
+The Logitech F310 `046D:C21D` XInput record includes the captured interrupt endpoints and current XUSB mapping. Please compare every control with SDL on the same Mac using: https://github.com/xsyetopz/OpenJoystickDriver/blob/0.5.0-beta.4/docs/testing/logitech-f310.md
+
+Keeping this issue open for that hardware confirmation.

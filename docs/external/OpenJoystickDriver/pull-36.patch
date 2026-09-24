@@ -1,0 +1,1401 @@
+diff --git a/Resources/ControllerOverrides/045e/045e-02e0.json b/Resources/ControllerOverrides/045e/045e-02e0.json
+new file mode 100644
+index 00000000..9f010ada
+--- /dev/null
++++ b/Resources/ControllerOverrides/045e/045e-02e0.json
+@@ -0,0 +1,14 @@
++{
++  "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller-override.schema.json",
++  "operation": "add",
++  "record": {
++    "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
++    "vendorID": 1118,
++    "productID": 736,
++    "transport": "hid",
++    "protocol": {
++      "driver": "XboxBluetoothHID",
++      "variant": "xboxBluetoothHID"
++    }
++  }
++}
+diff --git a/Resources/ControllerOverrides/04b4/04b4-2412.json b/Resources/ControllerOverrides/04b4/04b4-2412.json
+new file mode 100644
+index 00000000..49db69d9
+--- /dev/null
++++ b/Resources/ControllerOverrides/04b4/04b4-2412.json
+@@ -0,0 +1,14 @@
++{
++  "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller-override.schema.json",
++  "operation": "add",
++  "record": {
++    "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
++    "vendorID": 1204,
++    "productID": 9234,
++    "transport": "hid",
++    "protocol": {
++      "driver": "FlydigiVendor",
++      "variant": "flydigiVendor"
++    }
++  }
++}
+diff --git a/Resources/Schemas/controller.schema.json b/Resources/Schemas/controller.schema.json
+index 83f180c1..7c83f301 100644
+--- a/Resources/Schemas/controller.schema.json
++++ b/Resources/Schemas/controller.schema.json
+@@ -45,7 +45,9 @@
+ 						"SteamController",
+ 						"SwitchPro",
+ 						"XboxAdaptiveJoystick",
++						"XboxBluetoothHID",
+ 						"Flydigi",
++						"FlydigiVendor",
+ 						"GameSir",
+ 						"GenericHID"
+ 					]
+@@ -62,7 +64,9 @@
+ 						"steamController",
+ 						"switchPro",
+ 						"xboxAdaptiveJoystick",
++						"xboxBluetoothHID",
+ 						"flydigi",
++						"flydigiVendor",
+ 						"gameSirG7ProUSB",
+ 						"gameSirEnhancedHID",
+ 						"genericHID",
+@@ -369,6 +373,46 @@
+ 						}
+ 					}
+ 				},
++				{
++					"if": {
++						"properties": {
++							"driver": {
++								"const": "FlydigiVendor"
++							}
++						},
++						"required": ["driver"]
++					},
++					"then": {
++						"properties": {
++							"variant": {
++								"enum": ["flydigiVendor"]
++							}
++						},
++						"not": {
++							"required": ["quirks"]
++						}
++					}
++				},
++				{
++					"if": {
++						"properties": {
++							"driver": {
++								"const": "XboxBluetoothHID"
++							}
++						},
++						"required": ["driver"]
++					},
++					"then": {
++						"properties": {
++							"variant": {
++								"enum": ["xboxBluetoothHID"]
++							}
++						},
++						"not": {
++							"required": ["quirks"]
++						}
++					}
++				},
+ 				{
+ 					"if": {
+ 						"properties": {
+diff --git a/Sources/OpenJoystickDriver/App/Presentation/Controllers/ControllerViews.swift b/Sources/OpenJoystickDriver/App/Presentation/Controllers/ControllerViews.swift
+index 79aed738..9198cf0d 100644
+--- a/Sources/OpenJoystickDriver/App/Presentation/Controllers/ControllerViews.swift
++++ b/Sources/OpenJoystickDriver/App/Presentation/Controllers/ControllerViews.swift
+@@ -248,6 +248,8 @@
+       case .xbox360Wireless:
+         return OJDLocalized.string("controller.xbox360Wireless", fallback: "Xbox 360 wireless")
+       case .xboxOne: return OJDLocalized.string("controller.xboxOne", fallback: "Xbox One")
++      case .xboxBluetoothHID:
++        return OJDLocalized.string("controller.xboxBluetoothHID", fallback: "Xbox (Bluetooth)")
+       case .dualShock3: return OJDLocalized.string("controller.dualShock3", fallback: "DualShock 3")
+       case .dualShock4: return OJDLocalized.string("controller.dualShock4", fallback: "DualShock 4")
+       case .dualSense: return OJDLocalized.string("controller.dualSense", fallback: "DualSense")
+@@ -255,6 +257,8 @@
+         return OJDLocalized.string("controller.steamController", fallback: "Steam Controller")
+       case .switchPro: return OJDLocalized.string("controller.switchPro", fallback: "Switch Pro")
+       case .flydigi: return OJDLocalized.string("controller.flydigi", fallback: "Flydigi")
++      case .flydigiVendor:
++        return OJDLocalized.string("controller.flydigiVendor", fallback: "Flydigi (dongle)")
+       case .gameSirG7ProUSB: return "GameSir G7 Pro USB"
+       case .gameSirEnhancedHID: return "GameSir enhanced HID"
+       case .xboxAdaptiveJoystick:
+diff --git a/Sources/OpenJoystickDriver/App/Presentation/Settings/DeveloperControllerSummaryView.swift b/Sources/OpenJoystickDriver/App/Presentation/Settings/DeveloperControllerSummaryView.swift
+index c4a5a251..30b8aabf 100644
+--- a/Sources/OpenJoystickDriver/App/Presentation/Settings/DeveloperControllerSummaryView.swift
++++ b/Sources/OpenJoystickDriver/App/Presentation/Settings/DeveloperControllerSummaryView.swift
+@@ -127,12 +127,16 @@
+           fallback: "Xbox 360 Wireless"
+         )
+       case .xboxOne: return OJDLocalized.string("controller.xboxOne", fallback: "Xbox One")
++      case .xboxBluetoothHID:
++        return OJDLocalized.string("controller.xboxBluetoothHID", fallback: "Xbox (Bluetooth)")
+       case .dualShock3: return OJDLocalized.string("controller.dualShock3", fallback: "DualShock 3")
+       case .dualShock4: return OJDLocalized.string("controller.dualShock4", fallback: "DualShock 4")
+       case .dualSense: return OJDLocalized.string("controller.dualSense", fallback: "DualSense")
+       case .steamController:
+         return OJDLocalized.string("controller.steamController", fallback: "Steam Controller")
+       case .flydigi: return OJDLocalized.string("controller.flydigi", fallback: "Flydigi")
++      case .flydigiVendor:
++        return OJDLocalized.string("controller.flydigiVendor", fallback: "Flydigi (dongle)")
+       case .gameSirG7ProUSB: return "GameSir G7 Pro USB"
+       case .gameSirEnhancedHID: return "GameSir enhanced HID"
+       case .switchPro:
+diff --git a/Sources/OpenJoystickDriverKit/Output/Profiles/CompatibilityEvidence.swift b/Sources/OpenJoystickDriverKit/Output/Profiles/CompatibilityEvidence.swift
+index 94398f59..aa5a8faf 100644
+--- a/Sources/OpenJoystickDriverKit/Output/Profiles/CompatibilityEvidence.swift
++++ b/Sources/OpenJoystickDriverKit/Output/Profiles/CompatibilityEvidence.swift
+@@ -113,7 +113,7 @@ public enum AutomaticCompatibilityResolver {
+     case .xbox360, .xbox360Wireless, .gameSirG7ProUSB: return .xusb
+     case .xboxOne, .xboxAdaptiveJoystick: return .gip
+     case .dualShock3, .dualShock4, .dualSense, .switchPro, .steamController, .flydigi,
+-      .gameSirEnhancedHID, .genericHID, .unknown:
++      .xboxBluetoothHID, .flydigiVendor, .gameSirEnhancedHID, .genericHID, .unknown:
+       return .hid
+     }
+   }
+@@ -157,7 +157,8 @@ public enum AutomaticCompatibilityResolver {
+     case .dualShock4: return consumer == .unknownBrowserGamepad ? .appleGameController : .dualShock4
+     case .dualSense: return consumer == .unknownBrowserGamepad ? .appleGameController : .dualSense
+     case .xid, .xbox360, .xbox360Wireless, .xboxOne, .xboxAdaptiveJoystick, .dualShock3, .switchPro,
+-      .steamController, .flydigi, .gameSirG7ProUSB, .gameSirEnhancedHID, .genericHID, .unknown:
++      .steamController, .flydigi, .flydigiVendor, .xboxBluetoothHID, .gameSirG7ProUSB,
++      .gameSirEnhancedHID, .genericHID, .unknown:
+       return xboxFallback
+     }
+   }
+diff --git a/Sources/OpenJoystickDriverKit/Protocol/Catalog/ControllerRecordDocument.swift b/Sources/OpenJoystickDriverKit/Protocol/Catalog/ControllerRecordDocument.swift
+index 711e6a6b..ef597b70 100644
+--- a/Sources/OpenJoystickDriverKit/Protocol/Catalog/ControllerRecordDocument.swift
++++ b/Sources/OpenJoystickDriverKit/Protocol/Catalog/ControllerRecordDocument.swift
+@@ -148,7 +148,9 @@ struct ControllerRecordDocument: Decodable {
+       ),
+       "XboxAdaptiveJoystick": (
+         ["xboxAdaptiveJoystick", "unknown"], ["rawUSBPackets", "genericHIDPackets"]
+-      ), "Flydigi": (["flydigi"], []), "GameSir": (["gameSirG7ProUSB", "gameSirEnhancedHID"], []),
++      ), "XboxBluetoothHID": (["xboxBluetoothHID"], []), "Flydigi": (["flydigi"], []),
++      "FlydigiVendor": (["flydigiVendor"], []),
++      "GameSir": (["gameSirG7ProUSB", "gameSirEnhancedHID"], []),
+       "GenericHID": (["genericHID"], []),
+     ]
+   }
+diff --git a/Sources/OpenJoystickDriverKit/Protocol/Catalog/ParserRegistry.swift b/Sources/OpenJoystickDriverKit/Protocol/Catalog/ParserRegistry.swift
+index bf54f6cc..38a40506 100644
+--- a/Sources/OpenJoystickDriverKit/Protocol/Catalog/ParserRegistry.swift
++++ b/Sources/OpenJoystickDriverKit/Protocol/Catalog/ParserRegistry.swift
+@@ -91,7 +91,9 @@ public final class ParserRegistry: Sendable {
+         layout = .pro
+       }
+       return SwitchProParser(layout: layout)
++    case "XboxBluetoothHID": return XboxBluetoothHIDParser()
+     case "Flydigi": return FlydigiParser()
++    case "FlydigiVendor": return FlydigiVendorParser()
+     case "XUSB":
+       return Xbox360Parser(
+         outEndpoint: transportProfile.outputEndpoint,
+diff --git a/Sources/OpenJoystickDriverKit/Protocol/Catalog/TransportProfiles.swift b/Sources/OpenJoystickDriverKit/Protocol/Catalog/TransportProfiles.swift
+index a615042f..997246c8 100644
+--- a/Sources/OpenJoystickDriverKit/Protocol/Catalog/TransportProfiles.swift
++++ b/Sources/OpenJoystickDriverKit/Protocol/Catalog/TransportProfiles.swift
+@@ -58,7 +58,9 @@ public enum ControllerProtocolVariant: String, Codable, Hashable, Sendable {
+   case steamController
+   case switchPro
+   case xboxAdaptiveJoystick
++  case xboxBluetoothHID
+   case flydigi
++  case flydigiVendor
+   case gameSirG7ProUSB
+   case gameSirEnhancedHID
+   case genericHID
+diff --git a/Sources/OpenJoystickDriverKit/Protocol/Classification/USBProtocolClassification.swift b/Sources/OpenJoystickDriverKit/Protocol/Classification/USBProtocolClassification.swift
+index 542b219a..90a8b73b 100644
+--- a/Sources/OpenJoystickDriverKit/Protocol/Classification/USBProtocolClassification.swift
++++ b/Sources/OpenJoystickDriverKit/Protocol/Classification/USBProtocolClassification.swift
+@@ -229,7 +229,7 @@ public enum KnownRecordProtocolReconciler {
+       case .xbox360, .xbox360Wireless: .xusb
+       case .xboxOne, .xboxAdaptiveJoystick: .gip
+       case .genericHID, .dualShock3, .dualShock4, .dualSense, .steamController, .switchPro,
+-        .flydigi, .gameSirEnhancedHID:
++        .flydigi, .flydigiVendor, .xboxBluetoothHID, .gameSirEnhancedHID:
+         .genericHID
+       case .gameSirG7ProUSB, .unknown: nil
+       }
+diff --git a/Sources/OpenJoystickDriverKit/Protocol/Parsers/FlydigiVendorParser.swift b/Sources/OpenJoystickDriverKit/Protocol/Parsers/FlydigiVendorParser.swift
+new file mode 100644
+index 00000000..3925288f
+--- /dev/null
++++ b/Sources/OpenJoystickDriverKit/Protocol/Parsers/FlydigiVendorParser.swift
+@@ -0,0 +1,268 @@
++import Foundation
++
++private let flydigiVendorReportLength = 32
++private let flydigiVendorMagic: [UInt8] = [0x04, 0xFE, 0x66]
++private let flydigiVendorAxisCenter: UInt8 = 0x7F
++private let flydigiVendorAxisSpan: Float = 127
++private let flydigiVendorAxisDeadzone: Float = 0.08
++private let flydigiVendorTriggerMax: Float = 255
++private let flydigiVendorRumbleReportID: UInt8 = 0x05
++private let flydigiVendorRumbleCommand: UInt8 = 0x0F
++/// The controller plays one frame and decays, so sustained vibration needs the
++/// frame resent; 100 ms keeps it continuous without flooding the link.
++private let flydigiVendorRumbleIntervalNanoseconds: UInt64 = 100_000_000
++
++/// Parser for the Flydigi vendor protocol carried on HID usage page `0xFFA0`.
++///
++/// Flydigi controllers on their 2.4 GHz dongle in DInput mode expose a
++/// composite device whose vendor interface streams a 32-byte report prefixed
++/// `04 FE 66`. This is the only mode in which the back paddles send their own
++/// signals; elsewhere they repeat whichever button the controller's firmware
++/// assigns them, and no driver can separate them.
++///
++/// Bytes 4 through 6, 26, 27, 29 and 30 carry motion data that changes
++/// continuously even at rest, and bytes 11 through 15 behave as a counter.
++/// Neither correlates with any control, so both are ignored.
++public final class FlydigiVendorParser: InputParser, PhysicalHIDRumbleOutput, @unchecked Sendable {
++
++  private enum ReportOffset {
++    /// Back paddles and the two extra shoulder buttons.
++    static let extras = 7
++    static let system = 8
++    /// D-pad in the low nibble, three face buttons plus Select in the high nibble.
++    static let dpadAndFace = 9
++    static let shoulders = 10
++    static let leftStickX = 17
++    static let leftStickY = 19
++    static let rightStickX = 21
++    static let rightStickY = 22
++    static let leftTrigger = 23
++    static let rightTrigger = 24
++  }
++
++  private enum ExtrasMask {
++    static let c: UInt8 = 0x01
++    static let z: UInt8 = 0x02
++    static let m1: UInt8 = 0x04
++    static let m2: UInt8 = 0x08
++    static let m3: UInt8 = 0x10
++    static let m4: UInt8 = 0x20
++  }
++
++  private enum DpadFaceMask {
++    static let up: UInt8 = 0x01
++    static let right: UInt8 = 0x02
++    static let down: UInt8 = 0x04
++    static let left: UInt8 = 0x08
++    static let a: UInt8 = 0x10
++    static let b: UInt8 = 0x20
++    static let back: UInt8 = 0x40
++    static let x: UInt8 = 0x80
++  }
++
++  private enum ShoulderMask {
++    static let y: UInt8 = 0x01
++    static let start: UInt8 = 0x02
++    static let leftBumper: UInt8 = 0x04
++    static let rightBumper: UInt8 = 0x08
++    static let leftTrigger: UInt8 = 0x10
++    static let rightTrigger: UInt8 = 0x20
++    static let leftStick: UInt8 = 0x40
++    static let rightStick: UInt8 = 0x80
++  }
++
++  private enum SystemMask { static let guide: UInt8 = 0x08 }
++
++  private var prevExtras: UInt8 = 0
++  private var prevSystem: UInt8 = 0
++  private var prevDpadAndFace: UInt8 = 0
++  private var prevShoulders: UInt8 = 0
++  private var prevLeftTrigger: UInt8 = 0
++  private var prevRightTrigger: UInt8 = 0
++  private var prevLeftX = flydigiVendorAxisCenter
++  private var prevLeftY = flydigiVendorAxisCenter
++  private var prevRightX = flydigiVendorAxisCenter
++  private var prevRightY = flydigiVendorAxisCenter
++  private let stateLock = NSLock()
++
++  /// Creates a new FlydigiVendorParser.
++  public init() {}
++
++  /// Parses one vendor input report and returns zero or more controller events.
++  public func parse(data: Data) throws -> [ControllerEvent] {
++    let bytes = [UInt8](data)
++    guard bytes.count == flydigiVendorReportLength, Array(bytes.prefix(3)) == flydigiVendorMagic
++    else { return [] }
++
++    return stateLock.withLock {
++      var events: [ControllerEvent] = []
++      events += extrasEvents(bytes[ReportOffset.extras])
++      events += systemEvents(bytes[ReportOffset.system])
++      events += faceEvents(bytes[ReportOffset.dpadAndFace])
++      events += dpadEvents(bytes[ReportOffset.dpadAndFace])
++      events += shoulderEvents(bytes[ReportOffset.shoulders])
++      events += triggerEvents(bytes)
++      events += stickEvents(bytes)
++      prevExtras = bytes[ReportOffset.extras]
++      prevSystem = bytes[ReportOffset.system]
++      prevDpadAndFace = bytes[ReportOffset.dpadAndFace]
++      prevShoulders = bytes[ReportOffset.shoulders]
++      prevLeftTrigger = bytes[ReportOffset.leftTrigger]
++      prevRightTrigger = bytes[ReportOffset.rightTrigger]
++      prevLeftX = bytes[ReportOffset.leftStickX]
++      prevLeftY = bytes[ReportOffset.leftStickY]
++      prevRightX = bytes[ReportOffset.rightStickX]
++      prevRightY = bytes[ReportOffset.rightStickY]
++      return events
++    }
++  }
++
++  // MARK: - Physical output
++
++  /// Both motors are independently addressable and differ in strength: the
++  /// left is weaker than the right on the tested hardware.
++  public var physicalRumbleMotors: [PhysicalRumbleMotor] { [.leftMain, .rightMain] }
++
++  public var minimumPhysicalOutputIntervalNanoseconds: UInt64 {
++    flydigiVendorRumbleIntervalNanoseconds
++  }
++
++  /// Builds the four-byte vendor rumble frame.
++  ///
++  /// The frame latches: the motors run until a frame with zero magnitudes
++  /// arrives, so a caller that stops sending without sending a stop leaves
++  /// them running. The controller has no trigger actuators, so `lt` and `rt`
++  /// are ignored.
++  public func physicalRumbleReport(
++    left: UInt8,
++    right: UInt8,
++    lt _: UInt8,
++    rt _: UInt8
++  ) -> PhysicalHIDOutputReport {
++    PhysicalHIDOutputReport(
++      reportID: flydigiVendorRumbleReportID,
++      bytes: [flydigiVendorRumbleReportID, flydigiVendorRumbleCommand, left, right]
++    )
++  }
++
++  // MARK: - Input
++
++  /// Maps the six controls that only this transport reports separately.
++  private func extrasEvents(_ value: UInt8) -> [ControllerEvent] {
++    let pairs: [(UInt8, Button)] = [
++      (ExtrasMask.c, .leftFunction), (ExtrasMask.z, .rightFunction), (ExtrasMask.m1, .leftPaddle),
++      (ExtrasMask.m2, .rightPaddle), (ExtrasMask.m3, .leftGrip), (ExtrasMask.m4, .rightGrip),
++    ]
++    return pairs.flatMap {
++      transition(mask: $0.0, current: value, previous: prevExtras, button: $0.1)
++    }
++  }
++
++  /// Maps Home, the only control in byte 8.
++  private func systemEvents(_ value: UInt8) -> [ControllerEvent] {
++    transition(mask: SystemMask.guide, current: value, previous: prevSystem, button: .guide)
++  }
++
++  /// Maps the three face buttons and Select that share byte 9 with the
++  /// D-pad. Y sits in the shoulder byte instead.
++  private func faceEvents(_ value: UInt8) -> [ControllerEvent] {
++    let pairs: [(UInt8, Button)] = [
++      (DpadFaceMask.a, .a), (DpadFaceMask.b, .b), (DpadFaceMask.x, .x), (DpadFaceMask.back, .back),
++    ]
++    return pairs.flatMap {
++      transition(mask: $0.0, current: value, previous: prevDpadAndFace, button: $0.1)
++    }
++  }
++
++  /// Maps Y, Start, both bumpers and both stick clicks. The trigger bits in
++  /// this byte are handled by ``triggerEvents(_:)`` instead.
++  private func shoulderEvents(_ value: UInt8) -> [ControllerEvent] {
++    let pairs: [(UInt8, Button)] = [
++      (ShoulderMask.y, .y), (ShoulderMask.start, .start), (ShoulderMask.leftBumper, .leftBumper),
++      (ShoulderMask.rightBumper, .rightBumper), (ShoulderMask.leftStick, .leftStick),
++      (ShoulderMask.rightStick, .rightStick),
++    ]
++    return pairs.flatMap {
++      transition(mask: $0.0, current: value, previous: prevShoulders, button: $0.1)
++    }
++  }
++
++  /// Emits a press or release only when the masked bit changed.
++  private func transition(
++    mask: UInt8,
++    current: UInt8,
++    previous: UInt8,
++    button: Button
++  ) -> [ControllerEvent] {
++    let isPressed = current & mask != 0
++    guard isPressed != (previous & mask != 0) else { return [] }
++    return [isPressed ? .buttonPressed(button) : .buttonReleased(button)]
++  }
++
++  /// The D-pad occupies the low nibble as four direction bits in up, right,
++  /// down, left order rather than as a hat value.
++  private func dpadEvents(_ value: UInt8) -> [ControllerEvent] {
++    let current = value & 0x0F
++    guard current != prevDpadAndFace & 0x0F else { return [] }
++    return [.dpadChanged(Self.direction(for: current))]
++  }
++
++  /// Resolves four direction bits to a compass direction, treating any
++  /// adjacent pair as the diagonal between them.
++  private static func direction(for bits: UInt8) -> DpadDirection {
++    let up = bits & DpadFaceMask.up != 0
++    let right = bits & DpadFaceMask.right != 0
++    let down = bits & DpadFaceMask.down != 0
++    let left = bits & DpadFaceMask.left != 0
++    switch (up, right, down, left) {
++    case (true, true, _, _): return .northEast
++    case (true, _, _, true): return .northWest
++    case (_, true, true, _): return .southEast
++    case (_, _, true, true): return .southWest
++    case (true, _, _, _): return .north
++    case (_, true, _, _): return .east
++    case (_, _, true, _): return .south
++    case (_, _, _, true): return .west
++    default: return .neutral
++    }
++  }
++
++  /// The digital trigger bits in the shoulder byte accompany the analog values
++  /// rather than replacing them, so position comes from the analog bytes alone.
++  private func triggerEvents(_ bytes: [UInt8]) -> [ControllerEvent] {
++    var events: [ControllerEvent] = []
++    let left = bytes[ReportOffset.leftTrigger]
++    let right = bytes[ReportOffset.rightTrigger]
++    if left != prevLeftTrigger {
++      events.append(.leftTriggerChanged(Float(left) / flydigiVendorTriggerMax))
++    }
++    if right != prevRightTrigger {
++      events.append(.rightTriggerChanged(Float(right) / flydigiVendorTriggerMax))
++    }
++    return events
++  }
++
++  /// Converts one axis byte to -1...1 about its `0x7F` centre.
++  static func axis(_ raw: UInt8) -> Float {
++    let offset = Float(Int(raw) - Int(flydigiVendorAxisCenter))
++    let normalized = max(-1, min(1, offset / flydigiVendorAxisSpan))
++    return abs(normalized) < flydigiVendorAxisDeadzone ? 0 : normalized
++  }
++
++  /// Emits a stick event when either of its axes moved, so paired
++  /// coordinates stay consistent.
++  private func stickEvents(_ bytes: [UInt8]) -> [ControllerEvent] {
++    var events: [ControllerEvent] = []
++    let leftX = bytes[ReportOffset.leftStickX]
++    let leftY = bytes[ReportOffset.leftStickY]
++    if leftX != prevLeftX || leftY != prevLeftY {
++      events.append(.leftStickChanged(x: Self.axis(leftX), y: Self.axis(leftY)))
++    }
++    let rightX = bytes[ReportOffset.rightStickX]
++    let rightY = bytes[ReportOffset.rightStickY]
++    if rightX != prevRightX || rightY != prevRightY {
++      events.append(.rightStickChanged(x: Self.axis(rightX), y: Self.axis(rightY)))
++    }
++    return events
++  }
++}
+diff --git a/Sources/OpenJoystickDriverKit/Protocol/Parsers/XboxBluetoothHIDParser.swift b/Sources/OpenJoystickDriverKit/Protocol/Parsers/XboxBluetoothHIDParser.swift
+new file mode 100644
+index 00000000..c47edebb
+--- /dev/null
++++ b/Sources/OpenJoystickDriverKit/Protocol/Parsers/XboxBluetoothHIDParser.swift
+@@ -0,0 +1,221 @@
++import Foundation
++
++private let xboxBluetoothInputReportID: UInt8 = 0x01
++private let xboxBluetoothSystemReportID: UInt8 = 0x02
++private let xboxBluetoothInputReportLength = 16
++private let xboxBluetoothSystemReportLength = 2
++private let xboxBluetoothAxisCenter: UInt16 = 0x7FFF
++private let xboxBluetoothAxisSpan: Float = 32767
++private let xboxBluetoothAxisDeadzone: Float = 0.08
++private let xboxBluetoothTriggerMax: Float = 1023
++
++/// Parser for Xbox controllers that present the Bluetooth HID profile.
++///
++/// This is the layout used by the Xbox One S and Series pads over Bluetooth,
++/// and by third-party controllers that adopt the same identity. It differs
++/// from the Xbox 360 wire protocol that ``Xbox360Parser`` handles: axes are
++/// unsigned 16-bit centred at `0x7FFF` rather than signed, triggers are 10-bit,
++/// and the Guide button arrives on its own report.
++///
++/// Reading the axes as signed, which the descriptor-driven fallback does, wraps
++/// every value at or above `0x8000` to a negative number and confines both
++/// sticks to a single quadrant.
++public final class XboxBluetoothHIDParser: InputParser, @unchecked Sendable {
++
++  private enum ReportOffset {
++    static let leftStickX = 1
++    static let leftStickY = 3
++    static let rightStickX = 5
++    static let rightStickY = 7
++    static let leftTrigger = 9
++    static let rightTrigger = 11
++    static let hat = 13
++    static let buttons = 14
++    static let stickClicks = 15
++  }
++
++  private enum ButtonMask {
++    static let a: UInt8 = 0x01
++    static let b: UInt8 = 0x02
++    static let x: UInt8 = 0x04
++    static let y: UInt8 = 0x08
++    static let leftBumper: UInt8 = 0x10
++    static let rightBumper: UInt8 = 0x20
++    static let back: UInt8 = 0x40
++    static let start: UInt8 = 0x80
++  }
++
++  private enum StickClickMask {
++    static let leftStick: UInt8 = 0x01
++    static let rightStick: UInt8 = 0x02
++  }
++
++  private var prevButtons: UInt8 = 0
++  private var prevStickClicks: UInt8 = 0
++  private var prevHat: UInt8 = 0
++  private var prevGuide = false
++  private var prevLeftTrigger: UInt16 = 0
++  private var prevRightTrigger: UInt16 = 0
++  private var prevLeftX = xboxBluetoothAxisCenter
++  private var prevLeftY = xboxBluetoothAxisCenter
++  private var prevRightX = xboxBluetoothAxisCenter
++  private var prevRightY = xboxBluetoothAxisCenter
++  private let stateLock = NSLock()
++
++  /// Creates a new XboxBluetoothHIDParser.
++  public init() {}
++
++  /// Parses one input report and returns zero or more controller events.
++  public func parse(data: Data) throws -> [ControllerEvent] {
++    let bytes = [UInt8](data)
++    guard let reportID = bytes.first else { return [] }
++
++    return stateLock.withLock {
++      switch reportID {
++      case xboxBluetoothSystemReportID: return guideEvents(bytes)
++      case xboxBluetoothInputReportID: return inputEvents(bytes)
++      default: return []
++      }
++    }
++  }
++
++  /// The Guide button is reported alone on the System Control collection, so a
++  /// parser that only reads the main input report never observes it.
++  private func guideEvents(_ bytes: [UInt8]) -> [ControllerEvent] {
++    guard bytes.count >= xboxBluetoothSystemReportLength else { return [] }
++    let isPressed = bytes[1] & 0x01 != 0
++    guard isPressed != prevGuide else { return [] }
++    prevGuide = isPressed
++    return [isPressed ? .buttonPressed(.guide) : .buttonReleased(.guide)]
++  }
++
++  /// Decodes the main input report and records the state each field is
++  /// compared against on the next report.
++  private func inputEvents(_ bytes: [UInt8]) -> [ControllerEvent] {
++    guard bytes.count >= xboxBluetoothInputReportLength else { return [] }
++    var events: [ControllerEvent] = []
++    events += buttonEvents(bytes[ReportOffset.buttons])
++    events += stickClickEvents(bytes[ReportOffset.stickClicks])
++    events += hatEvents(bytes[ReportOffset.hat])
++    events += triggerEvents(bytes)
++    events += stickEvents(bytes)
++    prevButtons = bytes[ReportOffset.buttons]
++    prevStickClicks = bytes[ReportOffset.stickClicks]
++    prevHat = bytes[ReportOffset.hat]
++    prevLeftTrigger = Self.trigger(bytes, at: ReportOffset.leftTrigger)
++    prevRightTrigger = Self.trigger(bytes, at: ReportOffset.rightTrigger)
++    prevLeftX = Self.rawAxis(bytes, at: ReportOffset.leftStickX)
++    prevLeftY = Self.rawAxis(bytes, at: ReportOffset.leftStickY)
++    prevRightX = Self.rawAxis(bytes, at: ReportOffset.rightStickX)
++    prevRightY = Self.rawAxis(bytes, at: ReportOffset.rightStickY)
++    return events
++  }
++
++  /// Maps the eight face, bumper and menu bits packed into byte 14.
++  private func buttonEvents(_ value: UInt8) -> [ControllerEvent] {
++    let pairs: [(UInt8, Button)] = [
++      (ButtonMask.a, .a), (ButtonMask.b, .b), (ButtonMask.x, .x), (ButtonMask.y, .y),
++      (ButtonMask.leftBumper, .leftBumper), (ButtonMask.rightBumper, .rightBumper),
++      (ButtonMask.back, .back), (ButtonMask.start, .start),
++    ]
++    return pairs.flatMap {
++      transition(mask: $0.0, current: value, previous: prevButtons, button: $0.1)
++    }
++  }
++
++  /// Maps the two stick clicks, which sit in their own byte rather than
++  /// alongside the other buttons.
++  private func stickClickEvents(_ value: UInt8) -> [ControllerEvent] {
++    let pairs: [(UInt8, Button)] = [
++      (StickClickMask.leftStick, .leftStick), (StickClickMask.rightStick, .rightStick),
++    ]
++    return pairs.flatMap {
++      transition(mask: $0.0, current: value, previous: prevStickClicks, button: $0.1)
++    }
++  }
++
++  /// Emits a press or release only when the masked bit changed.
++  private func transition(
++    mask: UInt8,
++    current: UInt8,
++    previous: UInt8,
++    button: Button
++  ) -> [ControllerEvent] {
++    let isPressed = current & mask != 0
++    guard isPressed != (previous & mask != 0) else { return [] }
++    return [isPressed ? .buttonPressed(button) : .buttonReleased(button)]
++  }
++
++  /// The D-pad is an eight-position hat, 1 = up and increasing clockwise.
++  private func hatEvents(_ value: UInt8) -> [ControllerEvent] {
++    guard value != prevHat else { return [] }
++    return [.dpadChanged(Self.direction(for: value))]
++  }
++
++  /// Converts a hat value to a compass direction; anything outside 1...8 is neutral.
++  private static func direction(for hat: UInt8) -> DpadDirection {
++    switch hat {
++    case 1: return .north
++    case 2: return .northEast
++    case 3: return .east
++    case 4: return .southEast
++    case 5: return .south
++    case 6: return .southWest
++    case 7: return .west
++    case 8: return .northWest
++    default: return .neutral
++    }
++  }
++
++  /// Triggers are 10-bit values packed little-endian, so the high byte carries
++  /// only the top two bits.
++  private static func trigger(_ bytes: [UInt8], at index: Int) -> UInt16 {
++    guard index + 1 < bytes.count else { return 0 }
++    return (UInt16(bytes[index]) | (UInt16(bytes[index + 1]) << 8)) & 0x03FF
++  }
++
++  /// Emits a trigger event only when its 10-bit value changed.
++  private func triggerEvents(_ bytes: [UInt8]) -> [ControllerEvent] {
++    var events: [ControllerEvent] = []
++    let left = Self.trigger(bytes, at: ReportOffset.leftTrigger)
++    let right = Self.trigger(bytes, at: ReportOffset.rightTrigger)
++    if left != prevLeftTrigger {
++      events.append(.leftTriggerChanged(Float(left) / xboxBluetoothTriggerMax))
++    }
++    if right != prevRightTrigger {
++      events.append(.rightTriggerChanged(Float(right) / xboxBluetoothTriggerMax))
++    }
++    return events
++  }
++
++  /// Reads one little-endian axis word, defaulting to centre when the report
++  /// is shorter than the offset.
++  private static func rawAxis(_ bytes: [UInt8], at index: Int) -> UInt16 {
++    guard index + 1 < bytes.count else { return xboxBluetoothAxisCenter }
++    return UInt16(bytes[index]) | (UInt16(bytes[index + 1]) << 8)
++  }
++
++  /// Converts one unsigned axis word to -1...1 about its `0x7FFF` centre.
++  static func axis(_ raw: UInt16) -> Float {
++    let offset = Float(Int(raw) - Int(xboxBluetoothAxisCenter))
++    let normalized = max(-1, min(1, offset / xboxBluetoothAxisSpan))
++    return abs(normalized) < xboxBluetoothAxisDeadzone ? 0 : normalized
++  }
++
++  /// Emits a stick event when either of its axes moved, so paired
++  /// coordinates stay consistent.
++  private func stickEvents(_ bytes: [UInt8]) -> [ControllerEvent] {
++    var events: [ControllerEvent] = []
++    let leftX = Self.rawAxis(bytes, at: ReportOffset.leftStickX)
++    let leftY = Self.rawAxis(bytes, at: ReportOffset.leftStickY)
++    if leftX != prevLeftX || leftY != prevLeftY {
++      events.append(.leftStickChanged(x: Self.axis(leftX), y: Self.axis(leftY)))
++    }
++    let rightX = Self.rawAxis(bytes, at: ReportOffset.rightStickX)
++    let rightY = Self.rawAxis(bytes, at: ReportOffset.rightStickY)
++    if rightX != prevRightX || rightY != prevRightY {
++      events.append(.rightStickChanged(x: Self.axis(rightX), y: Self.axis(rightY)))
++    }
++    return events
++  }
++}
+diff --git a/Sources/OpenJoystickDriverKit/Resources/Controllers/045e/045e-02e0.json b/Sources/OpenJoystickDriverKit/Resources/Controllers/045e/045e-02e0.json
+new file mode 100644
+index 00000000..c0780ec9
+--- /dev/null
++++ b/Sources/OpenJoystickDriverKit/Resources/Controllers/045e/045e-02e0.json
+@@ -0,0 +1,10 @@
++{
++  "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
++  "vendorID": 1118,
++  "productID": 736,
++  "transport": "hid",
++  "protocol": {
++    "driver": "XboxBluetoothHID",
++    "variant": "xboxBluetoothHID"
++  }
++}
+diff --git a/Sources/OpenJoystickDriverKit/Resources/Controllers/04b4/04b4-2412.json b/Sources/OpenJoystickDriverKit/Resources/Controllers/04b4/04b4-2412.json
+new file mode 100644
+index 00000000..0cdcf5bb
+--- /dev/null
++++ b/Sources/OpenJoystickDriverKit/Resources/Controllers/04b4/04b4-2412.json
+@@ -0,0 +1,10 @@
++{
++  "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
++  "vendorID": 1204,
++  "productID": 9234,
++  "transport": "hid",
++  "protocol": {
++    "driver": "FlydigiVendor",
++    "variant": "flydigiVendor"
++  }
++}
+diff --git a/Sources/OpenJoystickDriverKit/Resources/Localization/Localizable.template.strings b/Sources/OpenJoystickDriverKit/Resources/Localization/Localizable.template.strings
+index 045eae78..49e0131b 100644
+--- a/Sources/OpenJoystickDriverKit/Resources/Localization/Localizable.template.strings
++++ b/Sources/OpenJoystickDriverKit/Resources/Localization/Localizable.template.strings
+@@ -797,6 +797,7 @@
+ "controller.dualShock3" = "DualShock 3";
+ "controller.dualShock4" = "DualShock 4";
+ "controller.flydigi" = "Flydigi";
++"controller.flydigiVendor" = "Flydigi (dongle)";
+ "controller.genericHID" = "Generic HID";
+ "controller.originalXbox" = "Original Xbox";
+ "controller.standardHID" = "Standard HID";
+@@ -807,6 +808,7 @@
+ "controller.xbox360Wireless" = "Xbox 360 wireless";
+ "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
+ "controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
++"controller.xboxBluetoothHID" = "Xbox (Bluetooth)";
+ "controller.xboxOne" = "Xbox One";
+ "controller.xboxOriginal" = "Xbox (original)";
+ "developer.buttons" = "Buttons";
+diff --git a/Tests/OpenJoystickDriverKitTests/Protocol/Parsers/FlydigiVader4ProModeTests.swift b/Tests/OpenJoystickDriverKitTests/Protocol/Parsers/FlydigiVader4ProModeTests.swift
+new file mode 100644
+index 00000000..442f0ec2
+--- /dev/null
++++ b/Tests/OpenJoystickDriverKitTests/Protocol/Parsers/FlydigiVader4ProModeTests.swift
+@@ -0,0 +1,460 @@
++import Foundation
++import Testing
++
++@testable import OpenJoystickDriverKit
++
++/// Contract for the Flydigi Vader 4 Pro across its connection modes.
++///
++/// The controller presents a different identity for each combination of its
++/// rear slider position and DInput/XInput toggle, and macOS treats each as a
++/// separate device. Bluetooth DInput (`D7D7:0041`) is covered by
++/// ``FlydigiParserTests``; the suites here cover the dongle's DInput identity,
++/// the Bluetooth XInput identity, and Switch mode.
++///
++/// The dongle's XInput identity is deliberately absent. It borrows the generic
++/// Microsoft Xbox 360 wired VID/PID, which genuine controllers reach over raw
++/// USB while this dongle is surfaced through the HID stack. A record declares
++/// one transport, so serving both populations from one identity is a design
++/// question rather than a parser gap.
++///
++/// Reports were captured on firmware 6.9.5.5 under macOS 26.5.2 by reading raw
++/// HID input through a per-device callback with an explicit buffer.
++private enum Vader4Pro {
++
++  // MARK: - Dongle, DInput — 04B4:2412
++
++  /// Composite device; the vendor protocol lives on HID usage page `0xFFA0`.
++  enum DongleDInput {
++    static let identifier = DeviceIdentifier(vendorID: 0x04B4, productID: 0x2412)
++    static let reportLength = 32
++    static let magic: [UInt8] = [0x04, 0xFE, 0x66]
++
++    static let neutral: [UInt8] = [
++      0x04, 0xFE, 0x66, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x00, 0x40, 0xFF,
++      0xB5, 0x00, 0x7F, 0x00, 0x7F, 0x00, 0x7F, 0x7F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++      0xFF, 0x00,
++    ]
++
++    enum Offset {
++      static let extras = 7
++      static let system = 8
++      static let faceAndDpad = 9
++      static let shoulders = 10
++      static let leftStickX = 17
++      static let leftTrigger = 23
++    }
++
++    static func with(_ index: Int, _ value: UInt8) -> Data {
++      var bytes = neutral
++      bytes[index] = value
++      return Data(bytes)
++    }
++  }
++
++  // MARK: - Bluetooth, XInput — 045E:02E0
++
++  /// Borrows the Xbox One S Bluetooth identity. Axes are unsigned and centred
++  /// at `0x7FFF`, which the descriptor-driven fallback misreads as signed.
++  enum BluetoothXInput {
++    static let identifier = DeviceIdentifier(vendorID: 0x045E, productID: 0x02E0)
++    static let reportLength = 16
++    static let inputReportID: UInt8 = 0x01
++    static let homeReportID: UInt8 = 0x02
++
++    static let neutral: [UInt8] = [
++      0x01, 0x00, 0x7F, 0xFF, 0x7F, 0x00, 0x7F, 0xFF, 0x7F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++      0x00,
++    ]
++
++    enum Offset {
++      static let leftStickX = 1
++      static let leftStickY = 3
++      static let rightStickX = 5
++      static let hat = 13
++      static let buttons = 14
++      static let stickClicks = 15
++    }
++
++    static func with(_ index: Int, _ value: UInt8) -> Data {
++      var bytes = neutral
++      bytes[index] = value
++      return Data(bytes)
++    }
++
++    /// Writes a 16-bit little-endian axis value at `index`.
++    static func axis(_ index: Int, _ value: UInt16) -> Data {
++      var bytes = neutral
++      bytes[index] = UInt8(value & 0xFF)
++      bytes[index + 1] = UInt8(value >> 8)
++      return Data(bytes)
++    }
++  }
++
++  // MARK: - Switch — 057E:2009
++
++  /// Emulates a Nintendo Switch Pro Controller and reuses that record.
++  enum SwitchMode {
++    static let identifier = DeviceIdentifier(vendorID: 0x057E, productID: 0x2009)
++    static let fullReportID: UInt8 = 0x30
++    /// Buttons occupy a 24-bit little-endian field; A is `0x000004`.
++    static let buttonsOffset = 3
++    static let aButtonMask: UInt8 = 0x04
++  }
++}
++
++private func registry() -> ParserRegistry { ParserRegistry() }
++
++// MARK: - Dongle, DInput
++
++/// `04B4:2412` is absent from the catalog and `FlydigiParser` accepts only the
++/// 15-byte Bluetooth report, so these reports currently reach no parser.
++@Suite
++struct Vader4ProDongleDInputTests {
++
++  private func parser() -> any InputParser {
++    registry().parser(for: Vader4Pro.DongleDInput.identifier, transport: .hid)
++  }
++
++  /// The identity must reach a parser that recognises the vendor framing
++  /// rather than the descriptor-driven fallback, which cannot decode it.
++  @Test
++  func testIdentityResolvesToTheVendorParser() {
++    let name = registry().parserName(for: Vader4Pro.DongleDInput.identifier, transport: .hid)
++    #expect(name != "GenericHID", "this identity needs a record rather than the fallback")
++  }
++
++  @Test
++  func testVendorReportShape() {
++    #expect(Vader4Pro.DongleDInput.neutral.count == Vader4Pro.DongleDInput.reportLength)
++    #expect(Array(Vader4Pro.DongleDInput.neutral.prefix(3)) == Vader4Pro.DongleDInput.magic)
++  }
++
++  @Test
++  func testFaceButtonsDecode() throws {
++    for (mask, button) in [(UInt8(0x10), Button.a), (0x20, .b), (0x80, .x)] {
++      let parser = parser()
++      _ = try parser.parse(data: Data(Vader4Pro.DongleDInput.neutral))
++      let events = try parser.parse(
++        data: Vader4Pro.DongleDInput.with(Vader4Pro.DongleDInput.Offset.faceAndDpad, mask)
++      )
++      #expect(events.contains { $0 == .buttonPressed(button) })
++    }
++  }
++
++  @Test
++  func testShoulderAndStickButtonsDecode() throws {
++    let cases: [(UInt8, Button)] = [
++      (0x01, .y), (0x02, .start), (0x04, .leftBumper), (0x08, .rightBumper), (0x40, .leftStick),
++      (0x80, .rightStick),
++    ]
++    for (mask, button) in cases {
++      let parser = parser()
++      _ = try parser.parse(data: Data(Vader4Pro.DongleDInput.neutral))
++      let events = try parser.parse(
++        data: Vader4Pro.DongleDInput.with(Vader4Pro.DongleDInput.Offset.shoulders, mask)
++      )
++      #expect(events.contains { $0 == .buttonPressed(button) })
++    }
++  }
++
++  /// The D-pad occupies the low nibble of byte 9 in up, right, down, left bit
++  /// order, unlike the up, down, left, right order used by other records.
++  @Test
++  func testDpadDecodesInUpRightDownLeftBitOrder() throws {
++    let cases: [(UInt8, DpadDirection)] = [
++      (0x01, .north), (0x02, .east), (0x04, .south), (0x08, .west),
++    ]
++    for (mask, direction) in cases {
++      let parser = parser()
++      _ = try parser.parse(data: Data(Vader4Pro.DongleDInput.neutral))
++      let events = try parser.parse(
++        data: Vader4Pro.DongleDInput.with(Vader4Pro.DongleDInput.Offset.faceAndDpad, mask)
++      )
++      #expect(events.contains { $0 == .dpadChanged(direction) })
++    }
++  }
++
++  @Test
++  func testGuideDecodes() throws {
++    let parser = parser()
++    _ = try parser.parse(data: Data(Vader4Pro.DongleDInput.neutral))
++    let events = try parser.parse(
++      data: Vader4Pro.DongleDInput.with(Vader4Pro.DongleDInput.Offset.system, 0x08)
++    )
++    #expect(events.contains { $0 == .buttonPressed(.guide) })
++  }
++
++  /// Analog triggers reach full scale on this transport.
++  @Test
++  func testTriggersReachFullScale() throws {
++    let parser = parser()
++    _ = try parser.parse(data: Data(Vader4Pro.DongleDInput.neutral))
++    let events = try parser.parse(
++      data: Vader4Pro.DongleDInput.with(Vader4Pro.DongleDInput.Offset.leftTrigger, 0xFF)
++    )
++    #expect(events.contains { $0 == .leftTriggerChanged(1.0) })
++  }
++
++  @Test
++  func testSticksRestCenteredAndDeflectFullScale() throws {
++    let parser = parser()
++    let neutral = try parser.parse(data: Data(Vader4Pro.DongleDInput.neutral))
++    #expect(
++      !neutral.contains { event in
++        if case .leftStickChanged(let x, let y) = event { return x != 0 || y != 0 }
++        return false
++      },
++      "every axis at 0x7F must read as centered"
++    )
++    let events = try parser.parse(
++      data: Vader4Pro.DongleDInput.with(Vader4Pro.DongleDInput.Offset.leftStickX, 0xFF)
++    )
++    #expect(
++      events.contains { event in
++        if case .leftStickChanged(let x, _) = event { return x > 0.9 }
++        return false
++      }
++    )
++  }
++
++  /// Byte 7 carries one bit per extra button. In every other mode these
++  /// controls repeat existing buttons, so this transport is the only one where
++  /// they can be bound separately.
++  @Test
++  func testExtraButtonsEmitDistinctEvents() throws {
++    var produced: Set<Button> = []
++    for mask: UInt8 in [0x01, 0x02, 0x04, 0x08, 0x10, 0x20] {
++      let parser = parser()
++      _ = try parser.parse(data: Data(Vader4Pro.DongleDInput.neutral))
++      let events = try parser.parse(
++        data: Vader4Pro.DongleDInput.with(Vader4Pro.DongleDInput.Offset.extras, mask)
++      )
++      let pressed = events.compactMap { event -> Button? in
++        if case .buttonPressed(let button) = event { return button }
++        return nil
++      }
++      #expect(!pressed.isEmpty, "extra button 0x\(String(mask, radix: 16)) must emit an event")
++      produced.formUnion(pressed)
++    }
++    #expect(produced.count == 6, "each extra button must map to its own Button case")
++  }
++}
++
++/// Vibration on the dongle's DInput transport, verified by driving the motors
++/// on hardware.
++@Suite
++struct Vader4ProDongleDInputRumbleTests {
++
++  private func rumbleParser() -> (any PhysicalHIDRumbleOutput)? {
++    registry().parser(for: Vader4Pro.DongleDInput.identifier, transport: .hid)
++      as? any PhysicalHIDRumbleOutput
++  }
++
++  @Test
++  func testParserAdvertisesBothMotors() throws {
++    let parser = try #require(rumbleParser())
++    #expect(parser.supportsPhysicalRumble)
++    #expect(parser.physicalRumbleMotors == [.leftMain, .rightMain])
++  }
++
++  /// The frame the controller accepts is `05 0F <left> <right>` on report 5.
++  @Test
++  func testRumbleFrameMatchesTheVerifiedVendorFormat() throws {
++    let parser = try #require(rumbleParser())
++    let report = parser.physicalRumbleReport(left: 0x40, right: 0x80, lt: 0, rt: 0)
++    #expect(report.reportID == 0x05)
++    #expect(report.bytes == [0x05, 0x0F, 0x40, 0x80])
++  }
++
++  /// Magnitude is honoured, so the two motors must be independently settable.
++  @Test
++  func testMotorsAreIndependentlyAddressable() throws {
++    let parser = try #require(rumbleParser())
++    let leftOnly = parser.physicalRumbleReport(left: 0xFF, right: 0x00, lt: 0, rt: 0)
++    let rightOnly = parser.physicalRumbleReport(left: 0x00, right: 0xFF, lt: 0, rt: 0)
++    #expect(leftOnly.bytes[2] == 0xFF && leftOnly.bytes[3] == 0x00)
++    #expect(rightOnly.bytes[2] == 0x00 && rightOnly.bytes[3] == 0xFF)
++  }
++
++  /// The effect latches until a zero-magnitude frame arrives, so the stop must
++  /// keep the command byte rather than being an empty or all-zero payload.
++  @Test
++  func testStopFrameKeepsTheCommandByte() throws {
++    let parser = try #require(rumbleParser())
++    let stop = parser.physicalRumbleReport(left: 0, right: 0, lt: 0, rt: 0)
++    #expect(stop.bytes == [0x05, 0x0F, 0x00, 0x00])
++  }
++
++  /// Sustained vibration needs the frame resent, so the parser must declare a
++  /// non-zero minimum interval rather than relying on a single write.
++  @Test
++  func testDeclaresAResendInterval() throws {
++    let parser = try #require(rumbleParser())
++    #expect(parser.minimumPhysicalOutputIntervalNanoseconds > 0)
++  }
++
++  /// The controller has no trigger actuators, so those arguments must not
++  /// reach the wire.
++  @Test
++  func testTriggerMagnitudesAreIgnored() throws {
++    let parser = try #require(rumbleParser())
++    let withTriggers = parser.physicalRumbleReport(left: 0x10, right: 0x20, lt: 0xFF, rt: 0xFF)
++    #expect(withTriggers.bytes == [0x05, 0x0F, 0x10, 0x20])
++  }
++}
++
++// MARK: - Bluetooth, XInput
++
++/// `045E:02E0` has no catalog record, so it falls back to `GenericHIDParser`.
++/// Most controls survive that, but the sticks are unsigned and the Home button
++/// arrives on a second report ID.
++@Suite
++struct Vader4ProBluetoothXInputTests {
++
++  private func parser() -> any InputParser {
++    registry().parser(for: Vader4Pro.BluetoothXInput.identifier, transport: .hid)
++  }
++
++  @Test
++  func testIdentityHasADedicatedParser() {
++    let name = registry().parserName(for: Vader4Pro.BluetoothXInput.identifier, transport: .hid)
++    #expect(name != "GenericHID", "this identity needs a record rather than the fallback")
++  }
++
++  @Test
++  func testNeutralReportShape() {
++    #expect(Vader4Pro.BluetoothXInput.neutral.count == Vader4Pro.BluetoothXInput.reportLength)
++    #expect(Vader4Pro.BluetoothXInput.neutral[0] == Vader4Pro.BluetoothXInput.inputReportID)
++  }
++
++  /// Axes are unsigned and centred at `0x7FFF`. Read as signed, everything at
++  /// or above `0x8000` wraps negative, which presents as the sticks working in
++  /// only one quadrant.
++  @Test
++  func testUnsignedAxesDecodeAcrossTheFullRange() throws {
++    let parser = parser()
++    _ = try parser.parse(data: Data(Vader4Pro.BluetoothXInput.neutral))
++
++    let right = try parser.parse(
++      data: Vader4Pro.BluetoothXInput.axis(Vader4Pro.BluetoothXInput.Offset.leftStickX, 0xFFFF)
++    )
++    #expect(
++      right.contains { event in
++        if case .leftStickChanged(let x, _) = event { return x > 0.9 }
++        return false
++      },
++      "0xFFFF must read as full positive, not negative"
++    )
++
++    let left = try parser.parse(
++      data: Vader4Pro.BluetoothXInput.axis(Vader4Pro.BluetoothXInput.Offset.leftStickX, 0x0000)
++    )
++    #expect(
++      left.contains { event in
++        if case .leftStickChanged(let x, _) = event { return x < -0.9 }
++        return false
++      }
++    )
++  }
++
++  @Test
++  func testNeutralAxesReadAsCentered() throws {
++    let events = try parser().parse(data: Data(Vader4Pro.BluetoothXInput.neutral))
++    #expect(
++      !events.contains { event in
++        if case .leftStickChanged(let x, let y) = event { return abs(x) > 0.1 || abs(y) > 0.1 }
++        return false
++      },
++      "0x7FFF must read as centered"
++    )
++  }
++
++  @Test
++  func testFaceButtonsDecode() throws {
++    let cases: [(UInt8, Button)] = [
++      (0x01, .a), (0x02, .b), (0x04, .x), (0x08, .y), (0x10, .leftBumper), (0x20, .rightBumper),
++      (0x40, .back), (0x80, .start),
++    ]
++    for (mask, button) in cases {
++      let parser = parser()
++      _ = try parser.parse(data: Data(Vader4Pro.BluetoothXInput.neutral))
++      let events = try parser.parse(
++        data: Vader4Pro.BluetoothXInput.with(Vader4Pro.BluetoothXInput.Offset.buttons, mask)
++      )
++      #expect(events.contains { $0 == .buttonPressed(button) })
++    }
++  }
++
++  @Test
++  func testStickClicksDecode() throws {
++    for (mask, button) in [(UInt8(0x01), Button.leftStick), (0x02, .rightStick)] {
++      let parser = parser()
++      _ = try parser.parse(data: Data(Vader4Pro.BluetoothXInput.neutral))
++      let events = try parser.parse(
++        data: Vader4Pro.BluetoothXInput.with(Vader4Pro.BluetoothXInput.Offset.stickClicks, mask)
++      )
++      #expect(events.contains { $0 == .buttonPressed(button) })
++    }
++  }
++
++  @Test
++  func testHatDecodes() throws {
++    let cases: [(UInt8, DpadDirection)] = [(1, .north), (3, .east), (5, .south), (7, .west)]
++    for (value, direction) in cases {
++      let parser = parser()
++      _ = try parser.parse(data: Data(Vader4Pro.BluetoothXInput.neutral))
++      let events = try parser.parse(
++        data: Vader4Pro.BluetoothXInput.with(Vader4Pro.BluetoothXInput.Offset.hat, value)
++      )
++      #expect(events.contains { $0 == .dpadChanged(direction) })
++    }
++  }
++
++  /// Home arrives on report `0x02` rather than the main input report, so a
++  /// parser that only decodes report `0x01` never sees it.
++  @Test
++  func testHomeDecodesFromItsOwnReport() throws {
++    let parser = parser()
++    _ = try parser.parse(data: Data(Vader4Pro.BluetoothXInput.neutral))
++    var home = [UInt8](repeating: 0, count: 2)
++    home[0] = Vader4Pro.BluetoothXInput.homeReportID
++    home[1] = 0x01
++    let events = try parser.parse(data: Data(home))
++    #expect(events.contains { $0 == .buttonPressed(.guide) })
++  }
++}
++
++// MARK: - Switch
++
++/// Switch mode already works through the shared Switch Pro record. These tests
++/// lock that in so a future catalog change cannot silently reroute it.
++@Suite
++struct Vader4ProSwitchModeTests {
++
++  @Test
++  func testIdentityResolvesToTheSwitchProParser() {
++    let name = registry().parserName(for: Vader4Pro.SwitchMode.identifier, transport: .hid)
++    #expect(name == "SwitchPro")
++  }
++
++  @Test
++  func testParserIsReachedOverHIDTransport() {
++    let parser = registry().parser(for: Vader4Pro.SwitchMode.identifier, transport: .hid)
++    #expect(parser is SwitchProParser)
++  }
++
++  /// The controller streams the Switch Pro full input report, so the parser
++  /// must accept report `0x30`.
++  @Test
++  func testFullInputReportDecodesAButtonPress() throws {
++    let parser = registry().parser(for: Vader4Pro.SwitchMode.identifier, transport: .hid)
++    var neutral = [UInt8](repeating: 0, count: 49)
++    neutral[0] = Vader4Pro.SwitchMode.fullReportID
++    _ = try parser.parse(data: Data(neutral))
++
++    var pressed = neutral
++    pressed[Vader4Pro.SwitchMode.buttonsOffset] = Vader4Pro.SwitchMode.aButtonMask
++    let events = try parser.parse(data: Data(pressed))
++    #expect(events.contains { $0 == .buttonPressed(.a) })
++  }
++}
+diff --git a/docs/testing/flydigi-vader-4-pro.md b/docs/testing/flydigi-vader-4-pro.md
+index ae98d699..f86a00cb 100644
+--- a/docs/testing/flydigi-vader-4-pro.md
++++ b/docs/testing/flydigi-vader-4-pro.md
+@@ -1,10 +1,114 @@
+-# Flydigi Vader 4 Pro (Bluetooth)
++# Flydigi Vader 4 Pro
++
++This controller connects five ways, and macOS treats each as a separate
++device with its own identity and protocol. Observed on firmware 6.9.5.5 with
++macOS 26.5.
++
++## Which Mode To Use
++
++| How you connect | Controls | Vibration | Back paddles [^paddles] |
++| --- | --- | --- | --- |
++| **Dongle, DInput** | ✅ | ✅ full strength | ⚠️ remap only |
++| Dongle, XInput | ❌ | — | — |
++| Bluetooth, DInput | ✅ | ❌ | ❌ |
++| Bluetooth, XInput | ✅ | ❌ | ❌ |
++| Switch | ✅ | ⚠️ short pulses | ❌ |
+ 
+-Bluetooth Low Energy identity `D7D7:0041`, firmware 6.9.5.5, observed on
+-macOS 26.5. The 2.4 GHz dongle and wired modes enumerate as different
+-identities and are not covered by this record.
++✅ works · ⚠️ works with a caveat · ❌ unavailable
+ 
+-## Why The Record Exists
++[^paddles]: M1-M4, C and Z. Only dongle DInput mode reports them separately,
++    and even there they cannot be passed straight through to a game. See
++    [About The Back Paddles](#about-the-back-paddles).
++
++**Use the dongle in DInput mode.** It is the only mode with vibration that also
++sees the back paddles as separate buttons. Plug in the 2.4 GHz dongle, set the
++slider on the back of the controller to the dongle position, and hold
++`O` + `A`.
++
++**Switch mode** is the best wireless choice if you want vibration. Set the
++slider to Switch, hold Home for three seconds, and pair it in System Settings.
++macOS names it "Pro Controller".
++
++**Bluetooth in DInput mode** is a good wireless choice when you do not need
++vibration at all.
++
++Switching modes changes how macOS sees the controller, so a game may ask you to
++reassign your buttons afterwards.
++
++## What Each Mode Gives You
++
++**Dongle, DInput.** All standard controls work. Vibration has real strength
++control and the two motors can be driven independently. The six extra buttons
++(M1-M4, C and Z) send their own signals here, which no other mode does, so a
++remapping profile can give each one an action.
++
++**Dongle, XInput.** Not supported. In this mode the controller identifies
++itself as a Microsoft Xbox 360 wired controller, an identity real Xbox
++controllers also use but reach over a different connection type. The driver
++cannot currently tell the two apart, so it does not read this mode. Hold
++`O` + `A` to switch the dongle to DInput, which supports everything.
++
++**Bluetooth, DInput.** All controls work. The controller does not accept
++vibration commands at all in this mode, so no game can make it rumble.
++
++**Bluetooth, XInput.** All controls work. The controller exposes a vibration
++channel in this mode, but the driver does not yet drive it.
++
++**Switch.** Every control works and vibration reaches you, but it uses the
++Nintendo HD rumble system, which plays a short pulse per command instead of a
++steady buzz. Games built around it feel right; games expecting a simple motor
++may feel a repeated tap. Controls appear under Nintendo names, so the triggers
++show as ZL and ZR and the bumpers as L and R. The driver lists a player
++indicator light for this mode because it shares the Switch Pro Controller
++profile, but this controller has no such lights and the setting does nothing.
++
++## About The Back Paddles
++
++The M1-M4, C and Z paddles send their own distinct signals only on the dongle
++in DInput mode.
++
++Even there, they cannot be handed to a game directly. The virtual controller
++this driver publishes carries the sixteen buttons a standard gamepad has, and
++all sixteen are already spoken for, so there is no spare button to put a paddle
++on. What you can do is give a paddle its own action in a remapping profile, for
++example a keyboard key or a different gamepad button.
++
++In every other mode they are not addressable at all. Each paddle repeats
++whichever button it is assigned to inside the controller, so if a paddle is set
++to RB, the driver receives an ordinary RB press and cannot tell the two apart.
++
++Those assignments live in the controller's own firmware and are changed with
++Flydigi's configuration app, which runs on Windows and mobile only. A macOS-only
++owner cannot change them, and a second-hand or previously configured controller
++may not match the factory defaults. The assignments on the controller used for
++this document are not necessarily the ones yours shipped with.
++
++## Identities
++
++Each mode enumerates as a stable, distinct VID/PID, so each needs its own
++catalog record and, where the protocol differs, its own parser.
++
++| Mode | Identity | Parser |
++| --- | --- | --- |
++| Dongle, DInput | `04B4:2412` | `FlydigiVendor`, the vendor protocol on HID usage page `0xFFA0` |
++| Dongle, XInput | `045E:028E` | none; see below |
++| Bluetooth, DInput | `D7D7:0041` | `Flydigi` |
++| Bluetooth, XInput | `045E:02E0` | `XboxBluetoothHID` |
++| Switch | `057E:2009` | `SwitchPro`, the shared Nintendo record |
++
++Three of these are identities the controller borrows rather than owns. In
++XInput modes it presents Microsoft Xbox VID/PIDs, and in Switch mode it
++presents Nintendo's Switch Pro Controller identity, which is why it reuses a
++record written for that hardware.
++
++Borrowing is also why dongle XInput is unsupported. `045E:028E` is the generic
++Microsoft Xbox 360 wired identity, and real Xbox 360 controllers using it are
++reached over a different connection type than this dongle. A catalog record
++names one connection type, so one record cannot currently serve both.
++
++The sections below describe the Bluetooth DInput record specifically.
++
++## Why The Bluetooth DInput Record Exists
+ 
+ The device advertises Generic Desktop GamePad usage, so descriptor-driven
+ discovery finds it, but three descriptor properties defeat the generic parser:
+@@ -44,8 +148,8 @@ Bytes 5–8 were `0x00` in every observed report.
+ Byte 10's digital trigger bits accompany, not replace, analog values; the parser
+ reads position only from bytes 13 and 14.
+ 
+-C, Z, and M1 through M4 are decoded but have no `Button` case and no bit in
+-the 16-button compatibility report, so they do not reach a consumer.
++C, Z, and M1 through M4 are indistinguishable from other buttons on this
++transport, so they are not decoded separately here.
+ 
+ ## Status
+ 
+@@ -54,8 +158,11 @@ table. Not yet verified on this hardware:
+ 
+ - consumer-visible input through a signed build and the virtual device;
+ - reconnect after the controller sleeps;
+-- rumble or any other physical output;
+-- the 2.4 GHz dongle and wired identities.
++- rumble or any other physical output.
++
++The controller accepts no output reports on this transport: its report
++descriptor declares no Output items and macOS reports a one-byte maximum
++output report, so rumble is not reachable here.
+ 
+ ## Procedure
+ 

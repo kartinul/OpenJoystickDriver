@@ -7,7 +7,7 @@
 - **State:** OPEN
 - **Author:** zunium
 - **Created:** 2026-07-18T21:00:27Z
-- **Updated:** 2026-08-25T16:21:22Z
+- **Updated:** 2026-09-24T08:40:36Z
 - **Closed:** —
 - **Labels:** enhancement, help wanted
 
@@ -106,3 +106,23 @@ Patience is key. There is a lot to do! 0.5.0 is to be huge.
 [Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/19#issuecomment-5413402604)
 
 Try [0.5.0-beta.1](https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.1) and tell me if it works!
+
+### xsyetopz — 2026-09-15T00:32:44Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/19#issuecomment-5672841953)
+
+OpenJoystickDriver 0.5.0-beta.4 is published: https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.4
+
+The `1532:0A29` record selects GIP on the captured interface and endpoints. Please verify startup, input, reconnect, player indicator, and rumble using: https://github.com/xsyetopz/OpenJoystickDriver/blob/0.5.0-beta.4/docs/testing/razer/wolverine-v2.md
+
+Keeping this issue open for those hardware results.
+
+### xsyetopz — 2026-09-24T08:40:25Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/19#issuecomment-5810791887)
+
+<img width="2880" height="2160" alt="Image" src="https://github.com/user-attachments/assets/ff36c297-a9c5-4ec8-9459-fdfa0da39b57" />
+
+<img width="2160" height="2880" alt="Image" src="https://github.com/user-attachments/assets/1808f569-3316-4cb3-b7a8-33192c7ae5e5" />
+
+I got the original just now. So, I hope using the original, handling V2 and V3 will be sufficient, too!

@@ -7,7 +7,7 @@
 - **State:** OPEN
 - **Author:** julesbravo
 - **Created:** 2026-06-03T23:26:22Z
-- **Updated:** 2026-08-25T16:22:15Z
+- **Updated:** 2026-09-15T00:32:38Z
 - **Closed:** —
 - **Labels:** enhancement, help wanted
 
@@ -280,3 +280,13 @@ I initially had a discord server, but people didn't really use it, so I deleted 
 [Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/8#issuecomment-5413412717)
 
 Try [0.5.0-beta.1](https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.1) and tell me if it works!
+
+### xsyetopz — 2026-09-15T00:32:38Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/8#issuecomment-5672841134)
+
+OpenJoystickDriver 0.5.0-beta.4 is published: https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.4
+
+This build includes the catalog identities, parser, feature-report discovery, and wired/wireless receiver lifecycle work for the Steam Controller. Please run the wired and wireless procedure, including reconnect and consumer-visible virtual input: https://github.com/xsyetopz/OpenJoystickDriver/blob/0.5.0-beta.4/docs/testing/steam-controller.md
+
+Keeping this issue open for those hardware results.

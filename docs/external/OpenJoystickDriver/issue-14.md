@@ -7,7 +7,7 @@
 - **State:** OPEN
 - **Author:** cbandras
 - **Created:** 2026-07-06T23:14:27Z
-- **Updated:** 2026-08-25T16:21:37Z
+- **Updated:** 2026-09-24T00:17:49Z
 - **Closed:** —
 - **Labels:** enhancement, help wanted
 
@@ -111,3 +111,47 @@ Apple's scenery is quite complicated, even for me. I'll try my best.
 [Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/14#issuecomment-5413405546)
 
 Try [0.5.0-beta.1](https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.1) and tell me if it works!
+
+### xsyetopz — 2026-09-15T00:32:42Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/14#issuecomment-5672841629)
+
+OpenJoystickDriver 0.5.0-beta.4 is published: https://github.com/xsyetopz/OpenJoystickDriver/releases/tag/0.5.0-beta.4
+
+The `1532:0A43` record selects GIP without claiming unobserved controls or output capabilities. Please verify startup, every input, reconnect, player indicator, and rumble with: https://github.com/xsyetopz/OpenJoystickDriver/blob/0.5.0-beta.4/docs/testing/razer/v3-te.md
+
+Keeping this issue open for those hardware results.
+
+### xsyetopz — 2026-09-21T11:42:51Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/14#issuecomment-5759907181)
+
+<img width="938" height="1196" alt="Image" src="https://github.com/user-attachments/assets/eb7005c1-3cac-4d6c-9b99-5ed997ee530d" />
+
+I just got access to the V1 Wolverine Tourney Edition, so this could possibly help a bit, too! Need to now wait for it to arrive.
+
+### multision — 2026-09-24T00:17:49Z
+
+[Source comment](https://github.com/xsyetopz/OpenJoystickDriver/issues/14#issuecomment-5805134429)
+
+0x81/0x01, successful handshake, LED comes on, and all buttons/sticks/triggers/D-pad work. The issue was the device profile selecting the wrong endpoints.
+
+The fix can be applied inside of OpenJoystickDriver/Sources/OpenJoystickDriverKit/Resources/Controllers/1532/1532-0a43.json. Replace the contents with
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
+  "vendorID": 5426,
+  "productID": 2627,
+  "transport": "usb",
+  "protocol": {
+    "driver": "GIP",
+    "variant": "xboxOne"
+  },
+  "usb": {
+    "endpoints": {
+      "in": 129,
+      "out": 1
+    }
+  }
+}
+```
