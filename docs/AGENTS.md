@@ -10,5 +10,7 @@ machine-readable contracts.
   producers declare the applicable schema.
 - Record accepted hardware observations concisely in the relevant stable page
   under `docs/testing/`; do not create a new dated report format.
-- `docs/external/` may contain faithful archived upstream issues, pull requests,
-  and patches. Do not rewrite archived evidence into a project-defined schema.
+- `docs/external/` is a gitignored local archive of upstream issues, pull
+  requests, and patches from `./Scripts/ojd docs export-external-issues`. Do not
+  rewrite archived evidence into a project-defined schema, and do not link it
+  from tracked files; cite the upstream URL instead.

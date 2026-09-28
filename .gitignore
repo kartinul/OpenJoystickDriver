@@ -5,6 +5,13 @@ CONTEXT.md
 .tmp/
 .ojd-diagnostics/
 
+# Internal planning and evidence (local only)
+
+/GOAL.md
+/goals/
+# Regenerate with `./Scripts/ojd docs export-external-issues`.
+/docs/external/
+
 # macOS
 
 .DS_Store

@@ -1,8 +1,10 @@
 # Open Issues and Pull Requests — OpenJoystickDriver
 
-Snapshot initially fetched 2026-09-24 08:36:56 UTC; issue #19 refreshed 2026-09-24 08:42:22 UTC. Sources: the [open issues](https://github.com/xsyetopz/OpenJoystickDriver/issues?q=is%3Aissue+is%3Aopen) and [open pull requests](https://github.com/xsyetopz/OpenJoystickDriver/pulls?q=is%3Apr+is%3Aopen) of [xsyetopz/OpenJoystickDriver](https://github.com/xsyetopz/OpenJoystickDriver). Open pull requests include drafts. GitHub remains authoritative if these files become stale. This snapshot contains 15 open issues and 2 open pull requests (0 drafts).
+Snapshot initially fetched 2026-09-24 08:36:56 UTC; issue #19 refreshed 2026-09-24 08:42:22 UTC; PR #40 fetched 2026-09-25 02:46:44 UTC. Sources: the [open issues](https://github.com/xsyetopz/OpenJoystickDriver/issues?q=is%3Aissue+is%3Aopen) and [open pull requests](https://github.com/xsyetopz/OpenJoystickDriver/pulls?q=is%3Apr+is%3Aopen) of [xsyetopz/OpenJoystickDriver](https://github.com/xsyetopz/OpenJoystickDriver). Open pull requests include drafts. GitHub remains authoritative if these files become stale. This snapshot contains 15 open issues and 3 open pull requests (0 drafts).
 
 This snapshot includes each open issue's description and conversation, and each open pull request's description, discussion, reviews, inline review comments, file and commit lists, and full patch. The Markdown renderer strips GitHub URL query strings in descriptions and comments; patch files reproduce the fetched diffs byte-for-byte.
+
+PR #40's description includes contributor-reported physical-device testing. The archive preserves that claim; it is not accepted hardware evidence.
 
 ## Open issues (15)
 
@@ -30,3 +32,4 @@ This snapshot includes each open issue's description and conversation, and each 
 | --- | --- | --- | --- |
 | [#36](pull-36.md) | No | feat(controllers): support the Vader 4 Pro dongle and Bluetooth XInput modes | [Patch](pull-36.patch) |
 | [#39](pull-39.md) | No | Add USB endpoints for Xbox Wolverine V3 TE (Wired, inputs resolving) | [Patch](pull-39.patch) |
+| [#40](pull-40.md) | No | Fix Flydigi Vader 5S USB GIP initialization | [Patch](pull-40.patch) |
