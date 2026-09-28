@@ -83,23 +83,30 @@
             }
           }
         }
-      }.sheet(isPresented: $screen.isCreatingProfile) {
-        ProfileNameSheet(
-          title: OJDLocalized.string("profiles.new", fallback: "New profile"),
-          initialName: OJDLocalized.string("profiles.defaultName", fallback: "My controller"),
-          devices: connectedDevices
-        ) { name, device, scope in createProfile(named: name, for: device, scope: scope) }
-      }.sheet(item: $screen.pairingProfile) { profile in
-        ProfileJoyConPairSheet(profile: profile, devices: connectedDevices) { left, right in
-          Task { @MainActor in
-            profileActionError = await viewModel.pairRemappingJoyCons(
-              left: left,
-              right: right,
-              profileID: profile.id
-            )
+      }
+      // macOS 10.15 presents only the last of several sheets attached to one view, so each sheet
+      // hangs off its own sibling background view.
+      .background(
+        EmptyView().sheet(isPresented: $screen.isCreatingProfile) {
+          ProfileNameSheet(
+            title: OJDLocalized.string("profiles.new", fallback: "New profile"),
+            initialName: OJDLocalized.string("profiles.defaultName", fallback: "My controller"),
+            devices: connectedDevices
+          ) { name, device, scope in createProfile(named: name, for: device, scope: scope) }
+        }
+      ).background(
+        EmptyView().sheet(item: $screen.pairingProfile) { profile in
+          ProfileJoyConPairSheet(profile: profile, devices: connectedDevices) { left, right in
+            Task { @MainActor in
+              profileActionError = await viewModel.pairRemappingJoyCons(
+                left: left,
+                right: right,
+                profileID: profile.id
+              )
+            }
           }
         }
-      }.alert(item: $screen.activeAlert) { alert in
+      ).alert(item: $screen.activeAlert) { alert in
         switch alert {
         case .delete(let id):
           Alert(
