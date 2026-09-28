@@ -46,27 +46,10 @@ extension UserSpaceOutputDispatcher {
           if let remappedState {
             apply(remappedState, to: &state)
           } else if let input {
-            Self.apply(
-              input,
-              labels: labels,
-              stickTransfer: stickTransfer,
-              emitsXboxGuideReport: emitsXboxGuideReport,
-              to: &state
-            )
+            Self.apply(input, labels: labels, stickTransfer: stickTransfer, to: &state)
           }
         }
-        var reports =
-          activeEntry.inputReportState.claimDelivery(of: primaryReport) ? [primaryReport] : []
-        if emitsXboxGuideReport {
-          if let remappedState {
-            reports.append(Self.xboxGuideReport(pressed: remappedState.buttons.contains(.guide)))
-          } else if let input,
-            let guide = activeEntry.inputReportState.updateGuide(input.pressed.contains(.guide))
-          {
-            reports.append(Self.xboxGuideReport(pressed: guide))
-          }
-        }
-        return reports
+        return activeEntry.inputReportState.claimDelivery(of: primaryReport) ? [primaryReport] : []
       }.value()
       registryLock.withLock { recomputeStatusLocked() }
     } catch {

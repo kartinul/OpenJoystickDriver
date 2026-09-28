@@ -151,7 +151,7 @@ struct PhysicalHIDPolicyTests {
 
     #expect(accepts())
     #expect(!accepts(serialNumber: UserSpaceVirtualDeviceConstants.serialPrefix + "opaque"))
-    #expect(!accepts(productName: UserSpaceVirtualDeviceConstants.product))
+    #expect(!accepts(productName: "OpenJoystickDriver Generic HID Gamepad"))
     #expect(!accepts(transport: "Virtual"))
     #expect(!accepts(transport: "virtual"))
     #expect(!accepts(locationID: virtualLocation))

@@ -269,7 +269,12 @@ supported macOS, so no HID path selects an implementation by OS version.
 
 The SDK marks `IOHIDUserDeviceCreateWithProperties` available from macOS 10.15
 with no deprecation, so `IOHIDUserDevice` is the only virtual HID publisher. The
-package does not link CoreHID.
+package does not link CoreHID. Publishing a logical controller is one
+`IOHIDUserDeviceCreateWithProperties` call with the profile's complete identity
+properties; there is no fallback property set or retry with a reduced
+property set. On macOS 27 the published device reports `Transport` as
+`Virtual` whatever the profile requests, so consumers do not see the profile's
+transport value.
 
 ## USB Transport Boundary
 

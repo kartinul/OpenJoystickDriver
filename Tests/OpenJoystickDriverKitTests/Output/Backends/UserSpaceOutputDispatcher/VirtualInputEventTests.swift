@@ -15,7 +15,6 @@ struct VirtualInputEventTests {
       event.state,
       labels: labels,
       stickTransfer: .init(deadzone: 0, rescalesDeadzone: false),
-      emitsXboxGuideReport: false,
       to: &state
     )
   }

@@ -2,13 +2,13 @@ import Foundation
 
 /// HID report descriptor bytes for an Xbox One S / Xbox Wireless Controller over Bluetooth.
 ///
-/// Used for Compatibility mode so SDL/Steam can auto-map the virtual device.
+/// Used by the `hid-xbox-one-s-bt` profile so SDL/Steam can auto-map the virtual device.
 ///
 /// Note:
 /// - This descriptor uses Report IDs. The primary gamepad input report is Report ID 1.
 public enum XboxOneBluetoothHIDDescriptor {
   /// Maps stable OJD button bits to the Apple GameController-facing usages in
-  /// the primary Xbox Bluetooth report. Guide remains on its existing path.
+  /// the primary Xbox Bluetooth report, including Guide (bit 10) in report 1.
   public static let buttonUsageMap: [Int: Int] = [
     6: 9,  // L3 -> usage 9 (B10)
     7: 10,  // R3 -> usage 10 (B11)

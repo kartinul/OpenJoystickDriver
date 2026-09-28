@@ -99,7 +99,6 @@ extension DeviceRuntimeProfile {
   func withRecordID(_ recordID: String?) -> DeviceRuntimeProfile {
     DeviceRuntimeProfile(
       recordID: recordID,
-      virtualProfile: virtualProfile,
       transportProfile: transportProfile,
       physicalProtocolID: physicalProtocolID,
       physicalProtocolVariant: physicalProtocolVariant,

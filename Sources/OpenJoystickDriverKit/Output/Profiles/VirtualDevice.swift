@@ -18,12 +18,6 @@ public enum UserSpaceVirtualDeviceConstants {
   /// so we can reliably filter our own devices from the input pipeline.
   public static let serialPrefix = "OpenJoystickDriver-UserSpace:"
 
-  /// Product string used for the user-space virtual gamepad (IOHIDUserDevice).
-  public static let product = "OpenJoystickDriver Virtual Gamepad"
-
-  /// Manufacturer string used for the user-space virtual gamepad (IOHIDUserDevice).
-  public static let manufacturer = "OpenJoystickDriver"
-
   /// Returns true when a SerialNumber belongs to an OpenJoystickDriver user-space device.
   public static func isOJDUserSpaceSerial(_ serial: String?) -> Bool {
     guard let serial else { return false }
@@ -50,7 +44,7 @@ public enum UserSpaceVirtualDeviceConstants {
     syntheticProperty: Any?
   ) -> Bool {
     if isOJDUserSpaceSerial(serialNumber) { return false }
-    if productName == product { return false }
+    if productName == VirtualDeviceProfile.openJoystickDriverGenericHID.productName { return false }
     if isOJDUserSpaceLocationID(locationID) { return false }
     if transport?.caseInsensitiveCompare("Virtual") == .orderedSame { return false }
     return !AppleGameControllerSyntheticHID.isSyntheticDevice(syntheticProperty: syntheticProperty)

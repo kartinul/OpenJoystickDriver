@@ -144,8 +144,7 @@ extension OutputCharacterizationTests {
     )
   }
 
-  /// The test dispatcher, like every non-Xbox profile, carries guide on bit 10; an Xbox guide
-  /// profile instead emits the `[0x02, x]` report for each guide or PS transition of a batch.
+  /// Guide always publishes on bit 10, independent of label family.
   @Test
   func guideReports() async {
     var lines: [String] = []
@@ -156,28 +155,12 @@ extension OutputCharacterizationTests {
       await output.dispatch([.release(.guide)], from: Self.standard, labels: labels)
       lines += output.render("-\(button)")
     }
-    // One snapshot per former event; each guide change emits one report.
-    var state = ControllerState.neutral
-    var reports: [[UInt8]] = []
-    for change in [
-      InputChange.press(.guide), .release(.guide), .press(.guide), .press(.faceSouth),
-      .release(.guide), .hat(.north),
-    ] {
-      let next = state.applying([change])
-      let guide = next.pressed.contains(.guide)
-      if guide != state.pressed.contains(.guide) {
-        reports.append(UserSpaceOutputDispatcher.xboxGuideReport(pressed: guide))
-      }
-      state = next
-    }
-    lines.append("xbox " + reports.map(VirtualOutput.hex).joined(separator: " "))
     #expect(
       lines == [
         "+guide b=0400 h=0 ls=0,0 rs=0,0 t=0,0 f=00 +1", "  out 0040000000000000000000000000",
         "-guide b=0000 h=0 ls=0,0 rs=0,0 t=0,0 f=00 +1", "  out 0000000000000000000000000000",
         "+ps b=0400 h=0 ls=0,0 rs=0,0 t=0,0 f=00 +1", "  out 0040000000000000000000000000",
         "-ps b=0000 h=0 ls=0,0 rs=0,0 t=0,0 f=00 +1", "  out 0000000000000000000000000000",
-        "xbox 0201 0200 0201 0200",
       ]
     )
   }

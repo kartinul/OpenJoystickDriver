@@ -148,7 +148,6 @@ private enum ReportFormatCodec {
       state,
       labels: .standard,
       stickTransfer: .init(deadzone: 0, rescalesDeadzone: false),
-      emitsXboxGuideReport: false,
       to: &virtual
     )
     return format.buildInputReport(from: virtual)

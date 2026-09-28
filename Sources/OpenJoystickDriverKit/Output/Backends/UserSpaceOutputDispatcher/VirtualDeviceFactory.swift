@@ -44,35 +44,16 @@ extension UserSpaceOutputDispatcher {
     return .createFailed
   }
 
-  internal func createIOKitEntry(for identifier: DeviceIdentifier) throws -> Entry {
-    let baseProperties = Self.deviceProperties(
-      profile: profile,
-      format: format,
-      identifier: identifier,
-      productNameOverride: productNameOverride
-    )
-    let attempts = Self.deviceCreationAttempts(baseProperties: baseProperties)
-    let candidateLocationIDs: [UInt32?] = [
-      UserSpaceVirtualDeviceConstants.locationID(for: identifier), 0x1000_0002, nil,
-    ]
+  /// Deferred creation until `IOHIDUserDeviceActivate` avoids dropped get/set report calls.
+  static let deviceCreationOptions = IOOptionBits(IOHIDUserDeviceOptions.createOnActivate.rawValue)
 
-    var device: IOHIDUserDevice?
-    attemptLoop: for attempt in attempts {
-      for locationID in candidateLocationIDs {
-        var properties = attempt.properties
-        if let locationID {
-          properties[kIOHIDLocationIDKey as String] = Int64(locationID)
-        } else {
-          properties.removeValue(forKey: kIOHIDLocationIDKey as String)
-        }
-        device = IOHIDUserDeviceCreateWithProperties(
-          kCFAllocatorDefault,
-          properties as CFDictionary,
-          attempt.options
-        )
-        if device != nil { break attemptLoop }
-      }
-    }
+  internal func createIOKitEntry(for identifier: DeviceIdentifier) throws -> Entry {
+    let properties = Self.deviceProperties(profile: profile, format: format, identifier: identifier)
+    let device = IOHIDUserDeviceCreateWithProperties(
+      kCFAllocatorDefault,
+      properties as CFDictionary,
+      Self.deviceCreationOptions
+    )
     // IOHIDUserDevice.h requires only the virtual-device entitlement, so permissions are not
     // checked up front; they only explain a failed create.
     guard let device else { throw Self.creationFailure() }
@@ -140,18 +121,21 @@ extension UserSpaceOutputDispatcher {
     }
   }
 
+  /// The complete published property dictionary for the one `IOHIDUserDeviceCreateWithProperties`
+  /// call: identity, report sizes, location, and the GenericDesktop/GamePad primary usage and
+  /// usage pairs.
   static func deviceProperties(
     profile: VirtualDeviceProfile,
     format: any VirtualGamepadReportFormat,
-    identifier: DeviceIdentifier,
-    productNameOverride: String? = nil
+    identifier: DeviceIdentifier
   ) -> [String: Any] {
+    let primaryUsage = Int(kHIDUsage_GD_GamePad)
     var properties: [String: Any] = [
       kIOHIDReportDescriptorKey as String: Data(format.descriptor),
       kIOHIDVendorIDKey as String: profile.vendorID,
       kIOHIDProductIDKey as String: profile.productID,
       kIOHIDVersionNumberKey as String: profile.versionNumber,
-      kIOHIDProductKey as String: productNameOverride ?? profile.productName,
+      kIOHIDProductKey as String: profile.productName,
       kIOHIDManufacturerKey as String: profile.manufacturer,
       kIOHIDSerialNumberKey as String: UserSpaceVirtualDeviceConstants.serialNumber(
         for: identifier
@@ -159,7 +143,14 @@ extension UserSpaceOutputDispatcher {
       kIOHIDMaxInputReportSizeKey as String: reportBufferSize(
         payloadSize: format.inputReportPayloadSize,
         reportID: format.inputReportID
-      ),
+      ), kIOHIDPrimaryUsagePageKey as String: Int(kHIDPage_GenericDesktop),
+      kIOHIDPrimaryUsageKey as String: primaryUsage,
+      kIOHIDDeviceUsagePairsKey as String: [
+        [
+          kIOHIDDeviceUsagePageKey as String: Int(kHIDPage_GenericDesktop),
+          kIOHIDDeviceUsageKey as String: primaryUsage,
+        ]
+      ],
     ]
     if let outputSize = format.outputReportPayloadSize {
       properties[kIOHIDMaxOutputReportSizeKey as String] = reportBufferSize(

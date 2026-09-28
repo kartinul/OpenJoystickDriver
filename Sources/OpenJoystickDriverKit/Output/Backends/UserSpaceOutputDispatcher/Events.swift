@@ -23,19 +23,12 @@ extension UserSpaceOutputDispatcher {
     _ input: ControllerState,
     labels: ControllerButtonLabels,
     stickTransfer: StickTransfer,
-    emitsXboxGuideReport: Bool,
     to state: inout VirtualGamepadState
   ) {
     let hat = hatValue(for: input.hat)
     state.buttons = GamepadHIDDescriptor.dpadButtonBits(for: hat)
     for control in input.pressed {
-      if let bit = buttonBit(
-        for: control,
-        labels: labels,
-        emitsXboxGuideReport: emitsXboxGuideReport
-      ) {
-        state.buttons |= 1 << bit
-      }
+      if let bit = buttonBit(for: control, labels: labels) { state.buttons |= 1 << bit }
     }
     state.hat = hat
     state.leftTriggerPressed = input.pressed.contains(.leftTriggerButton)
@@ -83,17 +76,11 @@ extension UserSpaceOutputDispatcher {
     state.rightTrigger = Self.remappedTriggerValue(remapped.value(for: .rightTrigger))
   }
 
-  static func xboxGuideReport(pressed: Bool) -> [UInt8] { [0x02, pressed ? 0x01 : 0x00] }
-
   // MARK: - Button mapping (XInput semantic order)
 
   /// PlayStation Share (Create) reads as View and Nintendo Capture as Capture; both keep Share's
   /// bit 15, while standard View keeps Back's bit 9.
-  static func buttonBit(
-    for control: ControlID,
-    labels: ControllerButtonLabels,
-    emitsXboxGuideReport: Bool
-  ) -> UInt32? {
+  static func buttonBit(for control: ControlID, labels: ControllerButtonLabels) -> UInt32? {
     switch control {
     case .faceSouth: return 0
     case .faceEast: return 1
@@ -105,7 +92,7 @@ extension UserSpaceOutputDispatcher {
     case .rightStickClick, .rightTrackpadClick: return 7
     case .menu: return 8
     case .view: return labels == .playStation ? 15 : 9
-    case .guide: return emitsXboxGuideReport ? nil : 10
+    case .guide: return 10
     case .share, .capture: return 15
     case .dpad, .leftStickX, .leftStickY, .rightStickX, .rightStickY, .leftTrigger, .rightTrigger,
       .leftTriggerButton, .rightTriggerButton, .touchpadClick, .microphone, .paddleLeft1,
@@ -128,7 +115,7 @@ extension UserSpaceOutputDispatcher {
     case .rightStick: return 7
     case .start, .options: return 8
     case .back: return 9
-    case .guide: return emitsXboxGuideReport ? nil : 10
+    case .guide: return 10
     case .share: return 15
     case .touchpad, .mute, .leftTriggerClick, .rightTriggerClick, .leftGrip, .rightGrip,
       .leftPadClick, .rightPadClick, .leftSL, .leftSR, .rightSL, .rightSR, .leftFunction,

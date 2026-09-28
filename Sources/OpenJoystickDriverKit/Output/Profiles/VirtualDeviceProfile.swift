@@ -30,17 +30,6 @@ public struct VirtualDeviceProfile: Equatable, Sendable {
   public let manufacturer: String
   public let transport: String
 
-  /// OpenJoystickDriver virtual gamepad. This standard HID GamePad identity avoids
-  /// triggering device-specific HID parsers in consumers (e.g. SDL's Xbox path).
-  public static let openJoystickDriver = Self(
-    vendorID: 0x4F4A,  // "OJ"
-    productID: 0x4447,  // "DG" (arbitrary, stable)
-    versionNumber: 0x0408,
-    productName: "OpenJoystickDriver Virtual Gamepad",
-    manufacturer: "OpenJoystickDriver",
-    transport: "USB"
-  )
-
   /// Stable non-spoof Generic HID identity. Its name, version, descriptor, and report
   /// layout form one consumer contract; incompatible layouts require a new product ID.
   public static let openJoystickDriverGenericHID = Self(
@@ -66,12 +55,7 @@ public struct VirtualDeviceProfile: Equatable, Sendable {
     transport: "Bluetooth"
   )
 
-  /// Default profile used when no protocol-specific profile is configured.
-  /// Uses the OpenJoystickDriver virtual identity (generic HID GamePad).
-  ///
-  /// IMPORTANT: Do not default to spoofing a real controller's VID/PID unless
-  /// the report descriptor and report bytes exactly match that controller's HID
-  /// protocol. Many consumers (notably SDL) switch parsing logic based on VID/PID
-  /// and will ignore inputs if the descriptor doesn't match their expectations.
-  public static let `default` = openJoystickDriver
+  /// Placeholder for `HIDDeviceStream`'s discarded `virtualProfile` parameter default; nothing
+  /// publishes or matches it.
+  public static let `default` = openJoystickDriverGenericHID
 }

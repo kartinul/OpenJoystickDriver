@@ -110,7 +110,7 @@ if usbMonitor { runRawUSBMonitor() }
 
 if monitor {
   let vid = intArg("--vid", default: 0x4F4A)
-  let pid = intArg("--pid", default: 0x4447)
+  let pid = intArg("--pid", default: 0x4449)
   let seconds = min(max(intArg("--seconds", default: 10), 1), 60)
 
   final class MonitorCounter {

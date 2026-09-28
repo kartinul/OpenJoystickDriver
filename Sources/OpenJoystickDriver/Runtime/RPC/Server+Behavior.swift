@@ -114,15 +114,13 @@ extension ApplicationServiceServer {
     let profile = try profileID.makeProfile()
     return try makeUserSpaceOutputDispatcher(
       profile: profile.identity,
-      format: profile.reportFormat,
-      emitsXboxGuideReport: false
+      format: profile.reportFormat
     )
   }
 
   private func makeUserSpaceOutputDispatcher(
     profile: VirtualDeviceProfile,
-    format: any VirtualGamepadReportFormat,
-    emitsXboxGuideReport: Bool
+    format: any VirtualGamepadReportFormat
   ) throws -> UserSpaceOutputDispatcher {
     let outputHandler: UserSpaceOutputDispatcher.OutputCommandHandler = {
       [weak self] identifier, command in
@@ -133,7 +131,6 @@ extension ApplicationServiceServer {
     return try UserSpaceOutputDispatcher(
       profile: profile,
       format: format,
-      emitsXboxGuideReport: emitsXboxGuideReport,
       onOutputCommand: outputHandler
     ) { [weak self] identifier in
       _ = await self?.feedbackGate.quiesceAndNeutralize(

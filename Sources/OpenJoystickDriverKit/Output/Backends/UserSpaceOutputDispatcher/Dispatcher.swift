@@ -15,8 +15,6 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
 
   internal let profile: VirtualDeviceProfile
   internal let format: any VirtualGamepadReportFormat
-  let emitsXboxGuideReport: Bool
-  internal let productNameOverride: String?
   internal let onOutputCommand: OutputCommandHandler?
   internal let onControllerDidStop: (@Sendable (DeviceIdentifier) async -> Void)?
   internal let lifecycle = LifecycleState()
@@ -36,17 +34,13 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
   static let requiredVirtualDeviceEntitlement = "com.apple.developer.hid.virtual.device"
   @preconcurrency
   public init(
-    profile: VirtualDeviceProfile = .default,
-    format: any VirtualGamepadReportFormat = OJDGenericGamepadFormat(),
-    emitsXboxGuideReport: Bool = false,
-    productNameOverride: String? = nil,
+    profile: VirtualDeviceProfile,
+    format: any VirtualGamepadReportFormat,
     onOutputCommand: OutputCommandHandler? = nil,
     onControllerDidStop: (@Sendable (DeviceIdentifier) async -> Void)? = nil
   ) throws {
     self.profile = profile
     self.format = format
-    self.emitsXboxGuideReport = emitsXboxGuideReport
-    self.productNameOverride = productNameOverride
     self.onOutputCommand = onOutputCommand
     self.onControllerDidStop = onControllerDidStop
     self.testBackendFactory = nil
@@ -62,10 +56,8 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
     format: any VirtualGamepadReportFormat = OJDGenericGamepadFormat(),
     onControllerDidStop: (@Sendable (DeviceIdentifier) async -> Void)? = nil
   ) {
-    profile = .default
+    profile = .openJoystickDriverGenericHID
     self.format = format
-    emitsXboxGuideReport = false
-    productNameOverride = nil
     onOutputCommand = nil
     self.onControllerDidStop = onControllerDidStop
     self.testBackendFactory = testBackendFactory

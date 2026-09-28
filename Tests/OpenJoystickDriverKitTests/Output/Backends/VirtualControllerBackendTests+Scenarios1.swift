@@ -31,15 +31,9 @@ extension VirtualControllerBackendTests {
   }
 
   @Test
-  func guideDispatchUsesXboxGuideReportContract() {
-    #expect(UserSpaceOutputDispatcher.xboxGuideReport(pressed: true) == [0x02, 0x01])
-    #expect(UserSpaceOutputDispatcher.xboxGuideReport(pressed: false) == [0x02, 0x00])
-  }
-
-  @Test
   func nonStandardButtonsKeepDistinctNormalizedBits() {
     func bit(_ control: ControlID, _ labels: ControllerButtonLabels) -> UInt32? {
-      UserSpaceOutputDispatcher.buttonBit(for: control, labels: labels, emitsXboxGuideReport: false)
+      UserSpaceOutputDispatcher.buttonBit(for: control, labels: labels)
     }
 
     #expect(bit(.share, .standard) == 15)

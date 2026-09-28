@@ -42,7 +42,10 @@ extension VirtualControllerBackendTests {
     guard !UserSpaceOutputDispatcher.hasRequiredVirtualDeviceEntitlement else { return }
 
     do {
-      _ = try UserSpaceOutputDispatcher()
+      _ = try UserSpaceOutputDispatcher(
+        profile: .openJoystickDriverGenericHID,
+        format: OJDGenericGamepadFormat()
+      )
       Issue.record("UserSpaceOutputDispatcher should require the virtual HID entitlement")
     } catch UserSpaceOutputDispatcher.CreationError.missingEntitlement(let entitlement) {
       #expect(entitlement == UserSpaceOutputDispatcher.requiredVirtualDeviceEntitlement)

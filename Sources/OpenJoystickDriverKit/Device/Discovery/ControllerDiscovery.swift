@@ -122,12 +122,10 @@ public actor DeviceManager {
   ///
   /// - Parameters:
   ///   - dispatcher: Output dispatcher for sending HID reports.
-  ///   - virtualProfile: Virtual device profile for self-exclusion filtering.
   ///   - usbTransportProvider: Native raw-USB transport provider, or nil to disable raw USB
   ///     discovery.
   public init(
     dispatcher: any OutputDispatcher,
-    virtualProfile: VirtualDeviceProfile = .default,
     usbTransportProvider: (any USBTransportProvider)? = nil,
     wirelessControllerDisconnector: (any WirelessControllerDisconnecting)? = nil
   ) {
@@ -138,7 +136,6 @@ public actor DeviceManager {
     self.protocolDriverRegistry = registry
     self.permissionManager = PermissionManager()
     self.hidManager = HIDManager(
-      virtualProfile: virtualProfile,
       additionalProfileIdentifiers: registry.hidIdentifiers,
       roleProfileIdentifiers: registry.hidRoleIdentifiers
     )

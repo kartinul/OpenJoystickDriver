@@ -94,7 +94,6 @@ struct DeviceCatalog: Sendable {
 
     return DeviceRuntimeProfile(
       recordID: String(format: "%04x-%04x", record.vendorID, record.productID),
-      virtualProfile: .default,
       transportProfile: DeviceTransportProfile(
         inputEndpoint: UInt8(inputEndpoint),
         outputEndpoint: UInt8(outputEndpoint),
@@ -125,7 +124,6 @@ struct DeviceCatalog: Sendable {
     let endpoints = defaultEndpoints(for: protocolID)
     return DeviceRuntimeProfile(
       recordID: nil,
-      virtualProfile: .default,
       transportProfile: DeviceTransportProfile(
         inputEndpoint: UInt8(endpoints.input),
         outputEndpoint: UInt8(endpoints.output),

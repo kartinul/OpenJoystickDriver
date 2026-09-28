@@ -101,13 +101,9 @@ protocol HIDAccessBackend: Sendable {
 private final class IOHIDAccessBackend: HIDAccessBackend, Sendable {
   private let stream: HIDDeviceStream
 
-  init(
-    virtualProfile: VirtualDeviceProfile,
-    additionalProfileIdentifiers: [DeviceIdentifier],
-    roleProfileIdentifiers: [DeviceIdentifier]
-  ) {
+  init(additionalProfileIdentifiers: [DeviceIdentifier], roleProfileIdentifiers: [DeviceIdentifier])
+  {
     stream = HIDDeviceStream(
-      virtualProfile: virtualProfile,
       additionalProfileIdentifiers: additionalProfileIdentifiers,
       roleProfileIdentifiers: roleProfileIdentifiers
     )
@@ -186,12 +182,10 @@ public final class HIDManager: Sendable {
 
   /// `roleProfileIdentifiers` are the models whose family declares HID protocol roles.
   public init(
-    virtualProfile: VirtualDeviceProfile = .default,
     additionalProfileIdentifiers: [DeviceIdentifier] = [],
     roleProfileIdentifiers: [DeviceIdentifier] = []
   ) {
     backend = IOHIDAccessBackend(
-      virtualProfile: virtualProfile,
       additionalProfileIdentifiers: additionalProfileIdentifiers,
       roleProfileIdentifiers: roleProfileIdentifiers
     )

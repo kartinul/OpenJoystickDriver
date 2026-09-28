@@ -8,8 +8,6 @@ final class UserSpaceInputReportState: @unchecked Sendable {
   private var state = VirtualGamepadState()
   private var report: [UInt8]
   private var remapped = false
-  /// Guide state of the last compatibility input, for profiles that report guide separately.
-  private var guidePressed = false
   /// The input report input delivery last published; nil once another path published.
   private var deliveredReport: [UInt8]?
   /// Set once the published device closes; host report requests then fail.
@@ -33,15 +31,6 @@ final class UserSpaceInputReportState: @unchecked Sendable {
 
   func currentReport() -> [UInt8] { lock.withLock { report } }
 
-  /// Records the guide state of compatibility input; returns it when it changed, else nil.
-  func updateGuide(_ pressed: Bool) -> Bool? {
-    lock.withLock {
-      guard pressed != guidePressed else { return nil }
-      guidePressed = pressed
-      return pressed
-    }
-  }
-
   /// Records `report` for delivery and returns whether consumers do not hold it yet.
   func claimDelivery(of report: [UInt8]) -> Bool {
     lock.withLock {
@@ -55,7 +44,6 @@ final class UserSpaceInputReportState: @unchecked Sendable {
     lock.withLock {
       state = VirtualGamepadState()
       remapped = false
-      guidePressed = false
       deliveredReport = nil
       report = format.buildInputReport(from: state)
       return report
