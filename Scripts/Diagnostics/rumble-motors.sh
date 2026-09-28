@@ -31,9 +31,15 @@ for index in "${!channels[@]}"; do
   step=$((index + 1))
   read -r -p "Press Return for $step/4 ${channels[$index]} (or Ctrl-C to stop)... "
   stop_rumble
-  "$app" --headless controller output rumble "$vid" "$pid" \
+  # A controller without this channel makes the command fail; the sequence goes on.
+  if ! "$app" --headless controller output rumble "$vid" "$pid" \
     --left 0 --right 0 --lt 0 --rt 0 "${options[$index]}" "$intensity" \
-    --duration-ms "$duration_ms"
+    --duration-ms "$duration_ms"; then
+    echo "Record $step: ${channels[$index]} -> not present"
+    continue
+  fi
+  # The command returns at once; the daemon stops the channel when the duration ends.
+  sleep "$((duration_ms / 1000)).$(printf '%03d' $((duration_ms % 1000)))"
   stop_rumble
   echo "Record $step: ${channels[$index]} -> left trigger / right trigger / left grip / right grip / none / other"
 done

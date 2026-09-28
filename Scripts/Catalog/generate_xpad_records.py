@@ -39,12 +39,21 @@ INIT_PATTERN = re.compile(
     r"(0x[0-9a-fA-F]+)\s*,\s*([A-Za-z0-9_]+)\s*\)"
 )
 
-MAPPING_ORDER = (
-    ("MAP_DPAD_TO_BUTTONS", "dpadToButtons"),
-    ("MAP_TRIGGERS_TO_BUTTONS", "triggersToButtons"),
-    ("MAP_STICKS_TO_NULL", "sticksToNull"),
-    ("MAP_SHARE_OFFSET", "shareOffset"),
+# xpad mapping macros that select a driver-declared quirk, and the one protocol
+# family declaring it; rows needing a quirk their driver does not declare are skipped.
+MAPPING_ORDER = (("MAP_SHARE_OFFSET", "share-offset", "xbox.gip"),)
+# xpad mapping macros that remove analog controls, as capability absences in
+# ControlID order. Buttons and stick clicks stay.
+CAPABILITY_ABSENCES = (
+    (
+        "MAP_STICKS_TO_NULL",
+        ("left-stick-x", "left-stick-y", "right-stick-x", "right-stick-y"),
+    ),
+    ("MAP_TRIGGERS_TO_BUTTONS", ("left-trigger", "right-trigger")),
 )
+# xpad reports these D-pad bits as buttons instead of hat axes; the wire bits
+# are unchanged and OJD parsers decode them as the D-pad either way.
+REPRESENTATION_MAPPING_FLAGS = {"MAP_DPAD_TO_BUTTONS"}
 PRESENCE_MAPPING_FLAGS = {
     "MAP_SHARE_BUTTON",
     "MAP_PADDLES",
@@ -56,27 +65,33 @@ DANCEPAD_FLAGS = {
     "MAP_STICKS_TO_NULL",
 }
 INIT_PACKET_NAMES = {
-    "xboxone_power_on": "powerOn",
-    "xboxone_s_init": "xboxOneSInit",
-    "extra_input_packet_init": "extraInput",
-    "xboxone_hori_ack_id": "horiAck",
-    "xboxone_led_on": "ledOn",
-    "xboxone_auth_done": "authDone",
-    "xboxone_rumblebegin_init": "rumbleBegin",
-    "xboxone_rumbleend_init": "rumbleEnd",
+    "xboxone_power_on": "xbox.gip/power-on",
+    "xboxone_s_init": "xbox.gip/s-init",
+    "extra_input_packet_init": "xbox.gip/enable-extra-input",
+    "xboxone_hori_ack_id": "xbox.gip/hori-ack",
+    "xboxone_led_on": "xbox.gip/led-on",
+    "xboxone_auth_done": "xbox.gip/auth-done",
+    "xboxone_rumblebegin_init": "xbox.gip/rumble-begin",
+    "xboxone_rumbleend_init": "xbox.gip/rumble-end",
 }
-SUPPORTED_TYPES = {
-    "XTYPE_XBOX": ("XID", "xid", 129, 2),
-    "XTYPE_XBOX360": ("XUSB", "xbox360", 129, 1),
-    "XTYPE_XBOX360W": ("XUSB", "xbox360Wireless", 129, 1),
-    "XTYPE_XBOXONE": ("GIP", "xboxOne", 130, 2),
+DEFAULT_INITIALIZATION = [
+    "xbox.gip/power-on",
+    "xbox.gip/led-on",
+    "xbox.gip/auth-done",
+]
+# xpad type -> protocol family and stored variant (None when transport decides it).
+SUPPORTED_TYPES: dict[str, tuple[str, str | None]] = {
+    "XTYPE_XBOX": ("xbox.xid", "gamepad"),
+    "XTYPE_XBOX360": ("xbox.xusb", "wired"),
+    "XTYPE_XBOX360W": ("xbox.xusb", "receiver"),
+    "XTYPE_XBOXONE": ("xbox.gip", None),
 }
 TYPE_FILTERS = {
     "all": None,
-    "xbox": "XTYPE_XBOX",
-    "xbox360": "XTYPE_XBOX360",
-    "xbox360Wireless": "XTYPE_XBOX360W",
-    "xboxOne": "XTYPE_XBOXONE",
+    "xbox.xid": "XTYPE_XBOX",
+    "xbox.xusb:wired": "XTYPE_XBOX360",
+    "xbox.xusb:receiver": "XTYPE_XBOX360W",
+    "xbox.gip": "XTYPE_XBOXONE",
 }
 
 
@@ -185,10 +200,10 @@ def parse_init_rules(source: str) -> list[InitRule]:
     return rules
 
 
-def parse_mapping_flags(expression: str) -> list[str]:
+def parse_mapping_flags(expression: str) -> set[str]:
     normalized = expression.strip()
     if normalized == "0":
-        return []
+        return set()
 
     source_flags: set[str] = set()
     if "DANCEPAD_MAP_CONFIG" in normalized:
@@ -196,21 +211,24 @@ def parse_mapping_flags(expression: str) -> list[str]:
         normalized = normalized.replace("DANCEPAD_MAP_CONFIG", "")
     source_flags.update(re.findall(r"MAP_[A-Z0-9_]+", normalized))
 
-    for source_name, _ in MAPPING_ORDER:
-        normalized = normalized.replace(source_name, "")
-    for source_name in PRESENCE_MAPPING_FLAGS:
+    known = (
+        {source for source, _, _ in MAPPING_ORDER}
+        | {source for source, _ in CAPABILITY_ABSENCES}
+        | REPRESENTATION_MAPPING_FLAGS
+        | PRESENCE_MAPPING_FLAGS
+    )
+    for source_name in known:
         normalized = normalized.replace(source_name, "")
     residual = re.sub(r"[\s|()]+", "", normalized)
     if residual:
         raise GenerationError(f"Unsupported mapping expression: {expression}")
 
-    known = {source for source, _ in MAPPING_ORDER} | PRESENCE_MAPPING_FLAGS
     unknown = source_flags - known
     if unknown:
         raise GenerationError(
             f"Unsupported mapping flag(s): {', '.join(sorted(unknown))}"
         )
-    return [target for source, target in MAPPING_ORDER if source in source_flags]
+    return source_flags
 
 
 def parse_device_flags(expression: str) -> list[str]:
@@ -227,8 +245,8 @@ def parse_device_flags(expression: str) -> list[str]:
     return flags
 
 
-def startup_packets_for(device: XpadDevice, rules: list[InitRule]) -> list[str]:
-    packets: list[str] = []
+def initialization_for(device: XpadDevice, rules: list[InitRule]) -> list[str]:
+    actions: list[str] = []
     for rule in rules:
         applies_globally = rule.vendor_id == 0 and rule.product_id == 0
         applies_to_device = (
@@ -236,18 +254,18 @@ def startup_packets_for(device: XpadDevice, rules: list[InitRule]) -> list[str]:
         )
         if not applies_globally and not applies_to_device:
             continue
-        packet = INIT_PACKET_NAMES.get(rule.source_name)
-        if packet is None:
+        action = INIT_PACKET_NAMES.get(rule.source_name)
+        if action is None:
             raise GenerationError(
                 f"Unsupported Xbox One init packet {rule.source_name} for "
                 f"{device.vendor_id:04x}:{device.product_id:04x}"
             )
-        packets.append(packet)
-    if not packets:
+        actions.append(action)
+    if not actions:
         raise GenerationError(
-            f"No Xbox One startup packets for {device.vendor_id:04x}:{device.product_id:04x}"
+            f"No Xbox One initialization actions for {device.vendor_id:04x}:{device.product_id:04x}"
         )
-    return packets
+    return actions
 
 
 def profile_filename(device: XpadDevice) -> str:
@@ -258,39 +276,41 @@ def build_profile(
     device: XpadDevice,
     init_rules: list[InitRule],
 ) -> dict[str, Any]:
-    driver, variant, _, _ = SUPPORTED_TYPES[device.xtype]
+    family, variant = SUPPORTED_TYPES[device.xtype]
     mapping_flags = parse_mapping_flags(device.mapping_expression)
-    allowed_flags = (
-        {"dpadToButtons", "triggersToButtons", "sticksToNull"}
-        if driver in {"XUSB", "XID"}
-        else {
-            "dpadToButtons",
-            "triggersToButtons",
-            "sticksToNull",
-            "shareOffset",
-        }
-    )
-    unsupported_flags = set(mapping_flags) - allowed_flags
-    if unsupported_flags:
-        raise GenerationError(
-            f"Mapping flags invalid for {driver}: {', '.join(sorted(unsupported_flags))}"
-        )
+    quirks: list[str] = []
+    for source, quirk, quirk_family in MAPPING_ORDER:
+        if source not in mapping_flags:
+            continue
+        if quirk_family != family:
+            raise GenerationError(f"Mapping flag {source} is not declared by {family}")
+        quirks.append(quirk)
+    absent = [
+        control
+        for source, controls in CAPABILITY_ABSENCES
+        if source in mapping_flags
+        for control in controls
+    ]
 
-    protocol: dict[str, Any] = {"driver": driver, "variant": variant}
-    if mapping_flags:
-        protocol["quirks"] = mapping_flags
-    if driver == "GIP":
-        startup_packets = startup_packets_for(device, init_rules)
-        if startup_packets != ["powerOn", "ledOn", "authDone"]:
-            protocol["startupPackets"] = startup_packets
+    protocol: dict[str, Any] = {"family": family}
+    if variant is not None:
+        protocol["variant"] = variant
+    if quirks:
+        protocol["quirks"] = quirks
+    if family == "xbox.gip":
+        initialization = initialization_for(device, init_rules)
+        if initialization != DEFAULT_INITIALIZATION:
+            protocol["initialization"] = initialization
 
-    return {
+    profile: dict[str, Any] = {
         "$schema": SCHEMA_ID,
         "vendorID": device.vendor_id,
         "productID": device.product_id,
-        "transport": "usb",
         "protocol": protocol,
     }
+    if absent:
+        profile["capabilities"] = {"absent": absent}
+    return profile
 
 
 def load_existing_profile_keys() -> set[tuple[int, int]]:

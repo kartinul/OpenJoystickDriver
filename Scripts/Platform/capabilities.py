@@ -191,8 +191,15 @@ class Resolver:
         return self._guide_xcode(Capability.SWIFT_TOOLCHAIN)
 
     def _ensure_full_xcode(self) -> RepairOutcome:
+        # Explicit DEVELOPER_DIR, then the xcode-select choice, then the newest installed Xcode.
+        # Honoring xcode-select keeps the SDK paired with the toolchain the developer chose.
         developer_dir = self.environ.get("DEVELOPER_DIR", "")
         candidates = [Path(developer_dir)] if developer_dir else []
+        selected = self._run(
+            ["xcode-select", "-p"], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL
+        )
+        if selected.returncode == 0 and selected.stdout.strip():
+            candidates.append(Path(selected.stdout.strip()))
         applications = Path(self.environ.get("OJD_APPLICATIONS_DIR", "/Applications"))
         candidates.extend(
             path / "Contents/Developer"

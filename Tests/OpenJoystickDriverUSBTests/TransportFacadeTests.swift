@@ -8,7 +8,8 @@ import Testing
 struct TransportFacadeTests {
   @Test
   func facadeExposesPassiveObservationCapabilityWithoutChangingAdmissionOwnership() {
-    let provider: any USBTransportObservationProvider = OpenJoystickDriverUSBTransportProvider()
+    let provider: any USBPhysicalDeviceObservationProvider =
+      OpenJoystickDriverUSBTransportProvider()
     _ = provider
     #expect(
       OpenJoystickDriverUSBTransportProvider.selectDevices(
@@ -21,31 +22,31 @@ struct TransportFacadeTests {
   }
 
   @Test
-  func defaultProviderResolutionHookRetainsConfiguredProfile() async {
+  func defaultProviderResolutionRetainsConfiguredProfileWithoutInventingFacts() async {
     let provider = FakeUSBTransportProvider()
     let configured = DeviceTransportProfile.gipDefault
 
     #expect(
-      await provider.resolveTransportProfile(
+      await provider.resolveTransport(
         for: device(route: .ioUSBHost, serviceID: 1),
         configured: configured
-      ) == configured
+      ) == USBTransportResolution(profile: configured)
     )
   }
 
   @Test
   func driverKitResolutionDoesNotUseDescriptorRouteFallback() {
     let configured = DeviceTransportProfile.gipDefault
-    let observation = ControllerTransportObservation(
+    let observation = PhysicalDevice(
       vendorID: 0x045E,
       productID: 0x0B12,
       interfaces: [
-        USBInterfaceTransportFacts(
+        PhysicalInterfaceSignature(
           interfaceNumber: 3,
           interfaceClass: 0xFF,
           endpoints: [
-            USBEndpointTransportFacts(address: 0x84, isInterrupt: true, isInput: true),
-            USBEndpointTransportFacts(address: 0x04, isInterrupt: true, isInput: false),
+            PhysicalEndpointSignature(address: 0x84, direction: .in, transferType: .interrupt),
+            PhysicalEndpointSignature(address: 0x04, direction: .out, transferType: .interrupt),
           ]
         )
       ]
@@ -63,17 +64,17 @@ struct TransportFacadeTests {
   @Test
   func facadeResolutionUsesCompletePassiveInterruptPair() {
     let configured = DeviceTransportProfile.gipDefault
-    let observation = ControllerTransportObservation(
+    let observation = PhysicalDevice(
       vendorID: 0x3537,
       productID: 0x1010,
       interfaces: [
-        USBInterfaceTransportFacts(
+        PhysicalInterfaceSignature(
           interfaceNumber: 2,
           alternateSetting: 1,
           interfaceClass: 0xFF,
           endpoints: [
-            USBEndpointTransportFacts(address: 0x84, isInterrupt: true, isInput: true),
-            USBEndpointTransportFacts(address: 0x04, isInterrupt: true, isInput: false),
+            PhysicalEndpointSignature(address: 0x84, direction: .in, transferType: .interrupt),
+            PhysicalEndpointSignature(address: 0x04, direction: .out, transferType: .interrupt),
           ]
         )
       ]
@@ -92,6 +93,94 @@ struct TransportFacadeTests {
   }
 
   @Test
+  func driverKitResolutionReturnsLimitedObservationWithoutDirectProbe() async throws {
+    let device = device(
+      route: .usbDriverKit,
+      serviceID: 42,
+      vendorID: 0x3537,
+      productID: 0x1010,
+      locationID: 77,
+      observedPhysicalLocationIdentifier: 77,
+      productName: "GameSir G7 SE",
+      serialNumber: "serial"
+    )
+    let observation = PhysicalDevice(
+      serviceIdentity: device.serviceIdentity,
+      vendorID: device.vendorID,
+      productID: device.productID,
+      productName: device.productName,
+      serialNumber: device.serialNumber,
+      physicalLocationIdentifier: 77,
+      interfaces: [
+        PhysicalInterfaceSignature(
+          hostTransport: .usb,
+          accessBackend: .usbDriverKit,
+          usbRoute: .usbDriverKit
+        )
+      ]
+    )
+    let directProbeCalls = ObservationCallCounter()
+    let direct = FakeUSBTransportProvider()
+    let driverKit = FakeUSBObservationProvider(devices: [device], observations: [observation])
+    let provider = OpenJoystickDriverUSBTransportProvider(
+      ioUSBHostProvider: direct,
+      usbDriverKitProvider: driverKit,
+      supportedRawUSBModels: [USBTransportModel(device)],
+      requiredDriverKitModels: []
+    ) { _ in
+      directProbeCalls.increment()
+      return nil
+    }
+    let configured = DeviceTransportProfile.gipDefault
+
+    let resolution = await provider.resolveTransport(for: device, configured: configured)
+    #expect(resolution == USBTransportResolution(profile: configured, physicalDevice: observation))
+    #expect(resolution.physicalDevice?.interfaces?.first?.interfaceNumber == nil)
+    #expect(resolution.physicalDevice?.interfaces?.first?.endpoints == nil)
+    #expect(try await provider.physicalDeviceObservations() == [observation])
+    #expect(directProbeCalls.calls == 0)
+    #expect(await direct.openCount == 0)
+  }
+
+  @Test
+  func driverKitObservationRejectsDifferentServiceIdentity() async throws {
+    let device = device(route: .usbDriverKit, serviceID: 42)
+    let mismatchedObservation = PhysicalDevice(
+      serviceIdentity: USBTransportServiceIdentity(route: .usbDriverKit, serviceID: 43),
+      vendorID: device.vendorID,
+      productID: device.productID,
+      interfaces: [
+        PhysicalInterfaceSignature(
+          hostTransport: .usb,
+          accessBackend: .usbDriverKit,
+          usbRoute: .usbDriverKit
+        )
+      ]
+    )
+    let directProbeCalls = ObservationCallCounter()
+    let provider = OpenJoystickDriverUSBTransportProvider(
+      ioUSBHostProvider: FakeUSBTransportProvider(),
+      usbDriverKitProvider: FakeUSBObservationProvider(
+        devices: [device],
+        observations: [mismatchedObservation]
+      ),
+      supportedRawUSBModels: [USBTransportModel(device)],
+      requiredDriverKitModels: []
+    ) { _ in
+      directProbeCalls.increment()
+      return nil
+    }
+    let configured = DeviceTransportProfile.gipDefault
+
+    #expect(
+      await provider.resolveTransport(for: device, configured: configured)
+        == USBTransportResolution(profile: configured)
+    )
+    #expect(try await provider.physicalDeviceObservations().isEmpty)
+    #expect(directProbeCalls.calls == 0)
+  }
+
+  @Test
   func mapsUnsupportedAndBadArgumentToEquivalentUnsupportedTransportErrors() {
     #expect(IOUSBHostTransportProvider.transportError(kIOReturnUnsupported) == .notSupported)
     #expect(IOUSBHostTransportProvider.transportError(kIOReturnBadArgument) == .notSupported)
@@ -107,139 +196,13 @@ struct TransportFacadeTests {
     )
   }
 
-  @Test
-  func accessibleThirdPartyDeviceUsesDirectIOUSBHost() {
-    let direct = device(route: .ioUSBHost, serviceID: 1, vendorID: 0x054C, productID: 0x0268)
-
-    #expect(
-      OpenJoystickDriverUSBTransportProvider.selectDevices(
-        direct: [direct],
-        driverKit: [],
-        supportedRawUSBModels: [USBTransportModel(direct)],
-        requiredDriverKitModels: []
-      ) == [direct]
-    )
-  }
-
-  @Test
-  func entitlementRestrictedModelNeverFallsBackToDirectIOUSBHost() {
-    let direct = device(route: .ioUSBHost, serviceID: 1, vendorID: 0x045E, productID: 0x0B12)
-
-    #expect(
-      OpenJoystickDriverUSBTransportProvider.selectDevices(
-        direct: [direct],
-        driverKit: [],
-        supportedRawUSBModels: [USBTransportModel(direct)],
-        requiredDriverKitModels: [USBTransportModel(vendorID: 0x045E, productID: 0x0B12)]
-      ).isEmpty
-    )
-  }
-
-  @Test
-  func observedDriverKitOwnerWinsOnlyForTheSamePhysicalDevice() {
-    let directClaimed = device(
-      route: .ioUSBHost,
-      serviceID: 1,
-      vendorID: 0x3537,
-      productID: 0x1010,
-      locationID: 7
-    )
-    let driverKit = device(
-      route: .usbDriverKit,
-      serviceID: 2,
-      vendorID: 0x3537,
-      productID: 0x1010,
-      locationID: 7
-    )
-    let anotherDirect = device(
-      route: .ioUSBHost,
-      serviceID: 3,
-      vendorID: 0x3537,
-      productID: 0x1010,
-      locationID: 8
-    )
-
-    let selected = OpenJoystickDriverUSBTransportProvider.selectDevices(
-      direct: [directClaimed, anotherDirect],
-      driverKit: [driverKit],
-      supportedRawUSBModels: [USBTransportModel(directClaimed)],
-      requiredDriverKitModels: []
-    )
-
-    #expect(selected == [driverKit, anotherDirect])
-  }
-
-  @Test
-  func oneDiscoveryBackendCanOperateWhenTheOtherIsUnavailable() async throws {
-    let directDevice = device(route: .ioUSBHost, serviceID: 1)
-    let direct = FakeUSBTransportProvider(devicesResult: .success([directDevice]))
-    let unavailable = FakeUSBTransportProvider(devicesResult: .failure(.disconnected))
-    let provider = OpenJoystickDriverUSBTransportProvider(
-      ioUSBHostProvider: direct,
-      usbDriverKitProvider: unavailable,
-      supportedRawUSBModels: [USBTransportModel(directDevice)],
-      requiredDriverKitModels: []
-    )
-
-    #expect(try await provider.devices() == [directDevice])
-  }
-
-  @Test
-  func openDispatchesByRecordedRouteWithoutFallback() async {
-    let direct = FakeUSBTransportProvider(openResult: .failure(.accessDenied))
-    let driverKit = FakeUSBTransportProvider()
-    let provider = OpenJoystickDriverUSBTransportProvider(
-      ioUSBHostProvider: direct,
-      usbDriverKitProvider: driverKit,
-      supportedRawUSBModels: [USBTransportModel(vendorID: 0x1234, productID: 0x5678)],
-      requiredDriverKitModels: []
-    )
-
-    do {
-      _ = try await provider.open(
-        device(route: .ioUSBHost, serviceID: 1),
-        options: USBTransportOpenOptions(interfaceNumber: 2)
-      )
-      Issue.record("Expected the selected IOUSBHost backend to fail")
-    } catch { #expect(error as? USBTransportError == .accessDenied) }
-    #expect(await direct.openCount == 1)
-    #expect(await driverKit.openCount == 0)
-  }
-
-  @Test
-  func directDiscoveryUsesDeviceServiceBeforeInterfacesExist() {
-    let devices = IOUSBHostTransportProvider.devices(from: [
-      IOUSBHostDeviceFacts(
-        serviceID: 10,
-        vendorID: 0x1234,
-        productID: 0x5678,
-        locationID: 9,
-        productName: "Controller",
-        serialNumber: "serial"
-      )
-    ])
-
-    #expect(
-      devices == [
-        device(
-          route: .ioUSBHost,
-          serviceID: 10,
-          vendorID: 0x1234,
-          productID: 0x5678,
-          locationID: 9,
-          productName: "Controller",
-          serialNumber: "serial"
-        )
-      ]
-    )
-  }
-
-  private func device(
+  func device(
     route: USBTransportRoute,
     serviceID: UInt64,
     vendorID: UInt16 = 0x1234,
     productID: UInt16 = 0x5678,
     locationID: UInt32 = 1,
+    observedPhysicalLocationIdentifier: UInt32? = nil,
     productName: String? = nil,
     serialNumber: String? = nil
   ) -> USBTransportDevice {
@@ -249,13 +212,14 @@ struct TransportFacadeTests {
       vendorID: vendorID,
       productID: productID,
       locationID: locationID,
+      observedPhysicalLocationIdentifier: observedPhysicalLocationIdentifier,
       productName: productName,
       serialNumber: serialNumber
     )
   }
 }
 
-private actor FakeUSBTransportProvider: USBTransportProvider {
+actor FakeUSBTransportProvider: USBTransportProvider {
   private let devicesResult: Result<[USBTransportDevice], USBTransportError>
   private let openResult: Result<any USBTransportSession, USBTransportError>
   private(set) var openCount = 0
@@ -281,10 +245,40 @@ private actor FakeUSBTransportProvider: USBTransportProvider {
   }
 }
 
-private final class FakeUSBTransportSession: USBTransportSession, @unchecked Sendable {
-  func writeInterruptPacket(endpoint: UInt8, data: [UInt8], timeout: UInt32) throws -> Int {
-    data.count
+private actor FakeUSBObservationProvider: USBPhysicalDeviceObservationProvider {
+  private let devicesValue: [USBTransportDevice]
+  private let observations: [PhysicalDevice]
+
+  init(devices: [USBTransportDevice], observations: [PhysicalDevice]) {
+    devicesValue = devices
+    self.observations = observations
   }
 
-  func readInterruptPacket(endpoint: UInt8, length: Int, timeout: UInt32) throws -> [UInt8] { [] }
+  func devices() throws -> [USBTransportDevice] { devicesValue }
+
+  func open(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) throws -> any USBTransportSession { throw USBTransportError.notSupported }
+
+  func physicalDeviceObservations() throws -> [PhysicalDevice] { observations }
+}
+
+private final class ObservationCallCounter: @unchecked Sendable {
+  private let lock = NSLock()
+  private var countValue = 0
+
+  var calls: Int { lock.withLock { countValue } }
+
+  func increment() { lock.withLock { countValue += 1 } }
+}
+
+private final class FakeUSBTransportSession: USBTransportSession, @unchecked Sendable {
+  func controlTransfer(_ request: USBControlTransferRequest, timeout: UInt32) throws -> [UInt8] {
+    throw USBTransportError.notSupported
+  }
+
+  func write(endpoint: UInt8, data: [UInt8], timeout: UInt32) throws -> Int { data.count }
+
+  func read(endpoint: UInt8, length: Int, timeout: UInt32) throws -> [UInt8] { [] }
 }

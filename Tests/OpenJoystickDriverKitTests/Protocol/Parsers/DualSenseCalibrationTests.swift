@@ -8,70 +8,60 @@ struct DualSenseCalibrationTests {
 
   @Test
   func revisionChangesOnlyForNewAcceptedCoefficients() throws {
-    let parser = DualSenseParser()
+    let parser = DualSenseDriver()
     var data = factory()
-    #expect(parser.consumeHIDFeatureReport(data, request: request, transport: "USB"))
-    #expect(try motion(parser).physicalReading?.calibrationRevision == 1)
-    #expect(parser.consumeHIDFeatureReport(data, request: request, transport: "USB"))
-    #expect(try motion(parser).physicalReading?.calibrationRevision == 1)
+    #expect(parser.consumeFeatureReply(data, request: request))
+    #expect(try motion(parser).calibrationRevision == 1)
+    #expect(parser.consumeFeatureReply(data, request: request))
+    #expect(try motion(parser).calibrationRevision == 1)
     write(21, into: &data, at: 1)
-    #expect(parser.consumeHIDFeatureReport(data, request: request, transport: "USB"))
-    #expect(try motion(parser).physicalReading?.calibrationRevision == 2)
+    #expect(parser.consumeFeatureReply(data, request: request))
+    #expect(try motion(parser).calibrationRevision == 2)
   }
 
   @Test
-  func legacyReadingDefaultsRevisionAndNewRevisionRoundTrips() throws {
-    let parser = DualSenseParser()
-    #expect(parser.consumeHIDFeatureReport(factory(), request: request, transport: "USB"))
-    let reading = try #require(motion(parser).physicalReading)
-    let encoded = try JSONEncoder().encode(reading)
-    #expect(try JSONDecoder().decode(ControllerMotionReading.self, from: encoded) == reading)
-    var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
-    object.removeValue(forKey: "calibrationRevision")
-    let legacy = try JSONDecoder().decode(
-      ControllerMotionReading.self,
-      from: JSONSerialization.data(withJSONObject: object)
-    )
-    #expect(legacy.calibrationRevision == 0)
-    #expect(legacy.gyroscopeDegreesPerSecond == reading.gyroscopeDegreesPerSecond)
+  func factorySampleRoundTripsWithRevision() throws {
+    let parser = DualSenseDriver()
+    #expect(parser.consumeFeatureReply(factory(), request: request))
+    let sample = try motion(parser)
+    let encoded = try JSONEncoder().encode(sample)
+    #expect(try JSONDecoder().decode(ControllerMotionSample.self, from: encoded) == sample)
+    #expect(sample.calibrationRevision == 1)
   }
 
   @Test
-  func nominalUnitsRetainRawReadings() throws {
-    let sample = try motion(DualSenseParser(), gyro: [16, -16, 0], accel: [8192, 0, -8192])
-    #expect(sample.rawGyroscope == ControllerRawSensorVector(x: 16, y: -16, z: 0))
-    let reading = try #require(sample.physicalReading)
-    #expect(reading.calibrationSource == .nominalDeviceScale)
-    #expect(reading.gyroscopeDegreesPerSecond == ControllerMotionVector(x: 1, y: -1, z: 0))
-    #expect(reading.accelerationG == ControllerMotionVector(x: 1, y: 0, z: -1))
+  func nominalUnitsMapSensorAxesToCanonicalSI() throws {
+    let sample = try motion(DualSenseDriver(), gyro: [16, -16, 0], accel: [8192, 0, -8192])
+    // Sensor (1, -1, 0) °/s and (1, 0, -1) g land canonical as (x, -z, y).
+    #expect(sample.calibrationSource == .nominalDeviceScale)
+    #expect(isClose(sample.angularVelocity, radiansPerSecond(1, 0, -1)))
+    #expect(isClose(sample.acceleration, metresPerSecondSquared(1, 1, 0)))
   }
 
   @Test
   func acceptedFactoryReportAppliesBiasAndScaleAtomically() throws {
-    let parser = DualSenseParser()
-    #expect(parser.consumeHIDFeatureReport(factory(), request: request, transport: "USB"))
+    let parser = DualSenseDriver()
+    #expect(parser.consumeFeatureReply(factory(), request: request))
     let zero = try motion(parser, gyro: [20, -30, 40], accel: [100, 100, 100])
-    let reading = try #require(zero.physicalReading)
-    #expect(reading.calibrationSource == .deviceFactory)
-    #expect(reading.gyroscopeDegreesPerSecond == ControllerMotionVector(x: 0, y: 0, z: 0))
-    #expect(reading.accelerationG == ControllerMotionVector(x: 0, y: 0, z: 0))
+    #expect(zero.calibrationSource == .deviceFactory)
+    #expect(isClose(zero.angularVelocity, ControllerMotionVector(x: 0, y: 0, z: 0)))
+    #expect(isClose(zero.acceleration, ControllerMotionVector(x: 0, y: 0, z: 0)))
     let endpoint = try motion(parser, gyro: [36, -14, 56], accel: [8292, -8092, 100])
-    #expect(
-      endpoint.physicalReading?.gyroscopeDegreesPerSecond
-        == ControllerMotionVector(x: 1, y: 1, z: 1)
-    )
-    #expect(endpoint.physicalReading?.accelerationG == ControllerMotionVector(x: 1, y: -1, z: 0))
+    #expect(isClose(endpoint.angularVelocity, radiansPerSecond(1, -1, 1)))
+    #expect(isClose(endpoint.acceleration, metresPerSecondSquared(1, 0, -1)))
     var invalid = factory()
     invalid[24] = 0
-    #expect(!parser.consumeHIDFeatureReport(invalid, request: request, transport: "USB"))
+    #expect(!parser.consumeFeatureReply(invalid, request: request))
     let retained = try motion(parser, gyro: [20, -30, 40], accel: [100, 100, 100])
-    #expect(retained.physicalReading == reading)
+    #expect(retained.angularVelocity == zero.angularVelocity)
+    #expect(retained.acceleration == zero.acceleration)
+    #expect(retained.calibrationRevision == zero.calibrationRevision)
   }
 
   @Test
   func bluetoothCalibrationRequiresFeatureCRC() throws {
-    let parser = DualSenseParser(prefersBluetooth: true)
-    #expect(!parser.consumeHIDFeatureReport(factory(), request: request, transport: "Bluetooth"))
+    let parser = DualSenseDriver(prefersBluetooth: true)
+    #expect(!parser.consumeFeatureReply(factory(), request: request))
     var data = factory()
     var crc: UInt32 = 0xFFFF_FFFF
     for byte in [UInt8(0xA3)] + Array(data.prefix(37)) {
@@ -80,32 +70,28 @@ struct DualSenseCalibrationTests {
     }
     crc = ~crc
     for index in 0..<4 { data[37 + index] = UInt8(truncatingIfNeeded: crc >> (8 * index)) }
-    #expect(parser.consumeHIDFeatureReport(data, request: request, transport: "Bluetooth"))
-    #expect(try motion(parser).physicalReading?.calibrationSource == .deviceFactory)
+    #expect(parser.consumeFeatureReply(data, request: request))
+    #expect(try motion(parser).calibrationSource == .deviceFactory)
   }
 
   @Test
   func stoppedPipelineRejectsCalibrationReplies() async throws {
-    let parser = DualSenseParser()
+    let parser = DualSenseDriver()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 0x054C, productID: 0x0CE6),
       transport: .hid(locationID: 1),
-      parser: parser,
+      driver: parser,
       dispatcher: LoggingOutputDispatcher()
     )
-    #expect(
-      await pipeline.consumeHIDFeatureReport(factory(), request: request, transport: "USB") == false
-    )
+    #expect(await pipeline.consumeFeatureReply(factory(), request: request) == false)
     await pipeline.start()
-    #expect(await pipeline.consumeHIDFeatureReport(factory(), request: request, transport: "USB"))
+    #expect(await pipeline.consumeFeatureReply(factory(), request: request))
     await pipeline.stop()
-    #expect(
-      await pipeline.consumeHIDFeatureReport(factory(), request: request, transport: "USB") == false
-    )
+    #expect(await pipeline.consumeFeatureReply(factory(), request: request) == false)
   }
 
   private func motion(
-    _ parser: DualSenseParser,
+    _ parser: DualSenseDriver,
     gyro: [Int16] = [0, 0, 0],
     accel: [Int16] = [0, 0, 0]
   ) throws -> ControllerMotionSample {
@@ -115,12 +101,7 @@ struct DualSenseCalibrationTests {
       write(gyro[index], into: &data, at: 16 + index * 2)
       write(accel[index], into: &data, at: 22 + index * 2)
     }
-    return try #require(
-      parser.parse(data: data).compactMap { event -> ControllerMotionSample? in
-        if case .motionSample(let sample) = event { return sample }
-        return nil
-      }.first
-    )
+    return try #require(parser.parseReport(data)?.motion.first)
   }
 
   private func factory() -> Data {

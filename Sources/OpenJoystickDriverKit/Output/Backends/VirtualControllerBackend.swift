@@ -77,7 +77,7 @@ extension UserSpaceOutputDispatcher: VirtualControllerBackend {
       supportsMultiplePhysicalControllers: true,
       requiresEntitlement: true,
       isImplemented: true,
-      notes: "CoreHID output on macOS 15+ with an IOKit output path on macOS 10.15–14."
+      notes: "IOKit IOHIDUserDevice output on every supported macOS."
     )
   }
 

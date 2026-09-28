@@ -10,7 +10,7 @@ Its Draft 2020-12 schemas are resolved locally; runtime code never fetches them.
 - `report.schema.json`: the CloudEvents 1.0 support-report envelope and payload.
 
 Each artifact class has one current, unversioned contract. OJD-owned property
-names use lowerCamelCase, including `vendorID`, `profileID`, `startupPackets`,
+names use lowerCamelCase, including `vendorID`, `profileID`, `initialization`,
 `keepAlive`, and `postHandshakeSettleMs`. JSON Schema keywords, CloudEvents
 context attributes, external API fields, and dynamic map keys retain their
 standards' or sources' spelling. Do not recase values: enums,
@@ -25,10 +25,44 @@ obsolete contracts.
 
 Controller records contain only facts consumed at runtime. Keep:
 
-1. parser-specific encoding and subsystem quirks in `protocol.quirks`;
-2. exact host writes and transport facts in `startupPackets`, `keepAlive`, and
-   USB overrides; and
-3. packet-mapped controls in parser events.
+1. the protocol binding in `protocol.family` (a `PhysicalProtocolID` such as
+   `xbox.xusb`) and `protocol.variant`. `variant` is required for the families whose
+   variant the transport cannot decide (`xbox.xid` `gamepad`; `xbox.xusb` `wired` or
+   `receiver`; `valve.steam-controller` `wired` or `dongle`; `vendor.gamesir` `usb`
+   or `enhanced-hid`) and forbidden for every other family, whose
+   variant classification derives from the observed transport. Records carry no
+   transport: the family and variant fix the access path (`xbox.*` and
+   `vendor.gamesir:usb` use raw USB, every other binding IOHID), and a `usb` block is
+   accepted only on raw-USB bindings;
+2. driver-declared quirks scoped by family in `protocol.quirks`: `xbox.gip`
+   `share-offset`, `nintendo.switch1` `joy-con-left` or `joy-con-right` (at most
+   one), and `vendor.gamesir` `inner-grips` (enhanced HID extras report the inner
+   grips) and `lighting-slots` (enhanced HID lighting memory is slot-based: the
+   driver reads, tracks and writes the active slot). Every other family declares
+   none;
+3. named driver-owned initialization actions in `protocol.initialization` (`xbox.gip` only,
+   for example `xbox.gip/power-on`), plus `keepAlive` and USB overrides. Rows never
+   carry raw packet bytes; omit the driver's default sequence;
+4. a named driver-owned assembly policy in `protocol.assembly`, which assembles one
+   logical controller from several protocol roles of one device. Discovery consumes it
+   (`ProtocolDriverRegistry.assemblyPolicy(for:)`), but its vocabulary is empty
+   (`"enum": []`, the Swift `ControllerAssemblyPolicy` has no cases), so every value is
+   rejected: no row has multi-interface evidence yet, and until a row adds the first
+   policy each protocol role is its own logical controller;
+5. evidenced capability corrections in the top-level `capabilities` object; and
+6. packet-mapped controls in parser events.
+
+`capabilities` holds only deltas against the bound parser's declared controls:
+`absent` and `present` are disjoint, nonempty lists of `controlID` values from the
+normalized controller model, and `rumble: "absent"` declares that the model has no
+rumble channel. Rumble is a separate key because rumble channel IDs such as
+`left-trigger` collide with control IDs; it is accepted only for GIP, the one driver
+that consumes it. A `present` control must be one the configured parser emits (for
+example the DualSense Edge paddles and function buttons). Quirks, capability values
+initialization actions, families and stored variants are Swift enums
+(`PhysicalProtocolID`, `PhysicalProtocolVariantID`), and a test keeps their schema
+enums equal to the Swift cases. Every implemented family has catalog rows, so the
+schema lists all of them.
 
 Do not add provenance, confidence, verification, review state, test plans, or
 per-controller schemas. Pin source revisions in `ControllerSources.lock.json`.

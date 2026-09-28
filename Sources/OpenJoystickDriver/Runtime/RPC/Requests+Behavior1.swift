@@ -18,10 +18,11 @@ extension ApplicationServiceServer {
     let quirks = device.quirks.isEmpty ? "none" : device.quirks.joined(separator: ",")
     let backends =
       device.preferredBackends.isEmpty ? "none" : device.preferredBackends.joined(separator: ",")
-    let battery = device.battery.map(Self.batteryDescription) ?? "unknown"
-    return "\(device.name) (VID:\(device.vendorID)" + " PID:\(device.productID) \(device.parser)"
+    let battery = device.connectionState.map { Self.batteryDescription($0.power) } ?? "unknown"
+    return "\(device.name) (VID:\(device.vendorID)" + " PID:\(device.productID)"
       + " [\(device.connection)] SN:\(serialNumber))"
-      + " protocol=\(device.protocolVariant.rawValue)"
+      + (device.interfaceNumber.map { " if=\($0)" } ?? "")
+      + " protocol=\(device.protocolBinding.rawValue)"
       + " endpoints=in:0x\(String(device.inputEndpoint, radix: 16))"
       + " out:0x\(String(device.outputEndpoint, radix: 16))"
       + " setConfig=\(device.needsSetConfiguration)" + " settleMs=\(device.postHandshakeSettleMs)"
@@ -30,9 +31,10 @@ extension ApplicationServiceServer {
       + " startup=\(device.startupCommandStatus ?? "not-required")"
   }
 
-  private static func batteryDescription(_ battery: ControllerBatteryTelemetry) -> String {
-    let percentage = battery.percentageDescription ?? "unknown"
-    return "\(percentage),\(battery.chargingState.rawValue),cable-\(battery.cableState.rawValue)"
+  private static func batteryDescription(_ power: ControllerConnectionState.Power) -> String {
+    let percentage = power.battery.percentageText ?? "unknown"
+    let wired = power.wiredPower.map { $0 ? "yes" : "no" } ?? "unknown"
+    return "\(percentage),\(power.charging.rawValue),wired-power-\(wired)"
   }
 
   /// Returns the current application service status including input monitoring state and
@@ -43,23 +45,20 @@ extension ApplicationServiceServer {
     let pm = permissionManager
     Task {
       let permissions = await pm.refreshAccessState()
-      let devices = await dm.connectedDeviceDescriptions()
+      let devices = describingVirtualHIDProfiles(await dm.connectedDeviceDescriptions())
+      let unboundDevices = await dm.unboundDeviceDescriptions()
+      let passThroughDevices = await dm.passThroughDeviceDescriptions()
       let userSnapshot = userSpaceStatusSnapshot()
       let payload = ApplicationServiceStatusPayload(
         inputMonitoring: "\(permissions.inputMonitoring)",
         accessibility: "\(permissions.accessibility)",
         connectedDevices: devices,
+        unboundDevices: unboundDevices,
+        passThroughDevices: passThroughDevices,
         userSpaceVirtualDeviceEnabled: userSnapshot.enabled,
         userSpaceVirtualDeviceStatus: userSnapshot.status,
-        compatibilityIdentity: userSnapshot.requestedIdentity.rawValue,
-        compatibilityLiveIdentity: userSnapshot.liveIdentity?.rawValue,
-        compatibilityRetry: userSnapshot.retrySnapshot.map {
-          ApplicationServiceCompatibilityRetryPayload(
-            requestedIdentity: $0.requestedIdentity.rawValue,
-            priorProfileIdentity: $0.priorProfileIdentity.rawValue,
-            phase: $0.phase.rawValue
-          )
-        }
+        virtualHIDProfileOverrideError: virtualHIDProfileOverrides.loadError?.statusDescription,
+        legacyCompatibilityIdentityRejected: virtualHIDProfileOverrides.legacyCompatibilityIdentity
       )
       do {
         let data = try JSONEncoder().encode(payload)
@@ -93,7 +92,7 @@ extension ApplicationServiceServer {
   }
 
   /// Returns the current input state for the specified device as encoded JSON data.
-  public func getDeviceInputState(
+  public func getControllerState(
     vendorID: Int,
     productID: Int,
     runtimeIdentifier: String?,
@@ -101,9 +100,13 @@ extension ApplicationServiceServer {
   ) {
     let callback = SendableReply(call: reply)
     let dm = deviceManager
+    guard let vendor = UInt16(exactly: vendorID), let product = UInt16(exactly: productID) else {
+      callback.call(nil)
+      return
+    }
     Task {
-      let identifier = DeviceIdentifier(vendorID: UInt16(vendorID), productID: UInt16(productID))
-      let state = await dm.inputState(for: identifier, runtimeIdentifier: runtimeIdentifier)
+      let identifier = DeviceIdentifier(vendorID: vendor, productID: product)
+      let state = await dm.controllerState(for: identifier, runtimeIdentifier: runtimeIdentifier)
       callback.call(try? JSONEncoder().encode(state))
     }
   }
@@ -117,8 +120,12 @@ extension ApplicationServiceServer {
   ) {
     let callback = SendableReply(call: reply)
     let dm = deviceManager
+    guard let vendor = UInt16(exactly: vendorID), let product = UInt16(exactly: productID) else {
+      callback.call(Data())
+      return
+    }
     Task {
-      let identifier = DeviceIdentifier(vendorID: UInt16(vendorID), productID: UInt16(productID))
+      let identifier = DeviceIdentifier(vendorID: vendor, productID: product)
       let log = await dm.packetLog(for: identifier, runtimeIdentifier: runtimeIdentifier)
       do {
         let data = try JSONEncoder().encode(log)
@@ -130,123 +137,25 @@ extension ApplicationServiceServer {
     }
   }
 
-  public func sendPhysicalRumble(
-    vendorID: Int,
-    productID: Int,
+  /// Sends one output command to the selected controller; `ControllerOutputResult` reports what
+  /// became of it, including the rumble channels the controller lacks.
+  public func sendControllerOutput(
+    _ command: ControllerOutputCommand,
+    vendorID: UInt16,
+    productID: UInt16,
     runtimeIdentifier: String?,
-    left: Int,
-    right: Int,
-    lt: Int,
-    rt: Int,
-    durationMs: Int,
-    reply: @escaping (Bool) -> Void
+    reply: @escaping (ControllerOutputResult) -> Void
   ) {
     let callback = SendableReply(call: reply)
     let dm = deviceManager
     Task {
-      let identifier = DeviceIdentifier(vendorID: UInt16(vendorID), productID: UInt16(productID))
-      let ok = await dm.sendRumble(
+      let identifier = DeviceIdentifier(vendorID: vendorID, productID: productID)
+      let result = await dm.sendControllerOutput(
+        command,
         for: identifier,
-        runtimeIdentifier: runtimeIdentifier,
-        left: UInt8(clamping: left),
-        right: UInt8(clamping: right),
-        lt: UInt8(clamping: lt),
-        rt: UInt8(clamping: rt),
-        durationMs: durationMs
+        runtimeIdentifier: runtimeIdentifier
       )
-      callback.call(ok)
-    }
-  }
-
-  public func setPhysicalPlayerIndicator(
-    vendorID: Int,
-    productID: Int,
-    runtimeIdentifier: String?,
-    playerIndex: Int,
-    reply: @escaping (Bool) -> Void
-  ) {
-
-    guard let indicator = PhysicalPlayerIndicator(rawValue: playerIndex) else {
-      reply(false)
-      return
-    }
-    let callback = SendableReply(call: reply)
-    let dm = deviceManager
-    Task {
-      let identifier = DeviceIdentifier(
-        vendorID: UInt16(clamping: vendorID),
-        productID: UInt16(clamping: productID)
-      )
-      callback.call(
-        await dm.sendPlayerIndicator(
-
-          for: identifier,
-          runtimeIdentifier: runtimeIdentifier,
-          indicator: indicator
-        )
-      )
-    }
-  }
-
-  public func setPhysicalColor(
-    vendorID: Int,
-    productID: Int,
-    runtimeIdentifier: String?,
-    red: Int,
-    green: Int,
-    blue: Int,
-    reply: @escaping (Bool) -> Void
-  ) {
-    guard let red = UInt8(exactly: red), let green = UInt8(exactly: green),
-      let blue = UInt8(exactly: blue)
-    else {
-      reply(false)
-      return
-    }
-    let callback = SendableReply(call: reply)
-    let dm = deviceManager
-    Task {
-      let identifier = DeviceIdentifier(
-        vendorID: UInt16(clamping: vendorID),
-        productID: UInt16(clamping: productID)
-      )
-      callback.call(
-        await dm.setPhysicalColor(
-          for: identifier,
-          runtimeIdentifier: runtimeIdentifier,
-          red: red,
-          green: green,
-          blue: blue
-        )
-      )
-    }
-  }
-
-  public func setPhysicalBrightness(
-    vendorID: Int,
-    productID: Int,
-    runtimeIdentifier: String?,
-    brightness: Int,
-    reply: @escaping (Bool) -> Void
-  ) {
-    guard let brightness = UInt8(exactly: brightness) else {
-      reply(false)
-      return
-    }
-    let callback = SendableReply(call: reply)
-    let dm = deviceManager
-    Task {
-      let identifier = DeviceIdentifier(
-        vendorID: UInt16(clamping: vendorID),
-        productID: UInt16(clamping: productID)
-      )
-      callback.call(
-        await dm.setPhysicalBrightness(
-          for: identifier,
-          runtimeIdentifier: runtimeIdentifier,
-          brightness: brightness
-        )
-      )
+      callback.call(result)
     }
   }
 
@@ -258,46 +167,6 @@ extension ApplicationServiceServer {
         try await remappingRouter.setOutputSuppressed(suppress)
         callback.call(true)
       } catch { callback.call(false) }
-    }
-  }
-
-  public func setCompatibilityIdentity(_ raw: String, reply: @escaping (Bool) -> Void) {
-    guard case .accepted(let id) = CompatibilityIdentity.mutationDecision(for: raw) else {
-      reply(false)
-      return
-    }
-    let callback = SendableReply(call: reply)
-    // The RPC bridge is callback-shaped, so this is the single request-scoped task.  The
-    // asynchronous transaction itself owns the ordering: close, then publish, then reply.
-    Task { [weak self] in
-      guard let self else { return }
-      callback.call(await self.setCompatibilityIdentityAsync(id))
-    }
-  }
-
-  public func setCompatibilityIdentityDetailed(_ raw: String, reply: @escaping (Data) -> Void) {
-    let callback = SendableReply(call: reply)
-    guard case .accepted(let identity) = CompatibilityIdentity.mutationDecision(for: raw) else {
-      let result = CompatibilityIdentityTransitionResult(
-        requestedIdentity: nil,
-        liveIdentity: userSpaceStatusSnapshot().liveIdentity,
-        retainedIdentity: userSpaceStatusSnapshot().liveIdentity,
-        failure: CompatibilityIdentityTransitionFailure(phase: .validation, cause: .invalidIdentity)
-      )
-      callback.call((try? JSONEncoder().encode(result)) ?? Data())
-      return
-    }
-    Task { [weak self] in
-      guard let self else { return }
-      let succeeded = await self.setCompatibilityIdentityAsync(identity)
-      let snapshot = self.userSpaceStatusSnapshot()
-      let result = CompatibilityIdentityTransitionResult(
-        requestedIdentity: identity,
-        liveIdentity: snapshot.liveIdentity,
-        retainedIdentity: succeeded ? nil : snapshot.liveIdentity,
-        failure: succeeded ? nil : self.compatibilityTransitionFailure(from: snapshot)
-      )
-      callback.call((try? JSONEncoder().encode(result)) ?? Data())
     }
   }
 

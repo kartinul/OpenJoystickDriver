@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Қосылған контроллерлер тексерілуде…";
 "status.refreshingProfile" = "Профиль күйі жаңартылуда…";
 "status.loadingProfiles" = "Профильдер жүктелуде…";
-"status.updatingIdentity" = "Контроллер сәйкестігі жаңартылуда…";
 "status.listening" = "Тыңдалуда…";
 "status.readyToListen" = "Тыңдауға дайын";
 "status.checkingInput" = "Тексеру";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Контроллерлер";
 "settings.controllerDisconnectedNotifications" = "Бақылаушы қосылымы бұғатталған";
 "settings.controllerDisconnectedShort" = "Қосылмау";
-"settings.controllerIdentity" = "Контроллер сәйкестігі";
 "settings.controllerNotifications" = "Бақылаушы қосылған";
 "settings.diagnostics" = "Диагностика";
 "settings.service" = "Қызмет";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Заряды таусылуда";
 "controllers.charging" = "Зарядталуда";
 "controllers.batteryFull" = "Толық зарядталған";
+"controllers.notChargeable" = "Зарядталмайды";
 "controllers.batteryAccessibilityDetails" = "Батарея: %@. Зарядтау күйі: %@. Кабель күйі: %@.";
 "controllers.activeProfile" = "Белсенді профиль";
 "controllers.profileChecking" = "Тексерілуде…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Белсенді профиль қолжетімсіз";
 "controllers.profileLoadError" = "Белсенді профильді жүктеу мүмкін болмады";
 "controllers.protocol" = "Хаттама";
-"controllers.parser" = "Парсер";
 "controllers.serialNumber" = "Сериялық нөмір";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Енгізу соңғы нүктесі";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Белсенді профиль қатесі: %@";
 "controllers.accessibilityDetails" = "%@. %@. Хаттама: %@. Parser: %@. Сериялық нөмір: %@. USB VID/PID: %@. Енгізу соңғы нүктесі: %@. Шығару соңғы нүктесі: %@.";
 "controllers.publishedAs" = "Жарияланған";
-"identity.title" = "Контроллер сәйкестігі";
-"identity.needsAttention" = "Назар аудару қажет";
-"identity.error" = "Контроллер сәйкестігінің қатесі";
-"identity.updating" = "Контроллер сәйкестігі жаңартылуда…";
-"identity.reset" = "Ұсынылғанға қайтару";
-"identity.checking" = "Тексеру";
-"identity.globalScope" = "Ағымдағы уақыттағы барлық виртуалды контроллерлерге қолданылады OpenJoystickDriver.";
-"identity.unavailable" = "Қолжетімсіз";
-"identity.notSelected" = "Таңдалмаған";
+"controllers.nativeGamepadNotPublished" = "macOS жүйесінің төл геймпады, жарияланбаған";
+"virtualProfile.advanced" = "Кеңейтілген";
+"virtualProfile.title" = "Виртуалды HID профилі";
+"virtualProfile.modelScope" = "Осы модельдің әрбір қосылған контроллеріне қолданылады.";
+"virtualProfile.sourceOverride" = "Қайта анықтау";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Автоматты, қайта анықтау қабылданбады";
+"virtualProfile.none" = "Виртуалды HID профилі жоқ";
+"virtualProfile.unavailable" = "Бұл контроллерді ешбір виртуалды HID профилі көрсете алмайды.";
+"virtualProfile.updating" = "Виртуалды HID профилі жаңартылуда…";
+"virtualProfile.live" = "Белсенді профиль";
+"virtualProfile.failure.unknownProfile" = "Бұл виртуалды HID профилі белгісіз. Ештеңе сақталмады.";
+"virtualProfile.failure.controllerNotFound" = "Контроллер ажыратылды немесе табылмады. Қайта анықтау өзгерген жоқ.";
+"virtualProfile.failure.overrideRejected" = "Қайта анықтау сақталды, бірақ бұл контроллер оны пайдалана алмайды, сондықтан автоматты түрде таңдайды.";
+"virtualProfile.failure.activationFailed" = "Белсендіру орындалмады, сондықтан алдыңғы виртуалды HID профилі қалпына келтірілді: %@";
+"virtualProfile.failure.outputDisabled" = "Қайта анықтау сақталды және виртуалды шығыс қосылғанда қолданылады.";
+"virtualProfile.failure.serverStopped" = "Қызмет тоқтады. Қайта анықтау өзгерген жоқ.";
+"virtualProfile.failure.persistenceFailed" = "Қайта анықтауды сақтау мүмкін болмады. Ештеңе сақталмады.";
+"virtualProfile.storeError" = "Виртуалды HID профилінің қайта анықтамаларын оқу мүмкін емес (%@). Контроллерлер автоматты түрде таңдайды.";
+"virtualProfile.legacyIdentityRejected" = "Контроллер сәйкестігінің ескірген %@ параметрі енді қолданылмайды. Оны тазалау үшін controller virtual reset --all іске қосыңыз.";
 "keyboard.noKey" = "Перне таңдалмаған";
 "keyboard.pressKey" = "Пернені басыңыз…";
 "keyboard.captureKey" = "Пернені түсіру";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Ағымдағы күй";
 "debug.runtime" = "Орындалу ортасы";
 "debug.controllers" = "Контроллерлер";
-"debug.controllerIdentity" = "Контроллер сәйкестігі";
 "debug.unavailable" = "Орындалу ортасы · қолжетімсіз";
 "debug.needsAttention" = "Орындалу ортасы · назар аудару қажет";
 "debug.diagnostics" = "Диагностика";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Контроллер шығысы өшірулі.";
 "debug.outputNeedsAttention" = "Контроллер шығысы назар аударуды қажет етеді.";
 "debug.serviceUnavailable" = "Қызмет диагностикасы қазір қолжетімсіз.";
-"error.selectedOutputUnavailable" = "Таңдалған контроллер шығысы қолжетімсіз.";
-"error.selectedOutputEnableFailed" = "Таңдалған контроллер шығысын қосу мүмкін болмады.";
 "error.profileChanged" = "Бұл профиль басқа жерде өзгертілді. Қайта жүктеңіз немесе өңдеуді жалғастырыңыз.";
 "error.duplicateProfile" = "Осы атаумен профиль бар.";
 "error.profileMissing" = "Бұл профиль енді қолжетімсіз.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Орындалу ортасы";
 "common.controllers" = "Контроллерлер";
 "common.profiles" = "Профильдер";
-"common.controllerIdentity" = "Контроллер сәйкестігі";
 "common.protocol" = "Хаттама";
-"common.parser" = "Парсер";
 "common.serialNumber" = "Сериялық нөмір";
 "common.inputEndpoint" = "Енгізу соңғы нүктесі";
 "common.outputEndpoint" = "Шығару соңғы нүктесі";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Таңдалған профильдік элемент енді жоқ.";
 "cli.catalog.app_ready.summary" = "Аутентификацияланған қолданба қызметінің дайындығын тексеру";
 "cli.catalog.app_status.summary" = "Қолданба қызметінің күйін көрсету";
-"cli.catalog.compat.summary" = "Виртуалды контроллер үйлесімділігін басқару";
 "cli.catalog.controller_list.summary" = "Қосылған контроллерлерді тізімдеу";
 "cli.catalog.controller_output.summary" = "Қолдау көрсетілетін физикалық контроллер шығысын тексеру";
 "cli.catalog.controller_packets.summary" = "Соңғы контроллер пакеттерін көрсету";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Драйвер мен орындалу ортасының күйін көрсету";
 "cli.catalog.test.summary" = "Виртуалды контроллер енгізуін жеткізуді тексеру";
 "cli.catalog.update.summary" = "GitHub-тан қолжетімді жаңартуларды тексеру";
-"cli.compat.identity" = "үйлесімділік сәйкестігі: %@";
-"cli.compat.identity_unknown" = "үйлесімділік сәйкестігі: белгісіз";
-"cli.compat.set_failed" = "Үйлесімділік сәйкестігін %@ етіп орнату сәтсіз аяқталды. Орнатылған қолданбаны іске қосып, Енгізуді бақылау және Қолжетімділік рұқсатын тексеріңіз.";
-"cli.compat.usage" = "Қолданылуы: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "пайдаланушы кеңістігінің күйі: %@";
 "cli.controller.allAppleEntries" = "Apple каталогының барлық дәл жазбалары:";
 "cli.controller.appleIDs" = "    Apple идентификаторлары: %@";
 "cli.controller.applePairs" = "  Apple жұптары : %d дәл VID/PID жазба";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Қосылған контроллер --device %@ параметріне сәйкес келмейді.";
 "cli.controller.selection.multiple" = "Бірнеше контроллер сәйкес келеді. --device арқылы біреуін таңдаңыз:\n  %@";
 "cli.controller.selection.none" = "Контроллер қосылмаған.";
+"cli.controller.virtual.live" = "Виртуалды HID профилі: %@ (%@)";
+"cli.controller.virtual.none" = "Виртуалды HID профилі: жоқ (%@)";
+"cli.controller.virtual.failed" = "Виртуалды HID профилі сұрауы орындалмады: %@";
+"cli.controller.virtual.unknown_profile" = "Белгісіз виртуалды HID профилі «%@». Мыналардың бірін қолданыңыз: %@.";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» виртуалды HID профилін талап етеді. Мыналардың бірін қолданыңыз: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "«--all» параметрін --vid, --pid немесе --device параметрлерімен біріктіруге болмайды.";
+"cli.controller.virtual.reset_all.success" = "OK: виртуалды HID профилінің барлық қайта анықтаулары тазартылды.";
+"cli.controller.virtual.reset_all.failed" = "Баптауларды қалпына келтіру сәтсіз аяқталды. Орнатылған қолданбаны іске қосып, оның рұқсаттарын тексеріңіз.";
 "cli.controller.selection.vid_pid_missing" = "Қосылған контроллер %@:%@ параметріне сәйкес келмейді.";
 "cli.controller.selection.vid_pid_pair" = "VID пен PID екеуін де беріңіз немесе екеуін де өткізіп жіберіңіз.";
 "cli.controller.serviceControllers" = "Контроллерлер (істеп тұрған қолданба қызметінен):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Кеңес: қажетті құқықты және Енгізуді бақылау рұқсатын беріңіз.";
 "cli.controller.usbControllers" = "USB контроллерлері (сынып 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "VID пен PID екеуін де беріңіз немесе бір контроллер қосылғанда екеуін де өткізіп жіберіңіз.";
-"cli.diagnose.advisory_candidate" = "    Кеңесші хаттама үміткері: %@";
 "cli.diagnose.app_missing" = "  Қолданба: %@ жолында жоқ";
 "cli.diagnose.app_missing_fix" = "  Түзету: қолданбаны құрастырып /Applications ішіне орнатыңыз";
 "cli.diagnose.app_present" = "  Қолданба: бар";
 "cli.diagnose.binary_path" = "Бинарлық: %@";
-"cli.diagnose.catalog_conflict" = "      Бақылау каталог отбасымен қайшы; талдауыш өзгермеген";
-"cli.diagnose.catalog_parser" = "      Каталог талдауышы %@ күйінде қалады (%@)";
 "cli.diagnose.dext_found" = "  Табылған .dext бумалары:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      0x соңғы нүктесі%02X %@ %@ maxPacket=%@ аралық =%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Белгісіз жауап қисығы «%@».";
 "cli.mapping.double_tap_format" = "--double-tap <ms>:<target> күтеді, мыс. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Қолданылуы: OpenJoystickDriver --headless map <command>\n\nПәрмендер:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nКөз: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nМақсат: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nӨс параметрлері:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nТурбо параметрлері (тек пернетақта және тышқан түймелері):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nБелсендіру параметрлері (тек пернетақта және тышқан түймелері, турбомен өзара үйлеспейді):\n  --long-hold <ms>:<target>     мыс. --long-hold 500:key:b\n  --double-tap <ms>:<target>    мыс. --double-tap 300:key:c\n\n<profile> UUID немесе дәл, әріп регистріне тәуелсіз профиль атауын қабылдайды.\n<id> ондық немесе 0x префиксті оналтылықты қабылдайды.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Қолданылуы: OpenJoystickDriver --headless map <command>\n\nПәрмендер:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nКөз: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nМақсат: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nӨс параметрлері:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nТурбо параметрлері (тек пернетақта және тышқан түймелері):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nБелсендіру параметрлері (тек пернетақта және тышқан түймелері, турбомен өзара үйлеспейді):\n  --long-hold <ms>:<target>     мыс. --long-hold 500:key:b\n  --double-tap <ms>:<target>    мыс. --double-tap 300:key:c\n\n<profile> UUID немесе дәл, әріп регистріне тәуелсіз профиль атауын қабылдайды.\n<id> ондық немесе 0x префиксті оналтылықты қабылдайды.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ 16 биттік ондық немесе 0x префиксті оналтылық идентификатор болуы керек.";
 "cli.mapping.jsonEncodeFailed" = "UTF-8 JSON кодтау мүмкін болмады.";
 "cli.mapping.layer_action_unknown" = "Белгісіз қабат әрекеті «%@». Күтілетін: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver қолданба қызметі істеп тұрған жоқ.";
 "cli.runtime.sample_limit" = "Баптау %d үлгі жинайды; --interval-ms мәнін арттырыңыз.";
 "cli.runtime.stable_note" = "Тұрақты шектелген суға батыру осы жүктемеге дәлел, барлық ағып кетулер жоқ екенінің дәлелі емес.";
-"cli.settings.reset.failed" = "Баптауларды қалпына келтіру сәтсіз аяқталды. Орнатылған қолданбаны іске қосып, оның рұқсаттарын тексеріңіз.";
-"cli.settings.reset.next" = "Келесі: үйлесімділік сәйкестігін таңдау үшін compat set <identity> іске қосыңыз.";
-"cli.settings.reset.success" = "OK: қолданба қызметінің баптаулары қалпына келтірілді.";
 "cli.status.access_denied" = "Қол жеткізу қабылданбаса, --headless permissions request іске қосып, Жүйе баптауларында Енгізуді бақылау мен Қолжетімділікті мақұлдаңыз.";
 "cli.status.heading" = "OpenJoystickDriver күйі";
 "cli.status.json_error" = "Күй JSON кодтау мүмкін болмады: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Күй         : %@";
 "cli.updates.unknown_option" = "Белгісіз жаңарту параметрі: %@";
 "common.unknown" = "Белгісіз";
-"compatibility.appleGameController" = "Алма GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (алғашқы)";
 "developer.buttons" = "Түймелер";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B түймесі";
 "inputTest.bCircle" = "Б / шеңбер";
 "inputTest.brightness" = "Жарық";
-"inputTest.circle" = "Шеңбер";
 "inputTest.color" = "Түсі";
 "inputTest.controls" = "Тікелей енгізу";
-"inputTest.cross" = "Крест";
 "inputTest.disconnected" = "Бақылаушы қосылымы бұғатталған";
 "inputTest.dpadDown" = "Бағыт тақтасы төмен";
 "inputTest.dpadLeft" = "Бағыт тақтасы солға";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Бұл контроллер үшін жарықтандыру басқарушылары жоқ.";
 "inputTest.live" = "Кіріс белсенді";
 "inputTest.menu" = "Мәзір";
-"inputTest.minus" = "Минус";
 "inputTest.off" = "Өшірулі";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Параметрлер";
 "inputTest.outputError" = "Физикалық шығыс қатесі";
 "inputTest.outputRejected" = "Бақылаушы осы шығыс сынағын қабылдамады.";
 "inputTest.permissionRequired" = "Кіріс Бақылау рұқсаты қажет";
 "inputTest.playerIndicator" = "Ойыншы индикаторы";
-"inputTest.plus" = "Плюс";
 "inputTest.pressed" = "Басылған";
-"inputTest.psButton" = "PS түймесі";
 "inputTest.released" = "Босатылған";
 "inputTest.rightBumper" = "Оң бампер";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Оң Y";
 "inputTest.rumble" = "Рэмбл";
 "inputTest.rumbleUnavailable" = "Rumble-ді осы контроллер қолдамайды.";
-"inputTest.share" = "Бөлісу";
-"inputTest.square" = "Шаршы";
 "inputTest.stale" = "Кіріс бұзылған";
 "inputTest.start" = "Кіріс сынағын бастау";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Тікелей енгізу";
 "inputTest.tabMotion" = "Талап";
 "inputTest.tabOutput" = "Шығарымы";
-"inputTest.steamButton" = "Steam түймесі";
 "inputTest.summary" = "Сынақ түймелері, таяқтар, триггерлер, шулау және басқарушы жарықтандыру.";
 "inputTest.testRumble" = "Сынақ Рэмбл";
 "inputTest.title" = "Кіріс сынағы";
-"inputTest.triangle" = "Үшбұрыш";
 "inputTest.unavailable" = "Кіріс қолжетімді емес";
 "inputTest.view" = "Көру";
 "inputTest.windowTitle" = "Кіріс сынағы %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Таңдалған Joy-Cons жұпталмады. Қосылған басқарушыларды жаңартып, қайталап көріңіз.";
 "profiles.joyConExplicitSession" = "Бірнеше рет басталды";
 "profiles.joyConSessionState" = "Жарықпен жұпталу";
-"profiles.gyro.virtualMotion" = "Алға қарай калибрленген виртуалды қозғалыс";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ ұңғыма (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Бақылаушы қосылымы бұғатталған";
 "controllers.resume" = "Қайта көру";
 "controllers.disconnectFromOJD" = "Бақылаушы қосылымы бұғатталған";
-"error.compatibilityTransitionDetailed" = "Таңдалған контроллер шығысын қосу мүмкін болмады. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Таңдалған контроллер шығысын қосу мүмкін болмады.";
 "cli.catalog.controller_disconnect.summary" = "Бақылаушы қосылымы бұғатталған";
 "cli.catalog.controller_resume.summary" = "Қайта көру — Бақылаушы қосылымы бұғатталған";
+"cli.catalog.controller_virtual_set.summary" = "Контроллердің виртуалды HID профилін қайта анықтау";
+"cli.catalog.controller_virtual_reset.summary" = "Контроллердің виртуалды HID профилін автоматты түрде таңдау, немесе --all көмегімен барлық ауыстыруларды тазалау";
 "cli.controller.disconnected" = "Бақылаушы қосылымы бұғатталған";
 "cli.controller.resumed" = "Кіріс белсенді";
 

@@ -4,7 +4,8 @@ import OpenJoystickDriverKit
 @testable import OpenJoystickDriver
 
 enum RemappingRouterTrace: Equatable {
-  case compatibility([ControllerEvent], DeviceIdentifier)
+  case virtualGamepad(ControllerState, DeviceIdentifier)
+  case compatibilityActivation(DeviceIdentifier)
   case compatibilityStop(DeviceIdentifier)
   case system(RemappingSystemInputAction)
   case gamepad(RemappingGamepadState, DeviceIdentifier)
@@ -51,17 +52,27 @@ final class RemappingRouterCompatibility: OutputDispatcher, ControllerLifecycleL
     self.checkpointAfterSuppressionCheck = checkpointAfterSuppressionCheck
   }
 
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) async {
+  func dispatch(
+    _ event: ControllerEvent,
+    labels _: ControllerButtonLabels,
+    from identifier: DeviceIdentifier
+  ) async { await record(.virtualGamepad(event.state, identifier)) }
+
+  func activateOutput(for identifier: DeviceIdentifier) async {
+    await record(.compatibilityActivation(identifier))
+  }
+
+  private func record(_ trace: RemappingRouterTrace) async {
     if checkpointAfterSuppressionCheck {
       guard !suppressOutput else { return }
       await dispatchCheckpoint()
-      recorder.append(.compatibility(events, identifier))
+      recorder.append(trace)
       return
     }
     await dispatchCheckpoint()
     await Task.yield()
     guard !suppressOutput else { return }
-    recorder.append(.compatibility(events, identifier))
+    recorder.append(trace)
   }
 
   func setRemappingOutputSuppressed(_ suppressed: Bool) {

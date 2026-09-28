@@ -1,0 +1,162 @@
+import Foundation
+import Testing
+
+@testable import OpenJoystickDriverKit
+
+// Transcripts captured from the current drivers; later slices must not change these values.
+extension DriverLifecycleCharacterizationTests {
+  @Test
+  func flydigiTranscript() throws {
+    #expect(
+      try transcript(Self.flydigi) == [
+        "capabilities rumble=[] binary=[]", "capabilities lighting=[]", "capabilities triggers=[]",
+        "usb.startup interval=0 retries=[] packets=0", "usb.keepAlive nil",
+        "usb.deferred inputs=0 packets=0", "usb.deferred drained=0",
+        "usb.connection[connected] packets=0", "usb.connection[disconnected] packets=0",
+        "hid.startupOutput[USB] interval=0 required=false beforeReads=false reports=0",
+        "hid.featureReads[USB] validates=false requests=[]",
+        "hid.featureReplies[USB] accepts=false", "hid.featureReports[USB] reports=0",
+        "hid.startupOutput[Bluetooth] interval=0 required=false beforeReads=false reports=0",
+        "hid.featureReads[Bluetooth] validates=false requests=[]",
+        "hid.featureReplies[Bluetooth] accepts=false", "hid.featureReports[Bluetooth] reports=0",
+        "hid.startupOutput[BLE] interval=0 required=false beforeReads=false reports=0",
+        "hid.featureReads[BLE] validates=false requests=[]",
+        "hid.featureReplies[BLE] accepts=false", "hid.featureReports[BLE] reports=0",
+        "hid.startupOutput[nil] interval=0 required=false beforeReads=false reports=0",
+        "hid.featureReads[nil] validates=false requests=[]",
+        "hid.featureReplies[nil] accepts=false", "hid.featureReports[nil] reports=0",
+        "hid.featureReports[presence] reports=0", "hid.shutdownFeatureReports reports=0",
+        "hid.periodic nil", "hid.statusRequest nil",
+        "hid.recovery[USB] supported=false beforeStartup=0 afterStartup=0",
+        "hid.recovery afterExpiry=0", "presence requiresConnection=false", "liveness timeout=nil",
+        "liveness observation=nil", "liveness format=nil", "battery=nil",
+      ]
+    )
+  }
+
+  @Test
+  func gameSirUSBTranscript() throws {
+    #expect(
+      try transcript(Self.gameSirUSB) == [
+        "capabilities rumble=[] binary=[]", "capabilities lighting=[programmableBrightness]",
+        "capabilities triggers=[]", "usb.startup interval=0 retries=[] packets=0",
+        "usb.keepAlive interval=500000000", "  ep=0x02 timeout=2000 n=64",
+        "    0f000102f2000000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "usb.deferred inputs=2 packets=0", "usb.deferred drained=0",
+        "usb.connection[connected] packets=0", "usb.connection[disconnected] packets=0",
+        "hid.startupOutput[USB] interval=20000000 required=false beforeReads=false reports=0",
+        "hid.featureReads[USB] validates=false requests=[]",
+        "hid.featureReplies[USB] accepts=false", "hid.featureReports[USB] reports=0",
+        "hid.startupOutput[Bluetooth] interval=20000000 required=false beforeReads=false reports=0",
+        "hid.featureReads[Bluetooth] validates=false requests=[]",
+        "hid.featureReplies[Bluetooth] accepts=false", "hid.featureReports[Bluetooth] reports=0",
+        "hid.startupOutput[BLE] interval=20000000 required=false beforeReads=false reports=0",
+        "hid.featureReads[BLE] validates=false requests=[]",
+        "hid.featureReplies[BLE] accepts=false", "hid.featureReports[BLE] reports=0",
+        "hid.startupOutput[nil] interval=20000000 required=false beforeReads=false reports=0",
+        "hid.featureReads[nil] validates=false requests=[]",
+        "hid.featureReplies[nil] accepts=false", "hid.featureReports[nil] reports=0",
+        "hid.featureReports[presence] reports=0", "hid.shutdownFeatureReports reports=0",
+        "hid.periodic interval=500000000 reports=0", "hid.statusRequest nil",
+        "hid.recovery[USB] supported=false beforeStartup=0 afterStartup=0",
+        "hid.recovery afterExpiry=0", "presence requiresConnection=false",
+        "presence input#0 change=nil", "presence input#1 change=nil", "liveness timeout=nil",
+        "liveness observation=nil", "liveness format=nil", "battery=73% charging wired-power=yes",
+        "out[cold].hidRumble motors=[] binary=[] minInterval=20000000", "  id=0x0f n=64",
+        "    0f20665540800000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[cold].color default=0,128,255", "out[cold].color plan=nil",
+        "out[cold].hidBrightnessPlan", "  plan=nil", "out[cold].usbBrightness packets=nil",
+        "out[ready].hidRumble motors=[] binary=[] minInterval=20000000", "  id=0x0f n=64",
+        "    0f20665540800000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[ready].color default=0,128,255", "out[ready].color plan=nil",
+        "out[ready].hidBrightnessPlan", "  plan=nil", "out[ready].usbBrightness packets=1",
+        "  ep=0x02 timeout=2000 n=64",
+        "    0f00013c032001f9013200000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[reset].hidRumble motors=[] binary=[] minInterval=20000000", "  id=0x0f n=64",
+        "    0f20665540800000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[reset].color default=0,128,255", "out[reset].color plan=nil",
+        "out[reset].hidBrightnessPlan", "  plan=nil", "out[reset].usbBrightness packets=nil",
+      ]
+    )
+  }
+
+  @Test
+  func gameSirEnhancedHIDTranscript() throws {
+    #expect(
+      try transcript(Self.gameSirEnhancedHID) == [
+        "capabilities rumble=[leftMain,rightMain] binary=[]",
+        "capabilities lighting=[programmableBrightness,programmableColor]",
+        "capabilities triggers=[]", "usb.startup interval=0 retries=[] packets=0",
+        "usb.keepAlive nil", "usb.deferred inputs=2 packets=0", "usb.deferred drained=0",
+        "usb.connection[connected] packets=0", "usb.connection[disconnected] packets=0",
+        "hid.startupOutput[USB] interval=20000000 required=false beforeReads=false reports=2",
+        "  id=0x0f n=64", "    0ff2000000000000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000", "  id=0x0f n=64",
+        "    0f04200000010000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "hid.featureReads[USB] validates=false requests=[]",
+        "hid.featureReplies[USB] accepts=false", "hid.featureReports[USB] reports=0",
+        "hid.startupOutput[Bluetooth] interval=20000000 required=false beforeReads=false reports=2",
+        "  id=0x0f n=64", "    0ff2000000000000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000", "  id=0x0f n=64",
+        "    0f04200000010000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "hid.featureReads[Bluetooth] validates=false requests=[]",
+        "hid.featureReplies[Bluetooth] accepts=false", "hid.featureReports[Bluetooth] reports=0",
+        "hid.startupOutput[BLE] interval=20000000 required=false beforeReads=false reports=2",
+        "  id=0x0f n=64", "    0ff2000000000000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000", "  id=0x0f n=64",
+        "    0f04200000010000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "hid.featureReads[BLE] validates=false requests=[]",
+        "hid.featureReplies[BLE] accepts=false", "hid.featureReports[BLE] reports=0",
+        "hid.startupOutput[nil] interval=20000000 required=false beforeReads=false reports=2",
+        "  id=0x0f n=64", "    0ff2000000000000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000", "  id=0x0f n=64",
+        "    0f04200000010000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "hid.featureReads[nil] validates=false requests=[]",
+        "hid.featureReplies[nil] accepts=false", "hid.featureReports[nil] reports=0",
+        "hid.featureReports[presence] reports=0", "hid.shutdownFeatureReports reports=0",
+        "hid.periodic interval=500000000 reports=1", "  id=0x0f n=64",
+        "    0ff2000000000000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "hid.statusRequest nil", "hid.recovery[USB] supported=false beforeStartup=0 afterStartup=0",
+        "hid.recovery afterExpiry=0", "presence requiresConnection=false",
+        "presence input#0 change=nil", "presence input#1 change=nil", "liveness timeout=nil",
+        "liveness observation=nil", "liveness format=nil", "battery=84% charging wired-power=yes",
+        "out[cold].hidRumble motors=[leftMain,rightMain] binary=[] minInterval=20000000",
+        "  id=0x0f n=64", "    0f20665540800000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[cold].color default=0,128,255", "out[cold].color plan=nil",
+        "out[cold].hidBrightnessPlan", "  plan=nil", "out[cold].usbBrightness packets=nil",
+        "out[ready].hidRumble motors=[leftMain,rightMain] binary=[] minInterval=20000000",
+        "  id=0x0f n=64", "    0f20665540800000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[ready].color default=0,128,255", "  plan interval=20000000 reports=4",
+        "  id=0x0f n=64", "    0f032000f9300105146411223311223311223311223311223311223311223311",
+        "    2233112233112233112233112233112233112233112200000000000000000000", "  id=0x0f n=64",
+        "    0f03200129303311223311223311223311223311223311223311223311223311",
+        "    2233112233112233112233112233112233112233112200000000000000000000", "  id=0x0f n=64",
+        "    0f032001591c3311223311223311223311223311223311223311223311223311",
+        "    2233000000000000000000000000000000000000000000000000000000000000", "  id=0x0f n=64",
+        "    0f03200000010200000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[ready].hidBrightnessPlan", "  plan interval=0 reports=1", "  id=0x0f n=64",
+        "    0f032000fc013200000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[ready].usbBrightness packets=nil",
+        "out[reset].hidRumble motors=[leftMain,rightMain] binary=[] minInterval=20000000",
+        "  id=0x0f n=64", "    0f20665540800000000000000000000000000000000000000000000000000000",
+        "    0000000000000000000000000000000000000000000000000000000000000000",
+        "out[reset].color default=0,128,255", "out[reset].color plan=nil",
+        "out[reset].hidBrightnessPlan", "  plan=nil", "out[reset].usbBrightness packets=nil",
+      ]
+    )
+  }
+}

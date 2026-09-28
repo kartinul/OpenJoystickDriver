@@ -28,10 +28,9 @@ struct SupportReportTests {
           name: "Test Controller",
           vendorID: 1234,
           productID: 5678,
-          parser: "GIP",
+          protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
           connection: "USB",
           serialNumber: secretSerial,
-          protocolVariant: .xboxOne,
           quirks: ["swapAB"],
           inputEndpoint: 129,
           outputEndpoint: 2,
@@ -41,16 +40,20 @@ struct SupportReportTests {
           physicalOutputCapabilities: PhysicalControllerOutputCapabilities(rumbleMotors: [
             .leftMain, .rightMain, .leftTrigger, .rightTrigger,
           ]),
-          battery: ControllerBatteryTelemetry(
-            percentage: 100,
-            chargingState: .full,
-            cableState: .connected
+          connectionState: ControllerConnectionState(
+            transport: .usb,
+            backend: .usbDriverKit,
+            isConnected: true,
+            power: ControllerConnectionState.Power(
+              charging: .discharging,
+              battery: BatteryLevel(percentage: 30...39),
+              wiredPower: false
+            )
           )
         )
       ],
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "error: \(secretPath)",
-      compatibilityIdentity: "sdl2-3"
+      userSpaceVirtualDeviceStatus: "error: \(secretPath)"
     )
     let diagnostics = ApplicationServiceVirtualDeviceDiagnosticsPayload(
       userSpaceVirtualDeviceEnabled: true,
@@ -131,8 +134,9 @@ struct SupportReportTests {
     #expect(report.data.privacy.includesHIDLocationIDs == false)
     #expect(report.data.controllers.first?.serialNumberPresent == true)
     #expect(report.data.controllers.first?.physicalOutputCapabilities.supportsTriggerRumble == true)
-    #expect(report.data.controllers.first?.battery?.percentage == 100)
-    #expect(report.data.controllers.first?.battery?.chargingState == .full)
+    let power = report.data.controllers.first?.connectionState?.power
+    #expect(power?.battery == BatteryLevel(percentage: 30...39))
+    #expect(power?.charging == .discharging)
     #expect(report.data.hidGamepads.first?.product == "Test Controller")
     let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     #expect(object["specversion"] as? String == "1.0")
@@ -147,6 +151,10 @@ struct SupportReportTests {
     #expect(object["schemaVersion"] == nil)
     let payload = try #require(object["data"] as? [String: Any])
     _ = try #require(payload["hidGamepads"] as? [[String: Any]])
+    let controllers = payload["controllers"] as? [[String: Any]]
+    let encodedPower = (controllers?.first?["connectionState"] as? [String: Any])?["power"]
+    let encodedBattery = (encodedPower as? [String: Any])?["battery"] as? [String: Any]
+    #expect(encodedBattery?["percentage"] as? [Int] == [30, 39])
     let system = try #require(payload["system"] as? [String: Any])
     let buildIdentity = try #require(system["buildIdentity"] as? [String: Any])
     #expect(buildIdentity["appBundleVersion"] as? String == "1.4.89")

@@ -15,9 +15,6 @@ extension RemappingEngineState {
       if let gyroDeadline = device.gyroDeadline {
         deadline = min(deadline ?? gyroDeadline, gyroDeadline)
       }
-      if let motionDeadline = device.virtualMotionDeadline {
-        deadline = min(deadline ?? motionDeadline, motionDeadline)
-      }
       if let motionStickDeadline = device.motionStickDeadline {
         deadline = min(deadline ?? motionStickDeadline, motionStickDeadline)
       }
@@ -86,9 +83,6 @@ extension RemappingEngineState {
       actions += device.advanceSticks(at: tickUptime)
       if let deadline = device.gyroDeadline, tickUptime >= deadline {
         actions += device.clearGyroStick()
-      }
-      if let deadline = device.virtualMotionDeadline, tickUptime >= deadline {
-        actions += device.clearVirtualMotion()
       }
       actions += processChords(for: &device)
       actions += replayPendingChordPresses(device: &device, at: tickUptime)
@@ -172,12 +166,12 @@ extension RemappingEngineState {
       actions += setBinding(bindingID, destination: destination, isDown: false, device: &device)
     }
     if let state = device.gamepad.drain() { actions.append(.gamepad(state, identifier)) }
-    actions += device.clearVirtualMotion()
     actions += stoppedContinuousActions(previous: oldContinuous)
     return actions
   }
 
   mutating func drain() -> [RemappingEngineAction] {
+    sourceBaselines.removeAll()
     var actions: [RemappingEngineAction] = []
     for identifier in sortedDeviceIdentifiers { actions += releaseController(identifier) }
     return actions

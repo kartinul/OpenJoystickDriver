@@ -12,13 +12,13 @@ extension DevicePipeline {
   func start() {
     guard !isActive else { return }
     isActive = true
-    if parser is any ControllerInputReportLivenessProvider {
-      inputHealthMonitoringStartedNanoseconds = DispatchTime.now().uptimeNanoseconds
+    if driver.sessionPlan.inputReportLivenessTimeoutNanoseconds != nil {
+      inputHealthMonitoringStartedNanoseconds = uptimeNanoseconds()
     }
     startIdleMonitor()
 
     switch transport {
-    case .usb(let device): runTask = Task { await self.startUSBPipeline(device: device) }
+    case .usb(let device): startUSBRun(device: device)
     case .hid:
       // HID pipeline: data fed via feedHIDData(); no separate startup loop needed
       print("[DevicePipeline] HID pipeline ready" + " for \(identifier)")
@@ -26,160 +26,178 @@ extension DevicePipeline {
   }
 
   /// Stop pipeline and clean up resources.
+  ///
+  /// Only the first stop tears down: it reports ownership, neutralizes output and ends the
+  /// controller. A repeated stop, such as an admission rollback that raced a detach, only keeps
+  /// the pipeline inactive, so `controllerDidStop` never fires twice.
   func stop() async {
     isActive = false
+    usbRunGeneration &+= 1
+    guard !hasStopped else { return }
+    hasStopped = true
     let task = runTask
     runTask = nil
     task?.cancel()
     // An adapter may be inside a non-cooperative platform open call before a session exists. The
     // inactive guard closes any handle returned later; only an established session is awaited here.
-    let shouldAwaitRunTask = usbHandle != nil
-    (parser as? any HIDStartupRecoveryProvider)?.expireHIDStartupRequests()
+    let hasPendingUSBOwnershipReport = usbOwnershipReportsInFlight > 0
+    let shouldAwaitRunTask = usbHandle != nil || hasPendingUSBOwnershipReport
+    driver.expireStartupRecovery()
     let idleTask = idleMonitorTask
     idleMonitorTask = nil
     idleTask?.cancel()
-    if case .usb = transport { await reportUSBInputOwnership(.unknown) }
+    if case .usb = transport, !hasPendingUSBOwnershipReport {
+      await reportUSBInputOwnership(.unknown)
+    }
     let handle = usbHandle
     usbHandle = nil
     await neutralizeOutput()
-    if let listener = dispatcher as? any ControllerLifecycleListener {
-      await listener.controllerDidStop(identifier)
-    }
+    await notifyControllerDidStop()
     await handle?.close()
-    (parser as? any InputParserSessionLifecycle)?.resetProtocolState()
+    driver.resetProtocolState()
     if shouldAwaitRunTask { await task?.value }
+    if case .usb = transport, hasPendingUSBOwnershipReport {
+      await reportUSBInputOwnership(.unknown)
+    }
     await idleTask?.value
     print("[DevicePipeline] Stopped: \(identifier)")
   }
 
+  func startUSBRun(device: USBTransportDevice) {
+    guard isActive else { return }
+    usbRunGeneration &+= 1
+    let generation = usbRunGeneration
+    runTask = Task { await self.startUSBPipeline(device: device, generation: generation) }
+  }
+
   /// Feed HID input report data (called by DeviceManager for class 0x03 devices).
   @discardableResult
-  func feedHIDData(_ data: Data) async -> [PhysicalHIDOutputReport] {
+  func feedHIDData(_ data: Data) async -> [PhysicalOutputWrite] {
     guard isActive else { return [] }
     appendToPacketLog(bytes: Array(data), direction: "rx")
     do {
-      let receivedAt = DispatchTime.now().uptimeNanoseconds
-      let events = try parser.parse(data: data, receivedAtNanoseconds: receivedAt)
-      snapshotBatteryTelemetry()
-      let featureReports = await handleInputConnectionStateChangeIfNeeded()
-      guard inputConnectionActive else { return featureReports }
-      await handleParsedEvents(events, now: receivedAt)
-      return featureReports
+      let receivedAt = uptimeNanoseconds()
+      let event = try parseReport(data, receivedAt: receivedAt)
+      let connectionWrites = await handleInputConnectionStateChangeIfNeeded()
+      guard inputConnectionActive else { return connectionWrites }
+      await handleParsedEvent(event, now: receivedAt)
+      return connectionWrites
     } catch {
       print("[DevicePipeline] Parse error" + " for \(identifier): \(error)")
       return []
     }
   }
 
-  func consumeHIDFeatureReport(
-    _ data: Data,
-    request: PhysicalHIDFeatureReadRequest,
-    transport: String?
-  ) -> Bool {
-    guard isActive, let consumer = parser as? any HIDFeatureReportConsumer else { return false }
-    return consumer.consumeHIDFeatureReport(data, request: request, transport: transport)
+  func sessionPlan() -> DriverSessionPlan { driver.sessionPlan }
+
+  func consumeFeatureReply(_ data: Data, request: PhysicalHIDFeatureReadRequest) -> Bool {
+    guard isActive else { return false }
+    return driver.consumeFeatureReply(data, request: request)
   }
 
-  func hidStartupOutputPlan(transport: String?) -> ([PhysicalHIDOutputReport], UInt64) {
-    guard isActive, let provider = parser as? any HIDStartupOutputReportProvider else {
-      return ([], 0)
-    }
-    return (
-      provider.hidStartupReports(transport: transport),
-      provider.hidStartupReportIntervalNanoseconds(transport: transport)
-    )
-  }
-
-  func pendingHIDStartupReports() -> [PhysicalHIDOutputReport] {
+  func hidStartupWrites() -> [PhysicalOutputWrite] {
     guard isActive else { return [] }
-    return (parser as? any HIDStartupRecoveryProvider)?.pendingHIDStartupReports() ?? []
+    return driver.startupWrites()
   }
 
-  func hidStartupOutputPrecedesFeatureReads() -> Bool {
-    (parser as? any HIDStartupOutputReportProvider)?.hidStartupOutputPrecedesFeatureReads == true
+  func hidStartupRecoveryWrites() -> [PhysicalOutputWrite] {
+    guard isActive else { return [] }
+    return driver.startupRecoveryWrites()
   }
 
-  func requiresSuccessfulHIDStartupOutput(transport: String?) -> Bool {
-    (parser as? any HIDStartupOutputReportProvider)?.requiresSuccessfulHIDStartupOutput(
-      transport: transport
-    ) ?? false
+  /// False for an observe-only pipeline, which never sends startup output.
+  func requiresSuccessfulHIDStartupOutput() -> Bool {
+    !observesOnly && driver.sessionPlan.requiresStartupOutput
   }
 
-  func hidStartupFeatureReadPlan(
-    transport: String?
-  ) -> (requests: [PhysicalHIDFeatureReadRequest], validatesReplies: Bool) {
-    guard let provider = parser as? any HIDStartupFeatureReadRequestProvider else {
-      return ([], false)
-    }
-    return (
-      provider.hidStartupFeatureReadRequests(transport: transport),
-      parser is any HIDFeatureReportConsumer
-    )
+  func hidStartupFeatureReads() -> [PhysicalHIDFeatureReadRequest] {
+    guard isActive else { return [] }
+    return driver.startupFeatureReads()
   }
 
-  func hidStartupFeatureReports(transport: String?) -> [PhysicalHIDOutputReport] {
-    (parser as? any HIDStartupFeatureReportProvider)?.hidStartupFeatureReports(transport: transport)
-      ?? []
+  func hidActivationWrites() -> [PhysicalOutputWrite] {
+    guard isActive else { return [] }
+    return driver.activationWrites()
   }
 
-  func hidInputConnectionStatusRequestReport() -> PhysicalHIDOutputReport? {
-    (parser as? any HIDInputConnectionStatusRequester)?.inputConnectionStatusRequestReport()
-  }
+  func hidPresenceRequestWrite() -> PhysicalOutputWrite? { driver.presenceRequestWrite() }
 
-  func supportsHIDStartupRecovery() -> Bool { parser is any HIDStartupRecoveryProvider }
-
-  func acceptsHIDFeatureReportReplies() -> Bool { parser is any HIDFeatureReportConsumer }
-
-  func expireHIDStartupRequests() {
-    (parser as? any HIDStartupRecoveryProvider)?.expireHIDStartupRequests()
-  }
+  func expireHIDStartupRecovery() { driver.expireStartupRecovery() }
 
   /// Feed one descriptor-decoded value to the Generic HID fallback.
   func feedHIDElementValue(_ value: HIDElementValue) async {
-    guard isActive, inputConnectionActive, let elementParser = parser as? any HIDElementValueParser
-    else { return }
-    let events = elementParser.parse(elementValue: value)
-    await handleParsedEvents(events, now: DispatchTime.now().uptimeNanoseconds)
+    guard isActive, inputConnectionActive else { return }
+    let receivedAt = uptimeNanoseconds()
+    await handleParsedEvent(parseElementValue(value, receivedAt: receivedAt), now: receivedAt)
   }
 
   func requiresInputConnectionBeforeOutput() -> Bool {
-    (parser as? any ControllerInputConnectionLifecycle)?.requiresInputConnectionBeforeOutput
-      ?? false
+    driver.sessionPlan.requiresInputConnectionBeforeOutput
   }
 
-  func hidShutdownFeatureReports() -> [PhysicalHIDOutputReport] {
+  func hidDeactivationWrites() -> [PhysicalOutputWrite] {
     if requiresInputConnectionBeforeOutput(), !inputConnectionActive { return [] }
-    return (parser as? any HIDShutdownFeatureReportProvider)?.hidShutdownFeatureReports() ?? []
+    return driver.deactivationWrites()
   }
 
-  func physicalInputCapabilities() -> PhysicalControllerInputCapabilities {
-    parser.physicalInputCapabilities
-  }
+  func capabilities() -> ControllerCapabilities { driver.capabilities.normalized }
 
+  /// For an observe-only pipeline, only what its native allowance names: macOS owns the rest.
   func physicalOutputCapabilities() -> PhysicalControllerOutputCapabilities {
-    ControllerProfileCapabilities.physicalOutputCapabilities(for: parser)
+    nativeWrites?.narrowing(driver.outputCapabilities) ?? driver.outputCapabilities
   }
 
   func supportsPhysicalRumble() -> Bool { physicalOutputCapabilities().supportsRumble }
 
   // MARK: - Input state and packet log
 
-  func inputState() -> DeviceInputState { currentInputState }
+  /// The latest observed state with its link and power state as of now.
+  func inputState() -> ControllerState {
+    var state = currentInputState
+    state.connection = currentConnectionState()
+    return state
+  }
   func controllerSessionState() -> ControllerSessionState { sessionState }
-  func batteryTelemetry() -> ControllerBatteryTelemetry? { currentBatteryTelemetry }
+  /// Link and power state: transport and backend from the binding, presence from this session.
+  ///
+  /// The controller-side link comes from evidence only: a receiver variant, a cabled variant, a
+  /// Bluetooth host link (the pad itself is the Bluetooth peer), or an observed physical link. A
+  /// USB host link alone can be a vendor radio dongle, so it leaves the transport unknown.
+  func connectionState(
+    binding: ProtocolBinding,
+    interface: PhysicalInterfaceSignature?
+  ) -> ControllerConnectionState {
+    let transport: PhysicalTransport? =
+      switch binding.variant {
+      case .receiver, .dongle: .proprietaryRadioReceiver
+      case .usb, .wired, .gamepad: .usb
+      case .bluetoothClassic: .bluetoothClassic
+      case .enhancedHID, nil:
+        switch interface?.hostTransport {
+        case .bluetoothClassic, .bluetoothLE: interface?.hostTransport
+        default: interface?.physicalTransport
+        }
+      }
+    return ControllerConnectionState(
+      transport: transport,
+      backend: binding.accessBackend,
+      isConnected: inputConnectionActive,
+      power: currentPower ?? .unknown
+    )
+  }
   func startupCommandStatus() -> String? { startupOutputStatus }
   func getPacketLog() -> [PacketLogEntry] { packetLog.entries() }
 
   func inputHealth() -> ControllerInputHealth {
-    let now = DispatchTime.now().uptimeNanoseconds
+    let now = uptimeNanoseconds()
     let reference = lastLiveInputReportNanoseconds ?? inputHealthMonitoringStartedNanoseconds
     let age = reference.map { now &- $0 }
     let observationAge = lastObservedInputReportNanoseconds.map { now &- $0 }
     let state: ControllerInputHealthState
     if awaitingNeutralAfterLivenessLoss {
       state = .waitingForNeutral
-    } else if let liveness = parser as? any ControllerInputReportLivenessProvider, let age,
-      age >= liveness.inputReportLivenessTimeoutNanoseconds
+    } else if let timeout = driver.sessionPlan.inputReportLivenessTimeoutNanoseconds, let age,
+      age >= timeout
     {
       state = .stale
     } else {
@@ -188,17 +206,16 @@ extension DevicePipeline {
     let failureReason: ControllerInputHealthFailureReason?
     if state == .healthy {
       failureReason = nil
-    } else if let liveness = parser as? any ControllerInputReportLivenessProvider,
-      let observationAge, observationAge < liveness.inputReportLivenessTimeoutNanoseconds
+    } else if let timeout = driver.sessionPlan.inputReportLivenessTimeoutNanoseconds,
+      let observationAge, observationAge < timeout
     {
       failureReason = .freshnessNotAdvancing
     } else {
       failureReason = .missingReports
     }
-    let reportFormat = (parser as? any ControllerInputReportFormatProvider)?.latestInputReportFormat
     return ControllerInputHealth(
       state: state,
-      reportFormat: reportFormat,
+      reportFormat: driver.latestInputReportFormat,
       lastReportAgeNanoseconds: age,
       failureReason: failureReason,
       recoveryCount: inputHealthRecoveryCount
@@ -212,17 +229,15 @@ extension DevicePipeline {
 
     if !allowed {
       waitingForExternalNeutral = false
-      let neutralizingEvents = outputState.neutralizingEvents()
-      if !neutralizingEvents.isEmpty {
-        await dispatcher.dispatch(events: neutralizingEvents, from: identifier)
-        updateOutputState(from: neutralizingEvents)
-      }
+      foregroundMask = nil
+      await neutralizeOutput()
       print("[DevicePipeline] Output gated by foreground consumer: \(identifier)")
       return
     }
 
     let shouldWaitForNeutral = !currentInputState.isEffectivelyNeutral
     waitingForExternalNeutral = shouldWaitForNeutral
+    foregroundMask = ForegroundInputMask(hiding: currentInputState)
 
     if shouldWaitForNeutral {
       print(
@@ -234,136 +249,6 @@ extension DevicePipeline {
     }
   }
 
-  func suspendControllerSession() async -> Bool {
-    guard isActive, sessionState == .active else { return false }
-    sessionState = .suspended
-    lastLiveInputReportNanoseconds = nil
-    inputHealthMonitoringStartedNanoseconds = nil
-    awaitingNeutralAfterLivenessLoss = false
-    waitingForExternalNeutral = false
-    await neutralizeOutput()
-    resetObservedInputState()
-    if let listener = dispatcher as? any ControllerLifecycleListener {
-      await listener.controllerDidStop(identifier)
-    }
-    return true
-  }
-
-  func resumeControllerSession() async -> Bool {
-    guard isActive, sessionState == .suspended else { return false }
-    resetObservedInputState()
-    outputState = currentInputState
-    lastLiveInputReportNanoseconds = nil
-    inputHealthMonitoringStartedNanoseconds = DispatchTime.now().uptimeNanoseconds
-    awaitingNeutralAfterLivenessLoss = false
-    sessionState = .active
-    await dispatcher.dispatch(events: [], from: identifier)
-    return true
-  }
-
-  func restartUSBStartupOutputForResume() async -> Bool {
-    guard case .usb = transport, let handle = usbHandle else { return true }
-    return await performUSBHandshake(handle: handle)
-  }
-
-  func updateObservedInputState(from events: [ControllerEvent]) {
-    currentInputState.apply(events: events)
-  }
-
-  func snapshotBatteryTelemetry() {
-    guard let provider = parser as? any ControllerBatteryTelemetryProvider else { return }
-    currentBatteryTelemetry = provider.batteryTelemetry
-  }
-
-  func resetObservedInputState() {
-    currentInputState = DeviceInputState(
-      vendorID: identifier.vendorID,
-      productID: identifier.productID
-    )
-  }
-
-  func updateOutputState(from events: [ControllerEvent]) { outputState.apply(events: events) }
-
-  func neutralizeOutput() async {
-    let neutralizingEvents = outputState.neutralizingEvents()
-    guard !neutralizingEvents.isEmpty else { return }
-    await dispatcher.dispatch(events: neutralizingEvents, from: identifier)
-    updateOutputState(from: neutralizingEvents)
-  }
-
-  func retireOutputAfterLivenessLoss() async {
-    guard !awaitingNeutralAfterLivenessLoss else { return }
-    await neutralizeOutput()
-    awaitingNeutralAfterLivenessLoss = true
-    if let listener = dispatcher as? any ControllerLifecycleListener {
-      await listener.controllerDidStop(identifier)
-    }
-  }
-
-  func handleInputConnectionStateChangeIfNeeded() async -> [PhysicalHIDOutputReport] {
-    guard let lifecycle = parser as? any ControllerInputConnectionLifecycle,
-      let state = lifecycle.consumeInputConnectionStateChange()
-    else { return [] }
-
-    if let output = parser as? any USBInputConnectionOutputProvider, let handle = usbHandle {
-      for packet in output.usbInputConnectionOutputPackets(for: state) {
-        do {
-          _ = try await handle.writeInterruptPacket(
-            endpoint: transportProfile.outputEndpoint,
-            data: packet,
-            timeout: 2_000
-          )
-          appendToPacketLog(bytes: packet, direction: "tx")
-        } catch {
-          print("[DevicePipeline] USB lifecycle output failed for \(identifier): \(error)")
-        }
-      }
-    }
-
-    switch state {
-    case .connected:
-      guard !inputConnectionActive else { return [] }
-      inputConnectionActive = true
-      await dispatcher.dispatch(events: [], from: identifier)
-      print("[DevicePipeline] Input controller connected: \(identifier)")
-      return (parser as? any HIDStartupFeatureReportProvider)?.hidStartupFeatureReports() ?? []
-    case .disconnected:
-      resetObservedInputState()
-      await neutralizeOutput()
-      if inputConnectionActive, let listener = dispatcher as? any ControllerLifecycleListener {
-        await listener.controllerDidStop(identifier)
-      }
-      inputConnectionActive = false
-      waitingForExternalNeutral = false
-      print("[DevicePipeline] Input controller disconnected: \(identifier)")
-      return (parser as? any HIDShutdownFeatureReportProvider)?.hidShutdownFeatureReports() ?? []
-    }
-  }
-
-  func appendToPacketLog(bytes: [UInt8], direction: String) {
-    packetLog.append(bytes: bytes, direction: direction)
-  }
-
-  // MARK: - Rumble
-
-  func sendRumble(left: UInt8, right: UInt8, lt: UInt8, rt: UInt8) async -> Bool {
-    guard let handle = usbHandle, let rumbleOutput = parser as? PhysicalRumbleOutput else {
-      return false
-    }
-    do {
-      let packet = rumbleOutput.physicalRumblePacket(left: left, right: right, lt: lt, rt: rt)
-      _ = try await handle.writeInterruptPacket(
-        endpoint: packet.endpoint,
-        data: packet.bytes,
-        timeout: packet.timeoutMilliseconds
-      )
-      return true
-    } catch {
-      if let error = error as? USBTransportError, error.isDisconnected {
-        await invalidateUSBHandle(handle)
-      }
-      print("[DevicePipeline] Rumble send failed for \(identifier): \(error)")
-      return false
-    }
-  }
+  /// Called when controller teardown starts; later writes must come from the teardown scope.
+  func acceptOnlyTeardownOutput() { acceptsOnlyTeardownOutput = true }
 }

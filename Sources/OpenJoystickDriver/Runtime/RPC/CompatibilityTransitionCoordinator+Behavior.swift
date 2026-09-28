@@ -2,167 +2,113 @@ import Foundation
 import OpenJoystickDriverKit
 
 extension ApplicationServiceServer {
+  /// Publishes the automatic dispatcher for the connected controllers after every earlier queued
+  /// change; true when output is live.
   func activateCompatibilityBackendForCurrentDevices() async -> Bool {
     await compatibilityTransitionCoordinator.enqueue { [weak self] in
-      guard let self else { return false }
-      return await self.performCompatibilityIdentityTransition(
-        to: self.requestedIdentity(),
-        force: true
-      )
+      await self?.performCompatibilityBackendActivation() ?? false
     }
   }
 
-  func performCompatibilityIdentityTransition(
-    to identity: CompatibilityIdentity,
-    force: Bool = false,
-    removePersistedIdentityOnCommit: Bool = false
-  ) async -> Bool {
+  /// Builds, activates, and publishes the automatic dispatcher when no output is live. A failure
+  /// closes the candidate and leaves output unavailable with the failure as its status.
+  func performCompatibilityBackendActivation() async -> Bool {
     guard !isCompatibilityServerStopped() else { return false }
-    let prior = compatibilityTransitionSnapshot()
-    if !force, prior.requestedIdentity == identity, prior.liveIdentity == identity, prior.enabled,
-      prior.dispatcher != nil
-    {
-      return true
-    }
+    let isLive = userSpaceLock.withLock { userSpaceEnabled && userSpaceDispatcher != nil }
+    if isLive { return true }
 
     let candidate: UserSpaceDispatcherBuild
     do {
-      candidate = try await stageCompatibilityDispatcher(
-        identity: identity,
-        timeout: compatibilityTransitionTimeouts.stageNanoseconds
-      )
-    } catch {
-      recordCompatibilityTransitionFailure(
-        phase: .stage,
-        requestedIdentity: identity,
-        priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity,
-        detail: String(reflecting: error)
-      )
-      return false
-    }
-
-    guard !isCompatibilityServerStopped() else {
-      _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
-      return false
-    }
-    let identifiers = await connectedIdentifiers()
-    guard
-      await feedbackGate.quiesceAndNeutralize(
-        identifiers,
-        timeout: compatibilityTransitionTimeouts.feedbackNanoseconds,
-        clock: compatibilityTransitionClock
-      )
-    else {
-      _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
-      recordCompatibilityTransitionFailure(
-        phase: .feedbackQuiescence,
-        requestedIdentity: identity,
-        priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity
-      )
-      if prior.enabled, prior.dispatcher != nil { feedbackGate.resume() }
-      return false
-    }
-    var zeroDeviceStarted: UInt64?
-    if let old = prior.dispatcher {
-      userSpaceLock.withLock { dispatcher.setBackend(nil) }
-      let closed = await closeCompatibilityBackend(old, slot: prior.closeSlot)
-      guard closed else {
-        _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
-        installUnavailableCompatibilityState(
-          phase: .candidateClose,
-          requestedIdentity: identity,
-          prior: prior
-        )
-        return false
+      candidate = try await withCompatibilityTimeout(
+        compatibilityTransitionTimeouts.stageNanoseconds,
+        clock: compatibilityTransitionClock,
+        error: .stageTimedOut
+      ) {
+        try self.buildUserSpaceDispatcher()
+      } onLateSuccess: { late in
+        _ = await self.closeCompatibilityBackend(late.closeSlot)
       }
-      zeroDeviceStarted = compatibilityTransitionClock.now()
+    } catch {
+      recordCompatibilityBackendUnavailable(error)
+      return false
+    }
+    guard !isCompatibilityServerStopped() else {
+      _ = await closeCompatibilityBackend(candidate.closeSlot)
+      return false
     }
 
     do {
-      let zeroDeviceRemaining = zeroDeviceStarted.map {
-        remainingNanoseconds(
-          since: $0,
-          within: compatibilityTransitionTimeouts.zeroDeviceNanoseconds
-        )
-      }
-      guard zeroDeviceRemaining != 0 else {
-        throw CompatibilityTransitionError.zeroDeviceIntervalTimedOut
-      }
-      let activationTimeout = min(
-        compatibilityTransitionTimeouts.activationNanoseconds(for: identifiers.count),
-        zeroDeviceRemaining ?? UInt64.max
-      )
-      let activated = try await activateCompatibilityDispatcher(
+      try await activateCompatibilityDispatcher(
         candidate.dispatcher,
-        for: identifiers,
-        timeout: activationTimeout
+        for: await connectedIdentifiers()
       )
-      let reconciled = await connectedIdentifiers()
-      guard activated, reconciled == identifiers, !isCompatibilityServerStopped() else {
-        throw CompatibilityTransitionError.serverStopped
-      }
-      guard
-        commitCompatibilityDispatcher(
-          candidate,
-          identity: identity,
-          identifiers: reconciled,
-          removePersistedIdentity: removePersistedIdentityOnCommit
-        )
-      else {
-        _ = await closeCompatibilityBackend(candidate.dispatcher, slot: candidate.closeSlot)
-        return false
-      }
-      feedbackGate.resume()
-      return true
     } catch {
-      let transitionDetail = String(reflecting: error)
-      guard
-        await closeCompatibilityBackendWithinZeroDeviceBudget(
-          candidate.dispatcher,
-          slot: candidate.closeSlot,
-          zeroDeviceStarted: zeroDeviceStarted
-        )
-      else {
-        installUnavailableCompatibilityState(
-          phase: .zeroDeviceInterval,
-          requestedIdentity: identity,
-          prior: prior
-        )
-        return false
-      }
-      guard !isCompatibilityServerStopped() else { return false }
-      let rollbackIdentifiers = await connectedIdentifiers()
-      if prior.dispatcher != nil,
-        await rollbackCompatibilityDispatcher(
-          identity: prior.liveIdentity ?? prior.requestedIdentity,
-          identifiers: rollbackIdentifiers,
-          prior: prior,
-          requestedIdentityAfterFailure: identity,
-          zeroDeviceStarted: zeroDeviceStarted
-        )
-      {
-        recordCompatibilityTransitionFailure(
-          phase: .activation,
-          requestedIdentity: identity,
-          priorProfileIdentity: prior.liveIdentity ?? prior.requestedIdentity,
-          detail: transitionDetail
-        )
-        feedbackGate.resume()
-      } else if await activateGenericFallback(
-        identifiers: rollbackIdentifiers,
-        prior: prior,
-        requestedIdentityAfterFailure: identity,
-        zeroDeviceStarted: zeroDeviceStarted
-      ) {
-        feedbackGate.resume()
-      } else {
-        installUnavailableCompatibilityState(
-          phase: prior.dispatcher == nil ? .activation : .rollbackActivation,
-          requestedIdentity: identity,
-          prior: prior
-        )
-      }
+      _ = await closeCompatibilityBackend(candidate.closeSlot)
+      recordCompatibilityBackendUnavailable(error)
       return false
     }
+
+    let published = userSpaceLock.withLock { () -> Bool in
+      guard !compatibilityServerStopped else { return false }
+      userSpaceDispatcher = candidate.dispatcher
+      userSpaceCloseSlot = candidate.closeSlot
+      dispatcher.setBackend(candidate.dispatcher)
+      userSpaceEnabled = true
+      userSpaceStatus = candidate.status
+      return true
+    }
+    guard published else {
+      _ = await closeCompatibilityBackend(candidate.closeSlot)
+      return false
+    }
+    print("[ApplicationServiceServer] Compatibility virtual gamepad ready")
+    return true
+  }
+
+  /// Activates `candidate` for `identifiers`, bounding each controller by the per-controller
+  /// timeout and the whole set by the total timeout.
+  ///
+  /// - Throws: `CancellationError` when the server stops before a controller's activation.
+  private func activateCompatibilityDispatcher(
+    _ candidate: any CompatibilityUserSpaceOutputDispatching,
+    for identifiers: [DeviceIdentifier]
+  ) async throws {
+    let timeout = compatibilityTransitionTimeouts.activationNanoseconds(for: identifiers.count)
+    guard !identifiers.isEmpty,
+      let scoped = candidate as? any CompatibilityUserSpaceOutputControllerActivating
+    else {
+      try await withCompatibilityTimeout(
+        timeout,
+        clock: compatibilityTransitionClock,
+        error: .activationTimedOut
+      ) { try await candidate.activate(for: identifiers) }
+      return
+    }
+    let started = compatibilityTransitionClock.now()
+    for identifier in identifiers {
+      guard !isCompatibilityServerStopped() else { throw CancellationError() }
+      let now = compatibilityTransitionClock.now()
+      let elapsed = now >= started ? now - started : 0
+      let remaining = timeout > elapsed ? timeout - elapsed : 0
+      try await withCompatibilityTimeout(
+        min(remaining, compatibilityTransitionTimeouts.perControllerNanoseconds),
+        clock: compatibilityTransitionClock,
+        error: .activationTimedOut
+      ) { try await scoped.activate(controller: identifier) }
+    }
+  }
+
+  private func recordCompatibilityBackendUnavailable(_ error: any Error) {
+    userSpaceLock.withLock {
+      guard !compatibilityServerStopped else { return }
+      userSpaceStatus = "error: \(error)"
+    }
+    print("[ApplicationServiceServer] Compatibility virtual gamepad unavailable: \(error)")
+  }
+
+  /// Every connected controller once, in provider order.
+  func connectedIdentifiers() async -> [DeviceIdentifier] {
+    var seen = Set<DeviceIdentifier>()
+    return (await connectedIdentifierProvider()).filter { seen.insert($0).inserted }
   }
 }

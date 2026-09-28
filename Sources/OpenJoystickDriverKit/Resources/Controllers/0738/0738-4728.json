@@ -2,12 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 1848,
   "productID": 18216,
-  "transport": "usb",
   "protocol": {
-    "driver": "XUSB",
-    "variant": "xbox360",
-    "quirks": [
-      "triggersToButtons"
+    "family": "xbox.xusb",
+    "variant": "wired"
+  },
+  "capabilities": {
+    "absent": [
+      "left-trigger",
+      "right-trigger"
     ]
   }
 }

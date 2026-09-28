@@ -8,7 +8,6 @@ struct ProfileGyroDraft {
   var activationSource: RemappingSource
   var pointerPointsPerDegree: String
   var fullStickDegreesPerSecond: String
-  var virtualMotion: Bool
 
   init(_ output: RemappingGyroOutput) {
     mode = output.mode
@@ -18,7 +17,6 @@ struct ProfileGyroDraft {
     activationSource = output.activationSource ?? .button(.south)
     pointerPointsPerDegree = String(output.pointerPointsPerDegree)
     fullStickDegreesPerSecond = String(output.fullStickDegreesPerSecond)
-    virtualMotion = output.virtualMotion
   }
 
   func validatedOutput(decimalSeparator: String = ".") throws -> RemappingGyroOutput {
@@ -41,8 +39,7 @@ struct ProfileGyroDraft {
       activationMode: activationMode,
       activationSource: activationMode == .always ? nil : activationSource,
       consumesActivationSource: consumesActivationSource,
-      trackball: trackball.validatedSettings(decimalSeparator: decimalSeparator),
-      virtualMotion: virtualMotion
+      trackball: trackball.validatedSettings(decimalSeparator: decimalSeparator)
     )
     try output.validate()
     return output

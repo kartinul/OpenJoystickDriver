@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Dárkkistit čadnojuvvon stivrejeaddjiid…";
 "status.refreshingProfile" = "Ođasmahttit profiila dili…";
 "status.loadingProfiles" = "Profiillaid bidjan…";
-"status.updatingIdentity" = "Ođasmahttit stivrejeaddji identitehta…";
 "status.listening" = "Gullat…";
 "status.readyToListen" = "Gearggus guldalit";
 "status.checkingInput" = "Dárkkistit";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Stivrejeaddjit";
 "settings.controllerDisconnectedNotifications" = "Stivrenrusttet lea heaittihuvvon";
 "settings.controllerDisconnectedShort" = "Heaittihuvvon";
-"settings.controllerIdentity" = "Bearráigeahčči identitehta";
 "settings.controllerNotifications" = "Stivrejeaddji lea čadnojuvvon";
 "settings.diagnostics" = "Diagnostihkka";
 "settings.service" = "Bálvalus";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Guorraneamin";
 "controllers.charging" = "Láddemin";
 "controllers.batteryFull" = "Dievva";
+"controllers.notChargeable" = "Ii sáhte luđet";
 "controllers.batteryAccessibilityDetails" = "Báhtter: %@. Láddendilli: %@. Kábeldilli: %@.";
 "controllers.activeProfile" = "Aktiiva profiila";
 "controllers.profileChecking" = "Dárkkistit…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Aktiiva profiila ii leat gávdnamis";
 "controllers.profileLoadError" = "Aktiiva profiila ii sáhttán biddjojuvvot";
 "controllers.protocol" = "Protokolla";
-"controllers.parser" = "Parse";
 "controllers.serialNumber" = "Ráidonummir";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Sisdoallu loahppačuokkis";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Aktiiva profiilameattáhus: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokolla: %@. Parser: %@. Ráidonummir: %@. USB VID/PID: %@. Bija loahppačuoggá: %@. Boađus loahppačuokkis: %@.";
 "controllers.publishedAs" = "Almmuhuvvon";
-"identity.title" = "Bearráigeahčči identitehta";
-"identity.needsAttention" = "Dárbbaša fuomášumi";
-"identity.error" = "Stivrejeaddji identitehtameattáhus";
-"identity.updating" = "Ođasmahttit stivrejeaddji identitehta…";
-"identity.reset" = "Nuppástuhttit ávžžuhuvvon";
-"identity.checking" = "Dárkkistit";
-"identity.globalScope" = "Guoská buot virtuála stivrejeaddjiide mat leat almmuhuvvon OpenJoystickDriver.";
-"identity.unavailable" = "Ii gávdno";
-"identity.notSelected" = "Ii válljejuvvon";
+"controllers.nativeGamepadNotPublished" = "macOS-vuođđo speallostivrejeaddji, ii almmuhuvvon";
+"virtualProfile.advanced" = "Viiddiduvvon";
+"virtualProfile.title" = "Virtuála HID-profiila";
+"virtualProfile.modelScope" = "Guoská buot dán modealla čatnon stivrejeaddjiide.";
+"virtualProfile.sourceOverride" = "Badjelčállin";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automáhtalaš, badjelčállin hilgojuvvui";
+"virtualProfile.none" = "Ii makkárge virtuála HID-profiila";
+"virtualProfile.unavailable" = "Ii oktage virtuála HID-profiila sáhte ovddastit dán stivrejeaddji.";
+"virtualProfile.updating" = "Ođasmahttimin virtuála HID-profiilla…";
+"virtualProfile.live" = "Aktiivvalaš profiila";
+"virtualProfile.failure.unknownProfile" = "Dát virtuála HID-profiila ii leat dovddus. Mihkkege ii vurkejuvvon.";
+"virtualProfile.failure.controllerNotFound" = "Stivrejeaddji lea čadnojuvvon eret dahje ii gávdno. Badjelčállin ii leat rievdan.";
+"virtualProfile.failure.overrideRejected" = "Badjelčállin lea vurkejuvvon, muhto dát stivrejeaddji ii sáhte dan geavahit, nu ahte dat vállje automáhtalaččat.";
+"virtualProfile.failure.activationFailed" = "Aktiveren ii lihkostuvvan, nu ahte ovddit virtuála HID-profiila máhcahuvvui: %@";
+"virtualProfile.failure.outputDisabled" = "Badjelčállin lea vurkejuvvon ja doaibmá go virtuála olggosbuktin lea doaimmas.";
+"virtualProfile.failure.serverStopped" = "Bálvalus bisánii. Badjelčállin ii leat rievdan.";
+"virtualProfile.failure.persistenceFailed" = "Badjelčállima ii sáhttán vurket. Mihkkege ii vurkejuvvon.";
+"virtualProfile.storeError" = "Virtuála HID-profiilla badjelčállimiid ii sáhte lohkat (%@). Stivrejeaddjit válljejit automáhtalaččat.";
+"virtualProfile.legacyIdentityRejected" = "Boares stivrejeaddji identitehta %@ heivehus ii šat geavahuvvo. Vuoje controller virtual reset --all sihkkut dan.";
 "keyboard.noKey" = "Ii leat válljejuvvon čoavddus";
 "keyboard.pressKey" = "Deaddilat nuppi…";
 "keyboard.captureKey" = "Váldde nuppi";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Dálá dilli";
 "debug.runtime" = "Doaibmaáigi";
 "debug.controllers" = "Stivrejeaddjit";
-"debug.controllerIdentity" = "Bearráigeahčči identitehta";
 "debug.unavailable" = "Doaibmaáigi · Ii gávdno";
 "debug.needsAttention" = "Doaibmaáigi · Dárbbaša fuomášumi";
 "debug.diagnostics" = "Diagnostihkka";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Stivrenrusttega olggosbuktin lea heaittihuvvon.";
 "debug.outputNeedsAttention" = "Stivrenrusttega boađus dárbbaša fuomášumi.";
 "debug.serviceUnavailable" = "Bálvalusdiagnostihkka ii leat dál gávdnamis.";
-"error.selectedOutputUnavailable" = "Válljejuvvon stivrejeaddji boađus ii leat gávdnamis.";
-"error.selectedOutputEnableFailed" = "Válljejuvvon stivrejeaddji olggosbuktin ii sáhttán álggahuvvot.";
 "error.profileChanged" = "Dát profiila rievddai eará sajis. Lasit ođđasit dahje joatkit rievdadeamen.";
 "error.duplicateProfile" = "Profiila mas lea dat namma gávdno juo.";
 "error.profileMissing" = "Dat profiila ii leat šat gávdnamis.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Doaibmaáigi";
 "common.controllers" = "Stivrejeaddjit";
 "common.profiles" = "Profiillat";
-"common.controllerIdentity" = "Bearráigeahčči identitehta";
 "common.protocol" = "Protokolla";
-"common.parser" = "Parse";
 "common.serialNumber" = "Ráidonummir";
 "common.inputEndpoint" = "Sisdoallu loahppačuokkis";
 "common.outputEndpoint" = "Boađus loahppačuokkis";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Válljejuvvon profiilaávnnas ii leat šat gávdnamis.";
 "cli.catalog.app_ready.summary" = "Dárkkis duođaštuvvon ohcanbálvalusa gearggusvuođa";
 "cli.catalog.app_status.summary" = "Čájet ohcanbálvalusa stáhtusa";
-"cli.catalog.compat.summary" = "Hálddaš virtuála stivrejeaddji kompatibilitehta";
 "cli.catalog.controller_list.summary" = "Listu čadnojuvvon stivrejeaddjiid";
 "cli.catalog.controller_output.summary" = "Geahččaleapmi doarju fysalaš stivrejeaddji bohtosa";
 "cli.catalog.controller_packets.summary" = "Čájet ođđaseamos stivrejeaddji páhkaid";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Čájehit stivrejeaddji ja doaibmaáiggi stáhtusa";
 "cli.catalog.test.summary" = "Geahččal virtuála stivrejeaddji sisačáliheami";
 "cli.catalog.update.summary" = "Dárkkis GitHub gávdnojit ođasmahttimat";
-"cli.compat.identity" = "soahpavašvuođaidentitehta: %@";
-"cli.compat.identity_unknown" = "soahpavašvuođaidentitehta: ii dieđe";
-"cli.compat.set_failed" = "Ii lihkostuvvan bidjat kompatibilitehtaidentitehta %@. Álggat installerejuvvon áppa ja duođaš sisabeassanbearráigeahču ja olámuttosvuođa.";
-"cli.compat.usage" = "Usage: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "geavaheaddji-saji stáhtus: %@";
 "cli.controller.allAppleEntries" = "Buot dárkilis Apple-kataloga sisačáliheamit:";
 "cli.controller.appleIDs" = "    Apple-ID:at: %@";
 "cli.controller.applePairs" = "  Eappelpárat : %d dárkilit VID/PID sisačáliheamit";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Ii oktage čadnojuvvon stivrejeaddji heive --device %@.";
 "cli.controller.selection.multiple" = "Máŋga stivrejeaddji heivejit oktii. Vállje ovtta mas lea --device:\n  %@";
 "cli.controller.selection.none" = "Ii oktage stivrejeaddji leat čadnojuvvon.";
+"cli.controller.virtual.live" = "Virtuála HID-profiila: %@ (%@)";
+"cli.controller.virtual.none" = "Virtuála HID-profiila: ii mihkkege (%@)";
+"cli.controller.virtual.failed" = "Virtuála HID-profiilla bivdda ii lihkostuvvan: %@";
+"cli.controller.virtual.unknown_profile" = "Amas virtuála HID-profiila ”%@”. Geavat ovtta dáin: %@.";
+"cli.controller.virtual.missing_profile" = "”controller virtual set” gáibida virtuála HID-profiilla. Geavat ovtta dáin: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "”--all” ii sáhte ovttastahttit --vid, --pid dahje --device molssaeavttuiguin.";
+"cli.controller.virtual.reset_all.success" = "OK: buot virtuála HID-profiilla badjelčállimat leat sihkkojuvvon.";
+"cli.controller.virtual.reset_all.failed" = "Ii nagodan nuppástuhttit njuolggadusaid. Álggat installerejuvvon áppa ja dárkkista dan lobiid.";
 "cli.controller.selection.vid_pid_missing" = "Ii oktage čadnojuvvon stivrejeaddji heive %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Váldde sihke VID ja PID, dahje hilggo guktot.";
 "cli.controller.serviceControllers" = "Stivrenrusttegat (jođus prográmmabálvalusas):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Rávvagat: addit gáibiduvvon vuoigatvuođa ja sisabahkkenbearráigeahču.";
 "cli.controller.usbControllers" = "USB Stivrejeaddjit (luohkká 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Bija sihke VID ja PID, dahje hilggo guktot go okta stivrejeaddji lea čadnojuvvon.";
-"cli.diagnose.advisory_candidate" = "    Ráđđeaddi protokollaevttohas: %@";
 "cli.diagnose.app_missing" = "  Áppa: váilu %@";
 "cli.diagnose.app_missing_fix" = "  Divvu: hukset + installeret prográmma /Applications:ii";
 "cli.diagnose.app_present" = "  Áppa: dál";
 "cli.diagnose.binary_path" = "Binára: %@";
-"cli.diagnose.catalog_conflict" = "      Observašuvdna riiddut katalogabearrašiin; parser ii rievdda";
-"cli.diagnose.catalog_parser" = "      Kataloga analysa lea ain %@ (%@)";
 "cli.diagnose.dext_found" = "  Gávdnen .dext-pakeahtaid:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      loahppačuokkis 0x%02X %@ %@ maxPacket=%@ gaskka=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Dovddameahttun vástáduskurva '%@'.";
 "cli.mapping.double_tap_format" = "--double-tap vuordá <ms>:<target>, e.g. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Geavaheapmi: OpenJoystickDriver --headless kárta <command>\n\nGohččun: \nlistu [--json] \nčájehit <profile> [--json] \nráhkadit <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global) \nođasmahttit <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global] \nčatnat <profile> --source <source> --target <target> [geatnegasvuođaválljemat] \nrahpat <profile> --source <source>\n  sihkkut <profile>\n  buvttadit <file>\n  viežžat <profile> [--output <file>] \nálkidahttit <profile>\n  heaittihit --vid <id> --pid <id> | --profile <uuid-or-name>\n  lobi dilli | jearaldat \nakkorda lasihit <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode rievdadus|ovtta áigge] [--window-ms <1...1000>] \nakkorda sihkkut <profile> --id <chord-id>\n  sekvensa lasiheapmi <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sekvensa sihkkut <profile> --id <sequence-id>\n  lávki ráhkadit <profile> --name <name> --activator <source> --mode doallat|rievdat \nlávkki sihkkut <profile> --id <layer-id>\n  lávkki čatnan <profile> --layer <layer-id> --source <s> --target <t> [geatnegasvuođaválljemat] \nlávkki rahpat <profile> --layer <layer-id> --source <s>\n  lávkelistu <profile>\n\nGáldu: nuppástus:<name> | dpad:<direction> | aksela:<name>[:negatiiva|positiiva] \nMihttomearri: čuokkis:<key>[:mods=command,control,option,shift] | muorra:<button> | \nsirdit:x|y | rulla:x|y \n\nAkseallaválljemat:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo-válljemat (dušše tastatur- ja muorračuoggát):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktiverenvejolašvuođat (dušše tastatur- ja muorračuoggát, mat eai leat turbo):\n  --long-hold <ms>:<target>     e.g. --long-hold 500:key:b\n  --double-tap <ms>:<target>    e.g. --double-tap 300:key:c\n\n<profile> dohkkeha UUID dahje dárkilis, stuorrabustávaid haga profiilanamma.\n<id> dohkkeha desimala dahje 0x-ovdamearkka heksadesimala. \n\nkártta ođasmahttin <profile> --virtual-gamepad deaktiverejuvvon|kártejuvvon|mannan \nkártta ođasmahttin <profile> --physical-input juhkkojuvvon|earenoamáš \nspeallanrusttet:čuokkis:<name> | gamepad:dpad:<direction> | speallanrusttet:aksela:<name>\n--behavior doallat|čuohppat|čuohppat_deadde|čuohppat_luoitit|pulsa|čuohppat|luoitit\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nkártta ođasmahttin <profile> --motion-space báikkálaš|spealli|máilbmi\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch duohta|boastut --motion-invert-yaw duohta|boastut\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias duohta|boastut --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nkártet kalibrerendili|álggat|bissehit|nuppástuhttit --controller <runtime-identifier>\n\n--gyro-output deaktiverejuvvon|muorra|olgeš_čuokkis|gurut_čuokkis\n--gyro-virtual-motion duohta|boastut\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation álo|seammás go_doallojuvvo|seammás go_almmuhuvvon|vállje\n--gyro-activation-source <source>\n  --gyro-consume-activation duohta|boastut\n  --gyro-trackball-source <source>|ii oktage --gyro-trackball-axes pitch|yaw|guktot\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume duohta|boastut \n\nStick-válljemat (ráhkadit ja ođasmahttit; vállje ovtta stick juohke gohččumii):\n  --stick-source olgeš|gurut --stick-mode ulbmil|čuohppat|dušše čuohppat|dušše jorgalit|ii oktage\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x duohta|boastut\n  --stick-invert-y duohta|boastut --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nOvttastuvvon Joy-Con: \nkártta ráhkadit <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro olgeš|gurut|deaktiverejuvvon --global\n  kárta joy-con pára <profile> --left <runtime-identifier> --right <runtime-identifier>\n  kárta joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Geavaheapmi: OpenJoystickDriver --headless kárta <command>\n\nGohččun: \nlistu [--json] \nčájehit <profile> [--json] \nráhkadit <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global) \nođasmahttit <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global] \nčatnat <profile> --source <source> --target <target> [geatnegasvuođaválljemat] \nrahpat <profile> --source <source>\n  sihkkut <profile>\n  buvttadit <file>\n  viežžat <profile> [--output <file>] \nálkidahttit <profile>\n  heaittihit --vid <id> --pid <id> | --profile <uuid-or-name>\n  lobi dilli | jearaldat \nakkorda lasihit <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode rievdadus|ovtta áigge] [--window-ms <1...1000>] \nakkorda sihkkut <profile> --id <chord-id>\n  sekvensa lasiheapmi <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sekvensa sihkkut <profile> --id <sequence-id>\n  lávki ráhkadit <profile> --name <name> --activator <source> --mode doallat|rievdat \nlávkki sihkkut <profile> --id <layer-id>\n  lávkki čatnan <profile> --layer <layer-id> --source <s> --target <t> [geatnegasvuođaválljemat] \nlávkki rahpat <profile> --layer <layer-id> --source <s>\n  lávkelistu <profile>\n\nGáldu: nuppástus:<name> | dpad:<direction> | aksela:<name>[:negatiiva|positiiva] \nMihttomearri: čuokkis:<key>[:mods=command,control,option,shift] | muorra:<button> | \nsirdit:x|y | rulla:x|y \n\nAkseallaválljemat:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo-válljemat (dušše tastatur- ja muorračuoggát):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktiverenvejolašvuođat (dušše tastatur- ja muorračuoggát, mat eai leat turbo):\n  --long-hold <ms>:<target>     e.g. --long-hold 500:key:b\n  --double-tap <ms>:<target>    e.g. --double-tap 300:key:c\n\n<profile> dohkkeha UUID dahje dárkilis, stuorrabustávaid haga profiilanamma.\n<id> dohkkeha desimala dahje 0x-ovdamearkka heksadesimala. \n\nkártta ođasmahttin <profile> --virtual-gamepad deaktiverejuvvon|kártejuvvon|mannan \nkártta ođasmahttin <profile> --physical-input juhkkojuvvon|earenoamáš \nspeallanrusttet:čuokkis:<name> | gamepad:dpad:<direction> | speallanrusttet:aksela:<name>\n--behavior doallat|čuohppat|čuohppat_deadde|čuohppat_luoitit|pulsa|čuohppat|luoitit\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nkártta ođasmahttin <profile> --motion-space báikkálaš|spealli|máilbmi\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch duohta|boastut --motion-invert-yaw duohta|boastut\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias duohta|boastut --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nkártet kalibrerendili|álggat|bissehit|nuppástuhttit --controller <runtime-identifier>\n\n--gyro-output deaktiverejuvvon|muorra|olgeš_čuokkis|gurut_čuokkis\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation álo|seammás go_doallojuvvo|seammás go_almmuhuvvon|vállje\n--gyro-activation-source <source>\n  --gyro-consume-activation duohta|boastut\n  --gyro-trackball-source <source>|ii oktage --gyro-trackball-axes pitch|yaw|guktot\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume duohta|boastut \n\nStick-válljemat (ráhkadit ja ođasmahttit; vállje ovtta stick juohke gohččumii):\n  --stick-source olgeš|gurut --stick-mode ulbmil|čuohppat|dušše čuohppat|dušše jorgalit|ii oktage\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x duohta|boastut\n  --stick-invert-y duohta|boastut --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nOvttastuvvon Joy-Con: \nkártta ráhkadit <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro olgeš|gurut|deaktiverejuvvon --global\n  kárta joy-con pára <profile> --left <runtime-identifier> --right <runtime-identifier>\n  kárta joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ ferte leat 16-bit desimála dahje 0x-ovdamearkka heksadesimála identifikašuvdna.";
 "cli.mapping.jsonEncodeFailed" = "Ii sáhttán kodet UTF-8 JSON.";
 "cli.mapping.layer_action_unknown" = "Dovddameahttun lávkki doaibma '%@'. Vuorddekeahtes: ráhkadit | sihkkut | čatnat | rahpat | lihkadus | listu";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver prográmmabálvalus ii leat doaimmas.";
 "cli.runtime.sample_limit" = "Konfigurašuvdna čoaggá %d ovdamearkkat; lassánit --interval-ms.";
 "cli.runtime.stable_note" = "Stabiila ráddjejuvvon čáhcebohcci lea duođaštus dán bargoveagas, ii duođaštus dasa ahte buot čáhcebohccit eai leat.";
-"cli.settings.reset.failed" = "Ii nagodan nuppástuhttit njuolggadusaid. Álggat installerejuvvon áppa ja dárkkista dan lobiid.";
-"cli.settings.reset.next" = "Boahtte: čađat compat-seahka <identity> válljet soahpavašvuođaidentitehta.";
-"cli.settings.reset.success" = "OK: nuppástuhttit prográmmabálvalusa njuolggadusaid.";
 "cli.status.access_denied" = "Jus beassan ii mieđihuvvo, de čađat --headless lobit bivdet ja dohkkehit sisačálihančuovvoleami ja olámuttosvuođa systemaásahusain.";
 "cli.status.heading" = "OpenJoystickDriver Dilli";
 "cli.status.json_error" = "Ii sáhttán kodet stáhtusa JSON: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Dilli : %@";
 "cli.updates.unknown_option" = "Dovddakeahtes ođasmahttinvejolašvuohta: %@";
 "common.unknown" = "Eahpedovddus";
-"compatibility.appleGameController" = "Eppel GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (álgoálgosaš)";
 "developer.buttons" = "Nuppástusat";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B-boalu";
 "inputTest.bCircle" = "B / Sirkel";
 "inputTest.brightness" = "Čuovga";
-"inputTest.circle" = "Sirkel";
 "inputTest.color" = "Ivdni";
 "inputTest.controls" = "Ealli sisaboahtu";
-"inputTest.cross" = "Rasttildan";
 "inputTest.disconnected" = "Stivrenrusttet lea heaittihuvvon";
 "inputTest.dpadDown" = "D-pad vuolás";
 "inputTest.dpadLeft" = "D-pad olgešbealde";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Čuovgga stivremat eai leat gávdnamis dán stivrejeaddjis.";
 "inputTest.live" = "Sisdoallu lea aktiiva";
 "inputTest.menu" = "Meny";
-"inputTest.minus" = "Minus";
 "inputTest.off" = "Heaittihuvvon";
 "inputTest.open" = "Raba sisačálihaniskkadeami…";
-"inputTest.options" = "Válljejumit";
 "inputTest.outputError" = "Fysihkalaš boađusmeattáhus";
 "inputTest.outputRejected" = "Stivrejeaddji hilggui dán boađusgeahččaleami.";
 "inputTest.permissionRequired" = "Sisaboađu čuovvunlohpi gáibiduvvo";
 "inputTest.playerIndicator" = "Spealli indikáhtor";
-"inputTest.plus" = "Dasa lassin";
 "inputTest.pressed" = "Deaddiluvvon";
-"inputTest.psButton" = "PS-boalu";
 "inputTest.released" = "Almmuhuvvon";
 "inputTest.rightBumper" = "Olgeš bumper";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Gurut Y";
 "inputTest.rumble" = "Rumble";
 "inputTest.rumbleUnavailable" = "Rumble ii leat doarjjan dán stivrejeaddjis.";
-"inputTest.share" = "Juogat";
-"inputTest.square" = "Kvadráhta";
 "inputTest.stale" = "Sisaváldin bissehuvvui";
 "inputTest.start" = "Álggat sisačálihangeahččaleami";
 "inputTest.starting" = "Álggahit…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Ealli sisaboahtu";
 "inputTest.tabMotion" = "Evttohus";
 "inputTest.tabOutput" = "Boađus";
-"inputTest.steamButton" = "Steam-boalu";
 "inputTest.summary" = "Geahččal nuppástusaid, čuoggáid, čuovggaid, rumbbuid ja stivrejeaddji čuovggaid.";
 "inputTest.testRumble" = "Geahččal vibrerema";
 "inputTest.title" = "Sisačálihangeahččaleapmi";
-"inputTest.triangle" = "Golmmačuoggá";
 "inputTest.unavailable" = "Sisačáliheapmi ii leat gávdnamis";
 "inputTest.view" = "Geahča";
 "inputTest.windowTitle" = "Sisačálihangeahččaleapmi — %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Válljejuvvon Joy-Cons ii sáhttán ovttastahttojuvvot. Ođasmahtte čadnojuvvon stivrejeaddjiid ja geahččal fas.";
 "profiles.joyConExplicitSession" = "Álggahuvvui čielga páračoahkkimiin";
 "profiles.joyConSessionState" = "Čielga ovttastahttin";
-"profiles.gyro.virtualMotion" = "Ovddosguvlui kalibrerejuvvon virtuála lihkadus";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ vibreren (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Stivrenrusttet lea heaittihuvvon";
 "controllers.resume" = "Geahččal fas";
 "controllers.disconnectFromOJD" = "Stivrenrusttet lea heaittihuvvon";
-"error.compatibilityTransitionDetailed" = "Válljejuvvon stivrejeaddji olggosbuktin ii sáhttán álggahuvvot. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Válljejuvvon stivrejeaddji olggosbuktin ii sáhttán álggahuvvot.";
 "cli.catalog.controller_disconnect.summary" = "Stivrenrusttet lea heaittihuvvon";
 "cli.catalog.controller_resume.summary" = "Geahččal fas — Stivrenrusttet lea heaittihuvvon";
+"cli.catalog.controller_virtual_set.summary" = "Mearrit stivrenrusttega virtuála HID-profiilla";
+"cli.catalog.controller_virtual_reset.summary" = "Vállje stivrenrusttega virtuála HID-profiilla automáhtalaččat, dahje sihko buot ovddaldeavdimiid gohčodemiin --all";
 "cli.controller.disconnected" = "Stivrenrusttet lea heaittihuvvon";
 "cli.controller.resumed" = "Sisdoallu lea aktiiva";
 

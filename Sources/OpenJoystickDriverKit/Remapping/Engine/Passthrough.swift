@@ -6,7 +6,13 @@ extension RemappingDeviceState {
     replayingAxis: (RemappingAxis, Float)? = nil
   ) -> [RemappingEngineAction] {
     guard profile.outputPolicy.virtualGamepad == .passthrough else { return [] }
-    let reserved = reservedPassthroughSources
+    var reserved = reservedPassthroughSources
+    // A trigger's analog axis and its click are one physical control: a profile that binds or
+    // reserves either withholds both, so a released axis cannot leak back as a full click.
+    for trigger in RemappingTriggerSource.allCases
+    where trigger.passthroughSources.contains(where: {
+      reserved.contains($0) || binding(for: $0) != nil
+    }) { reserved.formUnion(trigger.passthroughSources) }
     var buttons: Set<RemappingButton> = []
     var directions: Set<RemappingDpadDirection> = []
     for source in activeSources where !reserved.contains(source) && binding(for: source) == nil {
@@ -63,5 +69,15 @@ extension RemappingDeviceState {
       for sequence in layer.sequences { sources.formUnion(sequence.sources) }
     }
     return sources
+  }
+}
+
+extension RemappingTriggerSource {
+  /// Every source that reads this physical trigger: its analog axis and its click.
+  var passthroughSources: [RemappingSource] {
+    [
+      .axis(axis), .axisDirection(axis, .negative), .axisDirection(axis, .positive),
+      .button(self == .left ? .leftTriggerClick : .rightTriggerClick),
+    ]
   }
 }

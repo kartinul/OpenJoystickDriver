@@ -23,7 +23,7 @@ actor InputTestGatewayStub: InputTestDeviceGateway {
   ) throws -> RemappingMotionCalibrationStatus {
     throw RemappingMotionCalibrationError.motionUnavailable
   }
-  var inputSequence: [DeviceInputState?]
+  var inputSequence: [ControllerState?]
   var inputDelayNanoseconds: UInt64
   var outputDelayNanoseconds: UInt64
   var inputCalls = 0
@@ -42,7 +42,7 @@ actor InputTestGatewayStub: InputTestDeviceGateway {
   var maximumConcurrentOutputCalls = 0
 
   init(
-    inputSequence: [DeviceInputState?] = [],
+    inputSequence: [ControllerState?] = [],
     inputDelayNanoseconds: UInt64 = 0,
     outputDelayNanoseconds: UInt64 = 0
   ) {
@@ -51,7 +51,7 @@ actor InputTestGatewayStub: InputTestDeviceGateway {
     self.outputDelayNanoseconds = outputDelayNanoseconds
   }
 
-  func inputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState? {
+  func controllerState(for selector: RuntimeDeviceSelector) async throws -> ControllerState? {
     inputCalls += 1
     activeInputCalls += 1
     maximumConcurrentInputCalls = max(maximumConcurrentInputCalls, activeInputCalls)
@@ -67,38 +67,47 @@ actor InputTestGatewayStub: InputTestDeviceGateway {
     return inputSequence.removeFirst()
   }
 
-  func sendRumble(
-    for selector: RuntimeDeviceSelector,
-    left: UInt8,
-    right: UInt8,
-    leftTrigger: UInt8,
-    rightTrigger: UInt8,
-    durationMilliseconds: Int
-  ) async throws -> Bool {
+  /// Records each command in the call list of its kind; stop-rumble is the all-zero rumble of
+  /// 0 ms the model sent before the single output command.
+  func sendControllerOutput(
+    _ command: ControllerOutputCommand,
+    for selector: RuntimeDeviceSelector
+  ) async throws -> ControllerOutputResult {
     try await beginOutputCall()
     defer { finishOutputCall() }
-    if outputThrows { throw InputTestGatewayError.outputFailed }
-    rumbleCalls.append(
-      RecordedRumble(
-        selector: selector,
-        left: left,
-        right: right,
-        leftTrigger: leftTrigger,
-        rightTrigger: rightTrigger,
-        durationMilliseconds: durationMilliseconds
+    switch command {
+    case .setRumble(let intensities, let duration):
+      if outputThrows { throw InputTestGatewayError.outputFailed }
+      guard case .milliseconds(let durationMilliseconds) = duration else {
+        throw InputTestGatewayError.outputFailed
+      }
+      rumbleCalls.append(
+        RecordedRumble(
+          selector: selector,
+          left: intensities.leftMain.byte,
+          right: intensities.rightMain.byte,
+          leftTrigger: intensities.leftTrigger.byte,
+          rightTrigger: intensities.rightTrigger.byte,
+          durationMilliseconds: durationMilliseconds
+        )
       )
-    )
-    return outputResult
-  }
-
-  func setPlayerIndicator(
-    for selector: RuntimeDeviceSelector,
-    indicator: PhysicalPlayerIndicator
-  ) async throws -> Bool {
-    try await beginOutputCall()
-    defer { finishOutputCall() }
-    playerCalls.append((selector, indicator))
-    return outputResult
+    case .stopRumble:
+      if outputThrows { throw InputTestGatewayError.outputFailed }
+      rumbleCalls.append(
+        RecordedRumble(
+          selector: selector,
+          left: 0,
+          right: 0,
+          leftTrigger: 0,
+          rightTrigger: 0,
+          durationMilliseconds: 0
+        )
+      )
+    case .setPlayerIndicator(let indicator): playerCalls.append((selector, indicator))
+    case .setLightBrightness(let brightness): brightnessCalls.append((selector, brightness.byte))
+    case .setRGB, .setAdaptiveTrigger: throw InputTestGatewayError.outputFailed
+    }
+    return ControllerOutputResult(outputResult ? .delivered : .writeFailed)
   }
 
   func previewColor(
@@ -120,13 +129,6 @@ actor InputTestGatewayStub: InputTestDeviceGateway {
     return outputResult
   }
 
-  func setBrightness(for selector: RuntimeDeviceSelector, brightness: UInt8) async throws -> Bool {
-    try await beginOutputCall()
-    defer { finishOutputCall() }
-    brightnessCalls.append((selector, brightness))
-    return outputResult
-  }
-
   func counts() -> (
     input: Int, cancelled: Int, maximumConcurrentInput: Int, maximumConcurrentOutput: Int,
     rumble: Int, player: Int, color: Int, brightness: Int
@@ -141,7 +143,7 @@ actor InputTestGatewayStub: InputTestDeviceGateway {
   func setOutputThrows(_ value: Bool) { outputThrows = value }
 
   func waitForInputCalls(_ expectedCount: Int) async -> Bool {
-    for _ in 0..<500 {
+    for _ in 0..<10_000 {
       if inputCalls >= expectedCount { return true }
       try? await Task.sleep(nanoseconds: 1_000_000)
     }
@@ -149,7 +151,7 @@ actor InputTestGatewayStub: InputTestDeviceGateway {
   }
 
   func waitForRumbleCalls(_ expectedCount: Int) async -> Bool {
-    for _ in 0..<500 {
+    for _ in 0..<10_000 {
       if rumbleCalls.count >= expectedCount { return true }
       try? await Task.sleep(nanoseconds: 1_000_000)
     }

@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Tikrinami prijungti valdikliai…";
 "status.refreshingProfile" = "Atnaujinama profilio būsena…";
 "status.loadingProfiles" = "Įkeliami profiliai…";
-"status.updatingIdentity" = "Atnaujinama valdiklio tapatybė…";
 "status.listening" = "Klausomasi…";
 "status.readyToListen" = "Parengta klausytis";
 "status.checkingInput" = "Tikrinama";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Valdikliai";
 "settings.controllerDisconnectedNotifications" = "Valdiklis išjungtas";
 "settings.controllerDisconnectedShort" = "Išjungtas";
-"settings.controllerIdentity" = "Valdiklio tapatybė";
 "settings.controllerNotifications" = "Įjungtas valdiklis";
 "settings.diagnostics" = "Diagnostika";
 "settings.service" = "Tarnyba";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Išsikrauna";
 "controllers.charging" = "Įkraunama";
 "controllers.batteryFull" = "Pilna";
+"controllers.notChargeable" = "Neįkraunama";
 "controllers.batteryAccessibilityDetails" = "Baterija: %@. Įkrovimo būsena: %@. Kabelio būsena: %@.";
 "controllers.activeProfile" = "Aktyvus profilis";
 "controllers.profileChecking" = "Tikrinama…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Aktyvus profilis nepasiekiamas";
 "controllers.profileLoadError" = "Nepavyko įkelti aktyvaus profilio";
 "controllers.protocol" = "Protokolas";
-"controllers.parser" = "Parseris";
 "controllers.serialNumber" = "Serijos numeris";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Įvesties galinis taškas";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Aktyvaus profilio klaida: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokolas: %@. Parser: %@. Serijos numeris: %@. USB VID/PID: %@. Įvesties galinis taškas: %@. Išvesties galinis taškas: %@.";
 "controllers.publishedAs" = "Išleistas kaip";
-"identity.title" = "Valdiklio tapatybė";
-"identity.needsAttention" = "Reikia dėmesio";
-"identity.error" = "Valdiklio tapatybės klaida";
-"identity.updating" = "Atnaujinama valdiklio tapatybė…";
-"identity.reset" = "Atkurti rekomenduojamas";
-"identity.checking" = "Tikrinama";
-"identity.globalScope" = "taikomas visiems virtualiems duomenų valdytojams, paskelbtiems OpenJoystickDriver.";
-"identity.unavailable" = "Nepasiekiama";
-"identity.notSelected" = "Nepasirinkta";
+"controllers.nativeGamepadNotPublished" = "Integruotas macOS žaidimų valdiklis, nepaskelbtas";
+"virtualProfile.advanced" = "Išplėstiniai";
+"virtualProfile.title" = "Virtualus HID profilis";
+"virtualProfile.modelScope" = "Taikoma kiekvienam prijungtam šio modelio valdikliui.";
+"virtualProfile.sourceOverride" = "Nepaisymas";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automatinis, nepaisymas atmestas";
+"virtualProfile.none" = "Nėra virtualaus HID profilio";
+"virtualProfile.unavailable" = "Joks virtualus HID profilis negali atvaizduoti šio valdiklio.";
+"virtualProfile.updating" = "Atnaujinamas virtualus HID profilis…";
+"virtualProfile.live" = "Aktyvus profilis";
+"virtualProfile.failure.unknownProfile" = "Šis virtualus HID profilis nežinomas. Nieko neišsaugota.";
+"virtualProfile.failure.controllerNotFound" = "Valdiklis atjungtas arba nerastas. Nepaisymas nepakito.";
+"virtualProfile.failure.overrideRejected" = "Nepaisymas išsaugotas, bet šis valdiklis negali jo naudoti, todėl renkasi automatiškai.";
+"virtualProfile.failure.activationFailed" = "Aktyvinti nepavyko, todėl atkurtas ankstesnis virtualus HID profilis: %@";
+"virtualProfile.failure.outputDisabled" = "Nepaisymas išsaugotas ir bus pritaikytas įjungus virtualią išvestį.";
+"virtualProfile.failure.serverStopped" = "Paslauga sustojo. Nepaisymas nepakito.";
+"virtualProfile.failure.persistenceFailed" = "Nepavyko išsaugoti nepaisymo. Nieko neišsaugota.";
+"virtualProfile.storeError" = "Nepavyksta nuskaityti virtualaus HID profilio nepaisymų (%@). Valdikliai pasirenka automatiškai.";
+"virtualProfile.legacyIdentityRejected" = "Nebenaudojamas valdiklio tapatybės nustatymas %@ nebetaikomas. Paleiskite controller virtual reset --all, kad jį išvalytumėte.";
 "keyboard.noKey" = "Klavišas nepasirinktas";
 "keyboard.pressKey" = "Paspauskite klavišą…";
 "keyboard.captureKey" = "Įrašyti klavišą";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Dabartinė būsena";
 "debug.runtime" = "Vykdymo aplinka";
 "debug.controllers" = "Valdikliai";
-"debug.controllerIdentity" = "Valdiklio tapatybė";
 "debug.unavailable" = "Vykdymo aplinka · nepasiekiama";
 "debug.needsAttention" = "Vykdymo aplinka · reikia dėmesio";
 "debug.diagnostics" = "Diagnostika";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Valdiklio išvestis išjungta.";
 "debug.outputNeedsAttention" = "Valdiklio išvesčiai reikia dėmesio.";
 "debug.serviceUnavailable" = "Tarnybos diagnostika dabar nepasiekiama.";
-"error.selectedOutputUnavailable" = "Pasirinkta valdiklio išvestis nepasiekiama.";
-"error.selectedOutputEnableFailed" = "Pasirinktos valdiklio išvesties nepavyko įjungti.";
 "error.profileChanged" = "Šis profilis pakeistas kitur. Įkelkite iš naujo arba tęskite redagavimą.";
 "error.duplicateProfile" = "Profilis tokiu pavadinimu jau yra.";
 "error.profileMissing" = "Tas profilis jau nepasiekiamas.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Vykdymo aplinka";
 "common.controllers" = "Valdikliai";
 "common.profiles" = "Profiliai";
-"common.controllerIdentity" = "Valdiklio tapatybė";
 "common.protocol" = "Protokolas";
-"common.parser" = "Parseris";
 "common.serialNumber" = "Serijos numeris";
 "common.inputEndpoint" = "Įvesties galinis taškas";
 "common.outputEndpoint" = "Išvesties galinis taškas";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Pasirinktas profilo elementas nebebus prieinamas.";
 "cli.catalog.app_ready.summary" = "Tikrinti autentifikuotos programos tarnybos parengtį";
 "cli.catalog.app_status.summary" = "Rodyti programos tarnybos būseną";
-"cli.catalog.compat.summary" = "Tvarkyti virtualiojo valdiklio suderinamumą";
 "cli.catalog.controller_list.summary" = "Išvardyti prijungtus valdiklius";
 "cli.catalog.controller_output.summary" = "Išbandyti palaikomą fizinio valdiklio išvestį";
 "cli.catalog.controller_packets.summary" = "Rodyti naujausius valdiklio paketus";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Rodyti tvarkyklės ir vykdymo aplinkos būseną";
 "cli.catalog.test.summary" = "Išbandyti virtualiojo valdiklio įvesties perdavimą";
 "cli.catalog.update.summary" = "Tikrinti GitHub, ar yra naujinių";
-"cli.compat.identity" = "suderinamumo tapatybė: %@";
-"cli.compat.identity_unknown" = "suderinamumo tapatybė: nežinoma";
-"cli.compat.set_failed" = "Nepavyko nustatyti suderinamumo tapatybės į %@. Paleiskite įdiegtą programą ir patikrinkite Įvesties stebėsenos ir Pritaikymo neįgaliesiems prieigą.";
-"cli.compat.usage" = "Naudojimas: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "naudotojo erdvės būsena: %@";
 "cli.controller.allAppleEntries" = "Visi tikslūs Apple katalogo įrašai:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Apple poros  : %d tikslūs VID/PID įrašai";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Joks prijungtas valdiklis neatitinka --device %@.";
 "cli.controller.selection.multiple" = "Atitinka keli valdikliai. Pasirinkite vieną su --device:\n  %@";
 "cli.controller.selection.none" = "Valdiklis neprijungtas.";
+"cli.controller.virtual.live" = "Virtualus HID profilis: %@ (%@)";
+"cli.controller.virtual.none" = "Virtualus HID profilis: nėra (%@)";
+"cli.controller.virtual.failed" = "Virtualaus HID profilio užklausa nepavyko: %@";
+"cli.controller.virtual.unknown_profile" = "Nežinomas virtualus HID profilis „%@“. Naudokite vieną iš: %@.";
+"cli.controller.virtual.missing_profile" = "Komandai „controller virtual set“ reikia virtualaus HID profilio. Naudokite vieną iš: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "„--all“ negalima derinti su --vid, --pid ar --device.";
+"cli.controller.virtual.reset_all.success" = "Gerai: visi virtualaus HID profilio nepaisymai išvalyti.";
+"cli.controller.virtual.reset_all.failed" = "Nepavyko nustatyti nuostatų iš naujo. Paleiskite įdiegtą programą ir patikrinkite jos leidimus.";
 "cli.controller.selection.vid_pid_missing" = "Joks prijungtas valdiklis neatitinka %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Perduokite ir VID, ir PID arba praleiskite abu.";
 "cli.controller.serviceControllers" = "Valdikliai (iš veikiančios programos tarnybos):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Patarimas: suteikite reikiamą teisę ir Įvesties stebėsenos prieigą.";
 "cli.controller.usbControllers" = "USB valdikliai (klasė 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Perduokite ir VID, ir PID arba praleiskite abu, kai prijungtas vienas valdiklis.";
-"cli.diagnose.advisory_candidate" = "    Patariamasis protokolo kandidatas: %@";
 "cli.diagnose.app_missing" = "  Programa: trūksta %@";
 "cli.diagnose.app_missing_fix" = "  Taisymas: sukurkite ir įdiekite programą į /Applications";
 "cli.diagnose.app_present" = "  Programa: yra";
 "cli.diagnose.binary_path" = "Dvejetainis: %@";
-"cli.diagnose.catalog_conflict" = "      Stebėjimas prieštarauja katalogo šeimai; analizatorius nepakeistas";
-"cli.diagnose.catalog_parser" = "      Katalogo analizatorius lieka %@ (%@)";
 "cli.diagnose.dext_found" = "  Rasti .dext paketai:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      0x galutinio taško%02X %@ %@ maxPacket=%@ intervalas =%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Nežinoma atsako kreivė „%@“.";
 "cli.mapping.double_tap_format" = "--double-tap tikisi <ms>:<target>, pvz. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Naudojimas: OpenJoystickDriver --headless map <command>\n\nKomandos:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nŠaltinis: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nTikslas: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAšies parinktys:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo parinktys (tik klaviatūros ir pelės mygtukai):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktyvinimo parinktys (tik klaviatūros ir pelės mygtukai, nesuderinamos su turbo):\n  --long-hold <ms>:<target>     pvz. --long-hold 500:key:b\n  --double-tap <ms>:<target>    pvz. --double-tap 300:key:c\n\n<profile> priima UUID arba tikslų, raidžių dydžiui nejautrų profilio pavadinimą.\n<id> priima dešimtainę arba 0x priešdėlio šešioliktainę reikšmę.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Naudojimas: OpenJoystickDriver --headless map <command>\n\nKomandos:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nŠaltinis: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nTikslas: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAšies parinktys:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo parinktys (tik klaviatūros ir pelės mygtukai):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktyvinimo parinktys (tik klaviatūros ir pelės mygtukai, nesuderinamos su turbo):\n  --long-hold <ms>:<target>     pvz. --long-hold 500:key:b\n  --double-tap <ms>:<target>    pvz. --double-tap 300:key:c\n\n<profile> priima UUID arba tikslų, raidžių dydžiui nejautrų profilio pavadinimą.\n<id> priima dešimtainę arba 0x priešdėlio šešioliktainę reikšmę.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ turi būti 16 bitų dešimtainis arba 0x priešdėlio šešioliktainis identifikatorius.";
 "cli.mapping.jsonEncodeFailed" = "Nepavyko užkoduoti UTF-8 JSON.";
 "cli.mapping.layer_action_unknown" = "Nežinomas sluoksnio veiksmas „%@“. Tikimasi: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver programos tarnyba neveikia.";
 "cli.runtime.sample_limit" = "Konfigūracija surinktų %d imtis; padidinkite --interval-ms.";
 "cli.runtime.stable_note" = "Stabilus ribotas mirkymas yra įrodymas šiai apkrovai, ne įrodymas, kad visų nutekėjimų nėra.";
-"cli.settings.reset.failed" = "Nepavyko nustatyti nuostatų iš naujo. Paleiskite įdiegtą programą ir patikrinkite jos leidimus.";
-"cli.settings.reset.next" = "Toliau: vykdykite compat set <identity>, kad pasirinktumėte suderinamumo tapatybę.";
-"cli.settings.reset.success" = "Gerai: programos tarnybos nuostatos nustatytos iš naujo.";
 "cli.status.access_denied" = "Jei prieiga atmesta, vykdykite --headless permissions request ir patvirtinkite Įvesties stebėseną ir Pritaikymą neįgaliesiems Sistemos nuostatose.";
 "cli.status.heading" = "OpenJoystickDriver būsena";
 "cli.status.json_error" = "Nepavyko užkoduoti būsenos JSON: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Būsena       : %@";
 "cli.updates.unknown_option" = "Nežinoma naujinių parinktis: %@";
 "common.unknown" = "Nežinoma";
-"compatibility.appleGameController" = "Žvaigždė GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (originaliai)";
 "developer.buttons" = "Mygtukai";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Mygtukas B";
 "inputTest.bCircle" = "B / apskritimas";
 "inputTest.brightness" = "Šviesumas";
-"inputTest.circle" = "Apskritimas";
 "inputTest.color" = "Rūšis";
 "inputTest.controls" = "Tiesioginė įvestis";
-"inputTest.cross" = "Kryžiukas";
 "inputTest.disconnected" = "Valdiklis išjungtas";
 "inputTest.dpadDown" = "Krypčių pultas žemyn";
 "inputTest.dpadLeft" = "Krypčių pultas kairėn";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Šiai valdiklei nėra įmanomų apšvietimo valdiklių.";
 "inputTest.live" = "Įvesti aktyvus";
 "inputTest.menu" = "Meniu";
-"inputTest.minus" = "Minusas";
 "inputTest.off" = "Išjungta";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Parinktys";
 "inputTest.outputError" = "Fizinis išleidimo klaida";
 "inputTest.outputRejected" = "Valdiklis atmetė šį išėjimo bandymą.";
 "inputTest.permissionRequired" = "Įvesties Privalomas stebėjimo leidimas";
 "inputTest.playerIndicator" = "Žaidėjų rodiklis";
-"inputTest.plus" = "Pliusas";
 "inputTest.pressed" = "Paspausta";
-"inputTest.psButton" = "PS mygtukas";
 "inputTest.released" = "Atleista";
 "inputTest.rightBumper" = "Dešinysis bamperis";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Dešinysis Y";
 "inputTest.rumble" = "Rąšimas";
 "inputTest.rumbleUnavailable" = "Šis valdiklis nepalaiko \"Rumble\".";
-"inputTest.share" = "Bendrinti";
-"inputTest.square" = "Kvadratas";
 "inputTest.stale" = "Įvedimas nutrauktas";
 "inputTest.start" = "Pradėkite įvesti bandymą";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Tiesioginė įvestis";
 "inputTest.tabMotion" = "Pranešimas";
 "inputTest.tabOutput" = "Išėjimo";
-"inputTest.steamButton" = "Steam mygtukas";
 "inputTest.summary" = "Bandykite mygtukus, stiklus, triggerius, grumblį ir valdiklių apšvietimą.";
 "inputTest.testRumble" = "Bandymo ramblas";
 "inputTest.title" = "Įėjimo bandymas";
-"inputTest.triangle" = "Trikampis";
 "inputTest.unavailable" = "Įvedimas nedalyvavimas";
 "inputTest.view" = "Peržiūra";
 "inputTest.windowTitle" = "Įėjimo bandymas %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Pasirinktos \"Joy-Cons\" negalėjo būti susivienijamos.";
 "profiles.joyConExplicitSession" = "Pradėjau nuo eksplicito pora sesijos";
 "profiles.joyConSessionState" = "Išreiškius poravimas";
-"profiles.gyro.virtualMotion" = "Virtuali virtuolio judėjimo kalibruotas į priekį";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (Rumble)%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Valdiklis išjungtas";
 "controllers.resume" = "Bandyti dar kartą";
 "controllers.disconnectFromOJD" = "Valdiklis išjungtas";
-"error.compatibilityTransitionDetailed" = "Pasirinktos valdiklio išvesties nepavyko įjungti. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Pasirinktos valdiklio išvesties nepavyko įjungti.";
 "cli.catalog.controller_disconnect.summary" = "Valdiklis išjungtas";
 "cli.catalog.controller_resume.summary" = "Bandyti dar kartą — Valdiklis išjungtas";
+"cli.catalog.controller_virtual_set.summary" = "Priverstinai nustatyti valdiklio virtualų HID profilį";
+"cli.catalog.controller_virtual_reset.summary" = "Automatiškai parinkti valdiklio virtualų HID profilį, arba išvalyti visus pakeitimus naudojant --all";
 "cli.controller.disconnected" = "Valdiklis išjungtas";
 "cli.controller.resumed" = "Įvesti aktyvus";
 

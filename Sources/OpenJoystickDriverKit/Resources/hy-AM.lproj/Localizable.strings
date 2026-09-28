@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Միացված կարգավորիչների ստուգում…";
 "status.refreshingProfile" = "Պրոֆիլի վիճակի թարմացում…";
 "status.loadingProfiles" = "Պրոֆիլների բեռնում…";
-"status.updatingIdentity" = "Կարգավորիչի ինքնության թարմացում…";
 "status.listening" = "Լսում…";
 "status.readyToListen" = "Պատրաստ է լսել";
 "status.checkingInput" = "Ստուգում";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Կարգավորիչներ";
 "settings.controllerDisconnectedNotifications" = "Կառավարիչը անջատված է";
 "settings.controllerDisconnectedShort" = "Հեռացված";
-"settings.controllerIdentity" = "Կարգավորիչի ինքնություն";
 "settings.controllerNotifications" = "Կապված վերահսկիչ";
 "settings.diagnostics" = "Ախտորոշում";
 "settings.service" = "Ծառայություն";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Լիցքաթափում";
 "controllers.charging" = "Լիցքավորում";
 "controllers.batteryFull" = "Լրիվ";
+"controllers.notChargeable" = "Չի լիցքավորվում";
 "controllers.batteryAccessibilityDetails" = "Մարտկոց՝ %@։ Լիցքավորման վիճակ՝ %@։ Մալուխի վիճակ՝ %@։";
 "controllers.activeProfile" = "Ակտիվ պրոֆիլ";
 "controllers.profileChecking" = "Ստուգում…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Ակտիվ պրոֆիլն անհասանելի է";
 "controllers.profileLoadError" = "Ակտիվ պրոֆիլը չհաջողվեց բեռնել";
 "controllers.protocol" = "Արձանագրություն";
-"controllers.parser" = "Վերլուծիչ";
 "controllers.serialNumber" = "Սերիական համար";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Մուտքի վերջնակետ";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Ակտիվ պրոֆիլի սխալ. %@";
 "controllers.accessibilityDetails" = "%@. %@. Արձանագրություն. %@. Parser. %@. Սերիական համար. %@. USB VID/PID. %@. Մուտքի վերջնակետ. %@. Ելքի վերջնակետ. %@։";
 "controllers.publishedAs" = "Հրապարակվել է որպես";
-"identity.title" = "Կարգավորիչի ինքնություն";
-"identity.needsAttention" = "Ուշադրություն է պահանջվում";
-"identity.error" = "Կարգավորիչի ինքնության սխալ";
-"identity.updating" = "Կարգավորիչի ինքնության թարմացում…";
-"identity.reset" = "Վերականգնել առաջարկվածը";
-"identity.checking" = "Ստուգում";
-"identity.globalScope" = "Հատկվում է բոլոր վիրտուալ վերահսկիչների համար, որոնք հրապարակվել են OpenJoystickDriver.";
-"identity.unavailable" = "Անհասանելի";
-"identity.notSelected" = "Ընտրված չէ";
+"controllers.nativeGamepadNotPublished" = "macOS-ի բնիկ խաղային կառավարիչ, չհրապարակված";
+"virtualProfile.advanced" = "Ընդլայնված";
+"virtualProfile.title" = "Վիրտուալ HID պրոֆիլ";
+"virtualProfile.modelScope" = "Կիրառվում է այս մոդելի յուրաքանչյուր միացված կարգավորիչի համար։";
+"virtualProfile.sourceOverride" = "Վերասահմանում";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Ավտոմատ, վերասահմանումը մերժվել է";
+"virtualProfile.none" = "Վիրտուալ HID պրոֆիլ չկա";
+"virtualProfile.unavailable" = "Ոչ մի վիրտուալ HID պրոֆիլ չի կարող ներկայացնել այս կարգավորիչը։";
+"virtualProfile.updating" = "Վիրտուալ HID պրոֆիլի թարմացում…";
+"virtualProfile.live" = "Ակտիվ պրոֆիլ";
+"virtualProfile.failure.unknownProfile" = "Այս վիրտուալ HID պրոֆիլն անհայտ է։ Ոչինչ չի պահպանվել։";
+"virtualProfile.failure.controllerNotFound" = "Կարգավորիչն անջատվել է կամ չի գտնվում։ Վերասահմանումը չի փոխվել։";
+"virtualProfile.failure.overrideRejected" = "Վերասահմանումը պահպանված է, բայց այս կարգավորիչը չի կարող այն օգտագործել, ուստի ընտրում է ավտոմատ։";
+"virtualProfile.failure.activationFailed" = "Ակտիվացումը ձախողվեց, ուստի վերականգնվեց նախորդ վիրտուալ HID պրոֆիլը՝ %@";
+"virtualProfile.failure.outputDisabled" = "Վերասահմանումը պահպանված է և կկիրառվի վիրտուալ ելքը միացնելուց հետո։";
+"virtualProfile.failure.serverStopped" = "Ծառայությունը դադարեց։ Վերասահմանումը չի փոխվել։";
+"virtualProfile.failure.persistenceFailed" = "Վերասահմանումը հնարավոր չեղավ պահպանել։ Ոչինչ չի պահպանվել։";
+"virtualProfile.storeError" = "Վիրտուալ HID պրոֆիլի վերասահմանումները հնարավոր չէ կարդալ (%@)։ Կարգավորիչներն ընտրում են ավտոմատ։";
+"virtualProfile.legacyIdentityRejected" = "Կարգավորիչի ինքնության %@ հնացած կարգավորումն այլևս չի կիրառվում։ Այն մաքրելու համար գործարկեք controller virtual reset --all։";
 "keyboard.noKey" = "Ստեղն ընտրված չէ";
 "keyboard.pressKey" = "Սեղմեք ստեղն…";
 "keyboard.captureKey" = "Գրանցել ստեղն";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Ընթացիկ վիճակ";
 "debug.runtime" = "Գործարկում";
 "debug.controllers" = "Կարգավորիչներ";
-"debug.controllerIdentity" = "Կարգավորիչի ինքնություն";
 "debug.unavailable" = "Գործարկում · անհասանելի";
 "debug.needsAttention" = "Գործարկում · ուշադրություն է պահանջվում";
 "debug.diagnostics" = "Ախտորոշում";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Կարգավորիչի ելքն անջատված է։";
 "debug.outputNeedsAttention" = "Կարգավորիչի ելքը ուշադրություն է պահանջում։";
 "debug.serviceUnavailable" = "Ծառայության ախտորոշումն այժմ անհասանելի է։";
-"error.selectedOutputUnavailable" = "Ընտրված կարգավորիչի ելքն անհասանելի է։";
-"error.selectedOutputEnableFailed" = "Ընտրված կարգավորիչի ելքը չհաջողվեց միացնել։";
 "error.profileChanged" = "Այս պրոֆիլը փոխվել է այլ տեղ։ Վերաբեռնեք կամ շարունակեք խմբագրել։";
 "error.duplicateProfile" = "Այդ անունով պրոֆիլ արդեն կա։";
 "error.profileMissing" = "Այդ պրոֆիլն այլևս հասանելի չէ։";
@@ -443,9 +448,7 @@
 "common.runtime" = "Գործարկում";
 "common.controllers" = "Կարգավորիչներ";
 "common.profiles" = "Պրոֆիլներ";
-"common.controllerIdentity" = "Կարգավորիչի ինքնություն";
 "common.protocol" = "Արձանագրություն";
-"common.parser" = "Վերլուծիչ";
 "common.serialNumber" = "Սերիական համար";
 "common.inputEndpoint" = "Մուտքի վերջնակետ";
 "common.outputEndpoint" = "Ելքի վերջնակետ";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Ընտրված պրոֆիլային կետը այլեւս հասանելի չէ:";
 "cli.catalog.app_ready.summary" = "Ստուգել նույնականացված հավելվածի ծառայության պատրաստվածությունը";
 "cli.catalog.app_status.summary" = "Ցուցադրել հավելվածի ծառայության վիճակը";
-"cli.catalog.compat.summary" = "Կառավարել վիրտուալ կարգավորիչի համատեղելիությունը";
 "cli.catalog.controller_list.summary" = "Ցուցակել միացված կարգավորիչները";
 "cli.catalog.controller_output.summary" = "Փորձարկել աջակցվող ֆիզիկական կարգավորիչի ելքը";
 "cli.catalog.controller_packets.summary" = "Ցուցադրել կարգավորիչի վերջին փաթեթները";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Ցուցադրել դրայվերի և գործարկման վիճակը";
 "cli.catalog.test.summary" = "Փորձարկել վիրտուալ կարգավորիչի մուտքի առաքումը";
 "cli.catalog.update.summary" = "Ստուգել GitHub-ը հասանելի թարմացումների համար";
-"cli.compat.identity" = "համատեղելիության ինքնություն. %@";
-"cli.compat.identity_unknown" = "համատեղելիության ինքնություն. անհայտ";
-"cli.compat.set_failed" = "Չհաջողվեց համատեղելիության ինքնությունը սահմանել որպես %@: գործարկեք տեղադրված հավելվածը և ստուգեք մուտքի մոնիթորինգի և մատչելիության հասանելիությունը:";
-"cli.compat.usage" = "Օգտագործում. OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "օգտատիրոջ տարածքի վիճակ. %@";
 "cli.controller.allAppleEntries" = "Apple կատալոգի բոլոր ճշգրիտ գրառումները.";
 "cli.controller.appleIDs" = "    Apple նույնացուցիչներ. %@";
 "cli.controller.applePairs" = "  Apple զույգեր  . %d ճշգրիտ VID/PID գրառում";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Միացված կարգավորիչ չի համապատասխանում --device %@-ին:";
 "cli.controller.selection.multiple" = "Մի քանի կարգավորիչ է համընկնում: Ընտրեք մեկը --device-ով.\n  %@";
 "cli.controller.selection.none" = "Կարգավորիչ միացված չէ:";
+"cli.controller.virtual.live" = "Վիրտուալ HID պրոֆիլ. %@ (%@)";
+"cli.controller.virtual.none" = "Վիրտուալ HID պրոֆիլ. չկա (%@)";
+"cli.controller.virtual.failed" = "Վիրտուալ HID պրոֆիլի հարցումը ձախողվեց. %@";
+"cli.controller.virtual.unknown_profile" = "Անհայտ վիրտուալ HID պրոֆիլ «%@»: Օգտագործեք դրանցից մեկը. %@:";
+"cli.controller.virtual.missing_profile" = "«controller virtual set»-ը պահանջում է վիրտուալ HID պրոֆիլ: Օգտագործեք դրանցից մեկը. %@:";
+"cli.controller.virtual.reset_all_with_selector" = "«--all»-ը չի կարող համակցվել --vid, --pid կամ --device ընտրանքների հետ:";
+"cli.controller.virtual.reset_all.success" = "Լավ. վիրտուալ HID պրոֆիլի բոլոր վերասահմանումները մաքրվել են:";
+"cli.controller.virtual.reset_all.failed" = "Չհաջողվեց վերականգնել կարգավորումները: Գործարկեք տեղադրված հավելվածը և ստուգեք նրա թույլտվությունները:";
 "cli.controller.selection.vid_pid_missing" = "Միացված կարգավորիչ չի համապատասխանում %@:%@-ին:";
 "cli.controller.selection.vid_pid_pair" = "Փոխանցեք և VID, և PID, կամ բաց թողեք երկուսն էլ:";
 "cli.controller.serviceControllers" = "Կարգավորիչներ (աշխատող հավելվածի ծառայությունից).";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Հուշում. տրամադրեք պահանջվող իրավունքը և մուտքի մոնիթորինգի հասանելիությունը:";
 "cli.controller.usbControllers" = "USB կարգավորիչներ (դաս 0xFF / GIP).";
 "cli.controller.vidPidOrSingle" = "Փոխանցեք և VID, և PID, կամ բաց թողեք երկուսն էլ, երբ մեկ կարգավորիչ է միացված:";
-"cli.diagnose.advisory_candidate" = "    Խորհրդատվական արձանագրության թեկնածու. %@";
 "cli.diagnose.app_missing" = "  Հավելված. բացակայում է %@-ում";
 "cli.diagnose.app_missing_fix" = "  Ուղղում. կառուցեք և տեղադրեք հավելվածը /Applications-ում";
 "cli.diagnose.app_present" = "  Հավելված. առկա է";
 "cli.diagnose.binary_path" = "Երկուական. %@";
-"cli.diagnose.catalog_conflict" = "      Դիտարկումը հակասում է կատալոգի ընտանիքին. վերլուծիչն անփոփոխ է";
-"cli.diagnose.catalog_parser" = "      Կատալոգի վերլուծիչը մնում է %@ (%@)";
 "cli.diagnose.dext_found" = "  Գտնված .dext փաթեթներ.";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      վերջնական կետ 0x%02X %@ %@ maxPacket=%@ միջանկյալ=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Անհայտ արձագանքման կոր «%@»:";
 "cli.mapping.double_tap_format" = "--double-tap-ը սպասում է <ms>:<target>, օր. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Օգտագործում. OpenJoystickDriver --headless map <command>\n\nՀրամաններ.\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nԱղբյուր. button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nՆպատակ. key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nԱռանցքի ընտրանքներ.\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nՏուրբո ընտրանքներ (միայն ստեղնաշարի և մկնիկի կոճակներ).\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nԱկտիվացման ընտրանքներ (միայն ստեղնաշարի և մկնիկի կոճակներ, փոխադարձ բացառող տուրբոյի հետ).\n  --long-hold <ms>:<target>     օր. --long-hold 500:key:b\n  --double-tap <ms>:<target>    օր. --double-tap 300:key:c\n\n<profile>-ը ընդունում է UUID կամ ճշգրիտ, մեծատառերից անկախ պրոֆիլի անուն:\n<id>-ը ընդունում է տասնորդական կամ 0x նախածանցով տասնվեցական:\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Օգտագործում. OpenJoystickDriver --headless map <command>\n\nՀրամաններ.\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nԱղբյուր. button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nՆպատակ. key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nԱռանցքի ընտրանքներ.\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nՏուրբո ընտրանքներ (միայն ստեղնաշարի և մկնիկի կոճակներ).\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nԱկտիվացման ընտրանքներ (միայն ստեղնաշարի և մկնիկի կոճակներ, փոխադարձ բացառող տուրբոյի հետ).\n  --long-hold <ms>:<target>     օր. --long-hold 500:key:b\n  --double-tap <ms>:<target>    օր. --double-tap 300:key:c\n\n<profile>-ը ընդունում է UUID կամ ճշգրիտ, մեծատառերից անկախ պրոֆիլի անուն:\n<id>-ը ընդունում է տասնորդական կամ 0x նախածանցով տասնվեցական:\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@-ը պետք է լինի 16-բիթ տասնորդական կամ 0x նախածանցով տասնվեցական նույնացուցիչ:";
 "cli.mapping.jsonEncodeFailed" = "Չհաջողվեց կոդավորել UTF-8 JSON:";
 "cli.mapping.layer_action_unknown" = "Անհայտ շերտի գործողություն «%@»: Սպասվող. create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver հավելվածի ծառայությունը չի աշխատում:";
 "cli.runtime.sample_limit" = "Կազմաձևումը կհավաքի %d նմուշ. մեծացրեք --interval-ms:";
 "cli.runtime.stable_note" = "Կայուն սահմանափակ թրջումը ապացույց է այս բեռի համար, ոչ թե ապացույց, որ բոլոր արտահոսքերը բացակայում են:";
-"cli.settings.reset.failed" = "Չհաջողվեց վերականգնել կարգավորումները: Գործարկեք տեղադրված հավելվածը և ստուգեք նրա թույլտվությունները:";
-"cli.settings.reset.next" = "Հաջորդը. գործարկեք compat set <identity>՝ համատեղելիության ինքնությունը ընտրելու համար:";
-"cli.settings.reset.success" = "Լավ. հավելվածի ծառայության կարգավորումները վերականգնվել են:";
 "cli.status.access_denied" = "Եթե հասանելիությունը մերժված է, գործարկեք --headless permissions request և հաստատեք մուտքի մոնիթորինգը և մատչելիությունը Համակարգի կարգավորումներում:";
 "cli.status.heading" = "OpenJoystickDriver վիճակ";
 "cli.status.json_error" = "Չհաջողվեց կոդավորել վիճակի JSON. %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Վիճակ       . %@";
 "cli.updates.unknown_option" = "Անհայտ թարմացումների ընտրանք. %@";
 "common.unknown" = "Անհայտ";
-"compatibility.appleGameController" = "Apple GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (օրիգինալ)";
 "developer.buttons" = "Կոճակներ";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B կոճակ";
 "inputTest.bCircle" = "B / շրջան";
 "inputTest.brightness" = "Լուսավորություն";
-"inputTest.circle" = "Շրջան";
 "inputTest.color" = "Գույն";
 "inputTest.controls" = "Ուղիղ մուտք";
-"inputTest.cross" = "Խաչ";
 "inputTest.disconnected" = "Կառավարիչը անջատված է";
 "inputTest.dpadDown" = "Ուղղությունների վահանակ ներքև";
 "inputTest.dpadLeft" = "Ուղղությունների վահանակ ձախ";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Այս վերահսկիչի համար լույսերի վերահսկողություն չի տրամադրվում:";
 "inputTest.live" = "Ներմուծման ակտիվ";
 "inputTest.menu" = "Ցանկ";
-"inputTest.minus" = "Մինուս";
 "inputTest.off" = "Անջատված";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Ընտրանքներ";
 "inputTest.outputError" = "Ֆիզիկական արտադրանքի սխալ";
 "inputTest.outputRejected" = "Կառավարիչը մերժել է այս ելքի փորձարկումը:";
 "inputTest.permissionRequired" = "Ներմուծման Մոնիտորինգի թույլտվություն պահանջվում է";
 "inputTest.playerIndicator" = "Խաղացողի ցուցանիշը";
-"inputTest.plus" = "Պլյուս";
 "inputTest.pressed" = "Սեղմված";
-"inputTest.psButton" = "PS կոճակ";
 "inputTest.released" = "Ազատված";
 "inputTest.rightBumper" = "Աջ բամպեր";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Աջ Y";
 "inputTest.rumble" = "Ռումբլ";
 "inputTest.rumbleUnavailable" = "Rumble- ը չի աջակցվում այս վերահսկիչի կողմից:";
-"inputTest.share" = "Համօգտագործում";
-"inputTest.square" = "Քառակուսի";
 "inputTest.stale" = "Ներբեռնման ընդհատում";
 "inputTest.start" = "Սկսեք մուտքագրման փորձարկումը";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Ուղիղ մուտք";
 "inputTest.tabMotion" = "Քննարկում";
 "inputTest.tabOutput" = "Արտահանում";
-"inputTest.steamButton" = "Steam կոճակ";
 "inputTest.summary" = "Փորձարկման կոճակներ, փայտեր, սթրիկներ, բռունցք եւ վերահսկիչի լուսավորություն:";
 "inputTest.testRumble" = "Թեստային ռումբլ";
 "inputTest.title" = "Ներմուծման փորձարկում";
-"inputTest.triangle" = "Եռանկյուն";
 "inputTest.unavailable" = "Ներբեռնման հասանելի չէ";
 "inputTest.view" = "Դիտել";
 "inputTest.windowTitle" = "Ներմուծման փորձարկում %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Ընտրված Joy-Cons- ը չի կարող է զուգակցվել: Վերականգնեք միացված վերահսկիչները եւ փորձեք կրկին:";
 "profiles.joyConExplicitSession" = "Սկսվել է բացասական զույգի նստաշրջանի հետ";
 "profiles.joyConSessionState" = "Բացասական զուգակցում";
-"profiles.gyro.virtualMotion" = "Առաջնային կալիբրացված վիրտուալ շարժում";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ բռունցք (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Կառավարիչը անջատված է";
 "controllers.resume" = "Փորձել նորից";
 "controllers.disconnectFromOJD" = "Կառավարիչը անջատված է";
-"error.compatibilityTransitionDetailed" = "Ընտրված կարգավորիչի ելքը չհաջողվեց միացնել։ (%@, %@)";
 "error.controllerSessionChangeRejected" = "Ընտրված կարգավորիչի ելքը չհաջողվեց միացնել։";
 "cli.catalog.controller_disconnect.summary" = "Կառավարիչը անջատված է";
 "cli.catalog.controller_resume.summary" = "Փորձել նորից — Կառավարիչը անջատված է";
+"cli.catalog.controller_virtual_set.summary" = "Վերասահմանել կառավարիչի վիրտուալ HID պրոֆիլը";
+"cli.catalog.controller_virtual_reset.summary" = "Ավտոմատ ընտրել կառավարիչի վիրտուալ HID պրոֆիլը, կամ մաքրել բոլոր վերասահմանումները --all-ով";
 "cli.controller.disconnected" = "Կառավարիչը անջատված է";
 "cli.controller.resumed" = "Ներմուծման ակտիվ";
 

@@ -1,4 +1,3 @@
-import CoreHID
 import Darwin
 import Foundation
 import IOKit
@@ -16,46 +15,7 @@ extension UserSpaceOutputDispatcher {
       }
       return Entry(backend: backend, inputReportState: UserSpaceInputReportState(format: format))
     }
-    if #available(macOS 15, *) { return try await createCoreHIDEntry(for: identifier) }
     return try createIOKitEntry(for: identifier)
-  }
-
-  @available(macOS 15, *)
-  internal func createCoreHIDEntry(for identifier: DeviceIdentifier) async throws -> Entry {
-    let properties = Self.virtualDeviceProperties(
-      profile: profile,
-      format: format,
-      identifier: identifier,
-      productNameOverride: productNameOverride
-    )
-    guard let device = HIDVirtualDevice(properties: properties) else {
-      let error = Self.coreHIDCreationFailure()
-      print("[UserSpaceOutputDispatcher] CoreHID HIDVirtualDevice create returned nil: \(error)")
-      throw error
-    }
-    Self.applyPublishedIOHIDTransport(Self.ioHIDTransportValue(for: profile), to: device)
-    let inputReportState = UserSpaceInputReportState(format: format)
-    let sender = UserSpaceReportSender()
-    let delegate = CoreHIDDelegate(
-      handler: hostReportHandler(identifier: identifier, input: inputReportState, sender: sender)
-    )
-    let entry = Entry(
-      backend: CoreHIDBackend(device: device, delegate: delegate),
-      inputReportState: inputReportState,
-      sender: sender
-    )
-    guard lifecycle.isOpen else {
-      await entry.close()
-      throw CancellationError()
-    }
-    await device.activate(delegate: delegate)
-    guard lifecycle.isOpen else {
-      await entry.close()
-      throw CancellationError()
-    }
-    Self.applyPublishedIOHIDTransport(Self.ioHIDTransportValue(for: profile), to: device)
-    print("[UserSpaceOutputDispatcher] Created CoreHID virtual device for \(identifier)")
-    return entry
   }
 
   internal func hostReportHandler(
@@ -69,29 +29,29 @@ extension UserSpaceOutputDispatcher {
       input: input,
       sender: sender,
       isOpen: isOpen,
-      onRumble: onRumbleCommand
+      onOutput: onOutputCommand
     ) { [weak self] status in self?.registryLock.withLock { self?._lastRumbleStatus = status } }
   }
 
-  @available(macOS, introduced: 10.15, obsoleted: 15.0)
-  internal func createIOKitEntry(for identifier: DeviceIdentifier) throws -> Entry {
-    guard PermissionManager.currentInputMonitoringAccessState() == .granted else {
-      throw CreationError.inputMonitoringDenied
-    }
-    guard PermissionManager.currentAccessibilityAccessState() == .granted else {
-      throw CreationError.accessibilityDenied
-    }
+  static func creationFailure(
+    inputMonitoring: PermissionManager.AccessState =
+      PermissionManager.currentInputMonitoringAccessState(),
+    accessibility: PermissionManager.AccessState =
+      PermissionManager.currentAccessibilityAccessState()
+  ) -> CreationError {
+    if inputMonitoring != .granted { return .inputMonitoringDenied }
+    if accessibility != .granted { return .accessibilityDenied }
+    return .createFailed
+  }
 
+  internal func createIOKitEntry(for identifier: DeviceIdentifier) throws -> Entry {
     let baseProperties = Self.deviceProperties(
       profile: profile,
       format: format,
       identifier: identifier,
       productNameOverride: productNameOverride
     )
-    let attempts = Self.deviceCreationAttempts(
-      baseProperties: baseProperties,
-      primaryUsage: primaryUsage
-    )
+    let attempts = Self.deviceCreationAttempts(baseProperties: baseProperties)
     let candidateLocationIDs: [UInt32?] = [
       UserSpaceVirtualDeviceConstants.locationID(for: identifier), 0x1000_0002, nil,
     ]
@@ -113,14 +73,17 @@ extension UserSpaceOutputDispatcher {
         if device != nil { break attemptLoop }
       }
     }
-    guard let device else { throw CreationError.createFailed }
+    // IOHIDUserDevice.h requires only the virtual-device entitlement, so permissions are not
+    // checked up front; they only explain a failed create.
+    guard let device else { throw Self.creationFailure() }
     guard lifecycle.isOpen else {
       IOHIDUserDeviceCancel(device)
       throw CancellationError()
     }
 
+    let identity = identifier.controllerIdentity
     let queue = DispatchQueue(
-      label: "com.openjoystickdriver.iokit-hid.\(identifier.vendorID).\(identifier.productID)"
+      label: "com.openjoystickdriver.iokit-hid.\(identity.vendorID).\(identity.productID)"
     )
     let inputReportState = UserSpaceInputReportState(format: format)
     let entry = Entry(
@@ -169,51 +132,12 @@ extension UserSpaceOutputDispatcher {
   }
 
   /// IOHID `Transport` string HIDAPI matches (`kIOHIDTransportBluetoothValue` prefix).
-  ///
-  /// CoreHID `HIDVirtualDevice` still stamps `Transport=Virtual` unless this value is
-  /// also passed through `extraProperties` and applied on the backing `IOHIDUserDevice`.
   static func ioHIDTransportValue(for profile: VirtualDeviceProfile) -> String {
     switch profile.transport {
     case kIOHIDTransportBluetoothValue, kIOHIDTransportBluetoothLowEnergyValue:
       kIOHIDTransportBluetoothValue
     default: kIOHIDTransportUSBValue
     }
-  }
-
-  @available(macOS 15, *)
-  static func hidDeviceTransport(for profile: VirtualDeviceProfile) -> HIDDeviceTransport {
-    ioHIDTransportValue(for: profile) == kIOHIDTransportBluetoothValue ? .bluetooth : .usb
-  }
-
-  static func virtualDeviceExtraProperties(profile: VirtualDeviceProfile) -> [String: any AnyObject]
-  { [kIOHIDTransportKey as String: ioHIDTransportValue(for: profile) as CFString] }
-
-  @available(macOS 15, *)
-  static func applyPublishedIOHIDTransport(_ value: String, to device: HIDVirtualDevice) {
-    if #available(macOS 26, *), let userDevice = device.hidDevice {
-      IOHIDUserDeviceSetProperty(userDevice, kIOHIDTransportKey as CFString, value as CFString)
-    }
-  }
-
-  @available(macOS 15, *)
-  static func virtualDeviceProperties(
-    profile: VirtualDeviceProfile,
-    format: any VirtualGamepadReportFormat,
-    identifier: DeviceIdentifier,
-    productNameOverride: String? = nil
-  ) -> HIDVirtualDevice.Properties {
-    HIDVirtualDevice.Properties(
-      descriptor: Data(format.descriptor),
-      vendorID: UInt32(profile.vendorID),
-      productID: UInt32(profile.productID),
-      transport: hidDeviceTransport(for: profile),
-      product: productNameOverride ?? profile.productName,
-      manufacturer: profile.manufacturer,
-      versionNumber: UInt64(profile.versionNumber),
-      serialNumber: UserSpaceVirtualDeviceConstants.serialNumber(for: identifier),
-      locationID: UInt64(UserSpaceVirtualDeviceConstants.locationID(for: identifier)),
-      extraProperties: virtualDeviceExtraProperties(profile: profile)
-    )
   }
 
   static func deviceProperties(
@@ -249,34 +173,8 @@ extension UserSpaceOutputDispatcher {
     return properties
   }
 
-  public static func defaultPrimaryUsage(for format: any VirtualGamepadReportFormat) -> Int {
-    if let xbox360 = format as? Xbox360MacHIDReportFormat { return Int(xbox360.topLevelUsage) }
-    return Int(kHIDUsage_GD_GamePad)
-  }
-
   internal static func reportBufferSize(payloadSize: Int, reportID: UInt8?) -> Int {
     reportID == nil ? payloadSize : payloadSize + 1
-  }
-
-  /// Classifies a nil CoreHID `HIDVirtualDevice` (macOS 15+ wraps IOHIDUserDevice;
-  /// Accessibility / PostEvent deny surfaces as `IOServiceOpen` `kIOReturnNotPermitted`).
-  /// Input Monitoring / ListenEvent is not mapped: it blocks `IOHIDDeviceOpen` and
-  /// `GC.supportsHIDDevice`, not virtual-device create.
-  static func mappedCoreHIDCreationFailure(
-    provisioning: VirtualHIDProvisioningHost.Authorization,
-    accessibility: PermissionManager.AccessState
-  ) -> CreationError {
-    if provisioning == .excludesHost { return .provisioningProfileExcludesHost }
-    if accessibility != .granted { return .accessibilityDenied }
-    return .createFailed
-  }
-
-  @available(macOS 15, *)
-  internal static func coreHIDCreationFailure() -> CreationError {
-    mappedCoreHIDCreationFailure(
-      provisioning: VirtualHIDProvisioningHost.currentAuthorization(),
-      accessibility: PermissionManager.currentAccessibilityAccessState()
-    )
   }
 
   internal static func hasEntitlement(_ entitlement: String) -> Bool {

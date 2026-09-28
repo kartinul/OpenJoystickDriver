@@ -3,33 +3,29 @@ import Foundation
 import OpenJoystickDriverKit
 import OpenJoystickDriverUSB
 
-private let controllerRecordProbeKeepAliveIntervalNanoseconds: UInt64 = 4_000_000_000
 private actor ControllerRecordProbeIsolation {
-  private let parser: any InputParser
+  private let driver: any PhysicalProtocolDriver
+  /// Produced once, so the RECORD line shows the exact writes sent, sequence numbers included.
+  private lazy var startupWrites = driver.startupWrites()
 
-  init(parser: sending any InputParser) { self.parser = parser }
+  init(driver: sending any PhysicalProtocolDriver) { self.driver = driver }
 
-  func printRecord(plan: ControllerRecordProbePlan) {
-    renderProbeRecord(plan: plan, parser: parser, isolation: self)
+  func printRecord(plan: ControllerRecordProbePlan, transport: DeviceTransportProfile) {
+    renderProbeRecord(plan: plan, startup: startupWrites, transport: transport)
   }
 
-  func sendStartupPackets(session: any USBTransportSession, endpoint: UInt8) async throws {
-    try await writeProbeStartupPackets(
-      parser: parser,
-      session: session,
-      endpoint: endpoint,
-      isolation: self
-    )
+  func sendStartupPackets(session: any USBTransportSession) async throws {
+    try await writeProbeStartupPackets(startupWrites, session: session)
   }
 
   func monitor(
-    plan: ControllerRecordProbePlan,
+    transport: DeviceTransportProfile,
     session: any USBTransportSession,
     seconds: Int
   ) async throws -> (packets: Int, events: Int, parseErrors: Int) {
     try await monitorProbeInput(
-      parser: parser,
-      plan: plan,
+      driver: driver,
+      transport: transport,
       session: session,
       seconds: seconds,
       isolation: self
@@ -45,10 +41,11 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
     defer { done.signal() }
     do {
       let plan = try ControllerRecordProbePlan(contentsOf: URL(fileURLWithPath: recordPath))
-      let parser = plan.makeParser()
-      let isolation = ControllerRecordProbeIsolation(parser: parser)
-      await isolation.printRecord(plan: plan)
       if validateOnly {
+        await ControllerRecordProbeIsolation(driver: plan.makeUnobservedDriver()).printRecord(
+          plan: plan,
+          transport: plan.transportProfile
+        )
         print("RECORD_VALIDATION result=valid")
         return
       }
@@ -66,15 +63,38 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
 
       print("USB_DEVICE service=\(device.serviceID) location=\(device.locationID)")
       if let product = device.productName { print("USB_STRING product=\(product)") }
+      // Validate the claimed interface as discovery does, before open can set the configuration.
+      let passive = await provider.resolveTransport(for: device, configured: plan.transportProfile)
+      guard let claimed = await provider.resolveUSBConfiguration(device, passive: passive),
+        claimed.physicalDevice.map({ $0.serviceIdentity == device.serviceIdentity }) ?? true
+      else {
+        refuseProbeDevice(
+          reason: "configuration-unobserved",
+          message: "the device's USB configuration descriptor could not be read; try again",
+          exitCode: exitCode
+        )
+        return
+      }
+      let driver: any PhysicalProtocolDriver
+      switch plan.makeDriver(for: device, claimed: claimed) {
+      case .success(let validated): driver = validated
+      case .failure(let reason):
+        refuseProbeDevice(
+          reason: reason.rawValue,
+          message: "the device does not satisfy the record's interface contract",
+          exitCode: exitCode
+        )
+        return
+      }
+      let isolation = ControllerRecordProbeIsolation(driver: driver)
+      let transport = claimed.profile
+      await isolation.printRecord(plan: plan, transport: transport)
       let session = try await provider.open(
         device,
-        options: USBTransportOpenOptions(transportProfile: plan.transportProfile)
+        options: USBTransportOpenOptions(transportProfile: transport)
       )
 
-      if plan.transportProfile.needsSetConfiguration {
-        print("USB_CONFIGURATION value=1 result=set")
-      }
-      let transport = plan.transportProfile
+      if transport.needsSetConfiguration { print("USB_CONFIGURATION value=1 result=set") }
       if transport.alternateSetting != 0 {
         print(
           "USB_ALTERNATE_SETTING interface=\(transport.interfaceNumber)"
@@ -86,13 +106,17 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
           + " route=\(device.route.rawValue) result=opened"
       )
 
-      try await isolation.sendStartupPackets(session: session, endpoint: transport.outputEndpoint)
-      print("RECORD_HANDSHAKE driver=\(plan.driver.rawValue) result=complete")
+      try await isolation.sendStartupPackets(session: session)
+      print("RECORD_HANDSHAKE driver=\(plan.protocolBinding.rawValue) result=complete")
 
       if transport.postHandshakeSettleNanoseconds > 0 {
         try await Task.sleep(nanoseconds: transport.postHandshakeSettleNanoseconds)
       }
-      let summary = try await isolation.monitor(plan: plan, session: session, seconds: seconds)
+      let summary = try await isolation.monitor(
+        transport: transport,
+        session: session,
+        seconds: seconds
+      )
       await session.close()
       print(
         "RECORD_SUMMARY packets=\(summary.packets)"
@@ -109,55 +133,70 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
   exit(exitCode.value)
 }
 
+/// Refuses a device before any write, when its claimed interface cannot be validated.
+private func refuseProbeDevice(reason: String, message: String, exitCode: ExitCodeBox) {
+  print("RECORD_BINDING result=refused reason=\(reason)")
+  fputs("ERROR: \(message) (\(reason))\n", stderr)
+  exitCode.value = 4
+}
+
 private func renderProbeRecord(
   plan: ControllerRecordProbePlan,
-  parser: any InputParser,
-  isolation _: isolated ControllerRecordProbeIsolation
+  startup: [PhysicalOutputWrite],
+  transport: DeviceTransportProfile
 ) {
   let profileStartup = plan.startupPackets.map(\.rawValue).joined(separator: ",")
-  let usbStartup = (parser as? any USBStartupOutputProvider)?.usbStartupOutputPackets() ?? []
-  let usbStartupBytes = usbStartup.map(\.hexBytes).joined(separator: ",")
+  let usbStartupBytes = startup.map(\.hexBytes).joined(separator: ",")
   print(
     "RECORD identity=\"\(plan.name)\" vid=\(plan.vendorID) pid=\(plan.productID)"
-      + " driver=\(plan.driver.rawValue) interface=\(plan.interfaceNumber)"
-      + " in=\(hex(plan.transportProfile.inputEndpoint))"
-      + " out=\(hex(plan.transportProfile.outputEndpoint))"
-      + " configuration=\(plan.transportProfile.needsSetConfiguration ? "set1" : "current")"
+      + " driver=\(plan.protocolBinding.rawValue)" + " interface=\(transport.interfaceNumber)"
+      + " in=\(hex(transport.inputEndpoint))" + " out=\(hex(transport.outputEndpoint))"
+      + " configuration=\(transport.needsSetConfiguration ? "set1" : "current")"
       + " profile_startup=\(profileStartup.isEmpty ? "none" : profileStartup)"
       + " usb_startup=\(usbStartupBytes.isEmpty ? "none" : usbStartupBytes)"
   )
 }
 
 private func writeProbeStartupPackets(
-  parser: any InputParser,
-  session: any USBTransportSession,
-  endpoint: UInt8,
-  isolation _: isolated ControllerRecordProbeIsolation
+  _ startup: [PhysicalOutputWrite],
+  session: any USBTransportSession
 ) async throws {
-  guard let startupOutput = parser as? any USBStartupOutputProvider else { return }
-  for packet in startupOutput.usbStartupOutputPackets() {
-    do {
-      _ = try await session.writeInterruptPacket(endpoint: endpoint, data: packet, timeout: 2_000)
-      print("USB_TX endpoint=\(hex(endpoint)) bytes=\(packet.hexBytes)")
-    } catch let error as USBTransportError
-      where isIgnorableUSBStartupOutputError(parser: parser, packet: packet, error: error)
+  for write in startup {
+    do { try await writeProbe(write, session: session) } catch let error as USBTransportError
+      where isIgnorableUSBStartupOutputError(write, error: error)
     {
       print(
-        "USB_TX endpoint=\(hex(endpoint)) result=ignored"
-          + " detail=\"\(error)\" bytes=\(packet.hexBytes)"
+        "USB_TX endpoint=\(write.probeEndpoint) result=ignored"
+          + " detail=\"\(error)\" bytes=\(write.hexBytes)"
       )
     }
   }
 }
 
+/// Writes one driver-produced write and prints it as a USB_TX line.
+private func writeProbe(_ write: PhysicalOutputWrite, session: any USBTransportSession) async throws
+{
+  switch write {
+  case .usb(let packet, _):
+    _ = try await session.write(
+      endpoint: packet.endpoint,
+      data: packet.bytes,
+      timeout: packet.timeoutMilliseconds
+    )
+  case .hidOutput, .hidFeature: throw USBTransportError.notSupported
+  }
+  print("USB_TX endpoint=\(write.probeEndpoint) bytes=\(write.hexBytes)")
+}
+
 private func monitorProbeInput(
-  parser: any InputParser,
-  plan: ControllerRecordProbePlan,
+  driver: any PhysicalProtocolDriver,
+  transport: DeviceTransportProfile,
   session: any USBTransportSession,
   seconds: Int,
   isolation: isolated ControllerRecordProbeIsolation
 ) async throws -> (packets: Int, events: Int, parseErrors: Int) {
   let deadline = Date().addingTimeInterval(TimeInterval(seconds))
+  let keepAliveInterval = driver.sessionPlan.usbKeepAliveIntervalNanoseconds
   var lastKeepAlive = DispatchTime.now().uptimeNanoseconds
   var packetCount = 0
   var eventCount = 0
@@ -165,45 +204,46 @@ private func monitorProbeInput(
 
   while Date() < deadline {
     let now = DispatchTime.now().uptimeNanoseconds
-    if now &- lastKeepAlive >= controllerRecordProbeKeepAliveIntervalNanoseconds {
+    if let keepAliveInterval, now &- lastKeepAlive >= keepAliveInterval {
       lastKeepAlive = now
-      if plan.driver == .gip, plan.keepAlivePolicy == .disabled {
-        print("USB_KEEPALIVE result=disabled")
-      } else {
-        do {
-          if let packet = (parser as? any USBKeepAliveOutputProvider)?.usbKeepAlivePacket() {
-            _ = try await session.writeInterruptPacket(
+      do {
+        for write in driver.keepAliveWrites() {
+          switch write {
+          case .usb(let packet, _):
+            _ = try await session.write(
               endpoint: packet.endpoint,
               data: packet.bytes,
               timeout: packet.timeoutMilliseconds
             )
-            print("USB_KEEPALIVE result=sent")
+          case .hidOutput, .hidFeature: throw USBTransportError.notSupported
           }
-        } catch { print("USB_KEEPALIVE result=error detail=\(error.localizedDescription)") }
-      }
+          print("USB_KEEPALIVE result=sent")
+        }
+      } catch { print("USB_KEEPALIVE result=error detail=\(error.localizedDescription)") }
     }
 
     do {
-      let bytes = try await session.readInterruptPacket(
-        endpoint: plan.transportProfile.inputEndpoint,
+      let bytes = try await session.read(
+        endpoint: transport.inputEndpoint,
         length: 64,
         timeout: 250
       )
       packetCount += 1
       print(
-        "USB_RX endpoint=\(hex(plan.transportProfile.inputEndpoint))"
+        "USB_RX endpoint=\(hex(transport.inputEndpoint))"
           + " len=\(bytes.count) bytes=\(bytes.hexBytes)"
       )
       do {
-        let events = try parser.parse(data: Data(bytes))
-        try await sendLifecyclePackets(
-          parser: parser,
-          session: session,
-          plan: plan,
-          isolation: isolation
+        let event = try driver.parse(
+          report: Data(bytes),
+          receivedAt: MonotonicTimestamp(nanoseconds: DispatchTime.now().uptimeNanoseconds)
         )
-        eventCount += events.count
-        for event in events { print("EVENT \(String(describing: event))") }
+        for write in driver.drainPendingWrites() { try await writeProbe(write, session: session) }
+        try await sendLifecyclePackets(driver: driver, session: session, isolation: isolation)
+        if let event {
+          eventCount += 1
+          print("EVENT \(String(describing: event.state))")
+        }
       } catch {
         parseErrorCount += 1
         print("PARSE_ERROR detail=\(error.localizedDescription)")
@@ -215,23 +255,14 @@ private func monitorProbeInput(
 }
 
 private func sendLifecyclePackets(
-  parser: any InputParser,
+  driver: any PhysicalProtocolDriver,
   session: any USBTransportSession,
-  plan: ControllerRecordProbePlan,
   isolation _: isolated ControllerRecordProbeIsolation
 ) async throws {
-  guard let lifecycle = parser as? any ControllerInputConnectionLifecycle,
-    let state = lifecycle.consumeInputConnectionStateChange()
-  else { return }
+  guard let state = driver.consumeInputConnectionStateChange() else { return }
   print("CONTROLLER_CONNECTION state=\(String(describing: state))")
-  guard let output = parser as? any USBInputConnectionOutputProvider else { return }
-  for packet in output.usbInputConnectionOutputPackets(for: state) {
-    _ = try await session.writeInterruptPacket(
-      endpoint: plan.transportProfile.outputEndpoint,
-      data: packet,
-      timeout: 2_000
-    )
-    print("USB_TX endpoint=\(hex(plan.transportProfile.outputEndpoint)) bytes=\(packet.hexBytes)")
+  for write in driver.inputConnectionWrites(for: state) {
+    try await writeProbe(write, session: session)
   }
 }
 
@@ -239,4 +270,20 @@ private func hex<T: BinaryInteger>(_ value: T) -> String { "0x" + String(value, 
 
 extension [UInt8] {
   var hexBytes: String { map { String(format: "%02x", $0) }.joined(separator: " ") }
+}
+
+extension PhysicalOutputWrite {
+  var probeEndpoint: String {
+    switch self {
+    case .usb(let packet, _): hex(packet.endpoint)
+    case .hidOutput(let report), .hidFeature(let report): "report=\(hex(report.reportID))"
+    }
+  }
+
+  var hexBytes: String {
+    switch self {
+    case .usb(let packet, _): packet.bytes.hexBytes
+    case .hidOutput(let report), .hidFeature(let report): report.bytes.hexBytes
+    }
+  }
 }

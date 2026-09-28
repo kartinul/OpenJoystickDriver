@@ -13,7 +13,7 @@ struct StatusTests {
       name: "Test Pad",
       vendorID: 0x1234,
       productID: 0x5678,
-      parser: "GIP",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
       runtimeIdentifier: "session-device-7"
@@ -24,8 +24,7 @@ struct StatusTests {
         accessibility: "granted",
         connectedDevices: [device],
         userSpaceVirtualDeviceEnabled: true,
-        userSpaceVirtualDeviceStatus: "ready",
-        compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+        userSpaceVirtualDeviceStatus: "ready"
       )
     )
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
@@ -46,7 +45,7 @@ struct StatusTests {
       name: "Test Pad",
       vendorID: 0x1234,
       productID: 0x5678,
-      parser: "GIP",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
       runtimeIdentifier: "session-device-8"
@@ -65,8 +64,7 @@ struct StatusTests {
         accessibility: "granted",
         connectedDevices: [device],
         userSpaceVirtualDeviceEnabled: true,
-        userSpaceVirtualDeviceStatus: "ready",
-        compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+        userSpaceVirtualDeviceStatus: "ready"
       ),
       snapshotPayload: snapshot(
         profiles: [profile],
@@ -94,7 +92,7 @@ struct StatusTests {
       name: "Test Pad",
       vendorID: 0x1234,
       productID: 0x5678,
-      parser: "GIP",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
       runtimeIdentifier: "session-device-live"
@@ -104,16 +102,14 @@ struct StatusTests {
       accessibility: "granted",
       connectedDevices: [device],
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "ready",
-      compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+      userSpaceVirtualDeviceStatus: "ready"
     )
     let disconnected = ApplicationServiceStatusPayload(
       inputMonitoring: "granted",
       accessibility: "granted",
       connectedDevices: [],
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "ready",
-      compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+      userSpaceVirtualDeviceStatus: "ready"
     )
     let gateway = GatewayStub(statusPayload: connected)
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
@@ -136,7 +132,7 @@ struct StatusTests {
       name: "Test Pad",
       vendorID: 0x1234,
       productID: 0x5678,
-      parser: "GIP",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
       runtimeIdentifier: "session-device-retained"
@@ -147,8 +143,7 @@ struct StatusTests {
         accessibility: "granted",
         connectedDevices: [device],
         userSpaceVirtualDeviceEnabled: true,
-        userSpaceVirtualDeviceStatus: "ready",
-        compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+        userSpaceVirtualDeviceStatus: "ready"
       )
     )
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
@@ -206,7 +201,7 @@ struct StatusTests {
       name: "DualShock 4",
       vendorID: 0x054C,
       productID: 0x09CC,
-      parser: "DS4",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "Bluetooth",
       serialNumber: nil,
       runtimeIdentifier: "ds4-bluetooth"
@@ -217,8 +212,7 @@ struct StatusTests {
         accessibility: "granted",
         connectedDevices: [ds4],
         userSpaceVirtualDeviceEnabled: true,
-        userSpaceVirtualDeviceStatus: "ready",
-        compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+        userSpaceVirtualDeviceStatus: "ready"
       )
     )
     await gateway.resumeNextStatusRead()
@@ -271,7 +265,7 @@ struct StatusTests {
 
   @Test
   @MainActor
-  func livePollingDoesNotCancelTheFullProfilesAndIdentityRefresh() async {
+  func livePollingDoesNotCancelTheFullProfilesRefresh() async {
     let gateway = GatewayStub(statusReadDelayNanoseconds: 100_000_000)
     let viewModel = RuntimeViewModel(gateway: gateway)
     let fullRefresh = Task { await viewModel.refresh() }
@@ -282,10 +276,6 @@ struct StatusTests {
 
     guard case .available = viewModel.remappingState else {
       Issue.record("Expected profiles to finish loading")
-      return
-    }
-    guard case .available = viewModel.compatibilityState else {
-      Issue.record("Expected controller identity to finish loading")
       return
     }
   }
@@ -322,7 +312,7 @@ struct StatusTests {
       name: "Test Pad",
       vendorID: 0x1234,
       productID: 0x5678,
-      parser: "GIP",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
       runtimeIdentifier: "session-device-9"
@@ -333,8 +323,7 @@ struct StatusTests {
         accessibility: "granted",
         connectedDevices: [device],
         userSpaceVirtualDeviceEnabled: true,
-        userSpaceVirtualDeviceStatus: "ready",
-        compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+        userSpaceVirtualDeviceStatus: "ready"
       ),
       snapshotPayload: snapshot(profiles: [], postEventAccess: .notAuthorized)
     )
@@ -359,8 +348,7 @@ struct StatusTests {
       accessibility: "granted",
       connectedDevices: [],
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "ready",
-      compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+      userSpaceVirtualDeviceStatus: "ready"
     )
     let presentation = RuntimeStatusPresentation(payload: payload, postEventAccess: .granted)
 

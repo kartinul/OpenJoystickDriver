@@ -8,17 +8,17 @@ struct MotionProcessingTests {
     var motion = RemappingMotionProcessor()
     let unavailable = motion.startCalibration()
     #expect(!unavailable)
-    let tuning = RemappingMotionTuning(automaticBias: false)
+    let tuning = RemappingMotionTuning(space: .local, automaticBias: false)
     motion.process(sample(sequence: 0, time: 0, yaw: 3), tuning: tuning)
     let started = motion.startCalibration()
     #expect(started && motion.isManuallyCalibrating)
     motion.process(sample(sequence: 1, time: 10_000_000, yaw: 3), tuning: tuning)
     #expect(motion.calibrationOffset.y == 3)
-    #expect(motion.latest?.calibratedGyro.y == 0)
+    #expect(motion.latest?.tunedGyro.yawDegreesPerSecond == 0)
     motion.pauseCalibration()
     motion.process(sample(sequence: 2, time: 20_000_000, yaw: 5), tuning: tuning)
     #expect(!motion.isManuallyCalibrating)
-    #expect(motion.latest?.calibratedGyro.y == 2)
+    #expect(motion.latest?.tunedGyro.yawDegreesPerSecond == 2)
     let restarted = motion.startCalibration()
     #expect(restarted)
     motion.process(sample(sequence: 3, time: 1_000_000_000, yaw: 5), tuning: tuning)
@@ -35,23 +35,19 @@ struct MotionProcessingTests {
     source: ControllerMotionCalibrationSource = .deviceFactory,
     revision: UInt64 = 0
   ) -> ControllerMotionSample {
-    ControllerMotionSample(
+    ControllerMotionSample.engineSpace(
       timestamp: ControllerSampleTimestamp(
         rawCounter: 0,
-        elapsedNanoseconds: time,
+        monotonic: MonotonicTimestamp(nanoseconds: time),
         tickNanosecondsNumerator: nil,
         tickNanosecondsDenominator: nil,
         sequenceIndex: sequence,
         basis: .hostEstimate
       ),
-      rawGyroscope: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      rawAccelerometer: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      physicalReading: ControllerMotionReading(
-        gyroscopeDegreesPerSecond: ControllerMotionVector(x: 0, y: yaw, z: 0),
-        accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
-        calibrationSource: source,
-        calibrationRevision: revision
-      )
+      gyroDegreesPerSecond: ControllerMotionVector(x: 0, y: yaw, z: 0),
+      accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
+      calibrationSource: source,
+      calibrationRevision: revision
     )
   }
 
@@ -117,14 +113,14 @@ struct MotionProcessingTests {
     )
     for identifier in [first, second] {
       _ = engine.process(
-        events: [.motionSample(sample(sequence: 0, time: 0))],
+        inputs: [.motion(sample(sequence: 0, time: 0))],
         from: identifier,
         profile: profile,
         at: 50
       )
     }
     _ = engine.process(
-      events: [.motionSample(sample(sequence: 1, time: 10_000_000))],
+      inputs: [.motion(sample(sequence: 1, time: 10_000_000))],
       from: first,
       profile: profile,
       at: 50
@@ -142,7 +138,7 @@ struct MotionProcessingTests {
       try engine.calibrateMotion(.start, for: first)
     }
     _ = engine.process(
-      events: [.motionSample(sample(sequence: 0, time: 0))],
+      inputs: [.motion(sample(sequence: 0, time: 0))],
       from: first,
       profile: profile,
       at: 60

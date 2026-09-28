@@ -7,17 +7,15 @@ import Testing
 extension PhysicalRumbleOutputTests {
   @Test
   func testDs4ColorReportsUseExactUsbAndBluetoothLayouts() {
-    let usb = DS4Parser().physicalColorReport(red: 12, green: 34, blue: 56)
+    let usb = DualShock4Driver().encoded(.setRGB(red: 12, green: 34, blue: 56)).onlyReport
     #expect(usb.reportID == 0x05)
     #expect(usb.bytes.count == 32)
     #expect(usb.bytes[1] == 0x02)
     #expect(Array(usb.bytes[6...8]) == [12, 34, 56])
 
-    let bluetooth = DS4Parser(prefersBluetooth: true).physicalColorReport(
-      red: 12,
-      green: 34,
-      blue: 56
-    )
+    let bluetooth = DualShock4Driver(prefersBluetooth: true).encoded(
+      .setRGB(red: 12, green: 34, blue: 56)
+    ).onlyReport
     #expect(bluetooth.reportID == 0x11)
     #expect(bluetooth.bytes[1] == 0xC4)
     #expect(bluetooth.bytes[3] == 0x02)
@@ -27,17 +25,15 @@ extension PhysicalRumbleOutputTests {
 
   @Test
   func testDualSenseColorReportsUseExactUsbAndBluetoothLayouts() {
-    let usb = DualSenseParser().physicalColorReport(red: 12, green: 34, blue: 56)
+    let usb = DualSenseDriver().encoded(.setRGB(red: 12, green: 34, blue: 56)).onlyReport
     #expect(usb.reportID == 0x02)
     #expect(usb.bytes.count == 63)
     #expect(usb.bytes[2] == 0x04)
     #expect(Array(usb.bytes[45...47]) == [12, 34, 56])
 
-    let bluetooth = DualSenseParser(prefersBluetooth: true).physicalColorReport(
-      red: 12,
-      green: 34,
-      blue: 56
-    )
+    let bluetooth = DualSenseDriver(prefersBluetooth: true).encoded(
+      .setRGB(red: 12, green: 34, blue: 56)
+    ).onlyReport
     #expect(bluetooth.reportID == 0x31)
     #expect(bluetooth.bytes[4] == 0x04)
     #expect(Array(bluetooth.bytes[47...49]) == [12, 34, 56])
@@ -46,7 +42,7 @@ extension PhysicalRumbleOutputTests {
 
   @Test
   func testDs4PhysicalRumbleReportUsesUSBHIDOutputReport() {
-    let report = DS4Parser().physicalRumbleReport(left: 180, right: 90, lt: 255, rt: 64)
+    let report = DualShock4Driver().rumblePlan(left: 180, right: 90, lt: 255, rt: 64).onlyReport
 
     #expect(report.reportID == 0x05)
     #expect(report.bytes.count == 32)
@@ -59,9 +55,9 @@ extension PhysicalRumbleOutputTests {
 
   @Test
   func testDs4PhysicalRumbleReportUsesBluetoothReportAfterBluetoothInput() throws {
-    let parser = DS4Parser(prefersBluetooth: true)
+    let parser = DualShock4Driver(prefersBluetooth: true)
 
-    let report = parser.physicalRumbleReport(left: 180, right: 90, lt: 255, rt: 64)
+    let report = parser.rumblePlan(left: 180, right: 90, lt: 255, rt: 64).onlyReport
 
     #expect(report.reportID == 0x11)
     #expect(report.bytes.count == 78)
@@ -75,12 +71,12 @@ extension PhysicalRumbleOutputTests {
 
   @Test
   func testDs4PreferredBluetoothParserUsesBluetoothPhysicalRumbleBeforeInput() {
-    let report = DS4Parser(prefersBluetooth: true).physicalRumbleReport(
+    let report = DualShock4Driver(prefersBluetooth: true).rumblePlan(
       left: 180,
       right: 90,
       lt: 255,
       rt: 64
-    )
+    ).onlyReport
 
     #expect(report.reportID == 0x11)
     #expect(report.bytes.count == 78)
@@ -88,8 +84,10 @@ extension PhysicalRumbleOutputTests {
     #expect(report.bytes[7] == 180)
   }
 
-  func hasPhysicalRumble(_ parser: any InputParser) -> Bool {
-    parser is PhysicalRumbleOutput || parser is PhysicalHIDRumbleOutput
-      || parser is PhysicalHIDFeatureHapticOutput
+  func hasPhysicalRumble(_ parser: any PhysicalProtocolDriver) -> Bool {
+    let intensities: [PhysicalRumbleMotor: UInt8] = [.leftMain: 1, .leftHaptic: 1]
+    return parser.encoded(
+      .setRumble(RumbleIntensities(bytes: intensities), duration: .milliseconds(100))
+    ) != nil
   }
 }

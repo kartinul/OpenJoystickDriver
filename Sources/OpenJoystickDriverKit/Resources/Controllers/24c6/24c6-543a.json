@@ -2,16 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 9414,
   "productID": 21562,
-  "transport": "usb",
   "protocol": {
-    "driver": "GIP",
-    "variant": "xboxOne",
-    "startupPackets": [
-      "powerOn",
-      "ledOn",
-      "authDone",
-      "rumbleBegin",
-      "rumbleEnd"
+    "family": "xbox.gip",
+    "initialization": [
+      "xbox.gip/power-on",
+      "xbox.gip/led-on",
+      "xbox.gip/auth-done",
+      "xbox.gip/rumble-begin",
+      "xbox.gip/rumble-end"
     ]
   }
 }

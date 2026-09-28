@@ -1,15 +1,18 @@
 import Foundation
 
-/// Named GIP startup packets used by Xbox One-class controllers.
+/// Driver-owned GIP initialization actions used by Xbox One-class controllers.
+///
+/// Raw values are the protocol-scoped action IDs a catalog row selects in
+/// `protocol.initialization`; this driver owns the bytes each action sends.
 public enum GIPStartupPacket: String, CaseIterable, Sendable {
-  case powerOn
-  case xboxOneSInit
-  case extraInput
-  case horiAck
-  case ledOn
-  case authDone
-  case rumbleBegin
-  case rumbleEnd
+  case powerOn = "xbox.gip/power-on"
+  case xboxOneSInit = "xbox.gip/s-init"
+  case extraInput = "xbox.gip/enable-extra-input"
+  case horiAck = "xbox.gip/hori-ack"
+  case ledOn = "xbox.gip/led-on"
+  case authDone = "xbox.gip/auth-done"
+  case rumbleBegin = "xbox.gip/rumble-begin"
+  case rumbleEnd = "xbox.gip/rumble-end"
 
   public static let defaultSequence: [Self] = [.powerOn, .ledOn, .authDone]
 

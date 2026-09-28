@@ -9,18 +9,18 @@ struct RemappingDeferredSequenceTests {
     var state = RemappingEngineState()
     let profile = profile()
     _ = state.process(
-      events: [.buttonPressed(.a), .buttonPressed(.b)],
+      inputs: [.press(.faceSouth), .press(.faceEast)],
       from: identifier,
       profile: profile,
       at: 0
     )
     #expect(
-      state.process(events: [.buttonReleased(.a)], from: identifier, profile: profile, at: 1)
+      state.process(inputs: [.release(.faceSouth)], from: identifier, profile: profile, at: 1)
         .isEmpty
     )
     #expect(state.devices[identifier]?.deferredSequences.first?.awaitingSources == [.button(.east)])
     #expect(
-      state.process(events: [.buttonReleased(.b)], from: identifier, profile: profile, at: 2) == [
+      state.process(inputs: [.release(.faceEast)], from: identifier, profile: profile, at: 2) == [
         .system(.keyDown(.d)), .system(.keyUp(.d)),
       ]
     )
@@ -32,14 +32,14 @@ struct RemappingDeferredSequenceTests {
     var state = RemappingEngineState()
     let profile = profile()
     _ = state.process(
-      events: [.buttonPressed(.a), .buttonPressed(.b), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .press(.faceEast), .release(.faceSouth)],
       from: identifier,
       profile: profile,
       at: 0
     )
     #expect(
       state.process(
-        events: [.buttonPressed(.a), .buttonPressed(.x)],
+        inputs: [.press(.faceSouth), .press(.faceWest)],
         from: identifier,
         profile: profile,
         at: 1

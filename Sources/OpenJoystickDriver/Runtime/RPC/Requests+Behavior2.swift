@@ -20,39 +20,11 @@ extension ApplicationServiceServer {
     }
   }
 
-  func compatibilityTransitionFailure(
-    from snapshot: UserSpaceStatusSnapshot
-  ) -> CompatibilityIdentityTransitionFailure {
-    let phase =
-      snapshot.retrySnapshot.map { retry in
-        CompatibilityIdentityTransitionPhase(rawValue: retry.phase.rawValue) ?? .activation
-      } ?? .activation
-    let cause: CompatibilityIdentityTransitionCause
-    if isCompatibilityServerStopped() {
-      cause = .serverStopped
-    } else {
-      switch phase {
-      case .feedbackQuiescence, .candidateClose, .zeroDeviceInterval: cause = .timedOut
-      case .validation, .stage, .activation, .rollbackStage, .rollbackActivation:
-        cause = .unavailable
-      }
-    }
-    return CompatibilityIdentityTransitionFailure(
-      phase: phase,
-      cause: cause,
-      detail: snapshot.retrySnapshot?.detail
-    )
-  }
-
-  public func getCompatibilityIdentity(reply: @escaping (String) -> Void) {
-    reply(userSpaceStatusSnapshot().requestedIdentity.rawValue)
-  }
-
   public func getVirtualDeviceDiagnostics(reply: @escaping (Data) -> Void) {
     let callback = SendableReply(call: reply)
     Task {
       let userSnapshot = userSpaceStatusSnapshot()
-      let devices = await VirtualDeviceDiagnostics.enumerateHIDGamepads()
+      let devices = VirtualDeviceDiagnostics.enumerateHIDGamepads()
       let payload = ApplicationServiceVirtualDeviceDiagnosticsPayload(
         userSpaceVirtualDeviceEnabled: userSnapshot.enabled,
         userSpaceVirtualDeviceStatus: userSnapshot.status,
@@ -87,13 +59,6 @@ extension ApplicationServiceServer {
     }
   }
 
-  func setCompatibilityIdentityAsync(_ id: CompatibilityIdentity) async -> Bool {
-    await compatibilityTransitionCoordinator.enqueue { [weak self] in
-      guard let self else { return false }
-      return await self.performCompatibilityIdentityTransition(to: id)
-    }
-  }
-
   private func resetSettingsAsync() async -> Bool {
     await compatibilityTransitionCoordinator.enqueue { [weak self] in
       guard let self else { return false }
@@ -102,11 +67,10 @@ extension ApplicationServiceServer {
   }
 
   private func performResetSettingsAsync() async -> Bool {
-    await performCompatibilityIdentityTransition(
-      to: .automatic,
-      force: true,
-      removePersistedIdentityOnCommit: true
-    )
+    resetVirtualHIDProfileSettings()
+    let live = await performCompatibilityBackendActivation()
+    let retargeted = await retargetConnectedControllers()
+    return live && retargeted
   }
 
   func getRemappingSnapshot(

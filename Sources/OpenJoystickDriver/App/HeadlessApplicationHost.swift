@@ -19,14 +19,21 @@ final class HeadlessApplicationHost {
     registerForLoginIfNeeded()
     #if canImport(AppKit) && canImport(SwiftUI)
       runtime.handleShutdownSignal { [weak runtime] in
-        Task { @MainActor in
-          if NSApplication.shared.isRunning,
-            MenuBarCoordinator.terminateFromShutdownSignalIfRunning()
-          {
-            return
+        // terminate(_:) waits in a nested event loop for applicationShouldTerminate's asynchronous
+        // reply, which needs the main queue. Starting it from a run-loop block instead of a
+        // main-queue block or main-actor task keeps the main queue free to deliver that reply.
+        RunLoop.main.perform {
+          MainActor.assumeIsolated {
+            if NSApplication.shared.isRunning,
+              MenuBarCoordinator.terminateFromShutdownSignalIfRunning()
+            {
+              return
+            }
+            Task { @MainActor in
+              await runtime?.stop()
+              exit(0)
+            }
           }
-          await runtime?.stop()
-          exit(0)
         }
       }
     #endif

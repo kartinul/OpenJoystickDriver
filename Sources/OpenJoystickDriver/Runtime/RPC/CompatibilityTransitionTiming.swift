@@ -7,10 +7,7 @@ struct CompatibilityTransitionTimeouts: Sendable {
     totalNanoseconds: 10_000_000_000,
     zeroControllerActivationNanoseconds: 2_000_000_000,
     feedbackNanoseconds: 2_000_000_000,
-    candidateCloseNanoseconds: 2_000_000_000,
-    rollbackStageNanoseconds: 2_000_000_000,
-    rollbackActivationTotalNanoseconds: 10_000_000_000,
-    zeroDeviceNanoseconds: 20_000_000_000
+    candidateCloseNanoseconds: 2_000_000_000
   )
 
   let stageNanoseconds: UInt64
@@ -19,9 +16,6 @@ struct CompatibilityTransitionTimeouts: Sendable {
   let zeroControllerActivationNanoseconds: UInt64
   let feedbackNanoseconds: UInt64
   let candidateCloseNanoseconds: UInt64
-  let rollbackStageNanoseconds: UInt64
-  let rollbackActivationTotalNanoseconds: UInt64
-  let zeroDeviceNanoseconds: UInt64
 
   init(
     stageNanoseconds: UInt64,
@@ -29,10 +23,7 @@ struct CompatibilityTransitionTimeouts: Sendable {
     totalNanoseconds: UInt64,
     zeroControllerActivationNanoseconds: UInt64 = 2_000_000_000,
     feedbackNanoseconds: UInt64 = 2_000_000_000,
-    candidateCloseNanoseconds: UInt64 = 2_000_000_000,
-    rollbackStageNanoseconds: UInt64 = 2_000_000_000,
-    rollbackActivationTotalNanoseconds: UInt64 = 10_000_000_000,
-    zeroDeviceNanoseconds: UInt64 = 20_000_000_000
+    candidateCloseNanoseconds: UInt64 = 2_000_000_000
   ) {
     self.stageNanoseconds = stageNanoseconds
     self.perControllerNanoseconds = perControllerNanoseconds
@@ -40,24 +31,12 @@ struct CompatibilityTransitionTimeouts: Sendable {
     self.zeroControllerActivationNanoseconds = zeroControllerActivationNanoseconds
     self.feedbackNanoseconds = feedbackNanoseconds
     self.candidateCloseNanoseconds = candidateCloseNanoseconds
-    self.rollbackStageNanoseconds = rollbackStageNanoseconds
-    self.rollbackActivationTotalNanoseconds = rollbackActivationTotalNanoseconds
-    self.zeroDeviceNanoseconds = zeroDeviceNanoseconds
   }
 
   func activationNanoseconds(for count: Int) -> UInt64 {
     guard count > 0 else { return zeroControllerActivationNanoseconds }
     let perController = perControllerNanoseconds.multipliedReportingOverflow(by: UInt64(count))
     return min(perController.overflow ? UInt64.max : perController.partialValue, totalNanoseconds)
-  }
-
-  func rollbackActivationNanoseconds(for count: Int) -> UInt64 {
-    guard count > 0 else { return zeroControllerActivationNanoseconds }
-    let perController = perControllerNanoseconds.multipliedReportingOverflow(by: UInt64(count))
-    return min(
-      perController.overflow ? UInt64.max : perController.partialValue,
-      rollbackActivationTotalNanoseconds
-    )
   }
 }
 

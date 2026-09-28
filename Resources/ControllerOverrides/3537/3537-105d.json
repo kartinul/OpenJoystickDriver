@@ -5,7 +5,6 @@
     "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
     "vendorID": 13623,
     "productID": 4189,
-    "transport": "usb",
-    "protocol": { "driver": "GameSir", "variant": "gameSirG7ProUSB" }
+    "protocol": { "family": "vendor.gamesir", "variant": "usb" }
   }
 }

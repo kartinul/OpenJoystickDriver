@@ -44,8 +44,62 @@ struct USBDriverKitExtensionConfigurationTests {
           vendorID: 0x3537,
           productID: 0x1010,
           locationID: 77,
+          observedPhysicalLocationIdentifier: 77,
           productName: "GameSir G7 SE",
           serialNumber: "serial"
+        )
+    )
+    #expect(device.observedPhysicalLocationIdentifier == 77)
+    let observation = try #require(
+      USBDriverKitTransportProvider.physicalDeviceObservation(from: service)
+    )
+    #expect(observation.serviceIdentity == device.serviceIdentity)
+    #expect(observation.physicalLocationIdentifier == 77)
+    #expect(observation.deviceRelease == nil)
+    #expect(observation.configurationValue == nil)
+    #expect(
+      observation.interfaces == [
+        PhysicalInterfaceSignature(
+          hostTransport: .usb,
+          accessBackend: .usbDriverKit,
+          usbRoute: .usbDriverKit
+        )
+      ]
+    )
+  }
+
+  @Test
+  func driverKitObservationKeepsUnavailableFactsNil() throws {
+    let service = DriverService(
+      id: 42,
+      name: "XboxUSBDevice",
+      properties: [
+        "idVendor": .unsignedInteger(0x3537), "idProduct": .integer(0x1010),
+        "USB Product Name": .string("GameSir G7 SE"),
+      ]
+    )
+
+    let device = try #require(USBDriverKitTransportProvider.device(service))
+    #expect(device.locationID == UInt32(truncatingIfNeeded: service.id))
+    #expect(device.observedPhysicalLocationIdentifier == nil)
+
+    let observation = try #require(
+      USBDriverKitTransportProvider.physicalDeviceObservation(from: service)
+    )
+    #expect(
+      observation
+        == PhysicalDevice(
+          serviceIdentity: USBTransportServiceIdentity(route: .usbDriverKit, serviceID: 42),
+          vendorID: 0x3537,
+          productID: 0x1010,
+          productName: "GameSir G7 SE",
+          interfaces: [
+            PhysicalInterfaceSignature(
+              hostTransport: .usb,
+              accessBackend: .usbDriverKit,
+              usbRoute: .usbDriverKit
+            )
+          ]
         )
     )
   }

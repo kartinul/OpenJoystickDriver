@@ -9,7 +9,7 @@ struct RemappingActivationSchedulingTests {
     var state = RemappingEngineState()
     let profile = profile(doubleTap: true)
     _ = state.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: identifier,
       profile: profile,
       at: 0
@@ -17,14 +17,14 @@ struct RemappingActivationSchedulingTests {
     var actions: [RemappingEngineAction] = []
     if tickBeforePress { actions += state.tick(at: 200_000_000) }
     actions += state.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: identifier,
       profile: profile,
       at: 200_000_000
     )
     #expect(actions == [.system(.keyDown(.a)), .system(.keyUp(.a))])
     _ = state.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: identifier,
       profile: profile,
       at: 200_000_001
@@ -38,7 +38,9 @@ struct RemappingActivationSchedulingTests {
     let profile = profile(doubleTap: true)
     #expect(
       state.process(
-        events: [.buttonPressed(.a), .buttonReleased(.a), .buttonPressed(.a), .buttonReleased(.a)],
+        inputs: [
+          .press(.faceSouth), .release(.faceSouth), .press(.faceSouth), .release(.faceSouth),
+        ],
         from: identifier,
         profile: profile,
         at: 0
@@ -46,7 +48,7 @@ struct RemappingActivationSchedulingTests {
     )
     #expect(
       state.process(
-        events: [.buttonPressed(.a), .buttonReleased(.a)],
+        inputs: [.press(.faceSouth), .release(.faceSouth)],
         from: identifier,
         profile: profile,
         at: 1
@@ -59,10 +61,10 @@ struct RemappingActivationSchedulingTests {
   func earlyLongHoldReleaseLeavesNoScheduledWork() {
     var state = RemappingEngineState()
     let profile = profile(doubleTap: false)
-    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
+    _ = state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0)
     #expect(state.hasScheduledOutput)
     #expect(
-      state.process(events: [.buttonReleased(.a)], from: identifier, profile: profile, at: 1) == [
+      state.process(inputs: [.release(.faceSouth)], from: identifier, profile: profile, at: 1) == [
         .system(.keyDown(.a)), .system(.keyUp(.a)),
       ]
     )
@@ -74,9 +76,9 @@ struct RemappingActivationSchedulingTests {
   func doubleTapSchedulesOnlyAfterReleaseAndStopsAfterExpiry() {
     var state = RemappingEngineState()
     let profile = profile(doubleTap: true)
-    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
+    _ = state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0)
     #expect(!state.hasScheduledOutput)
-    _ = state.process(events: [.buttonReleased(.a)], from: identifier, profile: profile, at: 1)
+    _ = state.process(inputs: [.release(.faceSouth)], from: identifier, profile: profile, at: 1)
     #expect(state.hasScheduledOutput)
     #expect(state.tick(at: 200_000_001) == [.system(.keyDown(.a)), .system(.keyUp(.a))])
     #expect(!state.hasScheduledOutput)
@@ -86,12 +88,12 @@ struct RemappingActivationSchedulingTests {
   func firedLongHoldDoesNotScheduleWhileOutputIsHeld() {
     var state = RemappingEngineState()
     let profile = profile(doubleTap: false)
-    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
+    _ = state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0)
     #expect(state.tick(at: 500_000_000) == [.system(.keyDown(.b))])
     #expect(!state.hasScheduledOutput)
     #expect(
       state.process(
-        events: [.buttonReleased(.a)],
+        inputs: [.release(.faceSouth)],
         from: identifier,
         profile: profile,
         at: 500_000_001

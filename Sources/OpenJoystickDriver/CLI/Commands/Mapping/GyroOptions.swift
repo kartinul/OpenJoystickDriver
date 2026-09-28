@@ -32,10 +32,6 @@ extension MappingProfileEditor {
     guard rawConsumption == "true" || rawConsumption == "false" else {
       throw MappingCommandError.invalidArguments("--gyro-consume-activation: true|false")
     }
-    let rawVirtualMotion = options["--gyro-virtual-motion"] ?? String(defaultValue.virtualMotion)
-    guard rawVirtualMotion == "true" || rawVirtualMotion == "false" else {
-      throw MappingCommandError.invalidArguments("--gyro-virtual-motion: true|false")
-    }
     let output = try RemappingGyroOutput(
       mode: mode,
       pointerPointsPerDegree: number(
@@ -49,8 +45,7 @@ extension MappingProfileEditor {
       activationMode: activation,
       activationSource: source,
       consumesActivationSource: rawConsumption == "true",
-      trackball: trackball(options, defaultValue: defaultValue.trackball),
-      virtualMotion: rawVirtualMotion == "true"
+      trackball: trackball(options, defaultValue: defaultValue.trackball)
     )
     try output.validate()
     return output

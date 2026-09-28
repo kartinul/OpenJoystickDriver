@@ -4,14 +4,38 @@ enum ProfileCapabilityResolver {
   static func resolve(
     profile: RemappingProfile,
     connectedDevices: [ApplicationServiceDeviceDescription],
-    registry: ParserRegistry
+    registry: ProtocolDriverRegistry
+  ) -> ControllerProfileCapabilities? {
+    let resolved = deviceCapabilities(
+      profile: profile,
+      connectedDevices: connectedDevices,
+      registry: registry
+    )
+    // A Joy-Con pair profile is scoped to the left half but maps controls from both halves.
+    guard profile.joyConPair != nil, let resolved else { return resolved }
+    let halves = [0x2006, 0x2007].compactMap {
+      registry.profileCapabilities(for: DeviceIdentifier(vendorID: 0x057E, productID: $0))
+    }
+    let pairInput = halves.map(\.physicalInput).reduce(resolved.physicalInput) { $0.union($1) }
+    return ControllerProfileCapabilities(
+      physicalInput: pairInput,
+      physicalOutput: resolved.physicalOutput,
+      buttonLabels: .nintendo
+    )
+  }
+
+  private static func deviceCapabilities(
+    profile: RemappingProfile,
+    connectedDevices: [ApplicationServiceDeviceDescription],
+    registry: ProtocolDriverRegistry
   ) -> ControllerProfileCapabilities? {
     let matchingDevices = connectedDevices.filter {
       $0.vendorID == profile.device.vendorID && $0.productID == profile.device.productID
     }
     if let first = matchingDevices.first {
-      return matchingDevices.dropFirst().reduce(capabilities(for: first)) {
-        $0.intersecting(capabilities(for: $1))
+      let labels = ControllerButtonLabels(protocolID: first.protocolBinding.protocolID)
+      return matchingDevices.dropFirst().reduce(capabilities(for: first, labels: labels)) {
+        $0.intersecting(capabilities(for: $1, labels: labels))
       }
     }
     return registry.profileCapabilities(
@@ -20,13 +44,13 @@ enum ProfileCapabilityResolver {
   }
 
   private static func capabilities(
-    for device: ApplicationServiceDeviceDescription
+    for device: ApplicationServiceDeviceDescription,
+    labels: ControllerButtonLabels
   ) -> ControllerProfileCapabilities {
     ControllerProfileCapabilities(
-      physicalInput: device.physicalInputCapabilities,
+      physicalInput: device.capabilities,
       physicalOutput: device.physicalOutputCapabilities,
-      supportsStickAxes: !device.quirks.contains("sticksToNull"),
-      supportsAnalogTriggers: !device.quirks.contains("triggersToButtons")
+      buttonLabels: labels
     )
   }
 }
@@ -36,19 +60,22 @@ enum ProfileCapabilityPolicy {
     _ source: RemappingSource,
     capabilities: ControllerProfileCapabilities?
   ) -> Bool {
-    guard capabilities != nil else { return true }
+    guard let input = capabilities?.physicalInput else { return true }
     switch source {
-    case .dpad: return true
+    case .dpad: return input.controls.contains(.dpad)
     case .button(let button):
-      if baseButtons.contains(button) { return true }
-      return capabilities?.physicalInput.additionalButtons.contains(button.physicalButton) == true
+      guard let control = button.controlID(labels: capabilities?.buttonLabels ?? .standard) else {
+        return false
+      }
+      return input.controls.contains(control)
     case .axis(let axis), .axisDirection(let axis, _):
-      return supports(axis, capabilities: capabilities)
-    case .triggerStage: return capabilities?.supportsAnalogTriggers == true
-    case .motionLean: return capabilities?.physicalInput.rawMotion == true
-    case .touchContact(let surface): return supports(surface, capabilities: capabilities)
-    case .touchGrid(let source): return supports(source.surface, capabilities: capabilities)
-    case .touchSwipe(let source): return supports(source.surface, capabilities: capabilities)
+      return input.controls.contains(axis.controlID)
+    case .triggerStage(let trigger, _):
+      return input.controls.contains(trigger == .left ? .leftTrigger : .rightTrigger)
+    case .motionLean: return input.motion
+    case .touchContact(let surface): return supports(surface, input: input)
+    case .touchGrid(let source): return supports(source.surface, input: input)
+    case .touchSwipe(let source): return supports(source.surface, input: input)
     }
   }
 
@@ -69,23 +96,9 @@ enum ProfileCapabilityPolicy {
   }
 
   private static func supports(
-    _ axis: RemappingAxis,
-    capabilities: ControllerProfileCapabilities?
-  ) -> Bool {
-    switch axis {
-    case .leftStickX, .leftStickY, .rightStickX, .rightStickY:
-      return capabilities?.supportsStickAxes == true
-    case .leftTrigger, .rightTrigger: return capabilities?.supportsAnalogTriggers == true
-    }
-  }
-
-  private static func supports(
     _ surface: RemappingTouchSurface,
-    capabilities: ControllerProfileCapabilities?
+    input: ControllerCapabilities
   ) -> Bool {
-    guard let input = capabilities?.physicalInput, input.touchContactsPerFrame > 0 else {
-      return false
-    }
     let physicalSurface: ControllerTouchSurface
     switch surface {
     case .primary: physicalSurface = .primary
@@ -93,46 +106,5 @@ enum ProfileCapabilityPolicy {
     case .right: physicalSurface = .right
     }
     return input.touchSurfaces.contains(physicalSurface)
-  }
-
-  private static let baseButtons: Set<RemappingButton> = [
-    .south, .east, .west, .north, .leftShoulder, .rightShoulder, .leftStick, .rightStick, .start,
-    .back, .guide,
-  ]
-}
-
-private extension RemappingButton {
-  var physicalButton: Button {
-    switch self {
-    case .south: return .a
-    case .east: return .b
-    case .west: return .x
-    case .north: return .y
-    case .leftShoulder: return .leftBumper
-    case .rightShoulder: return .rightBumper
-    case .leftStick: return .leftStick
-    case .rightStick: return .rightStick
-    case .start: return .start
-    case .back: return .back
-    case .guide: return .guide
-    case .share: return .share
-    case .options: return .options
-    case .touchpad: return .touchpad
-    case .mute: return .mute
-    case .leftTriggerClick: return .l2Digital
-    case .rightTriggerClick: return .r2Digital
-    case .leftGrip: return .leftGrip
-    case .rightGrip: return .rightGrip
-    case .leftPadClick: return .leftPadClick
-    case .rightPadClick: return .rightPadClick
-    case .leftSL: return .leftSL
-    case .leftSR: return .leftSR
-    case .rightSL: return .rightSL
-    case .rightSR: return .rightSR
-    case .leftFunction: return .leftFunction
-    case .rightFunction: return .rightFunction
-    case .leftPaddle: return .leftPaddle
-    case .rightPaddle: return .rightPaddle
-    }
   }
 }

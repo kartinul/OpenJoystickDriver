@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Se verifică controllerele conectate…";
 "status.refreshingProfile" = "Se actualizează starea profilului…";
 "status.loadingProfiles" = "Se încarcă profilurile…";
-"status.updatingIdentity" = "Se actualizează identitatea controllerului…";
 "status.listening" = "Se ascultă…";
 "status.readyToListen" = "Pregătit de ascultare";
 "status.checkingInput" = "Se verifică";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Controllere";
 "settings.controllerDisconnectedNotifications" = "Controlor deconectat";
 "settings.controllerDisconnectedShort" = "Discoordonată";
-"settings.controllerIdentity" = "Identitatea controllerului";
 "settings.controllerNotifications" = "Controlor conectat";
 "settings.diagnostics" = "Diagnostic";
 "settings.service" = "Serviciu";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Se descarcă";
 "controllers.charging" = "Se încarcă";
 "controllers.batteryFull" = "Plină";
+"controllers.notChargeable" = "Nu se poate încărca";
 "controllers.batteryAccessibilityDetails" = "Baterie: %@. Stare de încărcare: %@. Stare cablu: %@.";
 "controllers.activeProfile" = "Profil activ";
 "controllers.profileChecking" = "Se verifică…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Profilul activ este indisponibil";
 "controllers.profileLoadError" = "Profilul activ nu a putut fi încărcat";
 "controllers.protocol" = "Protocolul";
-"controllers.parser" = "Analizator";
 "controllers.serialNumber" = "Număr de serie";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Endpoint de intrare";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Eroare a profilului activ: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protocol: %@. Parser: %@. Număr de serie: %@. USB VID/PID: %@. Endpoint de intrare: %@. Endpoint de ieșire: %@.";
 "controllers.publishedAs" = "Publicat ca";
-"identity.title" = "Identitatea controllerului";
-"identity.needsAttention" = "Necesită atenție";
-"identity.error" = "Eroare de identitate a controllerului";
-"identity.updating" = "Se actualizează identitatea controllerului…";
-"identity.reset" = "Resetează la valorile recomandate";
-"identity.checking" = "Se verifică";
-"identity.globalScope" = "Se aplică tuturor controlerilor virtuali publicati de OpenJoystickDriver.";
-"identity.unavailable" = "Indisponibil";
-"identity.notSelected" = "Neselectat";
+"controllers.nativeGamepadNotPublished" = "Gamepad nativ macOS, nepublicat";
+"virtualProfile.advanced" = "Avansat";
+"virtualProfile.title" = "Profil HID virtual";
+"virtualProfile.modelScope" = "Se aplică fiecărui controller conectat al acestui model.";
+"virtualProfile.sourceOverride" = "Suprascriere";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automat, suprascriere respinsă";
+"virtualProfile.none" = "Niciun profil HID virtual";
+"virtualProfile.unavailable" = "Niciun profil HID virtual nu poate reprezenta acest controller.";
+"virtualProfile.updating" = "Se actualizează profilul HID virtual…";
+"virtualProfile.live" = "Profil activ";
+"virtualProfile.failure.unknownProfile" = "Acest profil HID virtual este necunoscut. Nu s-a salvat nimic.";
+"virtualProfile.failure.controllerNotFound" = "Controllerul a fost deconectat sau nu poate fi găsit. Suprascrierea nu s-a schimbat.";
+"virtualProfile.failure.overrideRejected" = "Suprascrierea este salvată, dar acest controller nu o poate folosi, așa că alege automat.";
+"virtualProfile.failure.activationFailed" = "Activarea a eșuat, așa că profilul HID virtual anterior a fost restaurat: %@";
+"virtualProfile.failure.outputDisabled" = "Suprascrierea este salvată și se aplică după activarea ieșirii virtuale.";
+"virtualProfile.failure.serverStopped" = "Serviciul s-a oprit. Suprascrierea nu s-a schimbat.";
+"virtualProfile.failure.persistenceFailed" = "Suprascrierea nu a putut fi salvată. Nu s-a salvat nimic.";
+"virtualProfile.storeError" = "Suprascrierile profilului HID virtual nu pot fi citite (%@). Controllerele aleg automat.";
+"virtualProfile.legacyIdentityRejected" = "Setarea retrasă de identitate a controllerului %@ nu mai este aplicată. Rulați controller virtual reset --all pentru a o șterge.";
 "keyboard.noKey" = "Nicio tastă selectată";
 "keyboard.pressKey" = "Apasă o tastă…";
 "keyboard.captureKey" = "Capturează tasta";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Starea actuală";
 "debug.runtime" = "Rulare";
 "debug.controllers" = "Controllere";
-"debug.controllerIdentity" = "Identitatea controllerului";
 "debug.unavailable" = "Rulare · Indisponibil";
 "debug.needsAttention" = "Rulare · Necesită atenție";
 "debug.diagnostics" = "Diagnostic";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Ieșirea controllerului este dezactivată.";
 "debug.outputNeedsAttention" = "Ieșirea controllerului necesită atenție.";
 "debug.serviceUnavailable" = "Diagnosticul serviciului este indisponibil momentan.";
-"error.selectedOutputUnavailable" = "Ieșirea de controller selectată este indisponibilă.";
-"error.selectedOutputEnableFailed" = "Ieșirea de controller selectată nu a putut fi activată.";
 "error.profileChanged" = "Acest profil a fost modificat în altă parte. Reîncarcă sau continuă editarea.";
 "error.duplicateProfile" = "Există deja un profil cu acest nume.";
 "error.profileMissing" = "Profilul respectiv nu mai este disponibil.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Rulare";
 "common.controllers" = "Controllere";
 "common.profiles" = "Profiluri";
-"common.controllerIdentity" = "Identitatea controllerului";
 "common.protocol" = "Protocolul";
-"common.parser" = "Analizator";
 "common.serialNumber" = "Număr de serie";
 "common.inputEndpoint" = "Endpoint de intrare";
 "common.outputEndpoint" = "Endpoint de ieșire";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Articolul de profil selectat nu mai este disponibil.";
 "cli.catalog.app_ready.summary" = "Verifică disponibilitatea autentificată a serviciului de aplicație";
 "cli.catalog.app_status.summary" = "Afișează starea serviciului de aplicație";
-"cli.catalog.compat.summary" = "Gestionează compatibilitatea controllerelor virtuale";
 "cli.catalog.controller_list.summary" = "Listează controllerele conectate";
 "cli.catalog.controller_output.summary" = "Testează ieșirea fizică acceptată a controllerului";
 "cli.catalog.controller_packets.summary" = "Afișează pachetele recente ale controllerului";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Afișează starea driverului și a rulării";
 "cli.catalog.test.summary" = "Testează livrarea de intrare a controllerului virtual";
 "cli.catalog.update.summary" = "Caută pe GitHub actualizări disponibile";
-"cli.compat.identity" = "identitate de compatibilitate: %@";
-"cli.compat.identity_unknown" = "identitate de compatibilitate: necunoscută";
-"cli.compat.set_failed" = "Nu s-a putut seta identitatea de compatibilitate la %@. Lansează aplicația instalată și verifică accesul la Monitorizarea introducerii și Accesibilitate.";
-"cli.compat.usage" = "Utilizare: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "starea spațiului utilizator: %@";
 "cli.controller.allAppleEntries" = "Toate înregistrările exacte din catalogul Apple:";
 "cli.controller.appleIDs" = "    ID-uri Apple: %@";
 "cli.controller.applePairs" = "  Perechi Apple : %d înregistrări VID/PID exacte";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Niciun controller conectat nu corespunde cu --device %@.";
 "cli.controller.selection.multiple" = "Mai multe controllere corespund. Selectează unul cu --device:\n  %@";
 "cli.controller.selection.none" = "Niciun controller nu este conectat.";
+"cli.controller.virtual.live" = "Profil HID virtual: %@ (%@)";
+"cli.controller.virtual.none" = "Profil HID virtual: niciunul (%@)";
+"cli.controller.virtual.failed" = "Cererea pentru profilul HID virtual a eșuat: %@";
+"cli.controller.virtual.unknown_profile" = "Profil HID virtual necunoscut «%@». Folosiți unul dintre: %@.";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» necesită un profil HID virtual. Folosiți unul dintre: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "«--all» nu poate fi combinat cu --vid, --pid sau --device.";
+"cli.controller.virtual.reset_all.success" = "OK: toate suprascrierile profilului HID virtual au fost șterse.";
+"cli.controller.virtual.reset_all.failed" = "Resetarea configurărilor a eșuat. Lansează aplicația instalată și verifică-i permisiunile.";
 "cli.controller.selection.vid_pid_missing" = "Niciun controller conectat nu corespunde cu %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Transmite VID și PID împreună sau omit-le pe ambele.";
 "cli.controller.serviceControllers" = "Controllere (din serviciul de aplicație care rulează):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Sfat: acordă dreptul necesar și accesul la Monitorizarea introducerii.";
 "cli.controller.usbControllers" = "Controllere USB (clasa 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Transmite VID și PID împreună sau omit-le pe ambele când este conectat un controller.";
-"cli.diagnose.advisory_candidate" = "    Candidat de protocol orientativ: %@";
 "cli.diagnose.app_missing" = "  App: lipsește la %@";
 "cli.diagnose.app_missing_fix" = "  Remediere: compilează și instalează aplicația în /Applications";
 "cli.diagnose.app_present" = "  App: prezentă";
 "cli.diagnose.binary_path" = "Binar: %@";
-"cli.diagnose.catalog_conflict" = "      Observația conflictuează cu familia din catalog; parserul rămâne neschimbat";
-"cli.diagnose.catalog_parser" = "      Parserul din catalog rămâne %@ (%@)";
 "cli.diagnose.dext_found" = "  Bundle-uri .dext găsite:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      punctul de sfârșit 0x%02X %@ %@ maxPacket=%@ Interval =%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Curbă de răspuns necunoscută «%@».";
 "cli.mapping.double_tap_format" = "--double-tap așteaptă <ms>:<target>, de ex. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Utilizare: OpenJoystickDriver --headless map <command>\n\nComenzi:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nSursă: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nȚintă: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nOpțiuni de axă:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nOpțiuni turbo (doar butoane de tastatură și mouse):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nOpțiuni de activare (doar butoane de tastatură și mouse, exclusive cu turbo):\n  --long-hold <ms>:<target>     de ex. --long-hold 500:key:b\n  --double-tap <ms>:<target>    de ex. --double-tap 300:key:c\n\n<profile> acceptă un UUID sau un nume de profil exact, fără distincție de majuscule.\n<id> acceptă zecimal sau hexazecimal cu prefix 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Utilizare: OpenJoystickDriver --headless map <command>\n\nComenzi:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nSursă: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nȚintă: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nOpțiuni de axă:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nOpțiuni turbo (doar butoane de tastatură și mouse):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nOpțiuni de activare (doar butoane de tastatură și mouse, exclusive cu turbo):\n  --long-hold <ms>:<target>     de ex. --long-hold 500:key:b\n  --double-tap <ms>:<target>    de ex. --double-tap 300:key:c\n\n<profile> acceptă un UUID sau un nume de profil exact, fără distincție de majuscule.\n<id> acceptă zecimal sau hexazecimal cu prefix 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ trebuie să fie un identificator pe 16 biți zecimal sau hexazecimal cu prefix 0x.";
 "cli.mapping.jsonEncodeFailed" = "Nu s-a putut codifica JSON-ul în UTF-8.";
 "cli.mapping.layer_action_unknown" = "Acțiune de strat necunoscută «%@». Așteptat: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "Serviciul de aplicație OpenJoystickDriver nu rulează.";
 "cli.runtime.sample_limit" = "Configurația ar colecta %d eșantioane; mărește --interval-ms.";
 "cli.runtime.stable_note" = "Un soak delimitat și stabil este un indiciu pentru această încărcare, nu dovada că nu există scurgeri.";
-"cli.settings.reset.failed" = "Resetarea configurărilor a eșuat. Lansează aplicația instalată și verifică-i permisiunile.";
-"cli.settings.reset.next" = "Următorul: rulează compat set <identity> pentru a alege identitatea de compatibilitate.";
-"cli.settings.reset.success" = "OK: configurările serviciului de aplicație au fost resetate.";
 "cli.status.access_denied" = "Dacă accesul este refuzat, rulează --headless permissions request și aprobă Monitorizarea introducerii și Accesibilitate în Configurări sistem.";
 "cli.status.heading" = "Stare OpenJoystickDriver";
 "cli.status.json_error" = "Nu s-a putut codifica JSON-ul de stare: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Stare       : %@";
 "cli.updates.unknown_option" = "Opțiune updates necunoscută: %@";
 "common.unknown" = "Necunoscut";
-"compatibility.appleGameController" = "Mărul GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (original)";
 "developer.buttons" = "Butoane";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Butonul B";
 "inputTest.bCircle" = "B / Cercul";
 "inputTest.brightness" = "Luminozitate";
-"inputTest.circle" = "Cerc";
 "inputTest.color" = "Culoare";
 "inputTest.controls" = "Intrare live";
-"inputTest.cross" = "Cruce";
 "inputTest.disconnected" = "Controlor deconectat";
 "inputTest.dpadDown" = "Crucea direcțională jos";
 "inputTest.dpadLeft" = "Crucea direcțională stânga";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Controlul de iluminare nu este disponibil pentru acest controler.";
 "inputTest.live" = "Input activ";
 "inputTest.menu" = "Meniu";
-"inputTest.minus" = "Minus";
 "inputTest.off" = "Dezactivat";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Opțiuni";
 "inputTest.outputError" = "Erore de ieșire fizică";
 "inputTest.outputRejected" = "Controlorul a respins această încercare de ieșire.";
 "inputTest.permissionRequired" = "Permisia de monitorizare necesară";
 "inputTest.playerIndicator" = "Indicatorul jucătorului";
-"inputTest.plus" = "În plus .";
 "inputTest.pressed" = "Apăsat";
-"inputTest.psButton" = "Butonul PS";
 "inputTest.released" = "Eliberat";
 "inputTest.rightBumper" = "Buton superior dreapta";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Y dreapta";
 "inputTest.rumble" = "Rumbel";
 "inputTest.rumbleUnavailable" = "Rumble nu este suportat de acest controller.";
-"inputTest.share" = "Partajare";
-"inputTest.square" = "Pătrat";
 "inputTest.stale" = "Intrarea întreruptă";
 "inputTest.start" = "Începeţi testul de intrare";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Intrare live";
 "inputTest.tabMotion" = "Moțiunea";
 "inputTest.tabOutput" = "Producție";
-"inputTest.steamButton" = "Butonul Steam";
 "inputTest.summary" = "Puncte de testare, băţuri, declanşatoare, zgomot şi lumină de control.";
 "inputTest.testRumble" = "Test Rumble";
 "inputTest.title" = "Testul de intrare";
-"inputTest.triangle" = "Triunghi";
 "inputTest.unavailable" = "Input nefolosibil";
 "inputTest.view" = "Vizualizare";
 "inputTest.windowTitle" = "Testul de intrare %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Nu se pot combina Joy-Cons-urile selectate.";
 "profiles.joyConExplicitSession" = "Am început cu o sesiune explicită de perechi";
 "profiles.joyConSessionState" = "Împreună explicită";
-"profiles.gyro.virtualMotion" = "Mișcare virtuală calibrată înainte";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ bârf (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Controlor deconectat";
 "controllers.resume" = "Încearcă din nou";
 "controllers.disconnectFromOJD" = "Controlor deconectat";
-"error.compatibilityTransitionDetailed" = "Ieșirea de controller selectată nu a putut fi activată. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Ieșirea de controller selectată nu a putut fi activată.";
 "cli.catalog.controller_disconnect.summary" = "Controlor deconectat";
 "cli.catalog.controller_resume.summary" = "Încearcă din nou — Controlor deconectat";
+"cli.catalog.controller_virtual_set.summary" = "Suprascrie profilul HID virtual al unui controler";
+"cli.catalog.controller_virtual_reset.summary" = "Selectează automat profilul HID virtual al unui controler, sau șterge toate suprascrierile cu --all";
 "cli.controller.disconnected" = "Controlor deconectat";
 "cli.controller.resumed" = "Input activ";
 

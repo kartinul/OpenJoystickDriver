@@ -1,4 +1,5 @@
 import Foundation
+import OpenJoystickDriverKit
 import Testing
 
 @testable import OpenJoystickDriverUSB
@@ -20,6 +21,7 @@ extension PassiveUSBDescriptorProbeTests {
       ])
     )
   }
+
   @Test
   func constrainedScanRejectsUnauthorizedZeroAndMultipleAndDoesNotAskSource() throws {
     let source = SpySource(matches: [])
@@ -43,6 +45,7 @@ extension PassiveUSBDescriptorProbeTests {
       }
     )
   }
+
   @Test
   func nestedRegistryParserPreservesOwnershipAndZeroDescriptors() throws {
     let tuple = PassiveUSBDescriptorTuple(vendorID: 0x3537, productID: 0x1010)
@@ -59,6 +62,61 @@ extension PassiveUSBDescriptorProbeTests {
     #expect(result.observedUSBFacts.interfacesState == .unverified)
     #expect(result.parsedDescriptorFacts.state == .parsed)
   }
+
+  @Test
+  func observedUSBDeviceReleasePreservesBcdDeviceAndUnavailableValues() throws {
+    let tuple = PassiveUSBDescriptorTuple(vendorID: 0x3537, productID: 0x1010)
+    let root = fixtureRoot()
+    let releaseRoot = PassiveUSBRegistryNode(
+      serviceClass: root.serviceClass,
+      properties: root.properties.merging(["bcdDevice": .unsignedInteger(0x0210)]) { _, new in new
+      },
+      children: root.children,
+      registryPath: root.registryPath
+    )
+    let result = PassiveUSBRegistryFactParser.parse(
+      root: releaseRoot,
+      tuple: tuple,
+      catalogInference: catalogInference()
+    )
+    #expect(result.observedUSBFacts.deviceRelease == 0x0210)
+
+    let device = USBTransportDevice(
+      route: .ioUSBHost,
+      serviceID: 12,
+      vendorID: tuple.vendorID,
+      productID: tuple.productID,
+      locationID: 42
+    )
+    #expect(
+      PassiveUSBDescriptorProbe.physicalDevice(from: result, for: device).deviceRelease == 0x0210
+    )
+
+    let missing = PassiveUSBRegistryFactParser.parse(
+      root: root,
+      tuple: tuple,
+      catalogInference: catalogInference()
+    )
+    #expect(missing.observedUSBFacts.deviceRelease == nil)
+
+    let outOfRangeRoot = PassiveUSBRegistryNode(
+      serviceClass: root.serviceClass,
+      properties: root.properties.merging(["bcdDevice": .unsignedInteger(0x1_0000)]) { _, new in new
+      },
+      children: root.children,
+      registryPath: root.registryPath
+    )
+    let outOfRange = PassiveUSBRegistryFactParser.parse(
+      root: outOfRangeRoot,
+      tuple: tuple,
+      catalogInference: catalogInference()
+    )
+    #expect(outOfRange.observedUSBFacts.deviceRelease == nil)
+    #expect(
+      PassiveUSBDescriptorProbe.physicalDevice(from: outOfRange, for: device).deviceRelease == nil
+    )
+  }
+
   @Test
   func layersAndContradictionsAreTypedAndInferenceCannotBecomeObservation() throws {
     let tuple = PassiveUSBDescriptorTuple(vendorID: 0x3537, productID: 0x1010)
@@ -109,6 +167,7 @@ extension PassiveUSBDescriptorProbeTests {
     )
     #expect(noSensitiveKeys(object))
   }
+
   @Test
   func alternateSettingsKeepTheirOwnEndpoints() throws {
     let root = PassiveUSBRegistryNode(
@@ -131,7 +190,47 @@ extension PassiveUSBDescriptorProbeTests {
     let interfaces = try #require(result.parsedDescriptorFacts.configuration?.interfaces)
     #expect(interfaces.map(\.alternateSetting) == [0, 1])
     #expect(interfaces.map { $0.endpoints.map(\.address) } == [[0x81], [0x02]])
+
+    let device = USBTransportDevice(
+      route: .ioUSBHost,
+      serviceID: 12,
+      vendorID: 0x3537,
+      productID: 0x1010,
+      locationID: 42
+    )
+    let physicalDevice = PassiveUSBDescriptorProbe.physicalDevice(from: result, for: device)
+    let signatures = try #require(physicalDevice.interfaces)
+    #expect(signatures.map(\.interfaceNumber) == [0, 0])
+    #expect(signatures.map(\.alternateSetting) == [0, 1])
+    #expect(signatures.compactMap { $0.endpoints?.first?.address } == [0x81, 0x02])
+    #expect(signatures.allSatisfy { $0.hostTransport == .usb && $0.usbRoute == .ioUSBHost })
+    #expect(signatures.allSatisfy { $0.physicalTransport == nil && $0.accessBackend == nil })
+    #expect(physicalDevice.serviceIdentity == device.serviceIdentity)
+    #expect(physicalDevice.physicalLocationIdentifier == 42)
+    #expect(physicalDevice.stableParentDeviceIdentifier == nil)
+    #expect(physicalDevice.deviceRelease == nil)
+    #expect(physicalDevice.deviceClass == 0xFF)
+    #expect(physicalDevice.configurationValue == nil)
+
+    let unavailableDescriptorResult = PassiveUSBProbeResult(
+      observedUSBFacts: result.observedUSBFacts,
+      parsedDescriptorFacts: PassiveUSBParsedDescriptorFacts(
+        state: .absent,
+        configuration: nil,
+        sources: [],
+        error: nil
+      ),
+      specificationInference: result.specificationInference,
+      catalogInference: result.catalogInference,
+      protocolClassification: result.protocolClassification,
+      userReportedPolling: result.userReportedPolling
+    )
+    #expect(
+      PassiveUSBDescriptorProbe.physicalDevice(from: unavailableDescriptorResult, for: device)
+        .interfaces == nil
+    )
   }
+
   @Test
   func descriptorParserRejectsMalformedBlobsAndKeepsUnknownDescriptors() throws {
     #expect(throws: PassiveUSBDescriptorBlobError.missingConfiguration) {
@@ -152,157 +251,5 @@ extension PassiveUSBDescriptorProbeTests {
     #expect(parsed.descriptors.map(\.type) == [2, 0x99, 4])
     #expect(parsed.interfaces.count == 1)
     #expect(parsed.interfaces[0].endpoints.isEmpty)
-  }
-  @Test
-  func endpointCountsAddressesAttributesAndIntervalsAreStrict() throws {
-    func blob(endpointCount: UInt8, endpoint: [UInt8]) -> [UInt8] {
-      [
-        9, 2, UInt8(18 + endpoint.count), 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, endpointCount, 0xFF,
-        0x47, 0xD0, 0,
-      ] + endpoint
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.totalLengthMismatch) {
-      try _ = PassiveUSBConfigurationDescriptorParser.parse(
-        blob(endpointCount: 2, endpoint: [7, 5, 1, 3, 0, 0, 1])
-      )
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidEndpointAddress) {
-      try _ = PassiveUSBConfigurationDescriptorParser.parse(
-        blob(endpointCount: 1, endpoint: [7, 5, 0, 3, 0, 0, 1])
-      )
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidEndpointAddress) {
-      try _ = PassiveUSBConfigurationDescriptorParser.parse(
-        blob(endpointCount: 1, endpoint: [7, 5, 0x71, 3, 0, 0, 1])
-      )
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidTransferAttributes) {
-      try PassiveUSBConfigurationDescriptorParser.parse(
-        blob(endpointCount: 1, endpoint: [7, 5, 1, 0xC3, 0, 0, 1])
-      )
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidInterval) {
-      try PassiveUSBConfigurationDescriptorParser.parse(
-        blob(endpointCount: 1, endpoint: [7, 5, 1, 3, 0, 0, 0]),
-        negotiatedSpeed: .full
-      )
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidInterval) {
-      try PassiveUSBConfigurationDescriptorParser.parse(
-        blob(endpointCount: 1, endpoint: [7, 5, 1, 1, 0, 0, 17]),
-        negotiatedSpeed: .high
-      )
-    }
-  }
-  @Test
-  func intervalBoundariesAreSpeedAndTransferScoped() throws {
-    func parse(
-      _ transfer: UInt8,
-      _ interval: UInt8,
-      _ speed: PassiveUSBNegotiatedSpeed
-    ) throws -> UInt64? {
-      try PassiveUSBConfigurationDescriptorParser.parse(
-        [
-          9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, transfer,
-          0, 0, interval,
-        ],
-        negotiatedSpeed: speed
-      ).interfaces[0].endpoints[0].nominalIntervalMicroseconds
-    }
-    #expect(try parse(3, 1, .full) == 1_000)
-    #expect(try parse(3, 255, .full) == 255_000)
-    #expect(try parse(3, 1, .high) == 125)
-    #expect(try parse(3, 16, .high) == 4_096_000)
-    #expect(try parse(1, 1, .full) == 1_000)
-    #expect(try parse(1, 16, .full) == 32_768_000)
-    #expect(try parse(2, 1, .high) == nil)
-    #expect(try parse(0, 1, .high) == nil)
-  }
-  @Test
-  func endpointUsageAndLowSpeedTransferRulesAreIndependent() throws {
-    func blob(attributes: UInt8, interval: UInt8) -> [UInt8] {
-      [
-        9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, attributes,
-        64, 0, interval,
-      ]
-    }
-    for usage in [UInt8(0x03), UInt8(0x13)] {
-      var base = blob(attributes: usage, interval: usage == 0x13 ? 8 : 1)
-      base[2] = 31
-      let parsed = try PassiveUSBConfigurationDescriptorParser.parse(
-        base + [6, 0x30, 0, 0, 64, 0],
-        negotiatedSpeed: .superSpeedPlus
-      )
-      #expect(parsed.interfaces[0].endpoints.count == 1)
-    }
-    for usage in [UInt8(0x23), UInt8(0x33)] {
-      #expect(throws: PassiveUSBDescriptorBlobError.invalidTransferAttributes) {
-        try PassiveUSBConfigurationDescriptorParser.parse(
-          blob(attributes: usage, interval: 1),
-          negotiatedSpeed: .superSpeed
-        )
-      }
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidTransferAttributes) {
-      try PassiveUSBConfigurationDescriptorParser.parse(blob(attributes: 0x13, interval: 8))
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidTransferAttributes) {
-      try PassiveUSBConfigurationDescriptorParser.parse(
-        blob(attributes: 2, interval: 1),
-        negotiatedSpeed: .low
-      )
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidTransferAttributes) {
-      try PassiveUSBConfigurationDescriptorParser.parse(
-        blob(attributes: 1, interval: 1),
-        negotiatedSpeed: .low
-      )
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidInterval) {
-      try PassiveUSBConfigurationDescriptorParser.parse(blob(attributes: 1, interval: 17))
-    }
-  }
-  @Test
-
-
-  func isochronousUsageValuesAcceptZeroOneTwoAndRejectThree() throws {
-    func blob(_ attributes: UInt8) -> [UInt8] {
-      [
-        9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, attributes,
-        0, 2, 1,
-      ]
-    }
-    for attributes in [UInt8(1), UInt8(0x11), UInt8(0x21)] {
-
-      #expect(throws: Never.self) {
-        try _ = PassiveUSBConfigurationDescriptorParser.parse(blob(attributes))
-      }
-    }
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidTransferAttributes) {
-      try _ = PassiveUSBConfigurationDescriptorParser.parse(blob(0x31))
-    }
-  }
-  @Test
-  func isochronousSynchronizationValuesAreAllAccepted() throws {
-    func blob(_ attributes: UInt8) -> [UInt8] {
-      [
-        9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, attributes,
-        0, 2, 1,
-      ]
-    }
-    for attributes in [UInt8(1), UInt8(5), UInt8(9), UInt8(13)] {
-      #expect(throws: Never.self) {
-        try _ = PassiveUSBConfigurationDescriptorParser.parse(blob(attributes))
-      }
-    }
-  }
-  @Test
-  func periodicZeroIsInvalidBeforeSpeedIsKnown() {
-    let bytes: [UInt8] = [
-      9, 2, 25, 0, 1, 1, 0, 0x80, 0x32, 9, 4, 0, 0, 1, 0xFF, 0x47, 0xD0, 0, 7, 5, 1, 3, 0, 0, 0,
-    ]
-    #expect(throws: PassiveUSBDescriptorBlobError.invalidInterval) {
-      try _ = PassiveUSBConfigurationDescriptorParser.parse(bytes)
-    }
   }
 }

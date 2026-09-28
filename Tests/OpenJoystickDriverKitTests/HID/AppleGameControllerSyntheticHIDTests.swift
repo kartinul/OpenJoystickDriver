@@ -1,4 +1,3 @@
-import CoreHID
 import Foundation
 import IOKit
 import IOKit.hid
@@ -52,12 +51,6 @@ struct AppleGameControllerSyntheticHIDTests {
   }
 
   @Test
-  func unknownRegistryEntryLookupDoesNotOpenAUserClient() {
-    #expect(!AppleGameControllerSyntheticHID.isSyntheticRegistryEntry(id: 0))
-    #expect(!AppleGameControllerSyntheticHID.isSyntheticRegistryEntry(id: 1))
-  }
-
-  @Test
   func physicalAdmissionAcceptsGamePad1WithoutSyntheticMetadata() {
     #expect(
       PhysicalHIDBackendEventPolicy.acceptsDevice(
@@ -77,20 +70,5 @@ struct AppleGameControllerSyntheticHIDTests {
         syntheticProperty: kCFBooleanFalse
       )
     )
-  }
-
-  @available(macOS 15, *)
-  @Test
-  func coreHIDMatchingCriteriaDoNotRequireSyntheticMetadata() {
-    let criteria = AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
-      primaryUsage: .genericDesktop(.gamepad)
-    )
-    #expect(criteria.primaryUsage == .genericDesktop(.gamepad))
-    let vidPid = AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
-      vendorID: 0x045E,
-      productID: 0x0B13
-    )
-    #expect(vidPid.vendorID == 0x045E)
-    #expect(vidPid.productID == 0x0B13)
   }
 }

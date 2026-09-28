@@ -27,19 +27,19 @@ enum RemappingOutputRoutingError: Error, Equatable, LocalizedError, Sendable {
 }
 
 enum RemappingRouteSelection: Equatable, Sendable {
-  case compatibility
+  case virtualGamepad
   case remapping(profileID: UUID)
   case unavailable
 }
 
 enum RemappingRouteEligibility: String, Equatable, Sendable {
-  case compatibilityOutputSuppressed = "compatibility_output_suppressed"
   case eligible
   case outputSuppressed = "output_suppressed"
   case postEventAccessNotAuthorized = "post_event_access_not_authorized"
   case targetApplicationNotFrontmost = "target_application_not_frontmost"
   case physicalInputNotExclusive = "physical_input_not_exclusive"
   case unavailable
+  case virtualOutputSuppressed = "virtual_output_suppressed"
 }
 
 struct RemappingRouteStatus: Equatable, Sendable {
@@ -56,7 +56,6 @@ struct RemappingRouteStatus: Equatable, Sendable {
 
 struct RemappingRoutingControls: Equatable, Sendable {
   let outputSuppressed: Bool
-  let compatibilityOutputAllowed: Bool
   let revision: UInt64
 }
 
@@ -114,7 +113,7 @@ enum RemappingProfileTransactionState: Equatable, Sendable {
 }
 
 enum RemappingSelectedRoute: Equatable, Sendable {
-  case compatibility
+  case virtualGamepad
   case remapping(RemappingProfile)
   case unavailable(RemappingOutputRoutingError)
 
@@ -165,4 +164,19 @@ enum RemappingRoutingCheckpoint: Equatable, Sendable {
   case dispatch
   case installRoutes
   case tick
+}
+
+/// Controllers whose input a remapping route consumes, readable per input report without
+/// entering the routing actor.
+final class RemappingObservedInputDemand: @unchecked Sendable {
+  private let lock = NSLock()
+  private var identifiers: Set<DeviceIdentifier> = []
+
+  func contains(_ identifier: DeviceIdentifier) -> Bool {
+    lock.withLock { identifiers.contains(identifier) }
+  }
+
+  func replace(with identifiers: Set<DeviceIdentifier>) {
+    lock.withLock { self.identifiers = identifiers }
+  }
 }

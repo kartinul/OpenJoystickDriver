@@ -32,22 +32,6 @@ enum CompatibilityOutputState: String, Sendable, Equatable {
   case error
 }
 
-struct RuntimeCompatibilityStatus: Sendable, Equatable {
-  let identity: CompatibilityIdentity?
-  let diagnostic: String?
-
-  init(rawValue: String?) {
-    self.identity = rawValue.flatMap(CompatibilityIdentity.init(rawValue:))
-    if let rawValue, identity == nil {
-      self.diagnostic = "Unknown compatibility identity: \(rawValue)"
-    } else {
-      self.diagnostic = nil
-    }
-  }
-
-  static let unavailable = Self(rawValue: nil)
-}
-
 struct ConnectedControllersStatus: Sendable {
   let isAvailable: Bool
   let descriptions: [ApplicationServiceDeviceDescription]
@@ -132,7 +116,6 @@ struct RuntimeStatusSnapshot: Sendable {
   let source: RuntimeStatusSource
   let permissions: StatusPermissions
   let controllers: ConnectedControllersStatus
-  let compatibility: RuntimeCompatibilityStatus
   let output: CompatibilityOutputStatus
   let applicationServicePayload: ApplicationServiceStatusPayload?
 
@@ -143,7 +126,6 @@ struct RuntimeStatusSnapshot: Sendable {
       accessibility: payload.accessibility
     )
     self.controllers = ConnectedControllersStatus(descriptions: payload.connectedDevices)
-    self.compatibility = RuntimeCompatibilityStatus(rawValue: payload.compatibilityIdentity)
     self.output = CompatibilityOutputStatus(
       enabled: payload.userSpaceVirtualDeviceEnabled,
       status: payload.userSpaceVirtualDeviceStatus
@@ -155,7 +137,6 @@ struct RuntimeStatusSnapshot: Sendable {
     self.source = .localSystem
     self.permissions = StatusPermissions(localPermissions)
     self.controllers = .unavailable
-    self.compatibility = .unavailable
     self.output = .unavailable
     self.applicationServicePayload = nil
   }
@@ -164,7 +145,6 @@ struct RuntimeStatusSnapshot: Sendable {
     self.source = .unavailable
     self.permissions = .unavailable
     self.controllers = .unavailable
-    self.compatibility = .unavailable
     self.output = .unavailable
     self.applicationServicePayload = nil
   }
@@ -192,19 +172,49 @@ enum RuntimeStatusText {
     lines.append(contentsOf: permissionLines(snapshot.permissions))
     lines.append("")
     lines.append("Compatibility output:")
-    if let identity = snapshot.compatibility.identity {
-      lines.append("  identity  : \(identity.rawValue)")
-    } else {
-      lines.append("  identity  : unavailable")
-    }
     lines.append("  backend   : \(snapshot.output.state.rawValue)")
     if let diagnostic = snapshot.output.diagnostic {
       lines.append("  status    : error: \(diagnostic)")
     } else if let detail = snapshot.output.detail {
       lines.append("  status    : \(detail)")
     }
+    if let error = snapshot.applicationServicePayload?.virtualHIDProfileOverrideError {
+      lines.append("  override error: \(error)")
+    }
+    if let legacy = snapshot.applicationServicePayload?.legacyCompatibilityIdentityRejected {
+      lines.append("  legacy identity rejected: \(legacy)")
+    }
     lines.append("")
     lines.append(contentsOf: controllerLines(snapshot.controllers))
+    if let unbound = snapshot.applicationServicePayload?.unboundDevices, !unbound.isEmpty {
+      lines.append("")
+      lines.append(contentsOf: unboundLines(unbound))
+    }
+    if let passThrough = snapshot.applicationServicePayload?.passThroughDevices,
+      !passThrough.isEmpty
+    {
+      lines.append("")
+      lines.append(contentsOf: passThroughLines(passThrough))
+    }
+    return lines
+  }
+
+  private static func passThroughLines(_ devices: [ApplicationServicePassThroughDevice]) -> [String]
+  {
+    ["Left to macOS (\(devices.count)):"]
+      + devices.map { "  VID:\($0.vendorID) PID:\($0.productID) [\($0.connection)]" }
+  }
+
+  private static func unboundLines(_ devices: [ApplicationServiceUnboundDevice]) -> [String] {
+    var lines = ["Unbound devices (\(devices.count)):"]
+    for device in devices {
+      let candidates = device.candidates.map(\.rawValue)
+      lines.append(
+        "  VID:\(device.vendorID) PID:\(device.productID) [\(device.connection)]"
+          + " backend=\(device.accessBackend.rawValue) reason=\(device.reason.rawValue)"
+          + " candidates=\(candidates.isEmpty ? "none" : candidates.joined(separator: ","))"
+      )
+    }
     return lines
   }
 
@@ -229,6 +239,21 @@ enum RuntimeStatusText {
     return permissions.isReady ? "[OK] ready" : "[ACTION] blocked"
   }
 
+  private static func virtualProfileLines(
+    _ status: ApplicationServiceVirtualHIDProfileStatus?
+  ) -> [String] {
+    guard let status else { return [] }
+    let virtual: String
+    if let profile = status.profile {
+      virtual = profile.rawValue + (status.source.map { " (\($0))" } ?? "")
+    } else {
+      virtual = status.unavailable ? "unavailable" : "none"
+    }
+    var lines = ["    virtual: \(virtual)"]
+    if let override = status.override { lines.append("    override: \(override.rawValue)") }
+    return lines
+  }
+
   private static func controllerLines(_ status: ConnectedControllersStatus) -> [String] {
     guard status.isAvailable else { return ["Devices: unavailable"] }
     guard !status.descriptions.isEmpty else { return ["Devices: (none connected)"] }
@@ -238,24 +263,28 @@ enum RuntimeStatusText {
       let serialNumber = device.serialNumber ?? "none"
       lines.append(
         "  \(device.name) (VID:\(device.vendorID) PID:\(device.productID) "
-          + "\(device.parser) [\(device.connection)] SN:\(serialNumber))"
+          + "[\(device.connection)] SN:\(serialNumber))"
       )
       let quirks = device.quirks.isEmpty ? "none" : device.quirks.joined(separator: ",")
       let backends =
         device.preferredBackends.isEmpty ? "none" : device.preferredBackends.joined(separator: ",")
       lines.append(
-        "    protocol=\(device.protocolVariant.rawValue)"
+        "    protocol=\(device.protocolBinding.rawValue)"
           + " endpoints=in:0x\(String(device.inputEndpoint, radix: 16))"
           + " out:0x\(String(device.outputEndpoint, radix: 16))"
           + " setConfig=\(device.needsSetConfiguration)"
           + " settleMs=\(device.postHandshakeSettleMs)"
       )
+      if device.physicalOwnership == .nativeGamepad {
+        lines.append("    native=macos virtual=none")
+      }
       lines.append("    quirks=\(quirks) backends=\(backends)")
-      if let battery = device.battery {
-        let percentage = battery.percentageDescription ?? "unknown"
+      lines.append(contentsOf: virtualProfileLines(device.virtualHIDProfile))
+      if let power = device.connectionState?.power {
+        let percentage = power.battery.percentageText ?? "unknown"
+        let wired = power.wiredPower.map { $0 ? "yes" : "no" } ?? "unknown"
         lines.append(
-          "    battery=\(percentage) status=\(battery.chargingState.rawValue)"
-            + " cable=\(battery.cableState.rawValue)"
+          "    battery=\(percentage) status=\(power.charging.rawValue) wired-power=\(wired)"
         )
       } else {
         lines.append("    battery=unknown")

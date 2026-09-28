@@ -16,7 +16,7 @@
   @MainActor
   final class ProfilesViewModel: ObservableObject {
     let documents: ProfileDocumentService
-    let capabilityRegistry = ParserRegistry()
+    let capabilityRegistry = ProtocolDriverRegistry()
     @Published
     var selectedProfileID: UUID?
     @Published

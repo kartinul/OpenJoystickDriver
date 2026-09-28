@@ -198,10 +198,13 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   public let vendorID: UInt16
   /// USB product ID.
   public let productID: UInt16
-  /// Name of the protocol parser in use (e.g. "GIP", "DS4").
-  public let parser: String
+  /// Bound protocol family and resolved variant (e.g. `xbox.gip:usb`, `vendor.flydigi`).
+  public let protocolBinding: ProtocolBindingID
   /// Connection type (e.g. "USB", "HID").
   public let connection: String
+  /// USB interface number the controller is reached through: the claimed interface of a raw-USB
+  /// pipeline, or the parent interface observed for a HID connection. Nil when none was observed.
+  public let interfaceNumber: UInt8?
   /// Discovery route that owns the live controller pipeline.
   public let discoverySource: ApplicationServiceDeviceDiscoverySource
   /// Observed physical ownership route used by virtual exposure policy.
@@ -212,9 +215,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   public let duplicateExposureRisk: DuplicateExposureRisk
   /// USB serial number, or nil if not reported.
   public let serialNumber: String?
-  /// Source-backed protocol variant selected from the generated controller record.
-  public let protocolVariant: ControllerProtocolVariant
-  /// Source-backed mapping quirks from the controller record.
+  /// Driver-declared quirk IDs from the controller record.
   public let quirks: [String]
   /// Interrupt IN endpoint address used by USB transports.
   public let inputEndpoint: UInt8
@@ -228,30 +229,32 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   public let preferredBackends: [String]
   /// Exact source-backed motors and lighting features of the active parser.
   public let physicalOutputCapabilities: PhysicalControllerOutputCapabilities
-  /// Sample formats implemented by the active parser; independent of calibration or mappings.
-  public let physicalInputCapabilities: PhysicalControllerInputCapabilities
-  /// Latest battery telemetry reported by the physical controller.
-  public let battery: ControllerBatteryTelemetry?
+  /// Normalized controls and sample formats the active parser emits for this record.
+  public let capabilities: ControllerCapabilities
+  /// Link and latest power state of the physical controller.
+  public let connectionState: ControllerConnectionState?
   /// Whether OpenJoystickDriver currently admits input and publishes output for this session.
   public let sessionState: ControllerSessionState
   /// Result of the most recent required protocol startup command sequence.
   public let startupCommandStatus: String?
   /// Live report freshness and recovery state for this controller input pipeline.
   public let inputHealth: ControllerInputHealth
+  /// Virtual HID profile selection for this controller; set by the service when it reports status.
+  public var virtualHIDProfile: ApplicationServiceVirtualHIDProfileStatus?
 
   /// Creates a new ApplicationServiceDeviceDescription.
   public init(
     name: String,
     vendorID: UInt16,
     productID: UInt16,
-    parser: String,
+    protocolBinding: ProtocolBindingID,
     connection: String,
+    interfaceNumber: UInt8? = nil,
     discoverySource: ApplicationServiceDeviceDiscoverySource = .unknown,
     physicalOwnership: ControllerOwnershipObservation = .unknown,
     hidInputOwnership: HIDInputOwnership = .unknown,
     duplicateExposureRisk: DuplicateExposureRisk = .unknownOwnership,
     serialNumber: String?,
-    protocolVariant: ControllerProtocolVariant = .unknown,
     quirks: [String] = [],
     inputEndpoint: UInt8 = 0,
     outputEndpoint: UInt8 = 0,
@@ -259,8 +262,8 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     postHandshakeSettleMs: Int = 0,
     preferredBackends: [String] = [],
     physicalOutputCapabilities: PhysicalControllerOutputCapabilities = .none,
-    physicalInputCapabilities: PhysicalControllerInputCapabilities = .none,
-    battery: ControllerBatteryTelemetry? = nil,
+    capabilities: ControllerCapabilities = ControllerCapabilities(controls: []),
+    connectionState: ControllerConnectionState? = nil,
     sessionState: ControllerSessionState = .active,
     startupCommandStatus: String? = nil,
     inputHealth: ControllerInputHealth = ControllerInputHealth(state: .healthy),
@@ -270,14 +273,14 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     self.name = name
     self.vendorID = vendorID
     self.productID = productID
-    self.parser = parser
+    self.protocolBinding = protocolBinding
     self.connection = connection
+    self.interfaceNumber = interfaceNumber
     self.discoverySource = discoverySource
     self.physicalOwnership = physicalOwnership
     self.hidInputOwnership = hidInputOwnership
     self.duplicateExposureRisk = duplicateExposureRisk
     self.serialNumber = serialNumber
-    self.protocolVariant = protocolVariant
     self.quirks = quirks
     self.inputEndpoint = inputEndpoint
     self.outputEndpoint = outputEndpoint
@@ -285,8 +288,8 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     self.postHandshakeSettleMs = postHandshakeSettleMs
     self.preferredBackends = preferredBackends
     self.physicalOutputCapabilities = physicalOutputCapabilities
-    self.physicalInputCapabilities = physicalInputCapabilities
-    self.battery = battery
+    self.capabilities = capabilities
+    self.connectionState = connectionState
     self.sessionState = sessionState
     self.startupCommandStatus = startupCommandStatus
     self.inputHealth = inputHealth
@@ -298,8 +301,9 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     self.name = try container.decode(String.self, forKey: .name)
     self.vendorID = try container.decode(UInt16.self, forKey: .vendorID)
     self.productID = try container.decode(UInt16.self, forKey: .productID)
-    self.parser = try container.decode(String.self, forKey: .parser)
+    self.protocolBinding = try container.decode(ProtocolBindingID.self, forKey: .protocolBinding)
     self.connection = try container.decode(String.self, forKey: .connection)
+    self.interfaceNumber = try container.decodeIfPresent(UInt8.self, forKey: .interfaceNumber)
     self.discoverySource = try container.decode(
       ApplicationServiceDeviceDiscoverySource.self,
       forKey: .discoverySource
@@ -313,10 +317,6 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
       try container.decodeIfPresent(DuplicateExposureRisk.self, forKey: .duplicateExposureRisk)
       ?? .unknownOwnership
     self.serialNumber = try container.decodeIfPresent(String.self, forKey: .serialNumber)
-    self.protocolVariant = try container.decode(
-      ControllerProtocolVariant.self,
-      forKey: .protocolVariant
-    )
     self.quirks = try container.decodeIfPresent([String].self, forKey: .quirks) ?? []
     self.inputEndpoint = try container.decodeIfPresent(UInt8.self, forKey: .inputEndpoint) ?? 0
     self.outputEndpoint = try container.decodeIfPresent(UInt8.self, forKey: .outputEndpoint) ?? 0
@@ -330,12 +330,11 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
       PhysicalControllerOutputCapabilities.self,
       forKey: .physicalOutputCapabilities
     )
-    self.physicalInputCapabilities =
-      try container.decodeIfPresent(
-        PhysicalControllerInputCapabilities.self,
-        forKey: .physicalInputCapabilities
-      ) ?? .none
-    self.battery = try container.decodeIfPresent(ControllerBatteryTelemetry.self, forKey: .battery)
+    self.capabilities = try container.decode(ControllerCapabilities.self, forKey: .capabilities)
+    self.connectionState = try container.decodeIfPresent(
+      ControllerConnectionState.self,
+      forKey: .connectionState
+    )
     self.sessionState =
       try container.decodeIfPresent(ControllerSessionState.self, forKey: .sessionState) ?? .active
     self.startupCommandStatus = try container.decodeIfPresent(
@@ -345,77 +344,9 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     self.inputHealth =
       try container.decodeIfPresent(ControllerInputHealth.self, forKey: .inputHealth)
       ?? ControllerInputHealth(state: .healthy)
-  }
-}
-
-/// Status snapshot returned by ``ApplicationServiceProtocol/getStatus(reply:)``.
-///
-/// Contains the current macOS permission states (as human-readable strings like
-/// "granted" or "denied") and descriptions of all connected controllers.
-public struct ApplicationServiceCompatibilityRetryPayload: Codable, Sendable, Equatable {
-  public let requestedIdentity: String
-  public let priorProfileIdentity: String
-  public let phase: String
-
-  public init(requestedIdentity: String, priorProfileIdentity: String, phase: String) {
-    self.requestedIdentity = requestedIdentity
-    self.priorProfileIdentity = priorProfileIdentity
-    self.phase = phase
-  }
-}
-
-public struct ApplicationServiceStatusPayload: Codable, Sendable {
-  /// Exact source and app bundle identity that produced this status snapshot.
-  public let buildIdentity: BuildIdentity
-  /// Input Monitoring permission state (e.g. "granted", "denied").
-  public let inputMonitoring: String
-  /// Accessibility permission used to publish an IOHIDUserDevice.
-  public let accessibility: String
-  /// Structured descriptions of all connected controllers.
-  public let connectedDevices: [ApplicationServiceDeviceDescription]
-  /// Whether the user-space virtual gamepad is enabled (IOHIDUserDevice).
-  public let userSpaceVirtualDeviceEnabled: Bool?
-  /// Short status string for the user-space virtual gamepad (e.g. "on", "off", "error: ...").
-  public let userSpaceVirtualDeviceStatus: String?
-  /// Compatibility mode identity/protocol selection.
-  public let compatibilityIdentity: String?
-  /// Identity currently published by the live compatibility backend, if any.
-  public let compatibilityLiveIdentity: String?
-  /// Persisted transition context available for an explicit retry after rollback failure.
-  public let compatibilityRetry: ApplicationServiceCompatibilityRetryPayload?
-
-  /// Creates a new ApplicationServiceStatusPayload.
-  public init(
-    buildIdentity: BuildIdentity = .current(),
-    inputMonitoring: String,
-    accessibility: String,
-    connectedDevices: [ApplicationServiceDeviceDescription],
-    userSpaceVirtualDeviceEnabled: Bool? = nil,
-    userSpaceVirtualDeviceStatus: String? = nil,
-    compatibilityIdentity: String? = nil,
-    compatibilityLiveIdentity: String? = nil,
-    compatibilityRetry: ApplicationServiceCompatibilityRetryPayload? = nil
-  ) {
-    self.buildIdentity = buildIdentity
-    self.inputMonitoring = inputMonitoring
-    self.accessibility = accessibility
-    self.connectedDevices = connectedDevices
-    self.userSpaceVirtualDeviceEnabled = userSpaceVirtualDeviceEnabled
-    self.userSpaceVirtualDeviceStatus = userSpaceVirtualDeviceStatus
-    self.compatibilityIdentity = compatibilityIdentity
-    self.compatibilityLiveIdentity = compatibilityLiveIdentity
-    self.compatibilityRetry = compatibilityRetry
-  }
-
-  enum CodingKeys: String, CodingKey {
-    case buildIdentity
-    case inputMonitoring
-    case accessibility
-    case connectedDevices
-    case userSpaceVirtualDeviceEnabled
-    case userSpaceVirtualDeviceStatus
-    case compatibilityIdentity
-    case compatibilityLiveIdentity
-    case compatibilityRetry
+    self.virtualHIDProfile = try container.decodeIfPresent(
+      ApplicationServiceVirtualHIDProfileStatus.self,
+      forKey: .virtualHIDProfile
+    )
   }
 }

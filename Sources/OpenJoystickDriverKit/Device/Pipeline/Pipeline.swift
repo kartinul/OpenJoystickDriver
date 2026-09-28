@@ -1,5 +1,22 @@
 import Foundation
 
+/// Serializes every write to one USB session so each write rechecks its handle in order.
+actor USBOutputWriteSerialQueue {
+  private var tail: Task<Void, Never>?
+
+  func perform<Value: Sendable>(
+    _ operation: @escaping @Sendable () async throws -> Value
+  ) async throws -> Value {
+    let previous = tail
+    let current = Task {
+      if let previous { await previous.value }
+      return try await operation()
+    }
+    tail = Task { _ = try? await current.value }
+    return try await current.value
+  }
+}
+
 let gipReadPacketLength = 64
 let gipReadTimeoutMs: UInt32 = 100
 struct USBPipelineRecoveryPolicy: Sendable {
@@ -38,27 +55,53 @@ actor DevicePipeline {
 
   let identifier: DeviceIdentifier
   let transport: Transport
-  let parser: any InputParser
+  let driver: any PhysicalProtocolDriver
   let dispatcher: any OutputDispatcher
+  /// Set for a controller macOS serves natively: OJD parses and routes its input, publishes no
+  /// virtual gamepad for it, and writes to it only what this allowance names.
+  let nativeWrites: NativeGamepadWrites?
+  let observesOnly: Bool
+  /// For an observe-only pipeline, the consumer that says whether anyone uses its input.
+  let observedInputDemand: (any ObservedInputDemand)?
   let usbTransportProvider: (any USBTransportProvider)?
   let transportProfile: DeviceTransportProfile
   let usbRecoveryPolicy: USBPipelineRecoveryPolicy
   let idleMonitorIntervalNanoseconds: UInt64
+  /// Monotonic time source for input receipt, liveness, and keep-alive timing.
+  let uptimeNanoseconds: @Sendable () -> UInt64
   var isActive = false
+  /// Set by the first ``stop()``; teardown side effects run once per pipeline.
+  var hasStopped = false
+  var usbRunGeneration: UInt64 = 0
   var usbHandle: (any USBTransportSession)?
-  var currentInputState: DeviceInputState
-  var outputState: DeviceInputState
+  /// The binding the driver was built for: its protocol fixes the button labels, and with the
+  /// interface it fixes the link that `ControllerState.connection` reports.
+  let binding: ProtocolBinding?
+  let interface: PhysicalInterfaceSignature?
+  let buttonLabels: ControllerButtonLabels
+  /// The controller's latest observed state, including input hidden from output.
+  var currentInputState = ControllerState.neutral
+  /// The state last sent to the dispatcher, without connection; neutral once the dispatcher was
+  /// told the controller stopped.
+  var lastDispatchedState = ControllerState.neutral
+  /// Hides input held across a lifted foreground gate until it changes.
+  var foregroundMask: ForegroundInputMask?
   let maxPacketLogEntries = 200
-  var currentBatteryTelemetry: ControllerBatteryTelemetry?
+  var currentPower: ControllerConnectionState.Power?
   let packetLog: PacketLogBuffer
   var idleMonitorTask: Task<Void, Never>?
   var runTask: Task<Void, Never>?
+  /// Keep-alive timer of the current USB run, independent of blocking input reads.
+  var usbKeepAliveTask: Task<Void, Never>?
+  let usbOutputWriteQueue = USBOutputWriteSerialQueue()
+  var usbOwnershipReportsInFlight = 0
   var externalOutputAllowed: Bool
   var waitingForExternalNeutral = false
   var consecutiveUSBIOErrors: Int = 0
   var lastUSBIOErrorLogNs: UInt64 = 0
   var inputConnectionActive: Bool
-  var sessionState: ControllerSessionState = .active
+  var sessionState: ControllerSessionState
+  var acceptsOnlyTeardownOutput = false
   var lastLiveInputReportNanoseconds: UInt64?
   var inputHealthMonitoringStartedNanoseconds: UInt64?
   var lastObservedInputReportNanoseconds: UInt64?
@@ -69,32 +112,39 @@ actor DevicePipeline {
   init(
     identifier: DeviceIdentifier,
     transport: Transport,
-    parser: sending any InputParser,
+    driver: sending any PhysicalProtocolDriver,
     dispatcher: any OutputDispatcher,
+    binding: ProtocolBinding? = nil,
+    interface: PhysicalInterfaceSignature? = nil,
+    nativeWrites: NativeGamepadWrites? = nil,
     usbTransportProvider: (any USBTransportProvider)? = nil,
     transportProfile: DeviceTransportProfile = .gipDefault,
     usbRecoveryPolicy: USBPipelineRecoveryPolicy = .standard,
     externalOutputAllowed: Bool = true,
+    sessionState: ControllerSessionState = .active,
     idleTimeoutNanoseconds _: UInt64 = 30_000_000_000,
-    idleMonitorIntervalNanoseconds: UInt64 = defaultIdleMonitorIntervalNanoseconds
+    idleMonitorIntervalNanoseconds: UInt64 = defaultIdleMonitorIntervalNanoseconds,
+    uptimeNanoseconds: @escaping @Sendable () -> UInt64 = { DispatchTime.now().uptimeNanoseconds }
   ) {
     self.identifier = identifier
     self.transport = transport
-    self.parser = parser
+    self.driver = driver
     self.dispatcher = dispatcher
+    self.binding = binding
+    self.interface = interface
+    self.buttonLabels =
+      binding.map { ControllerButtonLabels(protocolID: $0.protocolID) } ?? .standard
+    self.nativeWrites = nativeWrites
+    self.observesOnly = nativeWrites != nil
+    self.observedInputDemand = nativeWrites == nil ? nil : dispatcher as? any ObservedInputDemand
     self.usbTransportProvider = usbTransportProvider
     self.transportProfile = transportProfile
     self.usbRecoveryPolicy = usbRecoveryPolicy
     self.idleMonitorIntervalNanoseconds = idleMonitorIntervalNanoseconds
+    self.uptimeNanoseconds = uptimeNanoseconds
     self.externalOutputAllowed = externalOutputAllowed
-    let inputLifecycle = self.parser as? any ControllerInputConnectionLifecycle
-    self.inputConnectionActive = !(inputLifecycle?.requiresInputConnectionBeforeOutput ?? false)
-    let initialState = DeviceInputState(
-      vendorID: identifier.vendorID,
-      productID: identifier.productID
-    )
-    self.currentInputState = initialState
-    self.outputState = initialState
+    self.sessionState = sessionState
+    self.inputConnectionActive = !self.driver.sessionPlan.requiresInputConnectionBeforeOutput
     self.packetLog = PacketLogBuffer(maxEntries: maxPacketLogEntries)
   }
 }

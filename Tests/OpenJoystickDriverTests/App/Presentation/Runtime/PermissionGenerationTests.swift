@@ -14,8 +14,7 @@ struct RuntimePermissionGenerationTests {
         accessibility: "denied",
         connectedDevices: [],
         userSpaceVirtualDeviceEnabled: true,
-        userSpaceVirtualDeviceStatus: "ready",
-        compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+        userSpaceVirtualDeviceStatus: "ready"
       ),
       statusDelayNanoseconds: 100_000_000
     )
@@ -42,8 +41,7 @@ struct RuntimePermissionGenerationTests {
         accessibility: "denied",
         connectedDevices: [],
         userSpaceVirtualDeviceEnabled: true,
-        userSpaceVirtualDeviceStatus: "ready",
-        compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+        userSpaceVirtualDeviceStatus: "ready"
       ),
       statusDelayNanoseconds: 100_000_000
     )
@@ -131,8 +129,7 @@ private actor PermissionRaceGatewayStub: ApplicationServiceGateway {
       accessibility: "granted",
       connectedDevices: [],
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "ready",
-      compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+      userSpaceVirtualDeviceStatus: "ready"
     ),
     snapshotPayload: ApplicationServiceRemappingSnapshotPayload =
       ApplicationServiceRemappingSnapshotPayload(
@@ -175,7 +172,7 @@ private actor PermissionRaceGatewayStub: ApplicationServiceGateway {
     _ requirement: PermissionManager.Requirement
   ) throws -> PermissionManager.Snapshot { try requestPermissions() }
 
-  func deviceInputState(for selector: RuntimeDeviceSelector) throws -> DeviceInputState? { nil }
+  func controllerState(for selector: RuntimeDeviceSelector) throws -> ControllerState? { nil }
 
   func packetLog(for selector: RuntimeDeviceSelector) throws -> [PacketLogEntry] { [] }
 
@@ -241,7 +238,26 @@ private actor PermissionRaceGatewayStub: ApplicationServiceGateway {
   func unpairRemappingJoyCons(sessionID: UUID) throws -> ApplicationServiceRemappingSnapshotPayload
   { snapshotPayload }
 
-  func compatibilityIdentity() throws -> CompatibilityIdentity { .sdl2_3 }
+  func setVirtualHIDProfileOverride(
+    _ profile: VirtualHIDProfileID,
+    for selector: RuntimeDeviceSelector
+  ) throws -> VirtualHIDProfileOverrideResult {
+    VirtualHIDProfileOverrideResult(
+      requested: profile,
+      live: profile,
+      source: "override",
+      failure: nil
+    )
+  }
 
-  func setCompatibilityIdentity(_ identity: CompatibilityIdentity) throws -> Bool { true }
+  func resetVirtualHIDProfileOverride(
+    for selector: RuntimeDeviceSelector
+  ) throws -> VirtualHIDProfileOverrideResult {
+    VirtualHIDProfileOverrideResult(
+      requested: nil,
+      live: .generic,
+      source: "automatic",
+      failure: nil
+    )
+  }
 }

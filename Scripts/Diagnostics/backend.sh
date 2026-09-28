@@ -44,7 +44,7 @@ run_sdl3_probe_native() {
   xmake run -P "$PROBE_DIR" SDLGamepadProbe -- "$@"
 }
 
-configure_ojd_gamecontroller_route() {
+reset_ojd_virtual_profile_overrides() {
   local ROOT
   ROOT="$PROJECT_DIR"
   local APP_BIN="/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver"
@@ -55,13 +55,13 @@ configure_ojd_gamecontroller_route() {
 
   [[ -x "$CLI_BIN" ]] || die "OpenJoystickDriver CLI not found at $CLI_BIN or $APP_BIN"
 
-  run_limited_command 8 "$CLI_BIN" --headless compat set apple-gamecontroller >/dev/null || {
-    echo "WARN: could not set OJD compatibility identity to apple-gamecontroller" >&2
+  run_limited_command 8 "$CLI_BIN" --headless controller virtual reset --all >/dev/null || {
+    echo "WARN: could not reset OJD virtual HID profile overrides" >&2
   }
 }
 
 run_sdl3_gamecontroller_probe() {
-  configure_ojd_gamecontroller_route
+  reset_ojd_virtual_profile_overrides
   SDL_JOYSTICK_MFI=1 \
     SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS=1 \
     SDL_JOYSTICK_IOKIT=0 \
@@ -74,24 +74,8 @@ run_sdl3_gamecontroller_probe() {
     run_sdl3_probe_native --gc-prewarm --wait-devices 8 --rumble --expect-rumble "$@"
 }
 
-configure_ojd_hidapi_x360_route() {
-  local ROOT
-  ROOT="$PROJECT_DIR"
-  local APP_BIN="/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver"
-  local CLI_BIN="${OJD_CLI:-$APP_BIN}"
-  if [[ ! -x "$CLI_BIN" ]]; then
-    CLI_BIN="$ROOT/.build/debug/OpenJoystickDriver"
-  fi
-
-  [[ -x "$CLI_BIN" ]] || die "OpenJoystickDriver CLI not found at $CLI_BIN or $APP_BIN"
-
-  run_limited_command 8 "$CLI_BIN" --headless compat set sdl2-3 >/dev/null || {
-    echo "WARN: could not set OJD compatibility identity to sdl2-3" >&2
-  }
-}
-
 run_sdl3_hidapi_x360_probe() {
-  configure_ojd_hidapi_x360_route
+  reset_ojd_virtual_profile_overrides
   SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD=1 \
     SDL_JOYSTICK_MFI=0 \
     SDL_JOYSTICK_IOKIT=0 \

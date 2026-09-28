@@ -12,7 +12,90 @@ struct DeviceIdentifierTests {
 
     #expect(first.modelMatches(second))
     #expect(!first.modelMatches(other))
-    #expect(!first.exactlyMatches(second))
+    #expect(first.controllerIdentity != second.controllerIdentity)
+  }
+
+  @Test
+  func controllerIdentityIgnoresLocationAndInterface() {
+    let first = DeviceIdentifier(
+      vendorID: 0x045E,
+      productID: 0x0719,
+      serialNumber: "pad",
+      locationID: 1,
+      interfaceNumber: 0
+    )
+    let second = DeviceIdentifier(
+      vendorID: 0x045E,
+      productID: 0x0719,
+      serialNumber: "pad",
+      locationID: 2,
+      interfaceNumber: 2
+    )
+
+    #expect(first != second)
+    #expect(first.controllerIdentity == second.controllerIdentity)
+    #expect(
+      first.controllerIdentity
+        == ControllerIdentity(vendorID: 0x045E, productID: 0x0719, serialNumber: "pad")
+    )
+    #expect(first.controllerIdentity.identifiesPhysicalDevice)
+    #expect(!ControllerIdentity(vendorID: 0x045E, productID: 0x0719).identifiesPhysicalDevice)
+  }
+
+  @Test
+  func emptySerialIsNoSerial() {
+    let empty = DeviceIdentifier(vendorID: 0x045E, productID: 0x0719, serialNumber: "")
+    let none = DeviceIdentifier(vendorID: 0x045E, productID: 0x0719)
+
+    #expect(empty.controllerIdentity.serialNumber == nil)
+    #expect(!empty.controllerIdentity.identifiesPhysicalDevice)
+    #expect(empty == none)
+    #expect(empty.runtimeIdentifier == "M-045E-0719")
+  }
+
+  @Test
+  func serialCannotMimicTheInterfaceComponentOfTheRuntimeToken() {
+    let spoof = DeviceIdentifier(vendorID: 0x045E, productID: 0x0719, serialNumber: "pad:I:01")
+    let slot = DeviceIdentifier(
+      vendorID: 0x045E,
+      productID: 0x0719,
+      serialNumber: "pad",
+      interfaceNumber: 1
+    )
+
+    #expect(spoof.runtimeIdentifier != slot.runtimeIdentifier)
+  }
+
+  @Test
+  func keysDifferingOnlyByInterfaceAreDistinctLogicalControllers() throws {
+    let slot0 = DeviceIdentifier(
+      vendorID: 0x045E,
+      productID: 0x0719,
+      locationID: 7,
+      interfaceNumber: 0
+    )
+    let slot1 = DeviceIdentifier(
+      vendorID: 0x045E,
+      productID: 0x0719,
+      locationID: 7,
+      interfaceNumber: 2
+    )
+    let unspecified = DeviceIdentifier(vendorID: 0x045E, productID: 0x0719, locationID: 7)
+
+    #expect(Set([slot0, slot1, unspecified]).count == 3)
+    #expect(slot0.runtimeIdentifier != slot1.runtimeIdentifier)
+    #expect(slot0.runtimeIdentifier != unspecified.runtimeIdentifier)
+    try assertExactTokenShape(slot1.runtimeIdentifier)
+    #expect(
+      UserSpaceVirtualDeviceConstants.serialNumber(for: slot0)
+        != UserSpaceVirtualDeviceConstants.serialNumber(for: slot1)
+    )
+    #expect(
+      UserSpaceVirtualDeviceConstants.serialNumber(for: slot0)
+        != UserSpaceVirtualDeviceConstants.serialNumber(for: unspecified)
+    )
+    #expect(slot0.description.hasSuffix(" if=0)"))
+    #expect(!unspecified.description.contains("if="))
   }
 
   @Test
@@ -77,16 +160,16 @@ struct DeviceIdentifierTests {
     let identifier = DeviceIdentifier(vendorID: 0x045E, productID: 0x028E, serialNumber: serial)
     let description = ApplicationServiceDeviceDescription(
       name: "Controller",
-      vendorID: identifier.vendorID,
-      productID: identifier.productID,
-      parser: "Test",
+      vendorID: identifier.controllerIdentity.vendorID,
+      productID: identifier.controllerIdentity.productID,
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
       runtimeIdentifier: identifier.runtimeIdentifier
     )
     let route = ApplicationServiceRemappingRoutePayload(
-      vendorID: identifier.vendorID,
-      productID: identifier.productID,
+      vendorID: identifier.controllerIdentity.vendorID,
+      productID: identifier.controllerIdentity.productID,
       runtimeIdentifier: identifier.runtimeIdentifier,
       selection: .remapping,
       eligibility: .eligible,
@@ -114,7 +197,7 @@ struct DeviceIdentifierTests {
       name: "Controller",
       vendorID: 0x045E,
       productID: 0x028E,
-      parser: "XUSB",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       discoverySource: .hid,
       serialNumber: nil
@@ -134,7 +217,7 @@ struct DeviceIdentifierTests {
       name: "Controller",
       vendorID: 0x045E,
       productID: 0x028E,
-      parser: "XUSB",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       discoverySource: .rawUSB,
       serialNumber: nil

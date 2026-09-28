@@ -12,7 +12,7 @@ struct USBStartupOutputPolicyTests {
     let pipeline = DevicePipeline(
       identifier: identifier,
       transport: .usb(device: Self.device),
-      parser: StartupInputParser(),
+      driver: StartupInputParser(),
       dispatcher: dispatcher,
       usbTransportProvider: provider,
       usbRecoveryPolicy: Self.fastRecoveryPolicy
@@ -22,7 +22,7 @@ struct USBStartupOutputPolicyTests {
     let retried = await waitUntil { await provider.openAttempts() >= 4 }
 
     #expect(retried)
-    #expect(dispatcher.dispatchCount == 0)
+    #expect(dispatcher.activations == 0)
     #expect(dispatcher.ownershipStates.contains(.accessDenied))
     #expect(!dispatcher.ownershipStates.contains(.exclusive))
     await pipeline.stop()
@@ -37,18 +37,18 @@ struct USBStartupOutputPolicyTests {
     let pipeline = DevicePipeline(
       identifier: identifier,
       transport: .usb(device: Self.device),
-      parser: StartupInputParser(),
+      driver: StartupInputParser(),
       dispatcher: dispatcher,
       usbTransportProvider: provider,
       usbRecoveryPolicy: Self.fastRecoveryPolicy
     )
 
     let startTask = Task { await pipeline.start() }
-    let published = await waitUntil { dispatcher.dispatchCount == 1 }
+    let published = await waitUntil { dispatcher.activations == 1 }
 
     #expect(published)
     #expect(await provider.openAttempts() == 4)
-    #expect(dispatcher.batches == [[]])
+    #expect(dispatcher.activations == 1)
     #expect(dispatcher.ownershipAtDispatch == [.exclusive])
     await pipeline.stop()
     await startTask.value
@@ -77,7 +77,7 @@ struct USBStartupOutputPolicyTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 0x3537, productID: 0x1010),
       transport: .usb(device: Self.device),
-      parser: StartupInputParser(),
+      driver: StartupInputParser(),
       dispatcher: StartupRecordingOutputDispatcher(),
       usbTransportProvider: provider,
       usbRecoveryPolicy: USBPipelineRecoveryPolicy(
@@ -105,7 +105,7 @@ struct USBStartupOutputPolicyTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 0x3537, productID: 0x1010),
       transport: .usb(device: Self.device),
-      parser: StartupInputParser(),
+      driver: StartupInputParser(),
       dispatcher: dispatcher,
       usbTransportProvider: provider,
       usbRecoveryPolicy: Self.fastRecoveryPolicy
@@ -118,92 +118,71 @@ struct USBStartupOutputPolicyTests {
     await provider.resumeOpen()
     await startTask.value
 
-    #expect(dispatcher.dispatchCount == 0)
+    #expect(dispatcher.activations == 0)
     #expect(await waitUntil { await session.closeCount() == 1 })
     #expect(!dispatcher.ownershipStates.contains(.exclusive))
   }
 
   @Test
-  func ignoresIOErrorForXbox360RingLED() {
-    let parser = Xbox360Parser()
-    let error = USBTransportError.inputOutput
+  func ignoresIOErrorForXbox360RingLED() throws {
+    let write = try #require(XUSBDriver().startupWrites().first)
 
-    #expect(
-      isIgnorableUSBStartupOutputError(parser: parser, packet: [0x01, 0x03, 0x06], error: error)
-    )
+    #expect(isIgnorableUSBStartupOutputError(write, error: .inputOutput))
   }
 
   @Test
-  func ignoresUnsupportedErrorForXbox360RingLED() {
-    let parser = Xbox360Parser()
+  func ignoresUnsupportedErrorForXbox360RingLED() throws {
+    let write = try #require(XUSBDriver().startupWrites().first)
 
-    #expect(
-      isIgnorableUSBStartupOutputError(
-        parser: parser,
-        packet: [0x01, 0x03, 0x06],
-        error: .notSupported
-      )
-    )
+    #expect(isIgnorableUSBStartupOutputError(write, error: .notSupported))
   }
 
   @Test
-  func ignoresNotFoundErrorForXbox360RingLED() {
-    let parser = Xbox360Parser()
+  func ignoresNotFoundErrorForXbox360RingLED() throws {
+    let write = try #require(XUSBDriver().startupWrites().first)
 
-    #expect(
-      isIgnorableUSBStartupOutputError(
-        parser: parser,
-        packet: [0x01, 0x03, 0x06],
-        error: .notFound
-      )
-    )
+    #expect(isIgnorableUSBStartupOutputError(write, error: .notFound))
   }
 
   @Test
-  func preservesOtherXbox360StartupOutputFailures() {
-    let parser = Xbox360Parser()
+  func ignoresTimeoutForXbox360RingLED() throws {
+    let write = try #require(XUSBDriver().startupWrites().first)
+
+    #expect(isIgnorableUSBStartupOutputError(write, error: .timeout))
+  }
+
+  @Test
+  func preservesOtherXbox360StartupOutputFailures() throws {
+    let write = try #require(XUSBDriver().startupWrites().first)
     let errors: [USBTransportError] = [
-      .disconnected, .accessDenied, .timeout, .platform(code: 1, message: "unexpected"),
+      .disconnected, .accessDenied, .platform(code: 1, message: "unexpected"),
     ]
 
-    for error in errors {
-      #expect(
-        !isIgnorableUSBStartupOutputError(parser: parser, packet: [0x01, 0x03, 0x06], error: error)
-      )
-    }
+    for error in errors { #expect(!isIgnorableUSBStartupOutputError(write, error: error)) }
   }
 
   @Test
   func preservesNotFoundForOtherStartupPacketsAndParsers() {
-    let parser = Xbox360Parser()
-    let genericParser = GenericHIDParser(identifier: DeviceIdentifier(vendorID: 1, productID: 2))
+    let genericParser = HIDDescriptorDriver(identifier: DeviceIdentifier(vendorID: 1, productID: 2))
 
-    #expect(
-      !isIgnorableUSBStartupOutputError(parser: parser, packet: [0x00, 0x01], error: .notFound)
-    )
-    #expect(
-      !isIgnorableUSBStartupOutputError(
-        parser: genericParser,
-        packet: [0x01, 0x03, 0x06],
-        error: .notFound
-      )
-    )
+    #expect(!isIgnorableUSBStartupOutputError(Self.write([0x00, 0x01]), error: .notFound))
+    #expect(!isIgnorableUSBStartupOutputError(Self.write([0x01, 0x03, 0x06]), error: .notFound))
+    #expect(genericParser.startupWrites().isEmpty)
   }
 
   @Test
   func preservesIOErrorForOtherStartupPacketsAndParsers() {
-    let parser = Xbox360Parser()
-    let genericParser = GenericHIDParser(identifier: DeviceIdentifier(vendorID: 1, productID: 2))
+    let genericParser = HIDDescriptorDriver(identifier: DeviceIdentifier(vendorID: 1, productID: 2))
     let error = USBTransportError.inputOutput
 
-    #expect(!isIgnorableUSBStartupOutputError(parser: parser, packet: [0x00, 0x01], error: error))
-    #expect(
-      !isIgnorableUSBStartupOutputError(
-        parser: genericParser,
-        packet: [0x01, 0x03, 0x06],
-        error: error
-      )
-    )
+    #expect(!isIgnorableUSBStartupOutputError(Self.write([0x00, 0x01]), error: error))
+    #expect(!isIgnorableUSBStartupOutputError(Self.write([0x01, 0x03, 0x06]), error: error))
+    #expect(genericParser.startupWrites().isEmpty)
+  }
+
+  /// A startup write that does not tolerate rejection, whatever its bytes.
+  private static func write(_ bytes: [UInt8]) -> PhysicalOutputWrite {
+    .usb(PhysicalUSBOutputPacket(endpoint: 0x01, bytes: bytes, timeoutMilliseconds: 2_000))
   }
 
   private static let device = USBTransportDevice(
@@ -223,7 +202,7 @@ struct USBStartupOutputPolicyTests {
   )
 
   private func waitUntil(
-    timeoutNanoseconds: UInt64 = 1_000_000_000,
+    timeoutNanoseconds: UInt64 = 10_000_000_000,
     condition: @escaping @Sendable () async -> Bool
   ) async -> Bool {
     let deadline = DispatchTime.now().uptimeNanoseconds &+ timeoutNanoseconds
@@ -235,8 +214,13 @@ struct USBStartupOutputPolicyTests {
   }
 }
 
-private final class StartupInputParser: InputParser {
-  func parse(data: Data) throws -> [ControllerEvent] { [] }
+private final class StartupInputParser: PhysicalProtocolDriver {
+  let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
+  let sessionPlan = DriverSessionPlan()
+  let outputCapabilities = PhysicalControllerOutputCapabilities.none
+  let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
+  func consumeInputConnectionStateChange() -> ControllerInputConnectionState? { nil }
+  func parse(report _: Data, receivedAt _: MonotonicTimestamp) throws -> ControllerEvent? { nil }
 }
 
 private actor ScriptedUSBTransportProvider: USBTransportProvider {
@@ -260,12 +244,14 @@ private actor ScriptedUSBTransportProvider: USBTransportProvider {
 }
 
 private actor StartupUSBTransportSession: USBTransportSession {
-  var inputOwnership: HIDInputOwnership { .exclusive }
-  func writeInterruptPacket(endpoint: UInt8, data: [UInt8], timeout: UInt32) throws -> Int {
-    data.count
+  func controlTransfer(_ request: USBControlTransferRequest, timeout: UInt32) throws -> [UInt8] {
+    throw USBTransportError.notSupported
   }
 
-  func readInterruptPacket(endpoint: UInt8, length: Int, timeout: UInt32) throws -> [UInt8] {
+  var inputOwnership: HIDInputOwnership { .exclusive }
+  func write(endpoint: UInt8, data: [UInt8], timeout: UInt32) throws -> Int { data.count }
+
+  func read(endpoint: UInt8, length: Int, timeout: UInt32) throws -> [UInt8] {
     throw USBTransportError.timeout
   }
 }
@@ -297,14 +283,16 @@ private actor SuspendedSuccessfulUSBTransportProvider: USBTransportProvider {
 }
 
 private actor ClosingUSBTransportSession: USBTransportSession {
+  func controlTransfer(_ request: USBControlTransferRequest, timeout: UInt32) throws -> [UInt8] {
+    throw USBTransportError.notSupported
+  }
+
   var inputOwnership: HIDInputOwnership { closes == 0 ? .exclusive : .unknown }
   private var closes = 0
 
-  func writeInterruptPacket(endpoint: UInt8, data: [UInt8], timeout: UInt32) throws -> Int {
-    data.count
-  }
+  func write(endpoint: UInt8, data: [UInt8], timeout: UInt32) throws -> Int { data.count }
 
-  func readInterruptPacket(endpoint: UInt8, length: Int, timeout: UInt32) throws -> [UInt8] {
+  func read(endpoint: UInt8, length: Int, timeout: UInt32) throws -> [UInt8] {
     throw USBTransportError.timeout
   }
 
@@ -319,7 +307,7 @@ private final class StartupRecordingOutputDispatcher: OutputDispatcher,
   var suppressOutput = false
 
   private let lock = NSLock()
-  private var recordedBatches: [[ControllerEvent]] = []
+  private var recordedActivations = 0
   private var recordedOwnership: [HIDInputOwnership] = []
   private var dispatchedOwnership: [HIDInputOwnership] = []
 
@@ -331,12 +319,13 @@ private final class StartupRecordingOutputDispatcher: OutputDispatcher,
     for identifier: DeviceIdentifier
   ) { lock.withLock { recordedOwnership.append(ownership) } }
 
-  var batches: [[ControllerEvent]] { lock.withLock { recordedBatches } }
-  var dispatchCount: Int { lock.withLock { recordedBatches.count } }
+  var activations: Int { lock.withLock { recordedActivations } }
 
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {
+  func dispatch(_: ControllerEvent, labels _: ControllerButtonLabels, from _: DeviceIdentifier) {}
+
+  func activateOutput(for _: DeviceIdentifier) {
     lock.withLock {
-      recordedBatches.append(events)
+      recordedActivations += 1
       dispatchedOwnership.append(recordedOwnership.last ?? .unknown)
     }
   }

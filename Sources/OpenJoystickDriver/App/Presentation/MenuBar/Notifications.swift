@@ -5,6 +5,12 @@
   import OpenJoystickDriverKit
   import UserNotifications
 
+  /// The notification center, or nil outside an app bundle, where
+  /// `UNUserNotificationCenter.current()` raises an assertion instead of returning.
+  var bundledNotificationCenter: UNUserNotificationCenter? {
+    Bundle.main.bundleIdentifier == nil ? nil : UNUserNotificationCenter.current()
+  }
+
   enum RuntimeNotificationAuthorizationState: Equatable, Sendable {
     case checking
     case notDetermined
@@ -47,7 +53,11 @@
 
   struct SystemNotificationAuthorizationController: NotificationAuthorizationControlling {
     func state(completion: @escaping @Sendable (RuntimeNotificationAuthorizationState) -> Void) {
-      UNUserNotificationCenter.current().getNotificationSettings { settings in
+      guard let center = bundledNotificationCenter else {
+        completion(.denied)
+        return
+      }
+      center.getNotificationSettings { settings in
         completion(Self.state(for: settings.authorizationStatus))
       }
     }
@@ -55,14 +65,21 @@
     func request(
       completion: @escaping @Sendable (RuntimeNotificationAuthorizationState, String?) -> Void
     ) {
-      UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) {
-        authorized,
-        error in completion(authorized ? .allowed : .denied, error?.localizedDescription)
+      guard let center = bundledNotificationCenter else {
+        completion(.denied, "Notifications require the OpenJoystickDriver app bundle.")
+        return
+      }
+      center.requestAuthorization(options: [.alert, .sound]) { authorized, error in
+        completion(authorized ? .allowed : .denied, error?.localizedDescription)
       }
     }
 
     func settings(completion: @escaping @Sendable (RuntimeNotificationSettings) -> Void) {
-      UNUserNotificationCenter.current().getNotificationSettings { settings in
+      guard let center = bundledNotificationCenter else {
+        completion(.authorizationOnly(.denied))
+        return
+      }
+      center.getNotificationSettings { settings in
         completion(
           RuntimeNotificationSettings(
             authorization: Self.state(for: settings.authorizationStatus),
@@ -266,7 +283,7 @@
         content: content,
         trigger: nil
       )
-      UNUserNotificationCenter.current().add(request) { error in
+      bundledNotificationCenter?.add(request) { error in
         if let error { print("[Notifications] Delivery failed: \(error.localizedDescription)") }
       }
     }

@@ -2,17 +2,22 @@ import Foundation
 import IOKit
 
 struct IOUSBHostPassiveUSBRegistrySource: PassiveUSBRegistrySource {
+  /// Registry levels read below each matched service; nil reads the whole subtree. Runtime
+  /// observation reads only the device's direct children (its interfaces), so a hub's downstream
+  /// devices are never walked.
+  var childDepth: Int?
+
   func matchingServices(
     className: String,
     numericProperties: [String: UInt64]
   ) throws -> [PassiveUSBRegistryNode] {
-    try enumerate(className: className, numericProperties: numericProperties, includeChildren: true)
+    try enumerate(className: className, numericProperties: numericProperties, depth: childDepth)
   }
 
   private func enumerate(
     className: String,
     numericProperties: [String: UInt64],
-    includeChildren: Bool = false
+    depth: Int?
   ) throws -> [PassiveUSBRegistryNode] {
     let matching = IOServiceMatching(className)
     numericProperties.forEach { key, value in
@@ -35,7 +40,7 @@ struct IOUSBHostPassiveUSBRegistrySource: PassiveUSBRegistrySource {
     var nodes: [PassiveUSBRegistryNode] = []
     while let service = next(iterator) {
       defer { IOObjectRelease(service) }
-      nodes.append(try node(service, className: className, includeChildren: includeChildren))
+      nodes.append(try node(service, className: className, depth: depth))
     }
     return nodes
   }
@@ -43,13 +48,14 @@ struct IOUSBHostPassiveUSBRegistrySource: PassiveUSBRegistrySource {
   private func node(
     _ service: io_service_t,
     className: String,
-    includeChildren: Bool
+    depth: Int?
   ) throws -> PassiveUSBRegistryNode {
     let numericKeys = [
       "idVendor", "idProduct", "locationID", "bDeviceClass", "bDeviceSubClass", "bDeviceProtocol",
-      "bNumConfigurations", "kUSBCurrentConfiguration", "bInterfaceNumber", "bAlternateSetting",
-      "bInterfaceClass", "bInterfaceSubClass", "bInterfaceProtocol", "bEndpointAddress",
-      "wMaxPacketSize", "bInterval", "USBSpeed", "Device Speed", "UsbLinkSpeed", "USB Speed",
+      "bcdDevice", "bNumConfigurations", "kUSBCurrentConfiguration", "bInterfaceNumber",
+      "bAlternateSetting", "bInterfaceClass", "bInterfaceSubClass", "bInterfaceProtocol",
+      "bEndpointAddress", "wMaxPacketSize", "bInterval", "USBSpeed", "Device Speed", "UsbLinkSpeed",
+      "USB Speed",
     ]
     let stringKeys = [
       "USB Product Name", "Product Name", "transferType", "USBSpeed", "Device Speed",
@@ -76,7 +82,7 @@ struct IOUSBHostPassiveUSBRegistrySource: PassiveUSBRegistrySource {
       if let value = property(service, key: key) as? Data { properties[key] = .bytes(Array(value)) }
     }
     var children: [PassiveUSBRegistryNode] = []
-    if includeChildren {
+    if depth.map({ $0 > 0 }) ?? true {
       var iterator: io_iterator_t = 0
       let result = IORegistryEntryGetChildIterator(service, kIOServicePlane, &iterator)
       guard result == kIOReturnSuccess else {
@@ -85,15 +91,23 @@ struct IOUSBHostPassiveUSBRegistrySource: PassiveUSBRegistrySource {
       defer { IOObjectRelease(iterator) }
       while let child = next(iterator) {
         defer { IOObjectRelease(child) }
-        children.append(try node(child, className: registryClass(child), includeChildren: true))
+        children.append(
+          try node(child, className: registryClass(child), depth: depth.map { $0 - 1 })
+        )
       }
     }
     return PassiveUSBRegistryNode(
       serviceClass: className,
       properties: properties,
       children: children,
-      registryPath: registryPath(service)
+      registryPath: registryPath(service),
+      registryEntryID: registryEntryID(service)
     )
+  }
+
+  private func registryEntryID(_ service: io_service_t) -> UInt64? {
+    var value: UInt64 = 0
+    return IORegistryEntryGetRegistryEntryID(service, &value) == kIOReturnSuccess ? value : nil
   }
 
   private func registryPath(_ service: io_service_t) -> String {

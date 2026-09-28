@@ -5,9 +5,8 @@ extension RemappingEngineState {
   ) -> [RemappingEngineAction] {
     guard var device = devices[identifier] else { return [] }
     let processed = device.motion.process(sample, tuning: device.effectiveMotionTuning)
-    var actions = device.updateVirtualMotion(processed)
     let motionStick = device.updateMotionStick(processed)
-    actions += motionStick.actions
+    var actions = motionStick.actions
     devices[identifier] = device
     for change in motionStick.leanChanges {
       actions += setSource(
@@ -55,36 +54,6 @@ extension RemappingEngineState {
 }
 
 extension RemappingDeviceState {
-  mutating func updateVirtualMotion(
-    _ processed: RemappingProcessedMotion?
-  ) -> [RemappingEngineAction] {
-    guard profile.gyroOutput.virtualMotion else { return clearVirtualMotion() }
-    guard let processed, processed.deltaTime > 0 else {
-      return motion.latest == nil || processed?.deltaTime == 0 ? clearVirtualMotion() : []
-    }
-    let acceleration = ControllerMotionVector(
-      x: processed.fused.linearAccelerationG.x - processed.fused.gravityG.x,
-      y: processed.fused.linearAccelerationG.y - processed.fused.gravityG.y,
-      z: processed.fused.linearAccelerationG.z - processed.fused.gravityG.z
-    )
-    let output = RemappingVirtualMotionState(
-      gyroscopeDegreesPerSecond: processed.calibratedGyro,
-      accelerationG: acceleration,
-      deltaNanoseconds: processed.deltaNanoseconds
-    )
-    let (deadline, overflow) = lastUptime.addingReportingOverflow(100_000_000)
-    virtualMotionDeadline = overflow ? .max : deadline
-    hasVirtualMotionOutput = true
-    return [.motion(output, identifier)]
-  }
-
-  mutating func clearVirtualMotion() -> [RemappingEngineAction] {
-    virtualMotionDeadline = nil
-    guard hasVirtualMotionOutput else { return [] }
-    hasVirtualMotionOutput = false
-    return [.motion(nil, identifier)]
-  }
-
   mutating func processTrackball(
     _ processed: RemappingProcessedMotion?
   ) -> RemappingMotionTrackball.Step? {

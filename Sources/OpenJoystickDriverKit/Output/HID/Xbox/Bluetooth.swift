@@ -18,11 +18,6 @@ public enum XboxOneBluetoothHIDDescriptor {
     11: 12, 12: 13, 13: 14, 14: 15,
   ]
 
-  /// Maps controls that Xbox Bluetooth reports outside the Button usage page.
-  public static let seriesDigitalUsageMap: [Int: HIDInputUsage] = [
-    GamepadHIDDescriptor.ButtonBit.share.rawValue: HIDInputUsage(page: 0x0C, usage: 0xB2)
-  ]
-
   /// Xbox Series Bluetooth descriptor used by Apple GameController compatibility.
   public static let seriesDescriptor: [UInt8] = [
     0x05, 0x01, 0x09, 0x05, 0xA1, 0x01, 0x85, 0x01, 0x09, 0x01, 0xA1, 0x00, 0x09, 0x30, 0x09, 0x31,
@@ -52,7 +47,8 @@ public enum XboxOneBluetoothHIDDescriptor {
   ]
 }
 
-/// Xbox Series report layout adjusted only for Firefox's native 045E:02E0 remapper.
+/// Xbox Series Bluetooth report layout with share and the d-pad button bits never set; the
+/// format behind the 045E:02FD `hid-xbox-one-s-bt` profile.
 public struct XboxGeckoHIDReportFormat: VirtualGamepadReportFormat {
   private let base: HIDDescriptorReportFormat
 
@@ -65,8 +61,8 @@ public struct XboxGeckoHIDReportFormat: VirtualGamepadReportFormat {
   public init() throws {
     base = try HIDDescriptorReportFormat(
       descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
-      outputReportID: VirtualRumbleOutputReportParser.xboxOneReportID,
-      outputReportPayloadSize: VirtualRumbleOutputReportParser.xboxOneReportPayloadSize,
+      outputReportID: ConsumerOutputCodec.xboxOneReportID,
+      outputReportPayloadSize: ConsumerOutputCodec.xboxOneReportPayloadSize,
       buttonUsageMap: XboxOneBluetoothHIDDescriptor.buttonUsageMap
     )
   }

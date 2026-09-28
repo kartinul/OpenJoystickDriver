@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Checking connected controllers...";
 "status.refreshingProfile" = "Refreshing Profile State...";
 "status.loadingProfiles" = "Loading Profiles...";
-"status.updatingIdentity" = "Updating Controller Identity...";
 "status.listening" = "Listening...";
 "status.readyToListen" = "Ready to Listen";
 "status.checkingInput" = "Checking";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Controllers";
 "settings.controllerDisconnectedNotifications" = "Controller disconnected";
 "settings.controllerDisconnectedShort" = "Disconnected";
-"settings.controllerIdentity" = "Controller Identity";
 "settings.controllerNotifications" = "Controller connected";
 "settings.diagnostics" = "Diagnostics";
 "settings.service" = "Service";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Discharging";
 "controllers.charging" = "Charging";
 "controllers.batteryFull" = "Full";
+"controllers.notChargeable" = "Not chargeable";
 "controllers.batteryAccessibilityDetails" = "Battery: %@. Charging state: %@. Cable state: %@.";
 "controllers.activeProfile" = "Active profile";
 "controllers.profileChecking" = "Checking...";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Active profile unavailable";
 "controllers.profileLoadError" = "Active profile could not be loaded";
 "controllers.protocol" = "Protocol";
-"controllers.parser" = "Parser";
 "controllers.serialNumber" = "Serial Number";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Input Endpoint";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Active profile error: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protocol: %@. Parser: %@. Serial number: %@. USB VID/PID: %@. Input endpoint: %@. Output endpoint: %@.";
 "controllers.publishedAs" = "Published as";
-"identity.title" = "Controller Identity";
-"identity.needsAttention" = "Needs Attention";
-"identity.error" = "Controller identity error";
-"identity.updating" = "Updating controller identity...";
-"identity.reset" = "Reset to recommended";
-"identity.checking" = "Checking";
-"identity.globalScope" = "Applies to all virtual controllers published by OpenJoystickDriver.";
-"identity.unavailable" = "Unavailable";
-"identity.notSelected" = "Not Selected";
+"controllers.nativeGamepadNotPublished" = "Native macOS gamepad, not published";
+"virtualProfile.advanced" = "Advanced";
+"virtualProfile.title" = "Virtual HID profile";
+"virtualProfile.modelScope" = "Applies to every connected controller of this model.";
+"virtualProfile.sourceOverride" = "Override";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automatic, override rejected";
+"virtualProfile.none" = "No virtual HID profile";
+"virtualProfile.unavailable" = "No virtual HID profile can represent this controller.";
+"virtualProfile.updating" = "Updating virtual HID profile...";
+"virtualProfile.live" = "Live profile";
+"virtualProfile.failure.unknownProfile" = "This virtual HID profile is unknown. Nothing was stored.";
+"virtualProfile.failure.controllerNotFound" = "The controller disconnected or can't be found. The override is unchanged.";
+"virtualProfile.failure.overrideRejected" = "The override is stored, but this controller can't use it, so it selects automatically.";
+"virtualProfile.failure.activationFailed" = "Activation failed, so the previous virtual HID profile was restored: %@";
+"virtualProfile.failure.outputDisabled" = "The override is stored and applies once virtual output is enabled.";
+"virtualProfile.failure.serverStopped" = "The service stopped. The override is unchanged.";
+"virtualProfile.failure.persistenceFailed" = "The override couldn't be saved. Nothing was stored.";
+"virtualProfile.storeError" = "Virtual HID profile overrides can't be read (%@). Controllers select automatically.";
+"virtualProfile.legacyIdentityRejected" = "The retired controller identity setting %@ is no longer applied. Run controller virtual reset --all to clear it.";
 "keyboard.noKey" = "No key selected";
 "keyboard.pressKey" = "Press a key...";
 "keyboard.captureKey" = "Capture key";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Current status";
 "debug.runtime" = "Runtime";
 "debug.controllers" = "Controllers";
-"debug.controllerIdentity" = "Controller Identity";
 "debug.unavailable" = "Runtime · Unavailable";
 "debug.needsAttention" = "Runtime · Needs Attention";
 "debug.diagnostics" = "Diagnostics";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Controller output is turned off.";
 "debug.outputNeedsAttention" = "Controller output needs attention.";
 "debug.serviceUnavailable" = "Service diagnostics are unavailable right now.";
-"error.selectedOutputUnavailable" = "The selected controller output is unavailable.";
-"error.selectedOutputEnableFailed" = "The selected controller output could not be enabled.";
 "error.profileChanged" = "This profile changed elsewhere. Reload or keep editing.";
 "error.duplicateProfile" = "A profile with that name already exists.";
 "error.profileMissing" = "That profile is no longer available.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Runtime";
 "common.controllers" = "Controllers";
 "common.profiles" = "Profiles";
-"common.controllerIdentity" = "Controller identity";
 "common.protocol" = "Protocol";
-"common.parser" = "Parser";
 "common.serialNumber" = "Serial number";
 "common.inputEndpoint" = "Input endpoint";
 "common.outputEndpoint" = "Output endpoint";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "The selected profile item is no longer available.";
 "cli.catalog.app_ready.summary" = "Check authenticated application-service readiness";
 "cli.catalog.app_status.summary" = "Show application-service status";
-"cli.catalog.compat.summary" = "Manage virtual-controller compatibility";
 "cli.catalog.controller_list.summary" = "List connected controllers";
 "cli.catalog.controller_output.summary" = "Test supported physical controller output";
 "cli.catalog.controller_packets.summary" = "Show recent controller packets";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Show driver and runtime status";
 "cli.catalog.test.summary" = "Test virtual-controller input delivery";
 "cli.catalog.update.summary" = "Check GitHub for available updates";
-"cli.compat.identity" = "compatibility identity: %@";
-"cli.compat.identity_unknown" = "compatibility identity: unknown";
-"cli.compat.set_failed" = "Failed to set compatibility identity to %@. Launch the installed app and verify Input Monitoring and Accessibility access.";
-"cli.compat.usage" = "Usage: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid|dualshock4|dualsense|switchpro>";
-"cli.compat.user_space_status" = "user-space status: %@";
 "cli.controller.allAppleEntries" = "All exact Apple catalog entries:";
 "cli.controller.appleIDs" = "    Apple IDs: %@";
 "cli.controller.applePairs" = "  Apple pairs  : %d exact VID/PID entries";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "No connected controller matches --device %@.";
 "cli.controller.selection.multiple" = "Multiple controllers match. Select one with --device:\n  %@";
 "cli.controller.selection.none" = "No controller is connected.";
+"cli.controller.virtual.live" = "Virtual HID profile: %@ (%@)";
+"cli.controller.virtual.none" = "Virtual HID profile: none (%@)";
+"cli.controller.virtual.failed" = "Virtual HID profile request failed: %@";
+"cli.controller.virtual.unknown_profile" = "Unknown virtual HID profile '%@'. Use one of: %@.";
+"cli.controller.virtual.missing_profile" = "'controller virtual set' requires a virtual HID profile. Use one of: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "'--all' cannot be combined with --vid, --pid, or --device.";
+"cli.controller.virtual.reset_all.success" = "OK: cleared every virtual HID profile override.";
+"cli.controller.virtual.reset_all.failed" = "Failed to reset settings. Launch the installed app and verify its permissions.";
 "cli.controller.selection.vid_pid_missing" = "No connected controller matches %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Pass both VID and PID, or omit both.";
 "cli.controller.serviceControllers" = "Controllers (from running application service):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Tip: grant the required entitlement and Input Monitoring access.";
 "cli.controller.usbControllers" = "USB Controllers (class 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Pass both VID and PID, or omit both when one controller is connected.";
-"cli.diagnose.advisory_candidate" = "    Advisory protocol candidate: %@";
 "cli.diagnose.app_missing" = "  App: missing at %@";
 "cli.diagnose.app_missing_fix" = "  Fix: build + install the app to /Applications";
 "cli.diagnose.app_present" = "  App: present";
 "cli.diagnose.binary_path" = "Binary: %@";
-"cli.diagnose.catalog_conflict" = "      Observation conflicts with the catalog family; parser unchanged";
-"cli.diagnose.catalog_parser" = "      Catalog parser remains %@ (%@)";
 "cli.diagnose.dext_found" = "  Found .dext bundles:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      endpoint 0x%02X %@ %@ maxPacket=%@ interval=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Unknown response curve '%@'.";
 "cli.mapping.double_tap_format" = "--double-tap expects <ms>:<target>, e.g. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Usage: OpenJoystickDriver --headless map <command>\n\nCommands:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,... --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,... --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nSource: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nTarget: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAxis options:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo options (keyboard and mouse buttons only):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nActivation options (keyboard and mouse buttons only, mutually exclusive with turbo):\n  --long-hold <ms>:<target>     e.g. --long-hold 500:key:b\n  --double-tap <ms>:<target>    e.g. --double-tap 300:key:c\n\n<profile> accepts a UUID or an exact, case-insensitive profile name.\n<id> accepts decimal or 0x-prefixed hexadecimal.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Usage: OpenJoystickDriver --headless map <command>\n\nCommands:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,... --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,... --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nSource: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nTarget: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAxis options:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo options (keyboard and mouse buttons only):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nActivation options (keyboard and mouse buttons only, mutually exclusive with turbo):\n  --long-hold <ms>:<target>     e.g. --long-hold 500:key:b\n  --double-tap <ms>:<target>    e.g. --double-tap 300:key:c\n\n<profile> accepts a UUID or an exact, case-insensitive profile name.\n<id> accepts decimal or 0x-prefixed hexadecimal.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ must be a 16-bit decimal or 0x-prefixed hexadecimal identifier.";
 "cli.mapping.jsonEncodeFailed" = "Could not encode UTF-8 JSON.";
 "cli.mapping.layer_action_unknown" = "Unknown layer action '%@'. Expected: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver application service is not running.";
 "cli.runtime.sample_limit" = "Configuration would collect %d samples; increase --interval-ms.";
 "cli.runtime.stable_note" = "A stable bounded soak is evidence for this workload, not proof that all leaks are absent.";
-"cli.settings.reset.failed" = "Failed to reset settings. Launch the installed app and verify its permissions.";
-"cli.settings.reset.next" = "Next: run compat set <identity> to choose the compatibility identity.";
-"cli.settings.reset.success" = "OK: reset application service settings.";
 "cli.status.access_denied" = "If access is denied, run --headless permissions request and approve Input Monitoring and Accessibility in System Settings.";
 "cli.status.heading" = "OpenJoystickDriver Status";
 "cli.status.json_error" = "Could not encode status JSON: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Status      : %@";
 "cli.updates.unknown_option" = "Unknown updates option: %@";
 "common.unknown" = "Unknown";
-"compatibility.appleGameController" = "Apple GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (original)";
 "developer.buttons" = "Buttons";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B button";
 "inputTest.bCircle" = "B / Circle";
 "inputTest.brightness" = "Brightness";
-"inputTest.circle" = "Circle";
 "inputTest.color" = "Color";
 "inputTest.controls" = "Live input";
-"inputTest.cross" = "Cross";
 "inputTest.disconnected" = "Controller disconnected";
 "inputTest.dpadDown" = "D-pad down";
 "inputTest.dpadLeft" = "D-pad left";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Lighting controls are not available for this controller.";
 "inputTest.live" = "Input active";
 "inputTest.menu" = "Menu";
-"inputTest.minus" = "Minus";
 "inputTest.off" = "Off";
 "inputTest.open" = "Open Input Test...";
-"inputTest.options" = "Options";
 "inputTest.outputError" = "Physical output error";
 "inputTest.outputRejected" = "The controller rejected this output test.";
 "inputTest.permissionRequired" = "Input Monitoring permission required";
 "inputTest.playerIndicator" = "Player indicator";
-"inputTest.plus" = "Plus";
 "inputTest.pressed" = "Pressed";
-"inputTest.psButton" = "PS button";
 "inputTest.released" = "Released";
 "inputTest.rightBumper" = "Right bumper";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Right Y";
 "inputTest.rumble" = "Rumble";
 "inputTest.rumbleUnavailable" = "Rumble is not supported by this controller.";
-"inputTest.share" = "Share";
-"inputTest.square" = "Square";
 "inputTest.stale" = "Input interrupted";
 "inputTest.start" = "Start Input Test";
 "inputTest.starting" = "Starting...";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Input";
 "inputTest.tabMotion" = "Motion";
 "inputTest.tabOutput" = "Output";
-"inputTest.steamButton" = "Steam button";
 "inputTest.summary" = "Test buttons, sticks, triggers, rumble, and controller lighting.";
 "inputTest.testRumble" = "Test Rumble";
 "inputTest.title" = "Input Test";
-"inputTest.triangle" = "Triangle";
 "inputTest.unavailable" = "Input unavailable";
 "inputTest.view" = "View";
 "inputTest.windowTitle" = "Input Test — %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "The selected Joy-Cons could not be paired. Refresh connected controllers and try again.";
 "profiles.joyConExplicitSession" = "Started with an explicit pair session";
 "profiles.joyConSessionState" = "Explicit pairing";
-"profiles.gyro.virtualMotion" = "Forward calibrated virtual motion";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ rumble (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Pause input, physical effects, and OpenJoystickDriver virtual output.";
 "controllers.resume" = "Resume";
 "controllers.disconnectFromOJD" = "Disconnect from OpenJoystickDriver";
-"error.compatibilityTransitionDetailed" = "Could not switch controller output (%@, %@). The previous output remains active.";
 "error.controllerSessionChangeRejected" = "The controller session could not be changed.";
 "cli.catalog.controller_disconnect.summary" = "Suspend a controller from OpenJoystickDriver";
 "cli.catalog.controller_resume.summary" = "Resume a suspended controller";
+"cli.catalog.controller_virtual_set.summary" = "Override a controller's virtual HID profile";
+"cli.catalog.controller_virtual_reset.summary" = "Select a controller's virtual HID profile automatically, or clear every override with --all";
 "cli.controller.disconnected" = "Controller suspended from OpenJoystickDriver.";
 "cli.controller.resumed" = "Controller resumed in OpenJoystickDriver.";
 

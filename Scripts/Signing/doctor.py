@@ -220,7 +220,7 @@ def main() -> int:
         if development_profile_covers_host(host) is False:
             errors.append(
                 "host development profile does not include this Mac; "
-                "CoreHID HIDVirtualDevice will fail"
+                "IOHIDUserDevice virtual device creation will fail"
             )
     if driver is not None:
         errors.extend(

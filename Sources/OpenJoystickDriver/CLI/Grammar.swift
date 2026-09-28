@@ -1,4 +1,5 @@
 import Foundation
+import OpenJoystickDriverKit
 
 enum CLIParseError: LocalizedError {
   static let exitCode: Int32 = 64
@@ -35,6 +36,7 @@ enum CLIInvocation: Equatable {
   case controllerDisconnect([String])
   case controllerDisconnectWireless([String])
   case controllerResume([String])
+  case controllerVirtual(CLIVirtualProfileAction)
   case mapping([String])
   case appStatus([String])
   case appReady
@@ -42,7 +44,6 @@ enum CLIInvocation: Equatable {
   case appLogs([String])
   case `extension`(CLIExtensionAction)
   case permissions([String])
-  case compatibility(CLICompatibilityAction)
   case selfTest([String])
   case diagnose(CLIDiagnosticAction)
   case updateCheck([String])
@@ -54,9 +55,15 @@ enum CLIExtensionAction: Equatable {
   case disable
 }
 
-enum CLICompatibilityAction: Equatable {
-  case show
-  case set(String)
+enum CLIVirtualProfileAction: Equatable {
+  /// `controller virtual set|reset`: changes the override of the selected controller's model.
+  case change(VirtualHIDProfileChange, ControllerSelector)
+  /// `controller virtual reset --all`: clears every controller's virtual HID profile override.
+  case resetAll
+}
+
+enum VirtualHIDProfileChange: Equatable {
+  case set(VirtualHIDProfileID)
   case reset
 }
 
@@ -107,6 +114,7 @@ struct CLIGrammar {
       ControllerSessionCommand(action: .disconnectWireless).run(arguments: arguments)
     case .controllerResume(let arguments):
       ControllerSessionCommand(action: .resume).run(arguments: arguments)
+    case .controllerVirtual(let action): VirtualProfileCommand(action: action).run()
     case .mapping(let arguments): MappingCommand().run(arguments: arguments)
     case .appLogin(let enable):
       if enable { InstallCommand().run() } else { UninstallCommand().run() }
@@ -118,12 +126,6 @@ struct CLIGrammar {
       case .disable: SystemExtensionCommand().run(arguments: ["disable"])
       }
     case .permissions(let arguments): PermissionsCommand().run(arguments: arguments)
-    case .compatibility(let action):
-      switch action {
-      case .show: CompatibilityCommand().run(arguments: ["status"])
-      case .set(let identity): CompatibilityCommand().run(arguments: [identity])
-      case .reset: ResetSettingsCommand().run()
-      }
     case .selfTest(let arguments): SelfTestCommand().run(arguments: arguments)
     case .diagnose(let action):
       switch action {
@@ -167,7 +169,6 @@ struct CLIGrammar {
     case "app": return try parseApp(trailing)
     case "extension": return try parseExtension(trailing)
     case "permissions": return try parsePermissions(trailing)
-    case "compat": return try parseCompat(trailing)
     case "test": return .selfTest(trailing)
     case "diagnose": return try parseDiagnose(trailing)
     case "update": return try parseUpdate(trailing)
@@ -188,6 +189,7 @@ struct CLIGrammar {
     case "disconnect": return .controllerDisconnect(trailing)
     case "disconnect-wireless": return .controllerDisconnectWireless(trailing)
     case "resume": return .controllerResume(trailing)
+    case "virtual": return try parseControllerVirtual(trailing)
     default: throw CLIParseError.unknownCommand("controller \(command)")
     }
   }
@@ -226,22 +228,24 @@ struct CLIGrammar {
     }
   }
 
-  private static func parseCompat(_ arguments: [String]) throws -> CLIInvocation {
-    guard let command = arguments.first else { throw CLIParseError.missingSubcommand("compat") }
+  private static func parseControllerVirtual(_ arguments: [String]) throws -> CLIInvocation {
+    guard let command = arguments.first else {
+      throw CLIParseError.missingSubcommand("controller virtual")
+    }
     let trailing = Array(arguments.dropFirst())
     switch command {
-    case "show":
-      try requireEmpty(trailing, command: "compat show")
-      return .compatibility(.show)
     case "set":
-      guard trailing.count == 1 else {
-        throw CLIParseError.unexpectedArguments(command: "compat set")
+      guard let rawProfile = trailing.first else { throw VirtualProfileCommand.MissingProfile() }
+      guard let profile = VirtualHIDProfileID(rawValue: rawProfile) else {
+        throw VirtualProfileCommand.UnknownProfile(value: rawProfile)
       }
-      return .compatibility(.set(trailing[0]))
+      let selector = try ControllerSelector(arguments: Array(trailing.dropFirst()))
+      return .controllerVirtual(.change(.set(profile), selector))
     case "reset":
-      try requireEmpty(trailing, command: "compat reset")
-      return .compatibility(.reset)
-    default: throw CLIParseError.unknownCommand("compat \(command)")
+      if trailing == ["--all"] { return .controllerVirtual(.resetAll) }
+      guard !trailing.contains("--all") else { throw VirtualProfileCommand.ResetAllWithSelector() }
+      return .controllerVirtual(.change(.reset, try ControllerSelector(arguments: trailing)))
+    default: throw CLIParseError.unknownCommand("controller virtual \(command)")
     }
   }
 

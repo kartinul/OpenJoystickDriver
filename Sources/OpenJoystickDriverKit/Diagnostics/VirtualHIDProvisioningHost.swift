@@ -5,7 +5,7 @@ import Security
 /// Whether the embedded Apple Development profile authorizes virtual HID on this Mac.
 ///
 /// `SecTaskCopyValueForEntitlement` can report `com.apple.developer.hid.virtual.device`
-/// while AMFI still refuses `HIDVirtualDevice` because the development profile's
+/// while AMFI still refuses virtual HID creation because the development profile's
 /// device list does not include this host. Apple Silicon development profiles store
 /// the Provisioning UDID (IODeviceTree `chip-id` + `unique-chip-id`); Intel profiles
 /// store the Hardware UUID (`IOPlatformUUID`). Do not log device identifiers.

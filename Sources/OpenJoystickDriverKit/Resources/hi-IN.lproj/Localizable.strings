@@ -69,7 +69,6 @@
 "status.checkingControllers" = "कनेक्ट किए गए कंट्रोलर जाँचे जा रहे हैं…";
 "status.refreshingProfile" = "प्रोफ़ाइल स्थिति रीफ़्रेश हो रही है…";
 "status.loadingProfiles" = "प्रोफ़ाइल लोड हो रही हैं…";
-"status.updatingIdentity" = "कंट्रोलर पहचान अपडेट हो रही है…";
 "status.listening" = "सुन रहा है…";
 "status.readyToListen" = "सुनने के लिए तैयार";
 "status.checkingInput" = "जाँच";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "कंट्रोलर";
 "settings.controllerDisconnectedNotifications" = "नियंत्रक से कनेक्ट नहीं";
 "settings.controllerDisconnectedShort" = "डिस्कनेक्ट";
-"settings.controllerIdentity" = "कंट्रोलर पहचान";
 "settings.controllerNotifications" = "नियंत्रक कनेक्ट";
 "settings.diagnostics" = "डायग्नोस्टिक्स";
 "settings.service" = "सेवा";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "डिस्चार्ज हो रही है";
 "controllers.charging" = "चार्ज हो रही है";
 "controllers.batteryFull" = "पूरी तरह चार्ज";
+"controllers.notChargeable" = "चार्ज नहीं की जा सकती";
 "controllers.batteryAccessibilityDetails" = "बैटरी: %@। चार्जिंग स्थिति: %@। केबल स्थिति: %@।";
 "controllers.activeProfile" = "सक्रिय प्रोफ़ाइल";
 "controllers.profileChecking" = "जाँच हो रही है…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "सक्रिय प्रोफ़ाइल उपलब्ध नहीं";
 "controllers.profileLoadError" = "सक्रिय प्रोफ़ाइल लोड नहीं हो सकी";
 "controllers.protocol" = "प्रोटोकॉल";
-"controllers.parser" = "पार्सर";
 "controllers.serialNumber" = "सीरियल नंबर";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "इनपुट एंडपॉइंट";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "सक्रिय प्रोफ़ाइल त्रुटि: %@";
 "controllers.accessibilityDetails" = "%@। %@। प्रोटोकॉल: %@। Parser: %@। सीरियल नंबर: %@। USB VID/PID: %@। इनपुट एंडपॉइंट: %@। आउटपुट एंडपॉइंट: %@।";
 "controllers.publishedAs" = "प्रकाशित";
-"identity.title" = "कंट्रोलर पहचान";
-"identity.needsAttention" = "ध्यान देने की ज़रूरत";
-"identity.error" = "कंट्रोलर पहचान त्रुटि";
-"identity.updating" = "कंट्रोलर पहचान अपडेट हो रही है…";
-"identity.reset" = "सुझाए गए पर रीसेट करें";
-"identity.checking" = "जाँच";
-"identity.globalScope" = "सभी वर्चुअल नियंत्रकों पर लागू होता है OpenJoystickDriver.";
-"identity.unavailable" = "उपलब्ध नहीं";
-"identity.notSelected" = "चयनित नहीं";
+"controllers.nativeGamepadNotPublished" = "macOS का मूल गेमपैड, प्रकाशित नहीं";
+"virtualProfile.advanced" = "उन्नत";
+"virtualProfile.title" = "वर्चुअल HID प्रोफ़ाइल";
+"virtualProfile.modelScope" = "इस मॉडल के हर कनेक्टेड कंट्रोलर पर लागू होता है।";
+"virtualProfile.sourceOverride" = "ओवरराइड";
+"virtualProfile.sourceAutomaticAfterRejecting" = "स्वचालित, ओवरराइड अस्वीकृत";
+"virtualProfile.none" = "कोई वर्चुअल HID प्रोफ़ाइल नहीं";
+"virtualProfile.unavailable" = "कोई भी वर्चुअल HID प्रोफ़ाइल इस कंट्रोलर को प्रस्तुत नहीं कर सकती।";
+"virtualProfile.updating" = "वर्चुअल HID प्रोफ़ाइल अपडेट हो रही है…";
+"virtualProfile.live" = "सक्रिय प्रोफ़ाइल";
+"virtualProfile.failure.unknownProfile" = "यह वर्चुअल HID प्रोफ़ाइल अज्ञात है। कुछ भी सहेजा नहीं गया।";
+"virtualProfile.failure.controllerNotFound" = "कंट्रोलर डिस्कनेक्ट हो गया या नहीं मिल रहा। ओवरराइड अपरिवर्तित है।";
+"virtualProfile.failure.overrideRejected" = "ओवरराइड सहेजा गया है, लेकिन यह कंट्रोलर इसका उपयोग नहीं कर सकता, इसलिए यह स्वचालित रूप से चुनता है।";
+"virtualProfile.failure.activationFailed" = "सक्रियण विफल हुआ, इसलिए पिछली वर्चुअल HID प्रोफ़ाइल बहाल की गई: %@";
+"virtualProfile.failure.outputDisabled" = "ओवरराइड सहेजा गया है और वर्चुअल आउटपुट सक्षम होने पर लागू होगा।";
+"virtualProfile.failure.serverStopped" = "सेवा रुक गई। ओवरराइड अपरिवर्तित है।";
+"virtualProfile.failure.persistenceFailed" = "ओवरराइड सहेजा नहीं जा सका। कुछ भी सहेजा नहीं गया।";
+"virtualProfile.storeError" = "वर्चुअल HID प्रोफ़ाइल ओवरराइड पढ़े नहीं जा सकते (%@)। कंट्रोलर स्वचालित रूप से चुनते हैं।";
+"virtualProfile.legacyIdentityRejected" = "सेवानिवृत्त कंट्रोलर पहचान सेटिंग %@ अब लागू नहीं होती। इसे हटाने के लिए controller virtual reset --all चलाएँ।";
 "keyboard.noKey" = "कोई कुंजी चयनित नहीं";
 "keyboard.pressKey" = "कोई कुंजी दबाएँ…";
 "keyboard.captureKey" = "कुंजी कैप्चर करें";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "वर्तमान स्थिति";
 "debug.runtime" = "रनटाइम";
 "debug.controllers" = "कंट्रोलर";
-"debug.controllerIdentity" = "कंट्रोलर पहचान";
 "debug.unavailable" = "रनटाइम · उपलब्ध नहीं";
 "debug.needsAttention" = "रनटाइम · ध्यान देने की ज़रूरत";
 "debug.diagnostics" = "डायग्नोस्टिक्स";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "कंट्रोलर आउटपुट बंद है।";
 "debug.outputNeedsAttention" = "कंट्रोलर आउटपुट पर ध्यान देने की ज़रूरत है।";
 "debug.serviceUnavailable" = "सेवा डायग्नोस्टिक्स इस समय उपलब्ध नहीं हैं।";
-"error.selectedOutputUnavailable" = "चयनित कंट्रोलर आउटपुट उपलब्ध नहीं है।";
-"error.selectedOutputEnableFailed" = "चयनित कंट्रोलर आउटपुट सक्षम नहीं किया जा सका।";
 "error.profileChanged" = "यह प्रोफ़ाइल कहीं और बदल गई। फिर से लोड करें या संपादन जारी रखें।";
 "error.duplicateProfile" = "उस नाम की प्रोफ़ाइल पहले से मौजूद है।";
 "error.profileMissing" = "वह प्रोफ़ाइल अब उपलब्ध नहीं है।";
@@ -443,9 +448,7 @@
 "common.runtime" = "रनटाइम";
 "common.controllers" = "कंट्रोलर";
 "common.profiles" = "प्रोफ़ाइल";
-"common.controllerIdentity" = "कंट्रोलर पहचान";
 "common.protocol" = "प्रोटोकॉल";
-"common.parser" = "पार्सर";
 "common.serialNumber" = "सीरियल नंबर";
 "common.inputEndpoint" = "इनपुट एंडपॉइंट";
 "common.outputEndpoint" = "आउटपुट एंडपॉइंट";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "चयनित प्रोफ़ाइल आइटम अब उपलब्ध नहीं है।";
 "cli.catalog.app_ready.summary" = "प्रमाणित ऐप्लिकेशन सेवा की तत्परता जाँचें";
 "cli.catalog.app_status.summary" = "ऐप्लिकेशन सेवा की स्थिति दिखाएँ";
-"cli.catalog.compat.summary" = "वर्चुअल कंट्रोलर संगतता प्रबंधित करें";
 "cli.catalog.controller_list.summary" = "कनेक्ट किए गए कंट्रोलर की सूची दिखाएँ";
 "cli.catalog.controller_output.summary" = "समर्थित भौतिक कंट्रोलर आउटपुट का परीक्षण करें";
 "cli.catalog.controller_packets.summary" = "हाल के कंट्रोलर पैकेट दिखाएँ";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "ड्राइवर और रनटाइम स्थिति दिखाएँ";
 "cli.catalog.test.summary" = "वर्चुअल कंट्रोलर इनपुट डिलीवरी का परीक्षण करें";
 "cli.catalog.update.summary" = "उपलब्ध अपडेट के लिए GitHub जाँचें";
-"cli.compat.identity" = "संगतता पहचान: %@";
-"cli.compat.identity_unknown" = "संगतता पहचान: अज्ञात";
-"cli.compat.set_failed" = "संगतता पहचान %@ पर सेट नहीं हो सकी। इंस्टॉल किया गया ऐप लॉन्च करें और इनपुट मॉनिटरिंग तथा ऐक्सेसिबिलिटी ऐक्सेस सत्यापित करें।";
-"cli.compat.usage" = "इस्तेमाल: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "यूज़र-स्पेस स्थिति: %@";
 "cli.controller.allAppleEntries" = "सभी सटीक Apple कैटलॉग प्रविष्टियाँ:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Apple जोड़े   : %d सटीक VID/PID प्रविष्टियाँ";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "कोई कनेक्ट कंट्रोलर --device %@ से मेल नहीं खाता।";
 "cli.controller.selection.multiple" = "कई कंट्रोलर मेल खाते हैं। --device से एक चुनें:\n  %@";
 "cli.controller.selection.none" = "कोई कंट्रोलर कनेक्ट नहीं है।";
+"cli.controller.virtual.live" = "वर्चुअल HID प्रोफ़ाइल: %@ (%@)";
+"cli.controller.virtual.none" = "वर्चुअल HID प्रोफ़ाइल: कोई नहीं (%@)";
+"cli.controller.virtual.failed" = "वर्चुअल HID प्रोफ़ाइल अनुरोध विफल: %@";
+"cli.controller.virtual.unknown_profile" = "अज्ञात वर्चुअल HID प्रोफ़ाइल “%@”। इनमें से एक का उपयोग करें: %@।";
+"cli.controller.virtual.missing_profile" = "“controller virtual set” के लिए एक वर्चुअल HID प्रोफ़ाइल आवश्यक है। इनमें से एक का उपयोग करें: %@।";
+"cli.controller.virtual.reset_all_with_selector" = "“--all” को --vid, --pid या --device के साथ नहीं जोड़ा जा सकता।";
+"cli.controller.virtual.reset_all.success" = "OK: सभी वर्चुअल HID प्रोफ़ाइल ओवरराइड हटा दिए गए।";
+"cli.controller.virtual.reset_all.failed" = "सेटिंग्ज़ रीसेट नहीं हो सकीं। इंस्टॉल किया गया ऐप लॉन्च करें और उसकी अनुमतियाँ सत्यापित करें।";
 "cli.controller.selection.vid_pid_missing" = "कोई कनेक्ट कंट्रोलर %@:%@ से मेल नहीं खाता।";
 "cli.controller.selection.vid_pid_pair" = "VID और PID दोनों पास करें, या दोनों छोड़ दें।";
 "cli.controller.serviceControllers" = "कंट्रोलर (चल रही ऐप्लिकेशन सेवा से):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "सुझाव: ज़रूरी एंटाइटलमेंट और इनपुट मॉनिटरिंग ऐक्सेस दें।";
 "cli.controller.usbControllers" = "USB कंट्रोलर (class 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "VID और PID दोनों पास करें, या एक कंट्रोलर कनेक्ट होने पर दोनों छोड़ दें।";
-"cli.diagnose.advisory_candidate" = "    सलाहकारी प्रोटोकॉल उम्मीदवार: %@";
 "cli.diagnose.app_missing" = "  ऐप: %@ पर गायब";
 "cli.diagnose.app_missing_fix" = "  सुधार: ऐप बनाएँ + /Applications में इंस्टॉल करें";
 "cli.diagnose.app_present" = "  ऐप: मौजूद";
 "cli.diagnose.binary_path" = "बाइनरी: %@";
-"cli.diagnose.catalog_conflict" = "      अवलोकन कैटलॉग परिवार से टकराता है; पार्सर अपरिवर्तित";
-"cli.diagnose.catalog_parser" = "      कैटलॉग पार्सर %@ (%@) ही रहता है";
 "cli.diagnose.dext_found" = "  मिले .dext बंडल:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      अंत बिंदु 0x%02X %@ %@ maxPacket=%@ अंतराल=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "अज्ञात प्रतिक्रिया कर्व “%@”।";
 "cli.mapping.double_tap_format" = "--double-tap <ms>:<target> अपेक्षा करता है, जैसे --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "इस्तेमाल: OpenJoystickDriver --headless map <command>\n\nकमांड:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nस्रोत: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nलक्ष्य: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nअक्ष विकल्प:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nटर्बो विकल्प (केवल कीबोर्ड और माउस बटन):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nसक्रियण विकल्प (केवल कीबोर्ड और माउस बटन, टर्बो के साथ परस्पर अनन्य):\n  --long-hold <ms>:<target>     जैसे --long-hold 500:key:b\n  --double-tap <ms>:<target>    जैसे --double-tap 300:key:c\n\n<profile> UUID या सटीक, केस-असंवेदी प्रोफ़ाइल नाम स्वीकार करता है।\n<id> दशमलव या 0x-उपसर्ग हेक्साडेसिमल स्वीकार करता है।\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "इस्तेमाल: OpenJoystickDriver --headless map <command>\n\nकमांड:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nस्रोत: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nलक्ष्य: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nअक्ष विकल्प:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nटर्बो विकल्प (केवल कीबोर्ड और माउस बटन):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nसक्रियण विकल्प (केवल कीबोर्ड और माउस बटन, टर्बो के साथ परस्पर अनन्य):\n  --long-hold <ms>:<target>     जैसे --long-hold 500:key:b\n  --double-tap <ms>:<target>    जैसे --double-tap 300:key:c\n\n<profile> UUID या सटीक, केस-असंवेदी प्रोफ़ाइल नाम स्वीकार करता है।\n<id> दशमलव या 0x-उपसर्ग हेक्साडेसिमल स्वीकार करता है।\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ 16-बिट दशमलव या 0x-उपसर्ग हेक्साडेसिमल आइडेंटिफ़ायर होना चाहिए।";
 "cli.mapping.jsonEncodeFailed" = "UTF-8 JSON एन्कोड नहीं हो सका।";
 "cli.mapping.layer_action_unknown" = "अज्ञात लेयर क्रिया “%@”। अपेक्षित: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver ऐप्लिकेशन सेवा चल नहीं रही है।";
 "cli.runtime.sample_limit" = "कॉन्फ़िगरेशन %d नमूने एकत्र करेगा; --interval-ms बढ़ाएँ।";
 "cli.runtime.stable_note" = "एक स्थिर सीमित सोख इस कार्यभार का प्रमाण है, यह प्रमाण नहीं कि सभी लीक अनुपस्थित हैं।";
-"cli.settings.reset.failed" = "सेटिंग्ज़ रीसेट नहीं हो सकीं। इंस्टॉल किया गया ऐप लॉन्च करें और उसकी अनुमतियाँ सत्यापित करें।";
-"cli.settings.reset.next" = "अगला: संगतता पहचान चुनने के लिए compat set <identity> चलाएँ।";
-"cli.settings.reset.success" = "OK: ऐप्लिकेशन सेवा सेटिंग्ज़ रीसेट की गईं।";
 "cli.status.access_denied" = "यदि ऐक्सेस अस्वीकृत हो, तो --headless permissions request चलाएँ और सिस्टम सेटिंग्ज़ में इनपुट मॉनिटरिंग तथा ऐक्सेसिबिलिटी स्वीकृत करें।";
 "cli.status.heading" = "OpenJoystickDriver स्थिति";
 "cli.status.json_error" = "स्थिति JSON एन्कोड नहीं हो सका: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  स्थिति        : %@";
 "cli.updates.unknown_option" = "अज्ञात updates विकल्प: %@";
 "common.unknown" = "अज्ञात";
-"compatibility.appleGameController" = "सेब GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (मूल)";
 "developer.buttons" = "बटन";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B बटन";
 "inputTest.bCircle" = "बी / सर्कल";
 "inputTest.brightness" = "चमक";
-"inputTest.circle" = "सर्कल";
 "inputTest.color" = "रंग";
 "inputTest.controls" = "लाइव इनपुट";
-"inputTest.cross" = "क्रॉस";
 "inputTest.disconnected" = "नियंत्रक से कनेक्ट नहीं";
 "inputTest.dpadDown" = "डी-पैड नीचे";
 "inputTest.dpadLeft" = "डी-पैड बाएँ";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "इस नियंत्रक के लिए प्रकाश नियंत्रण उपलब्ध नहीं हैं।";
 "inputTest.live" = "इनपुट सक्रिय";
 "inputTest.menu" = "मेनू";
-"inputTest.minus" = "माइनस";
 "inputTest.off" = "बंद";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "विकल्प";
 "inputTest.outputError" = "भौतिक आउटपुट त्रुटि";
 "inputTest.outputRejected" = "नियंत्रक ने इस आउटपुट परीक्षण को अस्वीकार कर दिया।";
 "inputTest.permissionRequired" = "इनपुट निगरानी अनुमति आवश्यक";
 "inputTest.playerIndicator" = "खिलाड़ी सूचक";
-"inputTest.plus" = "प्लस";
 "inputTest.pressed" = "दबाया गया";
-"inputTest.psButton" = "PS बटन";
 "inputTest.released" = "छोड़ा गया";
 "inputTest.rightBumper" = "दायाँ बंपर";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "दाएँ Y";
 "inputTest.rumble" = "रम्बल";
 "inputTest.rumbleUnavailable" = "इस नियंत्रक द्वारा Rumble समर्थित नहीं है।";
-"inputTest.share" = "शेयर";
-"inputTest.square" = "स्क्वेयर";
 "inputTest.stale" = "इनपुट बाधित";
 "inputTest.start" = "इनपुट परीक्षण प्रारंभ करें";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "लाइव इनपुट";
 "inputTest.tabMotion" = "प्रस्ताव";
 "inputTest.tabOutput" = "आउटपुट";
-"inputTest.steamButton" = "Steam बटन";
 "inputTest.summary" = "परीक्षण बटन, छड़ी, ट्रिगर, रमबलिंग, और नियंत्रक प्रकाश व्यवस्था।";
 "inputTest.testRumble" = "टेस्ट रम्बल";
 "inputTest.title" = "इनपुट परीक्षण";
-"inputTest.triangle" = "ट्रायंगल";
 "inputTest.unavailable" = "इनपुट अनुपलब्ध";
 "inputTest.view" = "व्यू";
 "inputTest.windowTitle" = "इनपुट टेस्ट %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "चयनित जॉय-कॉनस को जोड़ा नहीं जा सका. कनेक्टेड नियंत्रकों को ताज़ा करें और फिर से प्रयास करें.";
 "profiles.joyConExplicitSession" = "एक स्पष्ट जोड़ी सत्र के साथ शुरू किया";
 "profiles.joyConSessionState" = "स्पष्ट जोड़ी";
-"profiles.gyro.virtualMotion" = "आगे का मापने योग्य वर्चुअल गति";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ गूँज (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "नियंत्रक से कनेक्ट नहीं";
 "controllers.resume" = "फिर कोशिश करें";
 "controllers.disconnectFromOJD" = "नियंत्रक से कनेक्ट नहीं";
-"error.compatibilityTransitionDetailed" = "चयनित कंट्रोलर आउटपुट सक्षम नहीं किया जा सका। (%@, %@)";
 "error.controllerSessionChangeRejected" = "चयनित कंट्रोलर आउटपुट सक्षम नहीं किया जा सका।";
 "cli.catalog.controller_disconnect.summary" = "नियंत्रक से कनेक्ट नहीं";
 "cli.catalog.controller_resume.summary" = "फिर कोशिश करें — नियंत्रक से कनेक्ट नहीं";
+"cli.catalog.controller_virtual_set.summary" = "किसी कंट्रोलर की वर्चुअल HID प्रोफ़ाइल ओवरराइड करें";
+"cli.catalog.controller_virtual_reset.summary" = "किसी कंट्रोलर की वर्चुअल HID प्रोफ़ाइल अपने-आप चुनें, या --all से सभी ओवरराइड साफ़ करें";
 "cli.controller.disconnected" = "नियंत्रक से कनेक्ट नहीं";
 "cli.controller.resumed" = "इनपुट सक्रिय";
 

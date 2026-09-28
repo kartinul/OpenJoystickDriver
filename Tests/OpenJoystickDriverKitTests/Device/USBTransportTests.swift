@@ -4,6 +4,42 @@ import Testing
 
 struct USBDescriptorTransportResolverTests {
   @Test
+  func unavailableInterfaceAndEndpointFactsStayAbsent() {
+    let interface = PhysicalInterfaceSignature(
+      interfaceClass: 0xFF,
+      endpoints: [
+        PhysicalEndpointSignature(direction: .in, transferType: .interrupt),
+        PhysicalEndpointSignature(direction: .out, transferType: .interrupt),
+      ]
+    )
+
+    #expect(interface.interfaceNumber == nil)
+    #expect(interface.alternateSetting == nil)
+    #expect(interface.interfaceSubclass == nil)
+    #expect(interface.interfaceProtocol == nil)
+    #expect(interface.configurationValue == nil)
+    #expect(interface.hostTransport == nil)
+    #expect(interface.physicalTransport == nil)
+    #expect(interface.accessBackend == nil)
+    #expect(interface.usbRoute == nil)
+    #expect(interface.endpoints?.allSatisfy { $0.address == nil } == true)
+    #expect(
+      USBDescriptorTransportResolver.discover(
+        interfaces: [interface],
+        preferredInterface: 0,
+        requirePreferredInterface: false
+      ) == nil
+    )
+    #expect(
+      USBDescriptorTransportResolver.discover(
+        interfaces: nil,
+        preferredInterface: 0,
+        requirePreferredInterface: false
+      ) == nil
+    )
+  }
+
+  @Test
   func liveDescriptorFactsReplaceProtocolDefaults() {
     let configured = DeviceTransportProfile.gipDefault
     let resolved = USBDescriptorTransportResolver.resolve(
@@ -82,6 +118,52 @@ struct USBDescriptorTransportResolverTests {
   }
 
   @Test
+  func descriptorSelectionAcceptsTheXIDClassAndSkipsHIDInterfaces() throws {
+    let selected = USBDescriptorTransportResolver.discover(
+      interfaces: [
+        interface(
+          number: 0,
+          interfaceClass: 0x03,
+          endpoints: [endpoint(0x81, input: true), endpoint(0x01, input: false)]
+        ),
+        interface(
+          number: 1,
+          interfaceClass: 0x58,
+          endpoints: [endpoint(0x82, input: true), endpoint(0x02, input: false)]
+        ),
+      ],
+      preferredInterface: 0,
+      requirePreferredInterface: false
+    )
+
+    let discovered = try #require(selected)
+    #expect(discovered.interfaceNumber == 1)
+    #expect(discovered.inputEndpoint == 0x82)
+    #expect(discovered.outputEndpoint == 0x02)
+  }
+
+  @Test
+  func missingEndpointAddressDoesNotMaskLaterCompletePair() throws {
+    let selected = USBDescriptorTransportResolver.discover(
+      interfaces: [
+        interface(
+          number: 2,
+          endpoints: [
+            PhysicalEndpointSignature(direction: .in, transferType: .interrupt),
+            endpoint(0x82, input: true), endpoint(0x02, input: false),
+          ]
+        )
+      ],
+      preferredInterface: 0,
+      requirePreferredInterface: false
+    )
+
+    let discovered = try #require(selected)
+    #expect(discovered.inputEndpoint == 0x82)
+    #expect(discovered.outputEndpoint == 0x02)
+  }
+
+  @Test
   func descriptorSelectionRequiresInterruptInputAndOutput() {
     let selected = USBDescriptorTransportResolver.discover(
       interfaces: [
@@ -146,17 +228,21 @@ struct USBDescriptorTransportResolverTests {
     _ address: UInt8,
     input: Bool,
     interrupt: Bool = true
-  ) -> USBEndpointTransportFacts {
-    USBEndpointTransportFacts(address: address, isInterrupt: interrupt, isInput: input)
+  ) -> PhysicalEndpointSignature {
+    PhysicalEndpointSignature(
+      address: address,
+      direction: input ? .in : .out,
+      transferType: interrupt ? .interrupt : .bulk
+    )
   }
 
   private func interface(
     number: UInt8,
     alternate: UInt8 = 0,
     interfaceClass: UInt8 = 0xFF,
-    endpoints: [USBEndpointTransportFacts]
-  ) -> USBInterfaceTransportFacts {
-    USBInterfaceTransportFacts(
+    endpoints: [PhysicalEndpointSignature]
+  ) -> PhysicalInterfaceSignature {
+    PhysicalInterfaceSignature(
       interfaceNumber: number,
       alternateSetting: alternate,
       interfaceClass: interfaceClass,
@@ -164,4 +250,88 @@ struct USBDescriptorTransportResolverTests {
     )
   }
 
+}
+
+struct USBControlTransferRequestTests {
+  @Test
+  func inputRequestComposesSetupPacketFromTypedFields() throws {
+    let request = try USBControlTransferRequest(
+      kind: .vendor,
+      recipient: .interface,
+      request: 0x01,
+      value: 0x0100,
+      index: 2,
+      dataStage: .input(length: 20)
+    )
+
+    #expect(request.direction == .in)
+    #expect(request.requestType == 0xC1)
+    #expect(request.length == 20)
+    #expect(request.outputData.isEmpty)
+  }
+
+  @Test
+  func outputRequestTakesLengthFromItsData() throws {
+    let request = try USBControlTransferRequest(
+      kind: .class,
+      recipient: .endpoint,
+      request: 0x09,
+      value: 0x0200,
+      index: 0x81,
+      dataStage: .output([1, 2, 3])
+    )
+
+    #expect(request.direction == .out)
+    #expect(request.requestType == 0x22)
+    #expect(request.length == 3)
+    #expect(request.outputData == [1, 2, 3])
+  }
+
+  @Test
+  func noDataRequestIsHostToDeviceWithZeroLength() throws {
+    let request = try USBControlTransferRequest(
+      kind: .standard,
+      recipient: .device,
+      request: 0x09,
+      value: 1
+    )
+
+    #expect(request.direction == .out)
+    #expect(request.requestType == 0x00)
+    #expect(request.length == 0)
+  }
+
+  @Test
+  func dataStageLengthsOutsideTheSetupPacketAreRejected() {
+    #expect(throws: USBTransportError.notSupported) {
+      try USBControlTransferRequest(
+        kind: .vendor,
+        recipient: .device,
+        request: 1,
+        dataStage: .output([UInt8](repeating: 0, count: Int(UInt16.max) + 1))
+      )
+    }
+    #expect(throws: USBTransportError.notSupported) {
+      try USBControlTransferRequest(
+        kind: .vendor,
+        recipient: .device,
+        request: 1,
+        dataStage: .output([])
+      )
+    }
+    #expect(throws: USBTransportError.notSupported) {
+      try USBControlTransferRequest(
+        kind: .vendor,
+        recipient: .device,
+        request: 1,
+        dataStage: .input(length: 0)
+      )
+    }
+  }
+
+  @Test
+  func endpointAddressDirectionBitSelectsTransferDirection() {
+    #expect(USBEndpointDirection(endpointAddress: 0x81) == .in)
+    #expect(USBEndpointDirection(endpointAddress: 0x02) == .out)
+  }
 }

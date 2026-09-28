@@ -1,48 +1,75 @@
 /// Full Steam Controller state packets carry raw IMU vectors and a sequence number, not time.
+/// Sample time is the first sample's receipt time plus the clamped receipt time elapsed since.
 struct SteamMotionSamples {
   private var previousCounter: UInt32?
   private var firstReceipt: UInt64?
   private var elapsed: UInt64 = 0
   private var sequence: UInt64 = 0
 
+  /// Starts a new time and duplicate-tracking session; the sequence index keeps counting.
+  mutating func reset() {
+    let next = sequence
+    self = Self()
+    sequence = next
+  }
+
   mutating func decode(_ bytes: [UInt8], receivedAt: UInt64) -> ControllerMotionSample? {
     guard bytes.count >= 40 else { return nil }
     let counter = UInt32(unsigned16(bytes, at: 4)) | (UInt32(unsigned16(bytes, at: 6)) << 16)
     guard previousCounter != counter else { return nil }
     previousCounter = counter
-    if let firstReceipt {
-      elapsed = max(elapsed, receivedAt >= firstReceipt ? receivedAt - firstReceipt : 0)
-    } else {
-      firstReceipt = receivedAt
-    }
+    let anchor = firstReceipt ?? receivedAt
+    firstReceipt = anchor
+    elapsed = max(elapsed, receivedAt >= anchor ? receivedAt - anchor : 0)
     let timestamp = ControllerSampleTimestamp(
       rawCounter: counter,
-      elapsedNanoseconds: elapsed,
+      monotonic: MonotonicTimestamp(nanoseconds: anchor + elapsed),
       tickNanosecondsNumerator: nil,
       tickNanosecondsDenominator: nil,
       sequenceIndex: sequence,
       basis: .hostEstimate
     )
     sequence += 1
-    let gyro = vector(bytes, at: 34)
-    let accel = vector(bytes, at: 28)
+    return Self.sample(
+      timestamp: timestamp,
+      gyro: vector(bytes, at: 34),
+      accel: vector(bytes, at: 28)
+    )
+  }
+
+  /// Steam Controller transform: raw counts, nominal scale (no factory calibration is read), SI,
+  /// then gyro (x, y, z) → (x, -y, z) and accel (x, y, z) → (x, y, z).
+  /// Source: SDL `HIDAPI_DriverSteam_UpdateDevice` in `src/joystick/hidapi/SDL_hidapi_steam.c` at
+  /// SDL `1ce4c5bc` scales gyro by 2000 °/s and accel by 2 g per 32768 counts and maps them into
+  /// its sensor frame (X right, Y up, Z toward the player) as gyro (x, z, y) and accel (x, z, -y).
+  /// The canonical frame takes SDL's +Z (toward the player) as -Y and SDL's +Y (up) as +Z.
+  /// Linux `hid-steam.c` `steam_controller_imu_mappings` (used by `steam_do_sensors_event`) at
+  /// Linux `fd179f8a` maps the same bytes the same way: accel rows `ABS_X` +28, `ABS_Z` -30,
+  /// `ABS_Y` +32, i.e. (x, z, -y); gyro rows `ABS_RX` +34, `ABS_RZ` +36, `ABS_RY` +38, i.e.
+  /// (x, z, y). Both sources give gyro and accel mappings that differ by a reflection of Y, so at
+  /// most one is right-handed; it is kept until hardware confirms it. Linux's accel resolution
+  /// (`STEAM_ACCEL_RES_PER_G` 16384) matches SDL's 2 g per 32768 counts. Linux declares 16 counts
+  /// per °/s (`STEAM_GYRO_RES_PER_DPS`) where SDL uses 16.384; the SDL scale is kept.
+  static func sample(
+    timestamp: ControllerSampleTimestamp,
+    gyro: ControllerRawSensorVector,
+    accel: ControllerRawSensorVector
+  ) -> ControllerMotionSample? {
+    let gyroScale = 2000.0 / 32768
+    let accelScale = 2.0 / 32768
     return ControllerMotionSample(
       timestamp: timestamp,
-      rawGyroscope: gyro,
-      rawAccelerometer: accel,
-      physicalReading: ControllerMotionReading(
-        gyroscopeDegreesPerSecond: ControllerMotionVector(
-          x: Double(gyro.x) * 2000 / 32768,
-          y: Double(gyro.z) * 2000 / 32768,
-          z: Double(gyro.y) * 2000 / 32768
-        ),
-        accelerationG: ControllerMotionVector(
-          x: Double(accel.x) * 2 / 32768,
-          y: Double(accel.z) * 2 / 32768,
-          z: -Double(accel.y) * 2 / 32768
-        ),
-        calibrationSource: .nominalDeviceScale
-      )
+      canonicalDegreesPerSecond: ControllerMotionVector(
+        x: Double(gyro.x) * gyroScale,
+        y: -Double(gyro.y) * gyroScale,
+        z: Double(gyro.z) * gyroScale
+      ),
+      canonicalG: ControllerMotionVector(
+        x: Double(accel.x) * accelScale,
+        y: Double(accel.y) * accelScale,
+        z: Double(accel.z) * accelScale
+      ),
+      calibrationSource: .nominalDeviceScale
     )
   }
 

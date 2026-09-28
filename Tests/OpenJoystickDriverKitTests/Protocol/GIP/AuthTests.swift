@@ -21,6 +21,7 @@ struct GIPAuthHandlerTests {
     // Payload is all zeros
     for i in 6..<response.count { #expect(response[i] == 0x00) }
   }
+
   @Test
   func test_buildAuthResponse_hostResponse2_large_payload() {
     let handler = GIPAuthHandler()
@@ -32,6 +33,7 @@ struct GIPAuthHandlerTests {
     #expect(response[4] == 0x03)
     #expect(response[5] == 0x04)
   }
+
   @Test
   func test_buildAuthResponse_all_host_states_have_correct_sizes() {
     let handler = GIPAuthHandler()
@@ -44,12 +46,14 @@ struct GIPAuthHandlerTests {
       #expect(response.count == 6 + size)
     }
   }
+
   @Test
   func test_buildAuthResponse_device_state_returns_empty() {
     let handler = GIPAuthHandler()
     let response = handler.buildAuthResponse(state: .devInit)
     #expect(response.isEmpty)
   }
+
   @Test
   func test_initial_device_state_is_start() {
     let handler = GIPAuthHandler()

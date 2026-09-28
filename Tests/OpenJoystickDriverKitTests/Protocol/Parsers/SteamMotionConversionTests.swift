@@ -5,7 +5,7 @@ import Testing
 
 struct SteamMotionConversionTests {
   @Test
-  func physicalUnitsPreserveRawAxesAndUseDistinctSensorTransforms() throws {
+  func nominalScaleMapsGyroAndAccelIntoTheCanonicalFrame() throws {
     var report = [UInt8](repeating: 0, count: 64)
     report[0] = 1
     report[2] = 1
@@ -18,21 +18,14 @@ struct SteamMotionConversionTests {
       report[offset] = UInt8(truncatingIfNeeded: raw)
       report[offset + 1] = UInt8(truncatingIfNeeded: raw >> 8)
     }
-    let parser = SteamControllerParser()
-    let events = try parser.parse(data: Data(report), receivedAtNanoseconds: 100)
-    let sample = try #require(
-      events.compactMap { event -> ControllerMotionSample? in
-        if case .motionSample(let sample) = event { return sample }
-        return nil
-      }.first
-    )
-    #expect(sample.rawGyroscope == ControllerRawSensorVector(x: 16384, y: .min, z: 8192))
-    #expect(sample.rawAccelerometer == sample.rawGyroscope)
-    let reading = try #require(sample.physicalReading)
-    #expect(reading.calibrationSource == .nominalDeviceScale)
-    #expect(reading.gyroscopeDegreesPerSecond == ControllerMotionVector(x: 1000, y: 500, z: -2000))
-    #expect(reading.accelerationG == ControllerMotionVector(x: 1, y: 0.5, z: 2))
+    let parser = SteamControllerDriver()
+    let events = try parser.parseReport(Data(report), at: 100)
+    let sample = try #require(events?.motion.first)
+    // Raw (16384, -32768, 8192) on both sensors: gyro (x, -y, z), accel (x, y, z).
+    #expect(sample.calibrationSource == .nominalDeviceScale)
+    #expect(isClose(sample.angularVelocity, radiansPerSecond(1000, 2000, 500)))
+    #expect(isClose(sample.acceleration, metresPerSecondSquared(1, -2, 0.5)))
     #expect(sample.timestamp.basis == .hostEstimate)
-    #expect(try parser.parse(data: Data(report), receivedAtNanoseconds: 200).isEmpty)
+    #expect(try parser.parseReport(Data(report), at: 200)?.motion.isEmpty == true)
   }
 }

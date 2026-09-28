@@ -8,8 +8,6 @@ extension RemappingEventEngine {
     uncertainHeldOutputs = potentiallyHeld
     uncertainGamepadDevices.formUnion(heldGamepadDevices)
     heldGamepadDevices.removeAll()
-    uncertainMotionDevices.formUnion(heldMotionDevices)
-    heldMotionDevices.removeAll()
     uncertainPhysicalDevices.formUnion(heldPhysicalOwners.keys)
     heldPhysicalOwners.removeAll()
     try? await releaseUncertainOutputs()

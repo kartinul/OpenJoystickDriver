@@ -68,14 +68,18 @@ struct LocalizationTests {
   func packagedCatalogIncludesCLIAndInputTestProductKeys() {
     let keys = LocalizationCatalogAudit.keys(for: Localization.sourceLocalization)
     for required in [
-      "cli.compat.usage", "cli.catalog.compat.summary", "cli.app_ready.not_ready",
-      "inputTest.controls", "inputTest.additionalButtons", "compatibility.xbox360HID",
-      "setup.openSystemSettings", "controllers.battery", "controllers.chargingState",
-      "controllers.cableState", "controllers.discharging", "controllers.charging",
-      "controllers.batteryFull", "controllers.batteryAccessibilityDetails", "profiles.actions",
-      "profiles.editorSection", "profiles.combinations",
+      "cli.controller.virtual.unknown_profile", "cli.controller.virtual.missing_profile",
+      "cli.controller.virtual.reset_all_with_selector", "cli.controller.virtual.reset_all.success",
+      "cli.controller.virtual.reset_all.failed", "cli.catalog.controller_virtual_set.summary",
+      "cli.app_ready.not_ready", "inputTest.controls", "inputTest.additionalButtons",
+      "virtualProfile.title", "setup.openSystemSettings", "controllers.battery",
+      "controllers.chargingState", "controllers.cableState", "controllers.discharging",
+      "controllers.charging", "controllers.batteryFull", "controllers.batteryAccessibilityDetails",
+      "profiles.actions", "profiles.editorSection", "profiles.combinations",
     ] { #expect(keys.contains(required)) }
-    #expect(!keys.contains("compatibility.xboxOneLegacyHID"))
+    #expect(!keys.contains { $0.hasPrefix("compatibility.") || $0.hasPrefix("identity.") })
+    #expect(!keys.contains { $0.hasPrefix("cli.compat.") || $0 == "cli.catalog.compat.summary" })
+    #expect(!keys.contains { $0.hasPrefix("cli.settings.reset.") })
     #expect(keys.filter { $0.hasPrefix("cli.") }.count >= 200)
     #expect(keys.filter { $0.hasPrefix("inputTest.") }.count >= 20)
   }

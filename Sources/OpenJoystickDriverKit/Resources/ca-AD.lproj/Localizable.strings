@@ -69,7 +69,6 @@
 "status.checkingControllers" = "S’estan comprovant els comandaments connectats…";
 "status.refreshingProfile" = "S’està actualitzant l’estat del perfil…";
 "status.loadingProfiles" = "S’estan carregant els perfils…";
-"status.updatingIdentity" = "S’està actualitzant la identitat del comandament…";
 "status.listening" = "S’està escoltant…";
 "status.readyToListen" = "A punt per escoltar";
 "status.checkingInput" = "S’està comprovant";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Comandaments";
 "settings.controllerDisconnectedNotifications" = "Comandament desconnectat";
 "settings.controllerDisconnectedShort" = "Desconnectat";
-"settings.controllerIdentity" = "Identitat del comandament";
 "settings.controllerNotifications" = "Comandament connectat";
 "settings.diagnostics" = "Diagnòstic";
 "settings.service" = "Servei";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Descarregant-se";
 "controllers.charging" = "Carregant";
 "controllers.batteryFull" = "Plena";
+"controllers.notChargeable" = "No recarregable";
 "controllers.batteryAccessibilityDetails" = "Bateria: %@. Estat de càrrega: %@. Estat del cable: %@.";
 "controllers.activeProfile" = "Perfil actiu";
 "controllers.profileChecking" = "S’està comprovant…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Perfil actiu no disponible";
 "controllers.profileLoadError" = "No s’ha pogut carregar el perfil actiu";
 "controllers.protocol" = "Protocol";
-"controllers.parser" = "Analitzador";
 "controllers.serialNumber" = "Número de sèrie";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Punt final d’entrada";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Error del perfil actiu: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protocol: %@. Parser: %@. Número de sèrie: %@. USB VID/PID: %@. Punt final d’entrada: %@. Punt final de sortida: %@.";
 "controllers.publishedAs" = "Publicat com";
-"identity.title" = "Identitat del comandament";
-"identity.needsAttention" = "Cal atenció";
-"identity.error" = "Error d’identitat del comandament";
-"identity.updating" = "S’està actualitzant la identitat del comandament…";
-"identity.reset" = "Restableix els valors recomanats";
-"identity.checking" = "S’està comprovant";
-"identity.globalScope" = "S’aplica a tots els comandaments virtuals publicats per l’OpenJoystickDriver.";
-"identity.unavailable" = "No disponible";
-"identity.notSelected" = "No seleccionat";
+"controllers.nativeGamepadNotPublished" = "Comandament natiu de macOS, no publicat";
+"virtualProfile.advanced" = "Avançat";
+"virtualProfile.title" = "Perfil HID virtual";
+"virtualProfile.modelScope" = "S’aplica a tots els comandaments connectats d’aquest model.";
+"virtualProfile.sourceOverride" = "Substitució";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automàtic, substitució rebutjada";
+"virtualProfile.none" = "Cap perfil HID virtual";
+"virtualProfile.unavailable" = "Cap perfil HID virtual pot representar aquest comandament.";
+"virtualProfile.updating" = "S’està actualitzant el perfil HID virtual…";
+"virtualProfile.live" = "Perfil actiu";
+"virtualProfile.failure.unknownProfile" = "Aquest perfil HID virtual és desconegut. No s’ha desat res.";
+"virtualProfile.failure.controllerNotFound" = "El comandament s’ha desconnectat o no es troba. La substitució no ha canviat.";
+"virtualProfile.failure.overrideRejected" = "La substitució s’ha desat, però aquest comandament no la pot fer servir i tria automàticament.";
+"virtualProfile.failure.activationFailed" = "L’activació ha fallat i s’ha restaurat el perfil HID virtual anterior: %@";
+"virtualProfile.failure.outputDisabled" = "La substitució s’ha desat i s’aplicarà quan s’activi la sortida virtual.";
+"virtualProfile.failure.serverStopped" = "El servei s’ha aturat. La substitució no ha canviat.";
+"virtualProfile.failure.persistenceFailed" = "No s’ha pogut desar la substitució. No s’ha desat res.";
+"virtualProfile.storeError" = "No es poden llegir les substitucions del perfil HID virtual (%@). Els comandaments trien automàticament.";
+"virtualProfile.legacyIdentityRejected" = "La configuració retirada d’identitat del comandament %@ ja no s’aplica. Executeu controller virtual reset --all per esborrar-la.";
 "keyboard.noKey" = "Cap tecla seleccionada";
 "keyboard.pressKey" = "Prem una tecla…";
 "keyboard.captureKey" = "Captura la tecla";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Estat actual";
 "debug.runtime" = "Execució";
 "debug.controllers" = "Comandaments";
-"debug.controllerIdentity" = "Identitat del comandament";
 "debug.unavailable" = "Execució · No disponible";
 "debug.needsAttention" = "Execució · Cal atenció";
 "debug.diagnostics" = "Diagnòstic";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "La sortida del comandament està desactivada.";
 "debug.outputNeedsAttention" = "La sortida del comandament requereix atenció.";
 "debug.serviceUnavailable" = "El diagnòstic del servei no està disponible ara.";
-"error.selectedOutputUnavailable" = "La sortida del comandament seleccionada no està disponible.";
-"error.selectedOutputEnableFailed" = "No s’ha pogut activar la sortida del comandament seleccionada.";
 "error.profileChanged" = "Aquest perfil s’ha canviat en un altre lloc. Torna a carregar-lo o continua editant.";
 "error.duplicateProfile" = "Ja existeix un perfil amb aquest nom.";
 "error.profileMissing" = "Aquest perfil ja no està disponible.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Execució";
 "common.controllers" = "Comandaments";
 "common.profiles" = "Perfils";
-"common.controllerIdentity" = "Identitat del comandament";
 "common.protocol" = "Protocol";
-"common.parser" = "Analitzador";
 "common.serialNumber" = "Número de sèrie";
 "common.inputEndpoint" = "Punt final d’entrada";
 "common.outputEndpoint" = "Punt final de sortida";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "El producte de perfil seleccionat ja no està disponible.";
 "cli.catalog.app_ready.summary" = "Comprova la disponibilitat autenticada del servei d’aplicació";
 "cli.catalog.app_status.summary" = "Mostra l’estat del servei d’aplicació";
-"cli.catalog.compat.summary" = "Gestiona la compatibilitat dels comandaments virtuals";
 "cli.catalog.controller_list.summary" = "Llista els comandaments connectats";
 "cli.catalog.controller_output.summary" = "Prova la sortida física compatible del comandament";
 "cli.catalog.controller_packets.summary" = "Mostra els paquets recents del comandament";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Mostra l’estat del controlador i de l’execució";
 "cli.catalog.test.summary" = "Prova el lliurament d’entrada del comandament virtual";
 "cli.catalog.update.summary" = "Comprova a GitHub si hi ha actualitzacions disponibles";
-"cli.compat.identity" = "identitat de compatibilitat: %@";
-"cli.compat.identity_unknown" = "identitat de compatibilitat: desconeguda";
-"cli.compat.set_failed" = "No s’ha pogut definir la identitat de compatibilitat a %@. Obre l’app instal·lada i comprova l’accés a Monitoratge d’entrada i Accessibilitat.";
-"cli.compat.usage" = "Ús: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "estat de l’espai d’usuari: %@";
 "cli.controller.allAppleEntries" = "Totes les entrades exactes del catàleg d’Apple:";
 "cli.controller.appleIDs" = "    ID d’Apple: %@";
 "cli.controller.applePairs" = "  Parelles Apple: %d entrades VID/PID exactes";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Cap comandament connectat no coincideix amb --device %@.";
 "cli.controller.selection.multiple" = "Hi ha diversos comandaments coincidents. Selecciona’n un amb --device:\n  %@";
 "cli.controller.selection.none" = "No hi ha cap comandament connectat.";
+"cli.controller.virtual.live" = "Perfil HID virtual: %@ (%@)";
+"cli.controller.virtual.none" = "Perfil HID virtual: cap (%@)";
+"cli.controller.virtual.failed" = "La sol·licitud del perfil HID virtual ha fallat: %@";
+"cli.controller.virtual.unknown_profile" = "Perfil HID virtual desconegut «%@». Useu-ne un de: %@.";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» requereix un perfil HID virtual. Useu-ne un de: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "«--all» no es pot combinar amb --vid, --pid ni --device.";
+"cli.controller.virtual.reset_all.success" = "OK: s’han esborrat totes les substitucions del perfil HID virtual.";
+"cli.controller.virtual.reset_all.failed" = "No s’ha pogut restablir la configuració. Obre l’app instal·lada i comprova’n els permisos.";
 "cli.controller.selection.vid_pid_missing" = "Cap comandament connectat no coincideix amb %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Passa VID i PID plegats, o omet-los tots dos.";
 "cli.controller.serviceControllers" = "Comandaments (del servei d’aplicació en execució):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Consell: concedeix el dret necessari i l’accés a Monitoratge d’entrada.";
 "cli.controller.usbControllers" = "Comandaments USB (classe 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Passa VID i PID plegats, o omet-los tots dos quan hi hagi un comandament connectat.";
-"cli.diagnose.advisory_candidate" = "    Candidat de protocol orientatiu: %@";
 "cli.diagnose.app_missing" = "  App: absent a %@";
 "cli.diagnose.app_missing_fix" = "  Correcció: compila i instal·la l’app a /Applications";
 "cli.diagnose.app_present" = "  Aplicació: present";
 "cli.diagnose.binary_path" = "Binari: %@";
-"cli.diagnose.catalog_conflict" = "      L’observació entra en conflicte amb la família del catàleg; l’analitzador no canvia";
-"cli.diagnose.catalog_parser" = "      L’analitzador del catàleg continua sent %@ (%@)";
 "cli.diagnose.dext_found" = "  Bundles .dext trobats:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      punt final 0x%02X %@ %@ maxPacket=%@ interval=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Corba de resposta desconeguda «%@».";
 "cli.mapping.double_tap_format" = "--double-tap espera <ms>:<target>, p. ex. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Ús: OpenJoystickDriver --headless map <command>\n\nOrdres:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nFont: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nDestí: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nOpcions d’eix:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nOpcions turbo (només botons de teclat i ratolí):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nOpcions d’activació (només botons de teclat i ratolí, excloents amb turbo):\n  --long-hold <ms>:<target>     p. ex. --long-hold 500:key:b\n  --double-tap <ms>:<target>    p. ex. --double-tap 300:key:c\n\n<profile> accepta un UUID o un nom de perfil exacte, sense distingir majúscules.\n<id> accepta decimal o hexadecimal amb prefix 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Ús: OpenJoystickDriver --headless map <command>\n\nOrdres:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nFont: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nDestí: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nOpcions d’eix:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nOpcions turbo (només botons de teclat i ratolí):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nOpcions d’activació (només botons de teclat i ratolí, excloents amb turbo):\n  --long-hold <ms>:<target>     p. ex. --long-hold 500:key:b\n  --double-tap <ms>:<target>    p. ex. --double-tap 300:key:c\n\n<profile> accepta un UUID o un nom de perfil exacte, sense distingir majúscules.\n<id> accepta decimal o hexadecimal amb prefix 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ ha de ser un identificador de 16 bits decimal o hexadecimal amb prefix 0x.";
 "cli.mapping.jsonEncodeFailed" = "No s’ha pogut codificar el JSON en UTF-8.";
 "cli.mapping.layer_action_unknown" = "Acció de capa desconeguda «%@». Esperat: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "El servei d’aplicació OpenJoystickDriver no s’està executant.";
 "cli.runtime.sample_limit" = "La configuració recolliria %d mostres; augmenta --interval-ms.";
 "cli.runtime.stable_note" = "Un soak acotat i estable és un indici per a aquesta càrrega, no la prova que no hi ha fuites.";
-"cli.settings.reset.failed" = "No s’ha pogut restablir la configuració. Obre l’app instal·lada i comprova’n els permisos.";
-"cli.settings.reset.next" = "Següent: executa compat set <identity> per triar la identitat de compatibilitat.";
-"cli.settings.reset.success" = "OK: s’ha restablert la configuració del servei d’aplicació.";
 "cli.status.access_denied" = "Si se’n denega l’accés, executa --headless permissions request i aprova Monitoratge d’entrada i Accessibilitat a Configuració del Sistema.";
 "cli.status.heading" = "Estat d’OpenJoystickDriver";
 "cli.status.json_error" = "No s’ha pogut codificar el JSON d’estat: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Estat       : %@";
 "cli.updates.unknown_option" = "Opció updates desconeguda: %@";
 "common.unknown" = "Desconegut";
-"compatibility.appleGameController" = "Apple GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (original)";
 "developer.buttons" = "Botons";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Botó B";
 "inputTest.bCircle" = "B / Círculo";
 "inputTest.brightness" = "Brillantesa";
-"inputTest.circle" = "Cercle";
 "inputTest.color" = "Color";
 "inputTest.controls" = "Entrada en directe";
-"inputTest.cross" = "Creu";
 "inputTest.disconnected" = "Controller desconectat";
 "inputTest.dpadDown" = "Creu direccional avall";
 "inputTest.dpadLeft" = "Creu direccional esquerra";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "No hi ha controls d'il·luminació disponibles per a aquest controlador.";
 "inputTest.live" = "Activ de entrada";
 "inputTest.menu" = "Menú";
-"inputTest.minus" = "Menys";
 "inputTest.off" = "Desactivat";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Opcions";
 "inputTest.outputError" = "Error de sortida física";
 "inputTest.outputRejected" = "El controlador va rebutjar aquesta prova de sortida.";
 "inputTest.permissionRequired" = "Permís de seguiment requerit";
 "inputTest.playerIndicator" = "Indicador del jugador";
-"inputTest.plus" = "Més";
 "inputTest.pressed" = "Premut";
-"inputTest.psButton" = "Botó PS";
 "inputTest.released" = "Alliberat";
 "inputTest.rightBumper" = "Botó superior dret";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Y dret";
 "inputTest.rumble" = "Rumble";
 "inputTest.rumbleUnavailable" = "Rumble no és suportat per aquest controlador.";
-"inputTest.share" = "Comparteix";
-"inputTest.square" = "Quadrat";
 "inputTest.stale" = "Introducció interrompuda";
 "inputTest.start" = "Inici de l'inscripció";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Entrada en directe";
 "inputTest.tabMotion" = "Moció";
 "inputTest.tabOutput" = "Producció";
-"inputTest.steamButton" = "Botó Steam";
 "inputTest.summary" = "Botons de prova, bastons, desencadenadors, ronc i il·luminació del controlador.";
 "inputTest.testRumble" = "Rumble de prova";
 "inputTest.title" = "Ensai d'entrada";
-"inputTest.triangle" = "Triangle";
 "inputTest.unavailable" = "Entrada no disponible";
 "inputTest.view" = "Vista";
 "inputTest.windowTitle" = "Enserament d'entrada %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Els Joy-Cons seleccionats no es poden emparejar.";
 "profiles.joyConExplicitSession" = "Començà amb una sessió de par explicita";
 "profiles.joyConSessionState" = "Paratge explícit";
-"profiles.gyro.virtualMotion" = "Moviment virtual calibrat cap endavant";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ rebombori (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Controller desconectat";
 "controllers.resume" = "Torna-ho a provar";
 "controllers.disconnectFromOJD" = "Controller desconectat";
-"error.compatibilityTransitionDetailed" = "No s’ha pogut activar la sortida del comandament seleccionada. (%@, %@)";
 "error.controllerSessionChangeRejected" = "No s’ha pogut activar la sortida del comandament seleccionada.";
 "cli.catalog.controller_disconnect.summary" = "Controller desconectat";
 "cli.catalog.controller_resume.summary" = "Torna-ho a provar — Controller desconectat";
+"cli.catalog.controller_virtual_set.summary" = "Força el perfil HID virtual d’un controlador";
+"cli.catalog.controller_virtual_reset.summary" = "Selecciona automàticament el perfil HID virtual d’un controlador, o esborra totes les substitucions amb --all";
 "cli.controller.disconnected" = "Controller desconectat";
 "cli.controller.resumed" = "Activ de entrada";
 

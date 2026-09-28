@@ -196,19 +196,19 @@ public struct ApplicationServiceRemappingActiveProfilePayload: Codable, Equatabl
 }
 
 public enum ApplicationServiceRemappingRouteSelection: String, Codable, Sendable {
-  case compatibility
   case remapping
   case unavailable
+  case virtualGamepad = "virtual-gamepad"
 }
 
 public enum ApplicationServiceRemappingRouteEligibility: String, Codable, Sendable {
-  case compatibilityOutputSuppressed = "compatibility_output_suppressed"
   case eligible
   case outputSuppressed = "output_suppressed"
   case postEventAccessNotAuthorized = "post_event_access_not_authorized"
   case targetApplicationNotFrontmost = "target_application_not_frontmost"
   case physicalInputNotExclusive = "physical_input_not_exclusive"
   case unavailable
+  case virtualOutputSuppressed = "virtual_output_suppressed"
 }
 
 public struct ApplicationServiceRemappingFailurePayload: Codable, Equatable, Sendable {

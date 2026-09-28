@@ -107,28 +107,25 @@
     private var controllerListRows: some View {
       List(selection: selectedDeviceIdentifier) {
         ForEach(devices, id: \.runtimeIdentifier) { device in
-          let published = PublishedVirtualIdentity.profile(
-            for: device,
-            requested: viewModel.requestedCompatibilityIdentity
-          )
+          let presentation = device.publishedIdentityPresentation
           HStack(spacing: 8) {
             OJDListGlyphSlot {
               OJDSystemSymbol(
-                name: published.presentation.controllerSymbolName,
+                name: presentation.controllerSymbolName,
                 fallback: OJDLocalized.string("common.controller", fallback: "Controller"),
-                fallbackSymbolName: published.presentation.controllerSymbolFallback
-              ).foregroundColor(published.presentation.glyphFamily.controllerSymbolColor)
+                fallbackSymbolName: presentation.controllerSymbolFallback
+              ).foregroundColor(presentation.glyphFamily.controllerSymbolColor)
             }
             VStack(alignment: .leading, spacing: 2) {
               Text(device.name).lineLimit(1)
-              Text(published.publishedUSBIdentityLabel).font(.caption).foregroundColor(
+              Text(device.publishedIdentityLabel).font(.caption).foregroundColor(
                 Color(NSColor.secondaryLabelColor)
               ).lineLimit(1)
             }
             Spacer(minLength: 0)
           }.padding(.vertical, 4).tag(device.runtimeIdentifier).ojdAccessibilityLabel(device.name)
             .ojdAccessibilityValue(
-              "\(published.publishedUSBIdentityLabel). \(device.protocolVariant.displayLabel)"
+              "\(device.publishedIdentityLabel). \(device.protocolBinding.displayLabel)"
             )
         }
       }.listStyle(SidebarListStyle())
@@ -210,8 +207,7 @@
     var controllerSymbolColor: Color {
       switch self {
       case .xbox: return Color(Self.xboxBrandColor)
-      case .playstation: return Color(Self.playStationBrandColor)
-      case .nintendo, .steam, .generic: return Color(NSColor.secondaryLabelColor)
+      case .generic: return Color(NSColor.secondaryLabelColor)
       }
     }
 
@@ -226,45 +222,50 @@
         alpha: 1
       )
     }
+  }
 
-    private static let playStationBrandColor = NSColor(name: nil) { appearance in
-      let isDark =
-        appearance.bestMatch(from: [NSAppearance.Name.aqua, NSAppearance.Name.darkAqua])
-        == .darkAqua
-      return NSColor(
-        srgbRed: 0,
-        green: (isDark ? 112.0 : 55.0) / 255.0,
-        blue: (isDark ? 204.0 : 145.0) / 255.0,
-        alpha: 1
-      )
+  extension ProtocolBindingID {
+    /// Family label; transport variants share their family's label.
+    var displayLabel: String {
+      switch protocolID {
+      case .xboxXID: OJDLocalized.string("controller.xboxOriginal", fallback: "Xbox (original)")
+      case .xboxXUSB where variant == .receiver:
+        OJDLocalized.string("controller.xbox360Wireless", fallback: "Xbox 360 wireless")
+      case .xboxXUSB: OJDLocalized.string("controller.xbox360", fallback: "Xbox 360")
+      case .xboxGIP: OJDLocalized.string("controller.xboxOne", fallback: "Xbox One")
+      case .sonySixaxis: OJDLocalized.string("controller.dualShock3", fallback: "DualShock 3")
+      case .sonyDualShock4: OJDLocalized.string("controller.dualShock4", fallback: "DualShock 4")
+      case .sonyDualSense: OJDLocalized.string("controller.dualSense", fallback: "DualSense")
+      case .valveSteamController:
+        OJDLocalized.string("controller.steamController", fallback: "Steam Controller")
+      case .nintendoSwitch1: OJDLocalized.string("controller.switchPro", fallback: "Switch Pro")
+      case .vendorFlydigi: OJDLocalized.string("controller.flydigi", fallback: "Flydigi")
+      case .vendorGameSir where variant == .usb: "GameSir G7 Pro USB"
+      case .vendorGameSir: "GameSir enhanced HID"
+      case .hidDescriptor: OJDLocalized.string("controller.genericHID", fallback: "Generic HID")
+      }
     }
   }
 
-  extension ControllerProtocolVariant {
-    var displayLabel: String {
-      switch self {
-      case .xid: return OJDLocalized.string("controller.xboxOriginal", fallback: "Xbox (original)")
-      case .xbox360: return OJDLocalized.string("controller.xbox360", fallback: "Xbox 360")
-      case .xbox360Wireless:
-        return OJDLocalized.string("controller.xbox360Wireless", fallback: "Xbox 360 wireless")
-      case .xboxOne: return OJDLocalized.string("controller.xboxOne", fallback: "Xbox One")
-      case .dualShock3: return OJDLocalized.string("controller.dualShock3", fallback: "DualShock 3")
-      case .dualShock4: return OJDLocalized.string("controller.dualShock4", fallback: "DualShock 4")
-      case .dualSense: return OJDLocalized.string("controller.dualSense", fallback: "DualSense")
-      case .steamController:
-        return OJDLocalized.string("controller.steamController", fallback: "Steam Controller")
-      case .switchPro: return OJDLocalized.string("controller.switchPro", fallback: "Switch Pro")
-      case .flydigi: return OJDLocalized.string("controller.flydigi", fallback: "Flydigi")
-      case .gameSirG7ProUSB: return "GameSir G7 Pro USB"
-      case .gameSirEnhancedHID: return "GameSir enhanced HID"
-      case .xboxAdaptiveJoystick:
+  extension ApplicationServiceDeviceDescription {
+    /// The identity of the virtual HID profile this controller publishes; nil when none is live.
+    var publishedVirtualProfile: VirtualDeviceProfile? { virtualHIDProfile?.profile?.identity }
+
+    /// Glyph presentation of the published identity, generic when no profile is live.
+    var publishedIdentityPresentation: VirtualIdentityPresentation {
+      (publishedVirtualProfile ?? VirtualHIDProfileID.generic.identity).presentation
+    }
+
+    /// The virtual identity published for this controller; macOS serves a native gamepad itself.
+    var publishedIdentityLabel: String {
+      guard physicalOwnership != .nativeGamepad else {
         return OJDLocalized.string(
-          "controller.xboxAdaptiveJoystick",
-          fallback: "Xbox Adaptive Joystick"
+          "controllers.nativeGamepadNotPublished",
+          fallback: "Native macOS gamepad, not published"
         )
-      case .genericHID: return OJDLocalized.string("controller.genericHID", fallback: "Generic HID")
-      case .unknown: return OJDLocalized.string("common.unknown", fallback: "Unknown")
       }
+      return publishedVirtualProfile?.publishedUSBIdentityLabel
+        ?? RuntimePresentation.noVirtualHIDProfileLabel
     }
   }
 

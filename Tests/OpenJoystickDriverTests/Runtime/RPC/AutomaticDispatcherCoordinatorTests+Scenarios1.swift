@@ -9,12 +9,11 @@ extension AutomaticDispatcherCoordinatorTests {
   var description: ApplicationServiceDeviceDescription {
     ApplicationServiceDeviceDescription(
       name: "probe",
-      vendorID: identifier.vendorID,
-      productID: identifier.productID,
-      parser: "GIP",
+      vendorID: identifier.controllerIdentity.vendorID,
+      productID: identifier.controllerIdentity.productID,
+      protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
       serialNumber: nil,
-      protocolVariant: .xboxOne,
       runtimeIdentifier: identifier.runtimeIdentifier
     )
   }
@@ -27,8 +26,7 @@ extension AutomaticDispatcherCoordinatorTests {
     let backend = InstallationBackend(stage: .suppression, gate: gate)
     async let pending = coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: { _ in backend }
     )
@@ -55,8 +53,7 @@ extension AutomaticDispatcherCoordinatorTests {
 
     let initial = await coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: factory
     )
@@ -70,7 +67,7 @@ extension AutomaticDispatcherCoordinatorTests {
 
     await coordinator.synchronizeSuppression { false }
     #expect(second.counts().activations == 1)
-    #expect(await coordinator.installedTargets()[identifier] == .genericHID)
+    #expect(await coordinator.installedTargets()[identifier] == .generic)
     await coordinator.close()
     #expect(second.counts().closes == 1)
   }
@@ -82,8 +79,7 @@ extension AutomaticDispatcherCoordinatorTests {
     let backend = InstallationBackend(stage: .activation, gate: gate)
     async let pending = coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: { _ in backend }
     )
@@ -114,8 +110,7 @@ extension AutomaticDispatcherCoordinatorTests {
     }
     let lease = await coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: factory
     )
@@ -146,8 +141,7 @@ extension AutomaticDispatcherCoordinatorTests {
 
     let initial = await coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: factory
     )
@@ -159,9 +153,8 @@ extension AutomaticDispatcherCoordinatorTests {
     try await coordinator.activateOne(
       identifier: identifier,
       descriptions: [description],
-      consumer: .sdlHIDAPI,
       isEligible: { _, _ in true },
-      identityProvider: { _, _ in .genericHID },
+      profileProvider: { _ in .generic },
       factory: factory
     )
     #expect(second.counts().activations == 1)
@@ -183,8 +176,7 @@ extension AutomaticDispatcherCoordinatorTests {
     let backend = InstallationBackend(stage: stage, gate: gate)
     async let lease = coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: { _ in backend }
     )
@@ -198,8 +190,7 @@ extension AutomaticDispatcherCoordinatorTests {
     #expect(backend.counts().closes == 1)
     let stale = await coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: { _ in backend }
     )
@@ -216,8 +207,7 @@ extension AutomaticDispatcherCoordinatorTests {
     let replacement = InstallationBackend(stage: .activation, gate: InstallationGate())
     let lease = await coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: { _ in original }
     )
@@ -225,8 +215,7 @@ extension AutomaticDispatcherCoordinatorTests {
     await lease?.release()
     async let replaced = coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .appleGameController,
+      profile: .xboxOneSBluetooth,
       isEligible: { _, _ in true },
       factory: { _ in replacement }
     )
@@ -249,8 +238,7 @@ extension AutomaticDispatcherCoordinatorTests {
     let backend = InstallationBackend(stage: .activation, gate: InstallationGate())
     async let lease = coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .sdlHIDAPI,
-      identity: .genericHID,
+      profile: .generic,
       isEligible: { _, _ in
         await gate.suspend()
         return true
@@ -266,26 +254,20 @@ extension AutomaticDispatcherCoordinatorTests {
   }
 
   @Test(.timeLimit(.minutes(1)))
-  func failedEngineVariantActivationRestoresPriorTarget() async throws {
+  func failedProfileReplacementActivationRestoresPriorTarget() async throws {
     let coordinator = AutomaticDispatcherCoordinator()
     let original = InstallationBackend(stage: .none, gate: InstallationGate())
     let failed = InstallationBackend(stage: .none, gate: InstallationGate(), failsActivation: true)
     let restored = InstallationBackend(stage: .none, gate: InstallationGate())
-    let canonical = AutomaticCompatibilityTarget.appleGameController
-    let gecko = AutomaticCompatibilityTarget(
-      identity: .appleGameController,
-      reportVariant: .geckoXboxOneS
-    )
     let canonicalBuilds = AutomaticBuildCounter()
-    let factory: AutomaticDispatcherCoordinator.Factory = { target in
-      if target == gecko { return failed }
+    let factory: AutomaticDispatcherCoordinator.Factory = { profile in
+      if profile == .xboxOneSBluetooth { return failed }
       return canonicalBuilds.next() == 0 ? original : restored
     }
 
     let first = await coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .blinkGamepad,
-      identity: canonical,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: factory
     )
@@ -293,8 +275,7 @@ extension AutomaticDispatcherCoordinatorTests {
     await first?.release()
     let replacement = await coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .blinkGamepad,
-      identity: gecko,
+      profile: .xboxOneSBluetooth,
       isEligible: { _, _ in true },
       factory: factory
     )
@@ -305,8 +286,7 @@ extension AutomaticDispatcherCoordinatorTests {
     #expect(restored.counts() == (1, 0))
     let retained = await coordinator.leaseForDispatch(
       controller: identifier,
-      consumer: .blinkGamepad,
-      identity: canonical,
+      profile: .generic,
       isEligible: { _, _ in true },
       factory: factory
     )

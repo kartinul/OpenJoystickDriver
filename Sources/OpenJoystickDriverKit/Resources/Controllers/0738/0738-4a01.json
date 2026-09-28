@@ -2,12 +2,13 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 1848,
   "productID": 18945,
-  "transport": "usb",
   "protocol": {
-    "driver": "GIP",
-    "variant": "xboxOne",
-    "quirks": [
-      "triggersToButtons"
+    "family": "xbox.gip"
+  },
+  "capabilities": {
+    "absent": [
+      "left-trigger",
+      "right-trigger"
     ]
   }
 }

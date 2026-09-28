@@ -55,7 +55,6 @@ extension AutomaticDispatcherCoordinator {
       do {
         let lease = try await acquire(
           identifier,
-          consumer: context.consumer,
           target: context.target,
           isEligible: context.isEligible,
           factory: context.factory
@@ -74,7 +73,6 @@ extension AutomaticDispatcherCoordinator {
     do {
       let lease = try await acquire(
         identifier,
-        consumer: context.consumer,
         target: context.target,
         isEligible: context.isEligible,
         factory: context.factory
@@ -83,7 +81,7 @@ extension AutomaticDispatcherCoordinator {
     } catch { return }
   }
 
-  func installedTargets() -> [DeviceIdentifier: AutomaticCompatibilityTarget] {
+  func installedTargets() -> [DeviceIdentifier: VirtualHIDProfileID] {
     entries.reduce(into: [:]) { targets, element in
       guard element.value.installed != nil, let target = element.value.target else { return }
       targets[element.key] = target
@@ -109,7 +107,7 @@ extension AutomaticDispatcherCoordinator {
         entry.lastFailure.map { "failure=\($0)" }
         ?? "status=\(entry.installed?.backend.status ?? "none")"
       return "controller=\(identifier), session=\(entry.sessionGeneration), "
-        + "publication=\(entry.publicationGeneration), target=\(target.identity.rawValue), "
+        + "publication=\(entry.publicationGeneration), target=\(target.rawValue), "
         + "last-attempted=\(attempted), last-completed=\(completed), "
         + "\(result), recovery=\(entry.recoveryState)"
     }.sorted()
@@ -170,7 +168,6 @@ extension AutomaticDispatcherCoordinator {
     do {
       let lease = try await acquire(
         controller,
-        consumer: context.consumer,
         target: context.target,
         isEligible: context.isEligible,
         factory: context.factory
@@ -219,7 +216,6 @@ extension AutomaticDispatcherCoordinator {
       return
     }
     closed = true
-    foreground &+= 1
     let slots = entries.values.compactMap(\.installed)
     let tasks = entries.values.flatMap { $0.tasks.values.map(\.task) }
     for identifier in entries.keys {

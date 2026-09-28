@@ -8,17 +8,21 @@
   @MainActor
   final class InputTestLiveState: ObservableObject {
     @Published
-    private(set) var snapshot: DeviceInputState
+    private(set) var snapshot: ControllerState
+    /// The selected controller's family labels, which name its controls.
+    private(set) var labels: ControllerButtonLabels
 
-    init(snapshot: DeviceInputState = DeviceInputState(vendorID: 0, productID: 0)) {
+    init(snapshot: ControllerState = .neutral, labels: ControllerButtonLabels = .standard) {
       self.snapshot = snapshot
+      self.labels = labels
     }
 
-    func reset(vendorID: UInt16, productID: UInt16) {
-      update(DeviceInputState(vendorID: vendorID, productID: productID))
+    func reset(labels: ControllerButtonLabels) {
+      self.labels = labels
+      update(.neutral)
     }
 
-    func update(_ nextSnapshot: DeviceInputState) {
+    func update(_ nextSnapshot: ControllerState) {
       guard snapshot != nextSnapshot else { return }
       snapshot = nextSnapshot
     }

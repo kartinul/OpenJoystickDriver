@@ -5,10 +5,8 @@
     "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
     "vendorID": 55255,
     "productID": 65,
-    "transport": "hid",
     "protocol": {
-      "driver": "Flydigi",
-      "variant": "flydigi"
+      "family": "vendor.flydigi"
     }
   }
 }

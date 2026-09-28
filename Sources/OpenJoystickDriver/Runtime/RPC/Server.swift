@@ -30,21 +30,20 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
   let compatibilityTransitionClock: CompatibilityTransitionClock
   let connectedIdentifierProvider: @Sendable () async -> [DeviceIdentifier]
   let feedbackGate: CompatibilityFeedbackGate
+  /// Service settings storage; also backs `virtualHIDProfileOverrides`.
+  let defaults: UserDefaults
+  let virtualHIDProfileOverrides: VirtualHIDProfileOverrideStore
   let userSpaceDispatcherBuilder:
-    (@Sendable (CompatibilityIdentity) throws -> any CompatibilityUserSpaceOutputDispatching)?
+    (@Sendable () throws -> any CompatibilityUserSpaceOutputDispatching)?
   let userSpaceLock = NSLock()
   var userSpaceDispatcher: (any CompatibilityUserSpaceOutputDispatching)?
   var userSpaceEnabled: Bool
   var userSpaceStatus: String = "off"
-  var compatibilityIdentity: CompatibilityIdentity
-  var persistedCompatibilityIdentity: CompatibilityIdentity
-  var compatibilityLiveIdentity: CompatibilityIdentity?
-  var compatibilityRetrySnapshot: CompatibilityRetrySnapshot?
   var userSpaceCloseSlot: CompatibilityBackendCloseSlot?
   var rpcServer: LocalServiceRPCServer?
   var compatibilityServerStopped = false
-  static let compatibilityIdentityDefaultsKey = "CompatibilityIdentity"
-  static let compatibilityRetrySnapshotDefaultsKey = "CompatibilityRetrySnapshot"
+  /// Retired setting that `resetSettings` removes; nothing reads it.
+  static let legacyCompatibilityRetrySnapshotDefaultsKey = "CompatibilityRetrySnapshot"
 
   /// Creates a server backed by the device manager, permissions, and output dispatchers.
   init(
@@ -55,12 +54,12 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
     remappingRouter: RemappingOutputRouter,
     postEventAccess: CoreGraphicsPostEventAccess,
     userSpaceDispatcherBuilder: (
-      @Sendable (CompatibilityIdentity) throws -> any CompatibilityUserSpaceOutputDispatching
+      @Sendable () throws -> any CompatibilityUserSpaceOutputDispatching
     )? = nil,
     connectedIdentifierProvider: (@Sendable () async -> [DeviceIdentifier])? = nil,
     compatibilityTransitionTimeouts: CompatibilityTransitionTimeouts = .standard,
     compatibilityTransitionClock: CompatibilityTransitionClock = .system,
-    initializeCompatibilityBackend: Bool = true
+    defaults: UserDefaults = .standard
   ) {
     self.deviceManager = deviceManager
     self.permissionManager = permissionManager
@@ -79,23 +78,11 @@ public final class ApplicationServiceServer: NSObject, @unchecked Sendable {
     self.compatibilityTransitionTimeouts = compatibilityTransitionTimeouts
     self.compatibilityTransitionClock = compatibilityTransitionClock
     self.feedbackGate = CompatibilityFeedbackGate(deviceManager: deviceManager)
+    self.defaults = defaults
+    self.virtualHIDProfileOverrides = VirtualHIDProfileOverrideStore(defaults: defaults)
     self.userSpaceEnabled = false
-    let savedCompat = UserDefaults.standard.string(forKey: Self.compatibilityIdentityDefaultsKey)
-    let persistence = CompatibilityIdentity.persisted(from: savedCompat)
-    if persistence.didRewrite {
-      UserDefaults.standard.set(
-        persistence.identity.rawValue,
-        forKey: Self.compatibilityIdentityDefaultsKey
-      )
-    }
-    self.compatibilityIdentity = persistence.identity
-    self.persistedCompatibilityIdentity = persistence.identity
-    self.compatibilityLiveIdentity = nil
-    self.compatibilityRetrySnapshot = Self.loadCompatibilityRetrySnapshot()
     self.userSpaceCloseSlot = nil
     super.init()
-
-    if initializeCompatibilityBackend { _ = self.initializeCompatibilityBackend() }
   }
 
   /// Starts the authenticated local RPC server used by the headless host and CLI.

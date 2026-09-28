@@ -7,8 +7,12 @@ extension DevicePipeline {
       return
     }
     usbHandle = nil
+    stopUSBKeepAlive()
     await handle.close()
-    (parser as? any InputParserSessionLifecycle)?.resetProtocolState()
+    driver.resetProtocolState()
+    // The driver forgot presence with the session, so the next session's presence reply must
+    // connect the controller again here too.
+    if requiresInputConnectionBeforeOutput(), inputConnectionActive { await endInputConnection() }
   }
 
 }

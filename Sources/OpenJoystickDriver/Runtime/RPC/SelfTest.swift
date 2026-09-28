@@ -1,4 +1,3 @@
-import CoreHID
 import Foundation
 import IOKit
 import IOKit.hid
@@ -57,36 +56,6 @@ extension ApplicationServiceServer {
   }
 
   func runVirtualDeviceSelfTestInternal(
-    seconds: Int
-  ) async -> ApplicationServiceVirtualDeviceSelfTestPayload {
-    if #available(macOS 15, *) { return await runCoreHIDSelfTest(seconds: seconds) }
-    return await runIOHIDSelfTest(seconds: seconds)
-  }
-
-  @available(macOS 15, *)
-  private func runCoreHIDSelfTest(
-    seconds: Int
-  ) async -> ApplicationServiceVirtualDeviceSelfTestPayload {
-    let observer = CoreHIDSelfTestObserver()
-    await observer.start()
-    try? await Task.sleep(for: .milliseconds(100))
-    let identifier = await selfTestIdentifier()
-    let userSpace = userSpaceLock.withLock { userSpaceDispatcher }
-    async let exercise: Void = exerciseUserSpaceSelfTest(userSpace, identifier: identifier)
-    async let window: Void = waitForSelfTestWindow(seconds: seconds)
-    _ = await (exercise, window)
-    let counts = await observer.stop()
-    return ApplicationServiceVirtualDeviceSelfTestPayload(
-      seconds: seconds,
-      userSpaceValueEvents: counts.values,
-      userSpaceReportEvents: counts.reports,
-      userSpaceRequired: true,
-      userSpaceStatus: currentUserSpaceStatus()
-    )
-  }
-
-  @available(macOS, introduced: 10.15, obsoleted: 15.0)
-  private func runIOHIDSelfTest(
     seconds: Int
   ) async -> ApplicationServiceVirtualDeviceSelfTestPayload {
     let counter = SelfTestCounter()
@@ -171,7 +140,7 @@ extension ApplicationServiceServer {
     identifier: DeviceIdentifier
   ) async {
     for probe in 0..<4 {
-      await userSpace?.dispatch(events: [], from: identifier)
+      await userSpace?.activateOutput(for: identifier)
       if probe < 3 { try? await Task.sleep(nanoseconds: Self.probeDelayNanoseconds) }
     }
   }
@@ -180,72 +149,4 @@ extension ApplicationServiceServer {
     try? await Task.sleep(nanoseconds: UInt64(seconds) * Self.nanosecondsPerSecond)
   }
 
-}
-
-@available(macOS 15, *)
-private actor CoreHIDSelfTestObserver {
-  private var managerTask: Task<Void, Never>?
-  private var deviceTasks: [UInt64: Task<Void, Never>] = [:]
-  private var valueEvents = 0
-  private var reportEvents = 0
-
-  func start() {
-    let manager = HIDDeviceManager()
-    managerTask = Task { [weak self] in
-      let criteria = [
-        AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
-          primaryUsage: .genericDesktop(.gamepad)
-        ),
-        AppleGameControllerSyntheticHID.coreHIDMatchingCriteria(
-          primaryUsage: .genericDesktop(.joystick)
-        ),
-      ]
-      do {
-        for try await notification in await manager.monitorNotifications(matchingCriteria: criteria)
-        {
-          if Task.isCancelled { break }
-          guard case .deviceMatched(let reference) = notification else { continue }
-          await self?.add(reference)
-        }
-      } catch {}
-    }
-  }
-
-  func stop() -> (values: Int, reports: Int) {
-    managerTask?.cancel()
-    managerTask = nil
-    deviceTasks.values.forEach { $0.cancel() }
-    deviceTasks.removeAll()
-    return (valueEvents, reportEvents)
-  }
-
-  private func add(_ reference: HIDDeviceClient.DeviceReference) async {
-    guard deviceTasks[reference.deviceID] == nil,
-      !AppleGameControllerSyntheticHID.isSyntheticRegistryEntry(id: reference.deviceID),
-      let client = HIDDeviceClient(deviceReference: reference),
-      UserSpaceVirtualDeviceConstants.isOJDUserSpaceSerial(await client.serialNumber)
-    else { return }
-    let task = Task { [weak self] in
-      let elements = await client.elements.filter { $0.type == .input }
-      do {
-        for try await notification in await client.monitorNotifications(
-          reportIDsToMonitor: [HIDReportID.allReports],
-          elementsToMonitor: elements
-        ) {
-          if Task.isCancelled { break }
-          switch notification {
-          case .inputReport: await self?.recordReport()
-          case .elementUpdates(let values): await self?.recordValues(values.count)
-          case .deviceRemoved: return
-          case .deviceSeized, .deviceUnseized: break
-          @unknown default: break
-          }
-        }
-      } catch {}
-    }
-    deviceTasks[reference.deviceID] = task
-  }
-
-  private func recordReport() { reportEvents += 1 }
-  private func recordValues(_ count: Int) { valueEvents += count }
 }

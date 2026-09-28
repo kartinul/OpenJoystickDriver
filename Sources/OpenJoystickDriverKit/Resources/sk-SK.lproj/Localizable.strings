@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Kontrola pripojených ovládačov…";
 "status.refreshingProfile" = "Obnovovanie stavu profilu…";
 "status.loadingProfiles" = "Načítavanie profilov…";
-"status.updatingIdentity" = "Aktualizácia identity ovládača…";
 "status.listening" = "Počúvanie…";
 "status.readyToListen" = "Pripravené na počúvanie";
 "status.checkingInput" = "Kontrola";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Ovládače";
 "settings.controllerDisconnectedNotifications" = "Správca odpojený";
 "settings.controllerDisconnectedShort" = "Odpojované";
-"settings.controllerIdentity" = "Identita ovládača";
 "settings.controllerNotifications" = "Pripojený ovládač";
 "settings.diagnostics" = "Diagnostika";
 "settings.service" = "Služba";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Vybíjanie";
 "controllers.charging" = "Nabíjanie";
 "controllers.batteryFull" = "Plná";
+"controllers.notChargeable" = "Nedá sa nabíjať";
 "controllers.batteryAccessibilityDetails" = "Batéria: %@. Stav nabíjania: %@. Stav kábla: %@.";
 "controllers.activeProfile" = "Aktívny profil";
 "controllers.profileChecking" = "Kontrola…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Aktívny profil nie je dostupný";
 "controllers.profileLoadError" = "Aktívny profil sa nepodarilo načítať";
 "controllers.protocol" = "Protokol";
-"controllers.parser" = "Analyzátor";
 "controllers.serialNumber" = "Sériové číslo";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Vstupný koncový bod";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Chyba aktívneho profilu: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokol: %@. Parser: %@. Sériové číslo: %@. USB VID/PID: %@. Vstupný koncový bod: %@. Výstupný koncový bod: %@.";
 "controllers.publishedAs" = "Vydavateľstvo";
-"identity.title" = "Identita ovládača";
-"identity.needsAttention" = "Vyžaduje pozornosť";
-"identity.error" = "Chyba identity ovládača";
-"identity.updating" = "Aktualizácia identity ovládača…";
-"identity.reset" = "Obnoviť odporúčané";
-"identity.checking" = "Kontrola";
-"identity.globalScope" = "Platí pre všetky virtuálne kontroléry uverejnené OpenJoystickDriver.";
-"identity.unavailable" = "Nedostupné";
-"identity.notSelected" = "Nevybrané";
+"controllers.nativeGamepadNotPublished" = "Natívny herný ovládač macOS, nepublikovaný";
+"virtualProfile.advanced" = "Rozšírené";
+"virtualProfile.title" = "Virtuálny profil HID";
+"virtualProfile.modelScope" = "Platí pre každý pripojený ovládač tohto modelu.";
+"virtualProfile.sourceOverride" = "Prepísanie";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automaticky, prepísanie odmietnuté";
+"virtualProfile.none" = "Žiadny virtuálny profil HID";
+"virtualProfile.unavailable" = "Žiadny virtuálny profil HID nemôže reprezentovať tento ovládač.";
+"virtualProfile.updating" = "Aktualizácia virtuálneho profilu HID…";
+"virtualProfile.live" = "Aktívny profil";
+"virtualProfile.failure.unknownProfile" = "Tento virtuálny profil HID je neznámy. Nič sa neuložilo.";
+"virtualProfile.failure.controllerNotFound" = "Ovládač bol odpojený alebo ho nemožno nájsť. Prepísanie sa nezmenilo.";
+"virtualProfile.failure.overrideRejected" = "Prepísanie je uložené, ale tento ovládač ho nemôže použiť, a preto vyberá automaticky.";
+"virtualProfile.failure.activationFailed" = "Aktivácia zlyhala, preto sa obnovil predchádzajúci virtuálny profil HID: %@";
+"virtualProfile.failure.outputDisabled" = "Prepísanie je uložené a použije sa po zapnutí virtuálneho výstupu.";
+"virtualProfile.failure.serverStopped" = "Služba sa zastavila. Prepísanie sa nezmenilo.";
+"virtualProfile.failure.persistenceFailed" = "Prepísanie sa nepodarilo uložiť. Nič sa neuložilo.";
+"virtualProfile.storeError" = "Prepísania virtuálneho profilu HID nemožno načítať (%@). Ovládače vyberajú automaticky.";
+"virtualProfile.legacyIdentityRejected" = "Vyradené nastavenie identity ovládača %@ sa už nepoužíva. Spustite controller virtual reset --all a vymažte ho.";
 "keyboard.noKey" = "Nie je vybratý žiadny kláves";
 "keyboard.pressKey" = "Stlačte kláves…";
 "keyboard.captureKey" = "Zachytiť kláves";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Aktuálny stav";
 "debug.runtime" = "Behové prostredie";
 "debug.controllers" = "Ovládače";
-"debug.controllerIdentity" = "Identita ovládača";
 "debug.unavailable" = "Behové prostredie · nedostupné";
 "debug.needsAttention" = "Behové prostredie · vyžaduje pozornosť";
 "debug.diagnostics" = "Diagnostika";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Výstup ovládača je vypnutý.";
 "debug.outputNeedsAttention" = "Výstup ovládača vyžaduje pozornosť.";
 "debug.serviceUnavailable" = "Diagnostika služby teraz nie je dostupná.";
-"error.selectedOutputUnavailable" = "Vybraný výstup ovládača nie je dostupný.";
-"error.selectedOutputEnableFailed" = "Vybraný výstup ovládača sa nepodarilo povoliť.";
 "error.profileChanged" = "Tento profil sa zmenil inde. Načítajte znova alebo pokračujte v úpravách.";
 "error.duplicateProfile" = "Profil s týmto názvom už existuje.";
 "error.profileMissing" = "Tento profil už nie je dostupný.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Behové prostredie";
 "common.controllers" = "Ovládače";
 "common.profiles" = "Profily";
-"common.controllerIdentity" = "Identita ovládača";
 "common.protocol" = "Protokol";
-"common.parser" = "Analyzátor";
 "common.serialNumber" = "Sériové číslo";
 "common.inputEndpoint" = "Vstupný koncový bod";
 "common.outputEndpoint" = "Výstupný koncový bod";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Vybraná položka profilu už nie je k dispozícii.";
 "cli.catalog.app_ready.summary" = "Skontrolovať pripravenosť overenej aplikačnej služby";
 "cli.catalog.app_status.summary" = "Zobraziť stav aplikačnej služby";
-"cli.catalog.compat.summary" = "Spravovať kompatibilitu virtuálneho ovládača";
 "cli.catalog.controller_list.summary" = "Vypísať pripojené ovládače";
 "cli.catalog.controller_output.summary" = "Otestovať podporovaný výstup fyzického ovládača";
 "cli.catalog.controller_packets.summary" = "Zobraziť nedávne pakety ovládača";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Zobraziť stav ovládača a behového prostredia";
 "cli.catalog.test.summary" = "Otestovať doručovanie vstupu virtuálneho ovládača";
 "cli.catalog.update.summary" = "Skontrolovať dostupné aktualizácie na GitHube";
-"cli.compat.identity" = "identita kompatibility: %@";
-"cli.compat.identity_unknown" = "identita kompatibility: neznáma";
-"cli.compat.set_failed" = "Identitu kompatibility sa nepodarilo nastaviť na %@. Spustite nainštalovanú aplikáciu a overte prístup k Monitorovaniu vstupu a Prístupnosti.";
-"cli.compat.usage" = "Použitie: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "stav používateľského priestoru: %@";
 "cli.controller.allAppleEntries" = "Všetky presné položky katalógu Apple:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Páry Apple  : %d presných položiek VID/PID";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Žiadny pripojený ovládač nezodpovedá --device %@.";
 "cli.controller.selection.multiple" = "Zodpovedá viacero ovládačov. Vyberte jeden pomocou --device:\n  %@";
 "cli.controller.selection.none" = "Nie je pripojený žiadny ovládač.";
+"cli.controller.virtual.live" = "Virtuálny profil HID: %@ (%@)";
+"cli.controller.virtual.none" = "Virtuálny profil HID: žiadny (%@)";
+"cli.controller.virtual.failed" = "Požiadavka na virtuálny profil HID zlyhala: %@";
+"cli.controller.virtual.unknown_profile" = "Neznámy virtuálny profil HID „%@“. Použite jeden z: %@.";
+"cli.controller.virtual.missing_profile" = "„controller virtual set“ vyžaduje virtuálny profil HID. Použite jeden z: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "„--all“ nemožno kombinovať s --vid, --pid ani --device.";
+"cli.controller.virtual.reset_all.success" = "OK: všetky prepísania virtuálneho profilu HID boli vymazané.";
+"cli.controller.virtual.reset_all.failed" = "Nastavenia sa nepodarilo resetovať. Spustite nainštalovanú aplikáciu a overte jej oprávnenia.";
 "cli.controller.selection.vid_pid_missing" = "Žiadny pripojený ovládač nezodpovedá %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Zadajte VID aj PID, alebo obe vynechajte.";
 "cli.controller.serviceControllers" = "Ovládače (z bežiacej aplikačnej služby):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Tip: udeľte požadované oprávnenie a prístup k Monitorovaniu vstupu.";
 "cli.controller.usbControllers" = "Ovládače USB (trieda 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Zadajte VID aj PID, alebo obe vynechajte, keď je pripojený jeden ovládač.";
-"cli.diagnose.advisory_candidate" = "    Kandidát poradného protokolu: %@";
 "cli.diagnose.app_missing" = "  Aplikácia: chýba v %@";
 "cli.diagnose.app_missing_fix" = "  Náprava: zostavte a nainštalujte aplikáciu do /Applications";
 "cli.diagnose.app_present" = "  Aplikácia: prítomná";
 "cli.diagnose.binary_path" = "Binárny súbor: %@";
-"cli.diagnose.catalog_conflict" = "      Pozorovanie je v rozpore s rodinou katalógu; parser bez zmeny";
-"cli.diagnose.catalog_parser" = "      Parser katalógu zostáva %@ (%@)";
 "cli.diagnose.dext_found" = "  Nájdené balíky .dext:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      koncový bod 0x%02X %@ %@ maxPacket=%@ interval=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Neznáma krivka odozvy „%@“.";
 "cli.mapping.double_tap_format" = "--double-tap očakáva <ms>:<target>, napr. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Použitie: OpenJoystickDriver --headless map <command>\n\nPríkazy:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nZdroj: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nCieľ: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nVoľby osi:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nVoľby turba (iba tlačidlá klávesnice a myši):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nVoľby aktivácie (iba tlačidlá klávesnice a myši, vzájomne sa vylučujúce s turbom):\n  --long-hold <ms>:<target>     napr. --long-hold 500:key:b\n  --double-tap <ms>:<target>    napr. --double-tap 300:key:c\n\n<profile> prijíma UUID alebo presný názov profilu bez rozlíšenia veľkosti písmen.\n<id> prijíma desiatkovú alebo šestnástkovú hodnotu s prefixom 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Použitie: OpenJoystickDriver --headless map <command>\n\nPríkazy:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nZdroj: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nCieľ: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nVoľby osi:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nVoľby turba (iba tlačidlá klávesnice a myši):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nVoľby aktivácie (iba tlačidlá klávesnice a myši, vzájomne sa vylučujúce s turbom):\n  --long-hold <ms>:<target>     napr. --long-hold 500:key:b\n  --double-tap <ms>:<target>    napr. --double-tap 300:key:c\n\n<profile> prijíma UUID alebo presný názov profilu bez rozlíšenia veľkosti písmen.\n<id> prijíma desiatkovú alebo šestnástkovú hodnotu s prefixom 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ musí byť 16-bitový desiatkový identifikátor alebo šestnástkový s prefixom 0x.";
 "cli.mapping.jsonEncodeFailed" = "JSON v UTF-8 sa nepodarilo zakódovať.";
 "cli.mapping.layer_action_unknown" = "Neznáma akcia vrstvy „%@“. Očakáva sa: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "Aplikačná služba OpenJoystickDriver nebeží.";
 "cli.runtime.sample_limit" = "Konfigurácia by zhromaždila %d vzoriek; zvýšte --interval-ms.";
 "cli.runtime.stable_note" = "Stabilná obmedzená záťaž je dôkazom pre túto záťaž, nie dôkazom, že neexistujú žiadne úniky.";
-"cli.settings.reset.failed" = "Nastavenia sa nepodarilo resetovať. Spustite nainštalovanú aplikáciu a overte jej oprávnenia.";
-"cli.settings.reset.next" = "Ďalej: spustite compat set <identity> a zvoľte identitu kompatibility.";
-"cli.settings.reset.success" = "OK: nastavenia aplikačnej služby boli resetované.";
 "cli.status.access_denied" = "Ak je prístup odmietnutý, spustite --headless permissions request a schváľte Monitorovanie vstupu a Prístupnosť v Nastaveniach systému.";
 "cli.status.heading" = "Stav OpenJoystickDriver";
 "cli.status.json_error" = "JSON stavu sa nepodarilo zakódovať: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Stav        : %@";
 "cli.updates.unknown_option" = "Neznáma voľba updates: %@";
 "common.unknown" = "Neznáme";
-"compatibility.appleGameController" = "Jablko GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (origín)";
 "developer.buttons" = "Tlačidlá";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Tlačidlo B";
 "inputTest.bCircle" = "B / kruh";
 "inputTest.brightness" = "Jasnosť";
-"inputTest.circle" = "Kruh";
 "inputTest.color" = "Farba";
 "inputTest.controls" = "Živý vstup";
-"inputTest.cross" = "Krížik";
 "inputTest.disconnected" = "Správca odpojený";
 "inputTest.dpadDown" = "Krížový ovládač nadol";
 "inputTest.dpadLeft" = "Krížový ovládač doľava";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Pre tento ovládač nie sú dostupné ovládače osvetlenia.";
 "inputTest.live" = "Vstup aktivný";
 "inputTest.menu" = "Ponuka";
-"inputTest.minus" = "Mínus";
 "inputTest.off" = "Vypnuté";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Možnosti";
 "inputTest.outputError" = "Fyzická výstupná chyba";
 "inputTest.outputRejected" = "Riadiaci ovládač odmietol tento výstupný test.";
 "inputTest.permissionRequired" = "Vstupné monitorovanie vyžadované povolenie";
 "inputTest.playerIndicator" = "Indikator hráča";
-"inputTest.plus" = "Navyše";
 "inputTest.pressed" = "Stlačené";
-"inputTest.psButton" = "Tlačidlo PS";
 "inputTest.released" = "Uvoľnené";
 "inputTest.rightBumper" = "Pravé rameno";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Pravé Y";
 "inputTest.rumble" = "Rachot";
 "inputTest.rumbleUnavailable" = "Rumble nepodporuje tento ovládač.";
-"inputTest.share" = "Zdieľať";
-"inputTest.square" = "Štvorec";
 "inputTest.stale" = "Prerušenie vstupu";
 "inputTest.start" = "Začnite vstupné testovanie";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Živý vstup";
 "inputTest.tabMotion" = "Návrh";
 "inputTest.tabOutput" = "Výstup";
-"inputTest.steamButton" = "Tlačidlo Steam";
 "inputTest.summary" = "Skúste tlačidlá, palice, spúšťače, zvon a ovládacie osvetlenie.";
 "inputTest.testRumble" = "Testový Rumble";
 "inputTest.title" = "Vstupné testovanie";
-"inputTest.triangle" = "Trojuholník";
 "inputTest.unavailable" = "Vstup nie je k dispozícii";
 "inputTest.view" = "Zobraziť";
 "inputTest.windowTitle" = "Vstupné testovanie %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Vybrané Joy-Cons nemohli byť spárované.";
 "profiles.joyConExplicitSession" = "Začal som s výslovným párovým zasadnutím";
 "profiles.joyConSessionState" = "Výrazné spáranie";
-"profiles.gyro.virtualMotion" = "Vnútro kalibrované virtuálne pohyby";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ rumuľovanie (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Správca odpojený";
 "controllers.resume" = "Skúsiť znova";
 "controllers.disconnectFromOJD" = "Správca odpojený";
-"error.compatibilityTransitionDetailed" = "Vybraný výstup ovládača sa nepodarilo povoliť. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Vybraný výstup ovládača sa nepodarilo povoliť.";
 "cli.catalog.controller_disconnect.summary" = "Správca odpojený";
 "cli.catalog.controller_resume.summary" = "Skúsiť znova — Správca odpojený";
+"cli.catalog.controller_virtual_set.summary" = "Prepísať virtuálny profil HID ovládača";
+"cli.catalog.controller_virtual_reset.summary" = "Vyberať virtuálny profil HID ovládača automaticky, alebo vymazať všetky prepísania pomocou --all";
 "cli.controller.disconnected" = "Správca odpojený";
 "cli.controller.resumed" = "Vstup aktivný";
 

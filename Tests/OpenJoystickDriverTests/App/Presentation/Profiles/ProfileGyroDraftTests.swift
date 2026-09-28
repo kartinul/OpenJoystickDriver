@@ -10,8 +10,7 @@ struct ProfileGyroDraftTests {
       pointerPointsPerDegree: 2.5,
       fullStickDegreesPerSecond: 180,
       activationMode: .toggle,
-      activationSource: .button(.south),
-      virtualMotion: true
+      activationSource: .button(.south)
     )
     let draft = ProfileGyroDraft(output)
     #expect(try draft.validatedOutput() == output)

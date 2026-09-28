@@ -66,6 +66,13 @@ def validate_record(
         suffix = f" at {location}" if location else ""
         raise ValidationError(f"{path}{suffix}: {error.message}") from error
 
+    # JSON Schema cannot express disjoint arrays; the runtime decoder rejects overlap too.
+    capabilities = record.get("capabilities", {})
+    overlap = set(capabilities.get("absent", [])) & set(capabilities.get("present", []))
+    require(
+        not overlap, f"{path}: capabilities both absent and present: {sorted(overlap)}"
+    )
+
     vendor_id = record["vendorID"]
     product_id = record["productID"]
     if enforce_path:
@@ -73,7 +80,7 @@ def validate_record(
         expected = expected_relative_path(vendor_id, product_id)
         require(relative == expected, f"{path}: path must be {expected}")
 
-    return vendor_id, product_id, record["protocol"]["driver"]
+    return vendor_id, product_id, record["protocol"]["family"]
 
 
 def validate_catalog(record_dir: pathlib.Path = RECORD_DIR) -> list[pathlib.Path]:

@@ -51,12 +51,12 @@
             value: String(format: "%04X:%04X", device.vendorID, device.productID)
           ),
           DeveloperValueRow(
-            label: OJDLocalized.string("common.parser", fallback: "Parser"),
-            value: device.parser
+            label: OJDLocalized.string("common.protocol", fallback: "Protocol"),
+            value: "\(protocolName(device.protocolBinding)) (\(device.protocolBinding))"
           ),
           DeveloperValueRow(
-            label: OJDLocalized.string("common.protocol", fallback: "Protocol"),
-            value: protocolName(device.protocolVariant)
+            label: OJDLocalized.string("common.serialNumber", fallback: "Serial number"),
+            value: device.serialNumber ?? "—"
           )
         )
         factRow(
@@ -80,15 +80,15 @@
         factRow(
           DeveloperValueRow(
             label: OJDLocalized.string("developer.buttons", fallback: "Buttons"),
-            value: buttonValue(model.latestInput?.pressedButtons)
+            value: buttonValue(model.latestInput?.pressed)
           ),
           DeveloperValueRow(
             label: OJDLocalized.string("developer.leftStick", fallback: "Left stick"),
-            value: stickValue(x: model.latestInput?.leftStickX, y: model.latestInput?.leftStickY)
+            value: stickValue(model.latestInput?.leftStick)
           ),
           DeveloperValueRow(
             label: OJDLocalized.string("developer.rightStick", fallback: "Right stick"),
-            value: stickValue(x: model.latestInput?.rightStickX, y: model.latestInput?.rightStickY)
+            value: stickValue(model.latestInput?.rightStick)
           )
         )
       }
@@ -106,48 +106,38 @@
       }
     }
 
-    private func stickValue(x: Float?, y: Float?) -> String {
-      String(format: "%.3f, %.3f", x ?? 0, y ?? 0)
+    /// Raw canonical values; Y points up.
+    private func stickValue(_ stick: StickPosition?) -> String {
+      let stick = stick ?? .center
+      return "\(stick.x.rawValue), \(stick.y.rawValue)"
     }
 
-    private func buttonValue(_ buttons: [String]?) -> String {
-      guard let buttons, !buttons.isEmpty else {
+    private func buttonValue(_ pressed: Set<ControlID>?) -> String {
+      guard let pressed, !pressed.isEmpty else {
         return OJDLocalized.string("common.none", fallback: "None")
       }
-      return buttons.sorted().joined(separator: ", ")
+      return ControlID.allCases.filter(pressed.contains).map(\.rawValue).joined(separator: ", ")
     }
 
-    private func protocolName(_ value: ControllerProtocolVariant) -> String {
-      switch value {
-      case .xid: return OJDLocalized.string("controller.originalXbox", fallback: "Original Xbox")
-      case .xbox360: return OJDLocalized.string("controller.xbox360", fallback: "Xbox 360")
-      case .xbox360Wireless:
-        return OJDLocalized.string(
-          "controller.xbox360WirelessDeveloper",
-          fallback: "Xbox 360 Wireless"
-        )
-      case .xboxOne: return OJDLocalized.string("controller.xboxOne", fallback: "Xbox One")
-      case .dualShock3: return OJDLocalized.string("controller.dualShock3", fallback: "DualShock 3")
-      case .dualShock4: return OJDLocalized.string("controller.dualShock4", fallback: "DualShock 4")
-      case .dualSense: return OJDLocalized.string("controller.dualSense", fallback: "DualSense")
-      case .steamController:
-        return OJDLocalized.string("controller.steamController", fallback: "Steam Controller")
-      case .flydigi: return OJDLocalized.string("controller.flydigi", fallback: "Flydigi")
-      case .gameSirG7ProUSB: return "GameSir G7 Pro USB"
-      case .gameSirEnhancedHID: return "GameSir enhanced HID"
-      case .switchPro:
-        return OJDLocalized.string(
-          "controller.switchProController",
-          fallback: "Switch Pro Controller"
-        )
-      case .xboxAdaptiveJoystick:
-        return OJDLocalized.string(
-          "controller.xboxAdaptiveJoystick",
-          fallback: "Xbox Adaptive Joystick"
-        )
-      case .genericHID:
-        return OJDLocalized.string("controller.standardHID", fallback: "Standard HID")
-      case .unknown: return OJDLocalized.string("common.unknown", fallback: "Unknown")
+    /// Family label; transport variants share their family's label.
+    private func protocolName(_ value: ProtocolBindingID) -> String {
+      switch value.protocolID {
+      case .xboxXID: OJDLocalized.string("controller.originalXbox", fallback: "Original Xbox")
+      case .xboxXUSB where value.variant == .receiver:
+        OJDLocalized.string("controller.xbox360WirelessDeveloper", fallback: "Xbox 360 Wireless")
+      case .xboxXUSB: OJDLocalized.string("controller.xbox360", fallback: "Xbox 360")
+      case .xboxGIP: OJDLocalized.string("controller.xboxOne", fallback: "Xbox One")
+      case .sonySixaxis: OJDLocalized.string("controller.dualShock3", fallback: "DualShock 3")
+      case .sonyDualShock4: OJDLocalized.string("controller.dualShock4", fallback: "DualShock 4")
+      case .sonyDualSense: OJDLocalized.string("controller.dualSense", fallback: "DualSense")
+      case .valveSteamController:
+        OJDLocalized.string("controller.steamController", fallback: "Steam Controller")
+      case .vendorFlydigi: OJDLocalized.string("controller.flydigi", fallback: "Flydigi")
+      case .vendorGameSir where value.variant == .usb: "GameSir G7 Pro USB"
+      case .vendorGameSir: "GameSir enhanced HID"
+      case .nintendoSwitch1:
+        OJDLocalized.string("controller.switchProController", fallback: "Switch Pro Controller")
+      case .hidDescriptor: OJDLocalized.string("controller.standardHID", fallback: "Standard HID")
       }
     }
 

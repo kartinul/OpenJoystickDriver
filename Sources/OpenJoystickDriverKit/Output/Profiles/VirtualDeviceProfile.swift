@@ -52,8 +52,8 @@ public struct VirtualDeviceProfile: Equatable, Sendable {
     transport: "USB"
   )
 
-  /// Xbox One S-shaped generic-HID profile for the explicit Apple/Xbox One
-  /// compatibility routes. This is not XInputHID, XUSB, or GIP emulation.
+  /// Xbox One S Bluetooth identity published by the `hid-xbox-one-s-bt` virtual profile.
+  /// This is not XInputHID, XUSB, or GIP emulation.
   public static let xboxOneS = Self(
     vendorID: 0x045E,
     productID: 0x02FD,
@@ -64,77 +64,6 @@ public struct VirtualDeviceProfile: Equatable, Sendable {
     productName: "Xbox Wireless Controller",
     manufacturer: "Microsoft",
     transport: "Bluetooth"
-  )
-
-  /// Xbox One S Bluetooth identity whose Firefox remapper matches the native report.
-  public static let firefoxXboxOneS = Self(
-    vendorID: 0x045E,
-    productID: 0x02E0,
-    versionNumber: 0x0000,
-    productName: "Xbox Wireless Controller",
-    manufacturer: "Microsoft",
-    transport: "Bluetooth"
-  )
-
-  /// Xbox Series Bluetooth identity used by Apple GameController compatibility.
-  /// The Series profile adds the Consumer Record input used for Share.
-  public static let xboxSeries = Self(
-    vendorID: 0x045E,
-    productID: 0x0B13,
-    versionNumber: 0x0000,
-    productName: "Xbox Wireless Controller",
-    manufacturer: "Microsoft",
-    transport: "Bluetooth"
-  )
-
-  /// Xbox 360 Controller (Wired). First-party SDL HIDAPI / `sdl2-3` spoof target
-  /// for Xbox 360-family clones.
-  ///
-  /// `versionNumber` must be non-zero: SDL on macOS treats `045E:028E` version 0
-  /// as a Steam virtual gamepad and ignores it unless that path is explicitly
-  /// allowed. `0x0114` matches a common wired Xbox 360 `bcdDevice`.
-  ///
-  /// Many macOS stacks do not treat 045E:028E as a standard HID gamepad.
-  public static let xbox360Wired = Self(
-    vendorID: 0x045E,
-    productID: 0x028E,
-    versionNumber: 0x0114,
-    productName: "Xbox 360 Wired Controller",
-    manufacturer: "Microsoft",
-    transport: "USB"
-  )
-
-  /// Sony DualShock 4 USB identity (`054C:09CC`). Official product string is
-  /// "Wireless Controller". Automatic promotion waits for live consumer bind.
-  public static let dualShock4USB = Self(
-    vendorID: 0x054C,
-    productID: 0x09CC,
-    versionNumber: 0x0000,
-    productName: "Wireless Controller",
-    manufacturer: "Sony Interactive Entertainment",
-    transport: "USB"
-  )
-
-  /// Sony DualSense USB identity (`054C:0CE6`). Official product string is
-  /// "Wireless Controller". Automatic promotion waits for live consumer bind.
-  public static let dualSenseUSB = Self(
-    vendorID: 0x054C,
-    productID: 0x0CE6,
-    versionNumber: 0x0000,
-    productName: "Wireless Controller",
-    manufacturer: "Sony Interactive Entertainment",
-    transport: "USB"
-  )
-
-  /// Nintendo Switch Pro USB identity (`057E:2009`). Official product string is
-  /// "Pro Controller". Automatic promotion waits for live consumer bind.
-  public static let switchProUSB = Self(
-    vendorID: 0x057E,
-    productID: 0x2009,
-    versionNumber: 0x0000,
-    productName: "Pro Controller",
-    manufacturer: "Nintendo Co., Ltd.",
-    transport: "USB"
   )
 
   /// Default profile used when no protocol-specific profile is configured.

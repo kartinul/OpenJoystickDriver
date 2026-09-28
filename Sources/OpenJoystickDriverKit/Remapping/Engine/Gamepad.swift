@@ -89,72 +89,8 @@ struct RemappingGamepadAccumulator: Sendable {
 }
 
 extension RemappingGamepadState {
-  /// Produces transitions for the existing virtual controller backends.
-  ///
-  /// Releases precede presses. Axis pairs include their unchanged component, and returning
-  /// to neutral emits explicit zero values without applying a physical-input deadzone.
-  public func events(since previous: Self) -> [ControllerEvent] {
-    let oldButtons = previous.canonicalButtons
-    let newButtons = canonicalButtons
-    var events = oldButtons.subtracting(newButtons).sorted { $0.rawValue < $1.rawValue }.map {
-      ControllerEvent.buttonReleased($0)
-    }
-    events += newButtons.subtracting(oldButtons).sorted { $0.rawValue < $1.rawValue }.map {
-      ControllerEvent.buttonPressed($0)
-    }
-    if dpad != previous.dpad { events.append(.dpadChanged(dpadDirection)) }
-    if value(for: .leftStickX) != previous.value(for: .leftStickX)
-      || value(for: .leftStickY) != previous.value(for: .leftStickY)
-    {
-      events.append(
-        .leftStickChanged(x: Float(value(for: .leftStickX)), y: Float(value(for: .leftStickY)))
-      )
-    }
-    if value(for: .rightStickX) != previous.value(for: .rightStickX)
-      || value(for: .rightStickY) != previous.value(for: .rightStickY)
-    {
-      events.append(
-        .rightStickChanged(x: Float(value(for: .rightStickX)), y: Float(value(for: .rightStickY)))
-      )
-    }
-    if value(for: .leftTrigger) != previous.value(for: .leftTrigger) {
-      events.append(.leftTriggerChanged(Float(value(for: .leftTrigger))))
-    }
-    if value(for: .rightTrigger) != previous.value(for: .rightTrigger) {
-      events.append(.rightTriggerChanged(Float(value(for: .rightTrigger))))
-    }
-    return events
-  }
-
-  private var canonicalButtons: Set<Button> {
-    Set(
-      buttons.compactMap { button -> Button? in
-        switch button {
-        case .leftFunction, .rightFunction, .leftPaddle, .rightPaddle, .leftSL, .leftSR, .rightSL,
-          .rightSR, .leftGrip, .rightGrip, .leftPadClick, .rightPadClick:
-          nil
-        case .south: .a
-        case .east: .b
-        case .west: .x
-        case .north: .y
-        case .leftShoulder: .leftBumper
-        case .rightShoulder: .rightBumper
-        case .leftStick: .leftStick
-        case .rightStick: .rightStick
-        case .start, .options: .start
-        case .back: .back
-        case .share: .share
-        case .guide: .guide
-        case .touchpad: .touchpad
-        case .mute: .mute
-        case .leftTriggerClick: .l2Digital
-        case .rightTriggerClick: .r2Digital
-        }
-      }
-    )
-  }
-
-  private var dpadDirection: DpadDirection {
+  /// The hat direction the held d-pad directions form; opposite directions cancel.
+  var dpadDirection: HatDirection {
     let horizontal = (dpad.contains(.right) ? 1 : 0) - (dpad.contains(.left) ? 1 : 0)
     let vertical = (dpad.contains(.up) ? 1 : 0) - (dpad.contains(.down) ? 1 : 0)
     switch (horizontal, vertical) {

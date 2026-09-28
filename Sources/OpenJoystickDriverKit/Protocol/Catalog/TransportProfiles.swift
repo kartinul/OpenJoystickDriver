@@ -4,7 +4,6 @@ import Foundation
 public struct DeviceTransportProfile: Equatable, Sendable {
   public static let inputEndpointRange = 128...255
   public static let outputEndpointRange = 1...127
-  public static let interfaceNumberRange = 0...255
   public static let nanosecondsPerMillisecond: UInt64 = 1_000_000
 
   public let inputEndpoint: UInt8
@@ -46,53 +45,94 @@ public struct DeviceTransportProfile: Equatable, Sendable {
   )
 }
 
-/// Controller protocol family/variant used for long-term compatibility metadata.
-public enum ControllerProtocolVariant: String, Codable, Hashable, Sendable {
-  case xid
-  case xbox360
-  case xbox360Wireless
-  case xboxOne
-  case dualShock3
-  case dualShock4
-  case dualSense
-  case steamController
-  case switchPro
-  case xboxAdaptiveJoystick
-  case flydigi
-  case gameSirG7ProUSB
-  case gameSirEnhancedHID
-  case genericHID
-  case unknown
-}
+/// A resolved protocol binding: a family and, exactly when the family has variants, the variant
+/// in use, written `family[:variant]` (for example `xbox.xusb:receiver`, `xbox.gip:usb` or
+/// `vendor.flydigi`).
+public struct ProtocolBindingID: Hashable, Sendable, RawRepresentable, Codable,
+  CustomStringConvertible
+{
+  public let protocolID: PhysicalProtocolID
+  public let variant: PhysicalProtocolVariantID?
 
-/// Physical transport declared by one exact controller catalog record.
-public enum ControllerCatalogTransport: String, Sendable {
-  case hid
-  case usb
-}
-
-/// Stable encoding quirks modeled after Linux xpad packing deviations.
-///
-/// These quirks never mean that a named control exists. Presence is the parser
-/// emitting that named event.
-public struct ControllerMappingOptions: OptionSet, Sendable {
-  public let rawValue: UInt8
-
-  public init(rawValue: UInt8) { self.rawValue = rawValue }
-
-  public static let dpadToButtons = Self(rawValue: 1 << 0)
-  public static let triggersToButtons = Self(rawValue: 1 << 1)
-  public static let sticksToNull = Self(rawValue: 1 << 2)
-  public static let shareOffset = Self(rawValue: 1 << 3)
-
-  public var names: [String] {
-    var result: [String] = []
-    if contains(.dpadToButtons) { result.append("dpadToButtons") }
-    if contains(.triggersToButtons) { result.append("triggersToButtons") }
-    if contains(.sticksToNull) { result.append("sticksToNull") }
-    if contains(.shareOffset) { result.append("shareOffset") }
-    return result
+  public init(_ protocolID: PhysicalProtocolID, variant: PhysicalProtocolVariantID? = nil) {
+    precondition(
+      Self.isValid(protocolID, variant),
+      "invalid binding \(protocolID) \(variant as Any)"
+    )
+    self.protocolID = protocolID
+    self.variant = variant
   }
+
+  private static func isValid(
+    _ protocolID: PhysicalProtocolID,
+    _ variant: PhysicalProtocolVariantID?
+  ) -> Bool {
+    guard let variant else { return protocolID.variants.isEmpty }
+    return protocolID.variants.contains(variant)
+  }
+
+  /// Nil unless the text names a family and, optionally, one of its implemented variants.
+  public init?(rawValue: String) {
+    let parts = rawValue.split(separator: ":", omittingEmptySubsequences: false)
+    guard parts.count <= 2, let protocolID = PhysicalProtocolID(rawValue: String(parts[0])) else {
+      return nil
+    }
+    let variant = parts.count == 2 ? PhysicalProtocolVariantID(rawValue: String(parts[1])) : nil
+    guard parts.count == 1 || variant != nil, Self.isValid(protocolID, variant) else { return nil }
+    self.init(protocolID, variant: variant)
+  }
+
+  public var rawValue: String {
+    variant.map { "\(protocolID.rawValue):\($0.rawValue)" } ?? protocolID.rawValue
+  }
+
+  public var description: String { rawValue }
+
+  /// Whether this binding is reached through raw USB rather than IOHID.
+  public var usesRawUSB: Bool { protocolID.usesRawUSB(storedVariant: variant) }
+}
+
+/// Catalog quirks, each declared by the one protocol driver that consumes it.
+///
+/// A quirk changes how the driver decodes or reaches a variant; one that decodes a fixed extra
+/// button bit also declares that control. Capability corrections are ``ControllerCapabilityDelta``.
+public enum ControllerQuirk: String, CaseIterable, Sendable {
+  /// GIP Share sits at a fixed offset from the end of the input packet (xpad `MAP_SHARE_OFFSET`).
+  case shareOffset = "share-offset"
+  /// Nintendo left Joy-Con axis and button permutation.
+  case joyConLeft = "joy-con-left"
+  /// Nintendo right Joy-Con axis and button permutation.
+  case joyConRight = "joy-con-right"
+  /// GameSir enhanced HID reports the inner grips in extras-byte bits 0x40 and 0x80.
+  case innerGrips = "inner-grips"
+  /// GameSir enhanced HID lighting memory is organized in profile slots: the driver reads the
+  /// active slot at startup, tracks it, and writes color and brightness into that slot.
+  case lightingSlots = "lighting-slots"
+
+  /// The protocol driver that declares this quirk.
+  public var protocolID: PhysicalProtocolID {
+    switch self {
+    case .shareOffset: .xboxGIP
+    case .joyConLeft, .joyConRight: .nintendoSwitch1
+    case .innerGrips, .lightingSlots: .vendorGameSir
+    }
+  }
+}
+
+/// A driver-owned policy that assembles one logical controller from several protocol roles of
+/// one physical device. A catalog row names it in `protocol.assembly`.
+///
+/// The vocabulary is empty, so validation rejects every name: no catalog row has
+/// multi-interface evidence yet, and a selection is stored only with a live producer and
+/// consumer. Discovery consumes it through ``ProtocolDriverRegistry/assemblyPolicy(for:)``;
+/// until a row adds the first policy, one role is one logical controller.
+public enum ControllerAssemblyPolicy: CaseIterable, Hashable, Sendable {
+  /// The catalog spelling of this policy.
+  public var name: String { switch self {} }
+
+  /// The policy spelled `name`, or nil for a name outside the vocabulary. The vocabulary is
+  /// empty, so every name is rejected; the first case adds the lookup over `allCases`.
+  init?(name _: String) { return nil }
 }
 
 /// Whether the GIP parser sends periodic host-side keep-alive packets.
@@ -102,15 +142,30 @@ public enum GIPKeepAlivePolicy: String, Codable, Sendable {
 }
 
 /// Complete runtime profile for one physical controller model.
-public struct DeviceRuntimeProfile: Sendable {
-  public let catalogTransport: ControllerCatalogTransport
-  public let parserName: String
+public struct DeviceRuntimeProfile: Equatable, Sendable {
   public let virtualProfile: VirtualDeviceProfile
   public let transportProfile: DeviceTransportProfile
-  public let protocolVariant: ControllerProtocolVariant
-  public let quirks: [String]
-  public let mappingOptions: ControllerMappingOptions
+  public let physicalProtocolID: PhysicalProtocolID
+  /// Nil when the family has one contract or its variant is a transport variant,
+  /// which classification derives from the observed transport.
+  public let physicalProtocolVariant: PhysicalProtocolVariantID?
+  public let quirks: [ControllerQuirk]
+  public let capabilityDelta: ControllerCapabilityDelta
   public let preferredBackends: [VirtualControllerBackendID]
   public let gipStartupPackets: [GIPStartupPacket]
   public let gipKeepAlivePolicy: GIPKeepAlivePolicy
+  /// The assembly policy the row names; nil runs each protocol role as its own controller.
+  public let assemblyPolicy: ControllerAssemblyPolicy?
+
+  /// Whether this row is reached through raw USB rather than IOHID.
+  public var usesRawUSB: Bool {
+    physicalProtocolID.usesRawUSB(storedVariant: physicalProtocolVariant)
+  }
+
+  /// The binding a raw-USB row resolves to (GIP's only variant is `usb`); nil for IOHID rows,
+  /// whose transport variant comes from the observed connection.
+  public var rawUSBBinding: ProtocolBindingID? {
+    guard usesRawUSB else { return nil }
+    return ProtocolBindingID(physicalProtocolID, variant: physicalProtocolVariant ?? .usb)
+  }
 }

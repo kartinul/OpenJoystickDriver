@@ -78,8 +78,10 @@ enum RuntimeReadiness: String, Sendable, Equatable {
 struct RuntimeStatusPresentation: Sendable, Equatable {
   let permissions: RuntimePermissionSummary
   let devices: [ApplicationServiceDeviceDescription]
-  let compatibilityIdentity: CompatibilityIdentity?
-  let compatibilityLabel: String
+  /// Why the stored virtual HID profile overrides cannot be read, as reported by the service.
+  let virtualHIDProfileOverrideError: String?
+  /// Raw value of the retired global controller identity setting the service no longer applies.
+  let legacyCompatibilityIdentityRejected: String?
   let outputState: RuntimeOutputState
   let outputDetail: String?
   let postEventAccess: RemappingPostEventAccessState?
@@ -92,7 +94,6 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
     requiresPostEventAccess: Bool? = nil
   ) {
     let permissions = RuntimePermissionSummary(status: payload)
-    let identity = payload.compatibilityIdentity.flatMap(CompatibilityIdentity.init(rawValue:))
     let outputState: RuntimeOutputState
     if payload.userSpaceVirtualDeviceStatus?.lowercased().hasPrefix("error:") == true {
       outputState = .error
@@ -106,10 +107,8 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
 
     self.permissions = permissions
     self.devices = payload.connectedDevices
-    self.compatibilityIdentity = identity
-    self.compatibilityLabel =
-      identity.map(RuntimePresentation.compatibilityLabel)
-      ?? OJDLocalized.string("common.unavailable", fallback: "Unavailable")
+    self.virtualHIDProfileOverrideError = payload.virtualHIDProfileOverrideError
+    self.legacyCompatibilityIdentityRejected = payload.legacyCompatibilityIdentityRejected
     self.outputState = outputState
     self.outputDetail = RuntimePresentation.outputDetail(
       enabled: payload.userSpaceVirtualDeviceEnabled,
@@ -129,8 +128,8 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
   init(
     permissions: RuntimePermissionSummary,
     devices: [ApplicationServiceDeviceDescription],
-    compatibilityIdentity: CompatibilityIdentity?,
-    compatibilityLabel: String,
+    virtualHIDProfileOverrideError: String?,
+    legacyCompatibilityIdentityRejected: String?,
     outputState: RuntimeOutputState,
     outputDetail: String?,
     postEventAccess: RemappingPostEventAccessState?,
@@ -139,8 +138,8 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
   ) {
     self.permissions = permissions
     self.devices = devices
-    self.compatibilityIdentity = compatibilityIdentity
-    self.compatibilityLabel = compatibilityLabel
+    self.virtualHIDProfileOverrideError = virtualHIDProfileOverrideError
+    self.legacyCompatibilityIdentityRejected = legacyCompatibilityIdentityRejected
     self.outputState = outputState
     self.outputDetail = outputDetail
     self.postEventAccess = postEventAccess
@@ -151,8 +150,8 @@ struct RuntimeStatusPresentation: Sendable, Equatable {
 
 extension RemappingProfile {
   var hasOutputMappings: Bool {
-    if gyroOutput.mode != .disabled || gyroOutput.virtualMotion || !stickMappings.isEmpty
-      || !touchMappings.isEmpty || motionTuning.steering != nil
+    if gyroOutput.mode != .disabled || !stickMappings.isEmpty || !touchMappings.isEmpty
+      || motionTuning.steering != nil
       || layers.contains(where: { $0.motionTuning?.steering != nil })
     {
       return true
@@ -202,11 +201,41 @@ enum RuntimePostEventAccessLoadState: Sendable, Equatable {
   case error(String)
 }
 
-enum RuntimeCompatibilityState: Sendable, Equatable {
-  case loading
-  case available(CompatibilityIdentity)
-  case unavailable(String)
-  case error(String)
+/// One controller's pending or failed virtual HID profile override request.
+/// A controller model: the scope of a virtual HID profile override, which the service applies
+/// to every connected controller with the same vendor and product.
+struct RuntimeControllerModel: Hashable, Sendable {
+  let vendorID: UInt16
+  let productID: UInt16
+
+  init(vendorID: UInt16, productID: UInt16) {
+    self.vendorID = vendorID
+    self.productID = productID
+  }
+
+  init(_ device: ApplicationServiceDeviceDescription) {
+    self.init(vendorID: device.vendorID, productID: device.productID)
+  }
+}
+
+/// The virtual HID profile override request and last failure of one controller model.
+struct RuntimeVirtualHIDProfileOverrideState: Sendable, Equatable {
+  enum Request: Sendable, Equatable {
+    case set(VirtualHIDProfileID)
+    case reset
+
+    /// The override the request stores; nil for a reset to automatic selection.
+    var requested: VirtualHIDProfileID? {
+      guard case .set(let profile) = self else { return nil }
+      return profile
+    }
+  }
+
+  /// The request being applied, or nil when none is in flight.
+  var request: Request?
+  var failure: String?
+
+  var inFlight: Bool { request != nil }
 }
 
 enum RuntimeMutationState: Sendable {
@@ -274,8 +303,8 @@ enum RuntimeMutationOperation: Sendable, Equatable {
 enum RuntimeInputCaptureState: Sendable {
   case idle
   case listening(RuntimeDeviceSelector)
-  case received(RuntimeDeviceSelector, DeviceInputState)
-  case detected(RuntimeDeviceSelector, DeviceInputState, RemappingSource)
+  case received(RuntimeDeviceSelector, ControllerState)
+  case detected(RuntimeDeviceSelector, ControllerState, RemappingSource)
   case unavailable(RuntimeDeviceSelector, String)
   case error(RuntimeDeviceSelector, String)
 }

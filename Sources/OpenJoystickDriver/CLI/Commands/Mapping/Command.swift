@@ -78,7 +78,6 @@ struct MappingInvocation {
         joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>
         joy-con unpair --session <session-uuid>
         --gyro-output disabled|mouse|left_stick|right_stick
-        --gyro-virtual-motion true|false
         --gyro-pointer-points-per-degree <0...1000>
         --gyro-full-stick-degrees-per-second <1...10000>
         --gyro-activation always|while_held|while_released|toggle

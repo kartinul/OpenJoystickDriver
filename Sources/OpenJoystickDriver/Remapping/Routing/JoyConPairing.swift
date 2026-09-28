@@ -18,8 +18,9 @@ extension RemappingRoutingCore {
         $0.runtimeIdentifier == rightRuntimeIdentifier
       })
     else { throw RemappingJoyConPairError.controllerUnavailable }
-    guard left.vendorID == 0x057E, left.productID == 0x2006, right.vendorID == 0x057E,
-      right.productID == 0x2007, left != right
+    guard left.controllerIdentity.vendorID == 0x057E, left.controllerIdentity.productID == 0x2006,
+      right.controllerIdentity.vendorID == 0x057E, right.controllerIdentity.productID == 0x2007,
+      left != right
     else { throw RemappingJoyConPairError.invalidControllerSide }
     guard joyConPairByMember[left] == nil, joyConPairByMember[right] == nil else {
       throw RemappingJoyConPairError.memberAlreadyPaired
@@ -99,20 +100,23 @@ extension RemappingRoutingCore {
     joyConPairByMember[identifier].flatMap { joyConPairs[$0] }
   }
 
-  func pairEvents(
-    _ events: [ControllerEvent],
-    from identifier: DeviceIdentifier
-  ) -> [ControllerEvent] {
+  /// A paired half's snapshot with its motion kept only when the pair takes gyro from it.
+  func pairEvent(_ event: ControllerEvent, from identifier: DeviceIdentifier) -> ControllerEvent {
     guard let session = pairSession(for: identifier), let settings = session.profile.joyConPair
-    else { return events }
-    return events.filter { event in
-      guard case .motionSample = event else { return true }
+    else { return event }
+    let keepsMotion =
       switch settings.gyroSelection {
-      case .disabled: return false
-      case .left: return identifier == session.left
-      case .right: return identifier == session.right
+      case .disabled: false
+      case .left: identifier == session.left
+      case .right: identifier == session.right
       }
-    }
+    guard !keepsMotion else { return event }
+    return ControllerEvent(
+      timestamp: event.timestamp,
+      state: event.state,
+      touchFrames: event.touchFrames,
+      isFresh: event.isFresh
+    )
   }
 
   func joyConPairPayloads() -> [ApplicationServiceJoyConPairPayload] {
@@ -135,6 +139,9 @@ extension RemappingRoutingCore {
     requiring proposedPermit: RemappingEmissionPermit?
   ) async throws {
     let eligibility = joyConPairEligibility(session, environment: environment)
+    if eligibility != .eligible, routes[session.left]?.eligibility == .eligible {
+      await endSources(session.members)
+    }
     let permit = try requireOperationalPermit(proposedPermit)
     do {
       if eligibility == .eligible {
@@ -183,8 +190,9 @@ extension RemappingRoutingCore {
     requiring permit: RemappingEmissionPermit
   ) async throws {
     guard let route = routes.removeValue(forKey: identifier) else { return }
+    await engine.endSource(identifier)
     switch route.selection {
-    case .compatibility: await notifyCompatibilityStop(identifier)
+    case .virtualGamepad: await notifyVirtualGamepadStop(identifier)
     case .remapping(let profile):
       try await releaseAndRetire(for: identifier, profile: profile, requiring: permit)
     case .unavailable: try await releaseAllSafely(for: identifier, requiring: permit)
@@ -200,9 +208,10 @@ extension RemappingRoutingCore {
       releaseError = error
     }
     if session.profile.outputPolicy.virtualGamepad != .disabled {
-      await notifyCompatibilityStop(session.left)
+      await notifyVirtualGamepadStop(session.left)
     }
     joyConPairs.removeValue(forKey: session.id)
+    await endSources(session.members)
     for member in session.members {
       joyConPairByMember.removeValue(forKey: member)
       routes.removeValue(forKey: member)

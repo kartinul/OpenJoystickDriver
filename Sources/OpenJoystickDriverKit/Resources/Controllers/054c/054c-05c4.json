@@ -2,9 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 1356,
   "productID": 1476,
-  "transport": "hid",
   "protocol": {
-    "driver": "DS4",
-    "variant": "dualShock4"
+    "family": "sony.dualshock4"
   }
 }

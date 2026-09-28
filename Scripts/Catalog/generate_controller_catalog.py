@@ -22,98 +22,121 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 LOCK_PATH = ROOT / "ControllerSources.lock.json"
 OVERRIDE_DIR = ROOT / "Resources" / "ControllerOverrides"
 OUTPUT_DIR = ROOT / "Sources" / "OpenJoystickDriverKit" / "Resources" / "Controllers"
+RECORD_SCHEMA_ID = (
+    "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/"
+    "Resources/Schemas/controller.schema.json"
+)
 
 
-HID_RECORDS = (
+# DualSense Edge function buttons and back paddles, present beyond the DualSense
+# family defaults (Linux hid-playstation registers the Edge separately).
+DUALSENSE_EDGE_CAPABILITIES: dict[str, Any] = {
+    "present": ["paddle-left-1", "paddle-right-1", "auxiliary-1", "auxiliary-2"]
+}
+
+# (source, vendor macro, product macro, family, stored variant, quirks, capabilities)
+HID_RECORDS: tuple[
+    tuple[str, str, str, str, str | None, list[str], dict[str, Any] | None], ...
+] = (
     (
         "hid_sony",
         "USB_VENDOR_ID_SONY",
         "USB_DEVICE_ID_SONY_PS3_CONTROLLER",
-        "DS3",
-        "dualShock3",
+        "sony.sixaxis",
+        None,
         [],
+        None,
     ),
     (
         "hid_playstation",
         "USB_VENDOR_ID_SONY",
         "USB_DEVICE_ID_SONY_PS4_CONTROLLER",
-        "DS4",
-        "dualShock4",
+        "sony.dualshock4",
+        None,
         [],
+        None,
     ),
     (
         "hid_playstation",
         "USB_VENDOR_ID_SONY",
         "USB_DEVICE_ID_SONY_PS4_CONTROLLER_2",
-        "DS4",
-        "dualShock4",
+        "sony.dualshock4",
+        None,
         [],
+        None,
     ),
     (
         "hid_playstation",
         "USB_VENDOR_ID_SONY",
         "USB_DEVICE_ID_SONY_PS5_CONTROLLER",
-        "DualSense",
-        "dualSense",
-        ["touchpad", "microphoneMute"],
+        "sony.dualsense",
+        None,
+        [],
+        None,
     ),
     (
         "hid_playstation",
         "USB_VENDOR_ID_SONY",
         "USB_DEVICE_ID_SONY_PS5_CONTROLLER_2",
-        "DualSense",
-        "dualSense",
-        ["touchpad", "microphoneMute", "edgeButtons"],
+        "sony.dualsense",
+        None,
+        [],
+        DUALSENSE_EDGE_CAPABILITIES,
     ),
     (
         "hid_nintendo",
         "USB_VENDOR_ID_NINTENDO",
         "USB_DEVICE_ID_NINTENDO_PROCON",
-        "SwitchPro",
-        "switchPro",
-        ["usbHandshake"],
+        "nintendo.switch1",
+        None,
+        [],
+        None,
     ),
     (
         "hid_nintendo",
         "USB_VENDOR_ID_NINTENDO",
         "USB_DEVICE_ID_NINTENDO_JOYCONL",
-        "SwitchPro",
-        "switchPro",
-        ["joyConLeft"],
+        "nintendo.switch1",
+        None,
+        ["joy-con-left"],
+        None,
     ),
     (
         "hid_nintendo",
         "USB_VENDOR_ID_NINTENDO",
         "USB_DEVICE_ID_NINTENDO_JOYCONR",
-        "SwitchPro",
-        "switchPro",
-        ["joyConRight"],
+        "nintendo.switch1",
+        None,
+        ["joy-con-right"],
+        None,
     ),
     (
         "hid_steam",
         "USB_VENDOR_ID_VALVE",
         "USB_DEVICE_ID_STEAM_CONTROLLER",
-        "SteamController",
-        "steamController",
-        ["lizardMode", "trackpads"],
+        "valve.steam-controller",
+        "wired",
+        [],
+        None,
     ),
     (
         "hid_steam",
         "USB_VENDOR_ID_VALVE",
         "USB_DEVICE_ID_STEAM_CONTROLLER_WIRELESS",
-        "SteamController",
-        "steamController",
-        ["lizardMode", "trackpads", "wirelessReceiver"],
+        "valve.steam-controller",
+        "dongle",
+        [],
+        None,
     ),
 )
 
 
-def load_locked_linux_files(linux: dict[str, Any]) -> dict[str, str]:
+def load_locked_files(source_lock: dict[str, Any]) -> dict[str, str]:
     result: dict[str, str] = {}
-    for key, file_lock in sorted(linux["files"].items()):
+    for key, file_lock in sorted(source_lock["files"].items()):
         url = (
-            f"https://raw.githubusercontent.com/{linux['repository']}/"
-            f"{linux['commit']}/{file_lock['path']}"
+            f"https://raw.githubusercontent.com/{source_lock['repository']}/"
+            f"{source_lock['commit']}/{file_lock['path']}"
         )
         request = urllib.request.Request(
             url,
@@ -129,9 +152,9 @@ def load_locked_linux_files(linux: dict[str, Any]) -> dict[str, str]:
                         "api",
                         "-X",
                         "GET",
-                        f"repos/{linux['repository']}/contents/{file_lock['path']}",
+                        f"repos/{source_lock['repository']}/contents/{file_lock['path']}",
                         "-f",
-                        f"ref={linux['commit']}",
+                        f"ref={source_lock['commit']}",
                     ],
                     CatalogError,
                 )
@@ -160,7 +183,15 @@ def parse_defines(source: str) -> dict[str, int]:
 def build_hid_records(sources: dict[str, str]) -> list[dict[str, Any]]:
     defines = parse_defines(sources["hid_ids"])
     records: list[dict[str, Any]] = []
-    for source_key, vendor_macro, product_macro, driver, variant, flags in HID_RECORDS:
+    for (
+        source_key,
+        vendor_macro,
+        product_macro,
+        family,
+        variant,
+        quirks,
+        capabilities,
+    ) in HID_RECORDS:
         source = sources[source_key]
         pattern = (
             r"HID_(?:USB|BLUETOOTH)_DEVICE\s*\(\s*"
@@ -178,22 +209,199 @@ def build_hid_records(sources: dict[str, str]) -> list[dict[str, Any]]:
             product_id = defines[product_macro]
         except KeyError as error:
             raise CatalogError(f"missing Linux HID ID definition: {error}") from error
-        protocol: dict[str, Any] = {"driver": driver, "variant": variant}
-        if flags:
-            protocol["quirks"] = flags
-        records.append(
-            {
-                "$schema": (
-                    "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/"
-                    "Resources/Schemas/controller.schema.json"
-                ),
-                "vendorID": vendor_id,
-                "productID": product_id,
-                "transport": "hid",
-                "protocol": protocol,
-            }
-        )
+        protocol: dict[str, Any] = {"family": family}
+        if variant is not None:
+            protocol["variant"] = variant
+        if quirks:
+            protocol["quirks"] = quirks
+        record: dict[str, Any] = {
+            "$schema": RECORD_SCHEMA_ID,
+            "vendorID": vendor_id,
+            "productID": product_id,
+            "protocol": protocol,
+        }
+        if capabilities is not None:
+            record["capabilities"] = capabilities
+        records.append(record)
     return records
+
+
+SONY_VENDOR_ID = 0x054C
+MICROSOFT_VENDOR_ID = 0x045E
+NVIDIA_VENDOR_ID = 0x0955
+# Microsoft Xbox 360 product IDs (wired pad, receivers, Big Button IR, Windows
+# driver identity). Third-party XBoxOneController rows reuse them.
+MICROSOFT_XBOX_360_PRODUCT_IDS = frozenset(
+    {0x028E, 0x0291, 0x02A0, 0x02A1, 0x02A9, 0x0719}
+)
+
+# SDL controller type -> (family, stored variant). Types absent here have no
+# implemented family and are skipped. SteamController rows carry no variant; SDL
+# does not say whether a row is the wired pad, the dongle or a Bluetooth link.
+SDL_FAMILIES: dict[str, tuple[str, str | None]] = {
+    "PS3Controller": ("sony.sixaxis", None),
+    "PS4Controller": ("sony.dualshock4", None),
+    "PS5Controller": ("sony.dualsense", None),
+    "SwitchProController": ("nintendo.switch1", None),
+    "XBox360Controller": ("xbox.xusb", "wired"),
+    "XBoxOneController": ("xbox.gip", None),
+    "SteamController": ("valve.steam-controller", None),
+}
+
+# Identities whose SDL type does not describe the wire protocol of an implemented
+# variant: (identity) -> (expected SDL type, skip reason). Each entry must still be
+# listed with that type at the pinned commit and must not already be catalogued.
+SDL_EXCLUSIONS: dict[tuple[int, int], tuple[str, str]] = {
+    (0x045E, 0x02A0): ("XBox360Controller", "xbox-360-receiver"),
+    (0x045E, 0x02A1): ("XBox360Controller", "windows-driver-identity"),
+    (0x045E, 0x02FF): ("XBoxOneController", "windows-driver-identity"),
+    (0x045E, 0x02E0): ("XBoxOneController", "xbox-bluetooth"),
+    (0x045E, 0x02FD): ("XBoxOneController", "xbox-bluetooth"),
+    (0x045E, 0x0B05): ("XBoxOneController", "xbox-bluetooth"),
+    (0x045E, 0x0B0C): ("XBoxOneController", "xbox-bluetooth"),
+    (0x045E, 0x0B13): ("XBoxOneController", "xbox-bluetooth"),
+    (0x045E, 0x0B20): ("XBoxOneController", "xbox-bluetooth"),
+    (0x045E, 0x0B21): ("XBoxOneController", "xbox-bluetooth"),
+    (0x045E, 0x0B22): ("XBoxOneController", "xbox-bluetooth"),
+    (0x045E, 0x0867): ("XBoxOneController", "semantics-unclear"),
+    (0x054C, 0x05C5): ("PS4Controller", "grip-add-on"),
+    (0x054C, 0x0BA0): ("PS4Controller", "ds4-dongle"),
+    (0x054C, 0x0E5F): ("PS5Controller", "layout-unverified"),
+    (0x057E, 0x2069): ("SwitchProController", "switch-2"),
+    (0x0E6F, 0x0186): ("SwitchProController", "no-usb-protocol"),
+    (0x0F0D, 0x00F6): ("SwitchProController", "no-usb-protocol"),
+    (0x1038, 0xB360): ("XBox360Controller", "semantics-unclear"),
+}
+
+SDL_ARRAY_PATTERN = re.compile(
+    r"arrControllers\[\]\s*=\s*\{(?P<body>.*?)^\};", re.DOTALL | re.MULTILINE
+)
+SDL_ENTRY_PATTERN = re.compile(
+    r"""
+    \{\s*MAKE_CONTROLLER_ID\s*\(\s*
+    (?P<vid>0[xX][0-9a-fA-F]+)\s*,\s*
+    (?P<pid>0[xX][0-9a-fA-F]+)\s*\)\s*,\s*
+    k_eControllerType_(?P<type>\w+)\s*,\s*
+    (?:NULL|"(?:\\.|[^"\\])*")\s*
+    \}\s*,\s*(?://.*)?
+    """,
+    re.VERBOSE,
+)
+
+
+def parse_sdl_controllers(source: str) -> list[tuple[int, int, str]]:
+    """Returns (vendor ID, product ID, SDL type) for every active arrControllers row."""
+    match = SDL_ARRAY_PATTERN.search(source)
+    if match is None:
+        raise CatalogError("SDL controller_list.h has no arrControllers table")
+    rows: list[tuple[int, int, str]] = []
+    for line in match["body"].splitlines():
+        text = line.strip()
+        if not text or text.startswith("//"):
+            continue
+        entry = SDL_ENTRY_PATTERN.fullmatch(text)
+        if entry is None:
+            raise CatalogError(f"unparsed SDL controller_list.h row: {text}")
+        rows.append((int(entry["vid"], 16), int(entry["pid"], 16), entry["type"]))
+    if not rows:
+        raise CatalogError("SDL controller_list.h produced no rows")
+    return rows
+
+
+def sdl_rule_reason(key: tuple[int, int], controller_type: str) -> str | None:
+    vendor_id, product_id = key
+    if vendor_id == 0:
+        return "not-usb-identity"
+    if controller_type == "PS3Controller" and vendor_id != SONY_VENDOR_ID:
+        return "third-party-ps3"
+    if controller_type == "PS5Controller" and vendor_id != SONY_VENDOR_ID:
+        return "third-party-ps5"
+    if controller_type == "XBox360Controller" and vendor_id == NVIDIA_VENDOR_ID:
+        return "not-xbox-protocol"
+    if (
+        controller_type == "XBoxOneController"
+        and product_id in MICROSOFT_XBOX_360_PRODUCT_IDS
+    ):
+        return "xbox-360-product-id"
+    return None
+
+
+def sdl_skip_reason(key: tuple[int, int], controller_type: str) -> str | None:
+    rule = sdl_rule_reason(key, controller_type)
+    exclusion = SDL_EXCLUSIONS.get(key)
+    if exclusion is not None:
+        if rule is not None:
+            raise CatalogError(f"redundant SDL exclusion {key}: rule {rule} applies")
+        return exclusion[1]
+    if (
+        rule is None
+        and key[0] == MICROSOFT_VENDOR_ID
+        and (controller_type == "XBoxOneController")
+    ):
+        # Microsoft ships Bluetooth and Windows-driver identities under this type;
+        # a new one must be reviewed before it can bind the USB-only GIP driver.
+        raise CatalogError(f"unreviewed Microsoft SDL XBoxOneController row {key}")
+    return rule
+
+
+def build_sdl_records(
+    rows: list[tuple[int, int, str]],
+    existing: dict[tuple[int, int], str],
+) -> tuple[dict[tuple[int, int], dict[str, Any]], dict[str, int]]:
+    """Admits SDL identities absent from `existing` (identity -> family).
+
+    Every distinct identity lands in exactly one count bucket, independent of row order.
+    """
+    types: dict[tuple[int, int], set[str]] = {}
+    for vendor_id, product_id, controller_type in rows:
+        types.setdefault((vendor_id, product_id), set()).add(controller_type)
+
+    for key, (expected_type, _) in sorted(SDL_EXCLUSIONS.items()):
+        if expected_type not in types.get(key, set()):
+            raise CatalogError(
+                f"stale SDL exclusion {key}: not listed as {expected_type}"
+            )
+
+    records: dict[tuple[int, int], dict[str, Any]] = {}
+    counts: dict[str, int] = {}
+
+    def count(bucket: str) -> None:
+        counts[bucket] = counts.get(bucket, 0) + 1
+
+    for key in sorted(types):
+        if len(types[key]) > 1:
+            count("sdl-conflict")
+            continue
+        (controller_type,) = types[key]
+        mapping = SDL_FAMILIES.get(controller_type)
+        if mapping is None:
+            count(f"unmapped:{controller_type}")
+            continue
+        family, variant = mapping
+        if key in existing:
+            if key in SDL_EXCLUSIONS:
+                raise CatalogError(f"redundant SDL exclusion {key}: already catalogued")
+            count("duplicate" if existing[key] == family else "conflict")
+            continue
+        reason = sdl_skip_reason(key, controller_type)
+        if reason is not None:
+            count(f"excluded:{reason}")
+            continue
+        if family == "valve.steam-controller":
+            count("excluded:variant-undeterminable")
+            continue
+        protocol: dict[str, Any] = {"family": family}
+        if variant is not None:
+            protocol["variant"] = variant
+        vendor_id, product_id = key
+        records[key] = {
+            "$schema": RECORD_SCHEMA_ID,
+            "vendorID": vendor_id,
+            "productID": product_id,
+            "protocol": protocol,
+        }
+        count("added")
+    return records, counts
 
 
 class CatalogError(RuntimeError):
@@ -230,6 +438,13 @@ def load_lock() -> dict[str, Any]:
             raise CatalogError("Linux commit must be a full SHA")
         if len(xpad["sha256"]) != 64:
             raise CatalogError("xpad SHA-256 is invalid")
+        sdl = lock["sdl"]
+        if sdl["repository"] != "libsdl-org/SDL":
+            raise CatalogError("unsupported SDL repository")
+        if len(sdl["commit"]) != 40:
+            raise CatalogError("SDL commit must be a full SHA")
+        if len(sdl["files"]["controller_list"]["sha256"]) != 64:
+            raise CatalogError("SDL controller_list SHA-256 is invalid")
         return lock
     except (OSError, KeyError, TypeError, json.JSONDecodeError) as error:
         raise CatalogError(f"invalid {LOCK_PATH.name}: {error}") from error
@@ -270,7 +485,7 @@ def load_overrides(
         else:
             key = (int(document["vendorID"]), int(document["productID"]))
             payload = document["set"]
-            if not payload or not set(payload) <= {"transport", "protocol", "usb"}:
+            if not payload or not set(payload) <= {"protocol", "usb"}:
                 raise CatalogError(f"{path}: invalid patch fields")
         expected = record_path(override_dir, key)
         if path != expected:
@@ -303,6 +518,21 @@ def apply_overrides(
         records[key] = merged
 
 
+def merge_sdl_records(
+    records: dict[tuple[int, int], dict[str, Any]],
+    overrides: list[tuple[str, tuple[int, int], dict[str, Any]]],
+    rows: list[tuple[int, int, str]],
+) -> dict[str, int]:
+    """Adds SDL identities to Linux `records`; Linux rows and add overrides win."""
+    existing = {key: record["protocol"]["family"] for key, record in records.items()}
+    for operation, key, payload in overrides:
+        if operation == "add":
+            existing[key] = payload["protocol"]["family"]
+    sdl_records, counts = build_sdl_records(rows, existing)
+    records.update(sdl_records)
+    return counts
+
+
 def build_catalog() -> dict[tuple[int, int], dict[str, Any]]:
     generator = load_module(
         "ojd_generate_xpad_records",
@@ -315,7 +545,7 @@ def build_catalog() -> dict[tuple[int, int], dict[str, Any]]:
     lock = load_lock()
     linux = lock["linux"]
 
-    sources = load_locked_linux_files(linux)
+    sources = load_locked_files(linux)
     source = sources["xpad"]
     candidates, skipped, _ = generator.generate_candidates(
         devices=generator.parse_devices(source),
@@ -338,7 +568,10 @@ def build_catalog() -> dict[tuple[int, int], dict[str, Any]]:
             raise CatalogError(f"Linux sources produced duplicate identity {key}")
         records[key] = record
 
-    apply_overrides(records, load_overrides(validator))
+    overrides = load_overrides(validator)
+    sdl_rows = parse_sdl_controllers(load_locked_files(lock["sdl"])["controller_list"])
+    sdl_counts = merge_sdl_records(records, overrides, sdl_rows)
+    apply_overrides(records, overrides)
 
     if not records:
         raise CatalogError("generation produced no controller records")
@@ -353,7 +586,31 @@ def build_catalog() -> dict[tuple[int, int], dict[str, Any]]:
 
     if skipped:
         print(f"Linux rows intentionally skipped: {len(skipped)}")
+    print(sdl_summary(sdl_rows, sdl_counts))
     return records
+
+
+def sdl_summary(rows: list[tuple[int, int, str]], counts: dict[str, int]) -> str:
+    unmapped = sum(
+        value
+        for bucket, value in counts.items()
+        if bucket.startswith("unmapped:") or bucket == "sdl-conflict"
+    )
+    identities = sum(counts.values())
+    lines = [
+        (
+            f"SDL rows parsed: {len(rows)} ({identities} identities); "
+            f"mapped {identities - unmapped}, added {counts.get('added', 0)}, "
+            f"duplicates {counts.get('duplicate', 0)}, "
+            f"conflicts {counts.get('conflict', 0)}"
+        ),
+        *(
+            f"  skipped {bucket}: {value}"
+            for bucket, value in sorted(counts.items())
+            if bucket not in {"added", "duplicate", "conflict"}
+        ),
+    ]
+    return "\n".join(lines)
 
 
 def expected_files(

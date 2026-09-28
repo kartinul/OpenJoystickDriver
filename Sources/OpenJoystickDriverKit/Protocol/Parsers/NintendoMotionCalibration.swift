@@ -6,6 +6,8 @@ struct NintendoMotionCalibration {
   private var revision: UInt64 = 0
   private let source: ControllerMotionCalibrationSource
 
+  /// `SWITCH_GYRO_SCALE` (14.2842 counts per °/s) and `SWITCH_ACCEL_SCALE` (4096 counts per g) in
+  /// SDL `src/joystick/hidapi/SDL_hidapi_switch.c` at SDL `1ce4c5bc`.
   static let nominal = Self(
     gyroOffsets: [0, 0, 0],
     gyroScales: Array(repeating: 1 / 14.2842, count: 3),
@@ -13,6 +15,8 @@ struct NintendoMotionCalibration {
     source: .nominalDeviceScale
   )
 
+  /// Scales follow SDL `LoadIMUCalibration` (`SWITCH_GYRO_SCALE_MULT` 936,
+  /// `SWITCH_ACCEL_SCALE_MULT` 4) in `src/joystick/hidapi/SDL_hidapi_switch.c` at SDL `1ce4c5bc`.
   static func factory(_ bytes: [UInt8], userOffsets: [UInt8]? = nil) -> Self? {
     guard bytes.count == 24 else { return nil }
     if let userOffsets {
@@ -57,19 +61,29 @@ struct NintendoMotionCalibration {
     return result
   }
 
-  func reading(
+  /// Switch Pro and Joy-Con transform: raw counts, then the SPI factory (or nominal) offset and
+  /// scale per axis, then SI, then the raw axes into the canonical frame:
+  /// Pro and left Joy-Con (x, y, z) → (-y, x, z); right Joy-Con (x, y, z) → (y, x, -z).
+  /// Source: SDL `SendSensorUpdate` in `src/joystick/hidapi/SDL_hidapi_switch.c` at SDL `1ce4c5bc`
+  /// maps raw (x, y, z) to its sensor frame (X right, Y up, Z toward the player) as
+  /// (-y, z, -x), negating X and Y again for the right Joy-Con. The canonical frame takes SDL's
+  /// +Z (toward the player) as -Y and SDL's +Y (up) as +Z. SDL's sideways single-Joy-Con swap is
+  /// not applied because OJD has no horizontal Joy-Con layout.
+  func sample(
+    timestamp: ControllerSampleTimestamp,
     gyro: ControllerRawSensorVector,
     accel: ControllerRawSensorVector,
     layout: NintendoControllerLayout
-  ) -> ControllerMotionReading? {
+  ) -> ControllerMotionSample? {
     let rawGyro = [Double(gyro.x), Double(gyro.y), Double(gyro.z)]
     let rawAccel = [Double(accel.x), Double(accel.y), Double(accel.z)]
     let gyroValues = (0..<3).map { (rawGyro[$0] - gyroOffsets[$0]) * gyroScales[$0] }
     // Nintendo's accelerometer offset adjusts sensitivity, not the sampled acceleration.
     let accelValues = (0..<3).map { rawAccel[$0] * accelScales[$0] }
-    return ControllerMotionReading(
-      gyroscopeDegreesPerSecond: canonical(gyroValues, layout: layout),
-      accelerationG: canonical(accelValues, layout: layout),
+    return ControllerMotionSample(
+      timestamp: timestamp,
+      canonicalDegreesPerSecond: canonical(gyroValues, layout: layout),
+      canonicalG: canonical(accelValues, layout: layout),
       calibrationSource: source,
       calibrationRevision: revision
     )
@@ -80,6 +94,6 @@ struct NintendoMotionCalibration {
     layout: NintendoControllerLayout
   ) -> ControllerMotionVector {
     let side = layout == .rightJoyCon ? 1.0 : -1.0
-    return ControllerMotionVector(x: values[1] * side, y: -values[2] * side, z: -values[0])
+    return ControllerMotionVector(x: values[1] * side, y: values[0], z: -values[2] * side)
   }
 }

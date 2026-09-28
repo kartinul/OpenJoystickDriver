@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Tjekker tilsluttede controllere…";
 "status.refreshingProfile" = "Opdaterer profilstatus…";
 "status.loadingProfiles" = "Indlæser profiler…";
-"status.updatingIdentity" = "Opdaterer controlleridentitet…";
 "status.listening" = "Lytter…";
 "status.readyToListen" = "Klar til at lytte";
 "status.checkingInput" = "Tjekker";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Controllere";
 "settings.controllerDisconnectedNotifications" = "Controller afbrudt";
 "settings.controllerDisconnectedShort" = "Afbrudt";
-"settings.controllerIdentity" = "Controlleridentitet";
 "settings.controllerNotifications" = "Controller tilsluttet";
 "settings.diagnostics" = "Diagnostik";
 "settings.service" = "Tjeneste";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Aflader";
 "controllers.charging" = "Oplader";
 "controllers.batteryFull" = "Fuldt opladet";
+"controllers.notChargeable" = "Kan ikke oplades";
 "controllers.batteryAccessibilityDetails" = "Batteri: %@. Opladningstilstand: %@. Kabeltilstand: %@.";
 "controllers.activeProfile" = "Aktiv profil";
 "controllers.profileChecking" = "Tjekker…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Aktiv profil ikke tilgængelig";
 "controllers.profileLoadError" = "Aktiv profil kunne ikke indlæses";
 "controllers.protocol" = "Protokol";
-"controllers.parser" = "Parser";
 "controllers.serialNumber" = "Serienummer";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Inputendepunkt";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Fejl i aktiv profil: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokol: %@. Parser: %@. Serienummer: %@. USB VID/PID: %@. Inputendepunkt: %@. Outputendepunkt: %@.";
 "controllers.publishedAs" = "Udgivet som";
-"identity.title" = "Controlleridentitet";
-"identity.needsAttention" = "Kræver opmærksomhed";
-"identity.error" = "Fejl i controlleridentitet";
-"identity.updating" = "Opdaterer controlleridentitet…";
-"identity.reset" = "Nulstil til anbefalet";
-"identity.checking" = "Tjekker";
-"identity.globalScope" = "Gælder alle virtuelle controllere, som OpenJoystickDriver udgiver.";
-"identity.unavailable" = "Ikke tilgængelig";
-"identity.notSelected" = "Ikke valgt";
+"controllers.nativeGamepadNotPublished" = "Indbygget macOS-gamepad, ikke publiceret";
+"virtualProfile.advanced" = "Avanceret";
+"virtualProfile.title" = "Virtuel HID-profil";
+"virtualProfile.modelScope" = "Gælder for alle tilsluttede controllere af denne model.";
+"virtualProfile.sourceOverride" = "Tilsidesættelse";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automatisk, tilsidesættelse afvist";
+"virtualProfile.none" = "Ingen virtuel HID-profil";
+"virtualProfile.unavailable" = "Ingen virtuel HID-profil kan repræsentere denne controller.";
+"virtualProfile.updating" = "Opdaterer virtuel HID-profil…";
+"virtualProfile.live" = "Aktiv profil";
+"virtualProfile.failure.unknownProfile" = "Denne virtuelle HID-profil er ukendt. Intet blev gemt.";
+"virtualProfile.failure.controllerNotFound" = "Controlleren er frakoblet eller kan ikke findes. Tilsidesættelsen er uændret.";
+"virtualProfile.failure.overrideRejected" = "Tilsidesættelsen er gemt, men denne controller kan ikke bruge den, så den vælger automatisk.";
+"virtualProfile.failure.activationFailed" = "Aktivering mislykkedes, så den forrige virtuelle HID-profil blev gendannet: %@";
+"virtualProfile.failure.outputDisabled" = "Tilsidesættelsen er gemt og træder i kraft, når virtuelt output er slået til.";
+"virtualProfile.failure.serverStopped" = "Tjenesten stoppede. Tilsidesættelsen er uændret.";
+"virtualProfile.failure.persistenceFailed" = "Tilsidesættelsen kunne ikke gemmes. Intet blev gemt.";
+"virtualProfile.storeError" = "Tilsidesættelser af virtuel HID-profil kan ikke læses (%@). Controllere vælger automatisk.";
+"virtualProfile.legacyIdentityRejected" = "Den udfasede indstilling for controlleridentitet %@ anvendes ikke længere. Kør controller virtual reset --all for at rydde den.";
 "keyboard.noKey" = "Ingen tast valgt";
 "keyboard.pressKey" = "Tryk på en tast…";
 "keyboard.captureKey" = "Registrer tast";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Aktuel status";
 "debug.runtime" = "Kørsel";
 "debug.controllers" = "Controllere";
-"debug.controllerIdentity" = "Controlleridentitet";
 "debug.unavailable" = "Kørsel · ikke tilgængelig";
 "debug.needsAttention" = "Kørsel · kræver opmærksomhed";
 "debug.diagnostics" = "Diagnostik";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Controlleroutput er slået fra.";
 "debug.outputNeedsAttention" = "Controlleroutput kræver opmærksomhed.";
 "debug.serviceUnavailable" = "Tjenestediagnostik er ikke tilgængelig lige nu.";
-"error.selectedOutputUnavailable" = "Det valgte controlleroutput er ikke tilgængeligt.";
-"error.selectedOutputEnableFailed" = "Det valgte controlleroutput kunne ikke aktiveres.";
 "error.profileChanged" = "Denne profil blev ændret et andet sted. Indlæs igen, eller fortsæt redigering.";
 "error.duplicateProfile" = "Der findes allerede en profil med det navn.";
 "error.profileMissing" = "Den profil er ikke længere tilgængelig.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Kørsel";
 "common.controllers" = "Controllere";
 "common.profiles" = "Profiler";
-"common.controllerIdentity" = "Controlleridentitet";
 "common.protocol" = "Protokol";
-"common.parser" = "Parser";
 "common.serialNumber" = "Serienummer";
 "common.inputEndpoint" = "Inputendepunkt";
 "common.outputEndpoint" = "Outputendepunkt";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Det valgte profilelement er ikke længere tilgængeligt.";
 "cli.catalog.app_ready.summary" = "Tjek godkendt parathed for programtjenesten";
 "cli.catalog.app_status.summary" = "Vis status for programtjenesten";
-"cli.catalog.compat.summary" = "Administrer kompatibilitet for den virtuelle controller";
 "cli.catalog.controller_list.summary" = "Vis tilsluttede controllere";
 "cli.catalog.controller_output.summary" = "Test understøttet fysisk controlleroutput";
 "cli.catalog.controller_packets.summary" = "Vis seneste controllerpakker";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Vis driver- og kørselsstatus";
 "cli.catalog.test.summary" = "Test inputlevering for den virtuelle controller";
 "cli.catalog.update.summary" = "Tjek GitHub for tilgængelige opdateringer";
-"cli.compat.identity" = "kompatibilitetsidentitet: %@";
-"cli.compat.identity_unknown" = "kompatibilitetsidentitet: ukendt";
-"cli.compat.set_failed" = "Kunne ikke sætte kompatibilitetsidentiteten til %@. Start den installerede app, og kontrollér adgang til Inputovervågning og Tilgængelighed.";
-"cli.compat.usage" = "Brug: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "user-space-status: %@";
 "cli.controller.allAppleEntries" = "Alle nøjagtige Apple-katalogposter:";
 "cli.controller.appleIDs" = "    Apple-id’er: %@";
 "cli.controller.applePairs" = "  Apple-par    : %d nøjagtige VID/PID-poster";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Ingen tilsluttet controller matcher --device %@.";
 "cli.controller.selection.multiple" = "Flere controllere matcher. Vælg én med --device:\n  %@";
 "cli.controller.selection.none" = "Ingen controller er tilsluttet.";
+"cli.controller.virtual.live" = "Virtuel HID-profil: %@ (%@)";
+"cli.controller.virtual.none" = "Virtuel HID-profil: ingen (%@)";
+"cli.controller.virtual.failed" = "Anmodning om virtuel HID-profil mislykkedes: %@";
+"cli.controller.virtual.unknown_profile" = "Ukendt virtuel HID-profil “%@”. Brug en af: %@.";
+"cli.controller.virtual.missing_profile" = "“controller virtual set” kræver en virtuel HID-profil. Brug en af: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "“--all” kan ikke kombineres med --vid, --pid eller --device.";
+"cli.controller.virtual.reset_all.success" = "OK: ryddede alle tilsidesættelser af virtuel HID-profil.";
+"cli.controller.virtual.reset_all.failed" = "Kunne ikke nulstille indstillinger. Start den installerede app, og kontrollér dens tilladelser.";
 "cli.controller.selection.vid_pid_missing" = "Ingen tilsluttet controller matcher %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Angiv både VID og PID, eller udelad begge.";
 "cli.controller.serviceControllers" = "Controllere (fra kørende programtjeneste):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Tip: tildel den påkrævede entitlement og adgang til Inputovervågning.";
 "cli.controller.usbControllers" = "USB-controllere (klasse 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Angiv både VID og PID, eller udelad begge, når én controller er tilsluttet.";
-"cli.diagnose.advisory_candidate" = "    Rådgivende protokolkandidat: %@";
 "cli.diagnose.app_missing" = "  App: mangler på %@";
 "cli.diagnose.app_missing_fix" = "  Løsning: byg + installer appen til /Applications";
 "cli.diagnose.app_present" = "  App: til stede";
 "cli.diagnose.binary_path" = "Binær: %@";
-"cli.diagnose.catalog_conflict" = "      Observation er i konflikt med katalogfamilien; parser uændret";
-"cli.diagnose.catalog_parser" = "      Katalogparser forbliver %@ (%@)";
 "cli.diagnose.dext_found" = "  Fundne .dext-bundles:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      Endpunkt 0x%02X %@ %@ MaxPacket=%@ Interval =%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Ukendt svarkurve “%@”.";
 "cli.mapping.double_tap_format" = "--double-tap forventer <ms>:<target>, f.eks. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Brug: OpenJoystickDriver --headless map <command>\n\nKommandoer:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nKilde: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nMål: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAkseindstillinger:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurboindstillinger (kun tastatur- og museknapper):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktiveringsindstillinger (kun tastatur- og museknapper, gensidigt udelukkende med turbo):\n  --long-hold <ms>:<target>     f.eks. --long-hold 500:key:b\n  --double-tap <ms>:<target>    f.eks. --double-tap 300:key:c\n\n<profile> accepterer en UUID eller et nøjagtigt, versalfølsomt uafhængigt profilnavn.\n<id> accepterer decimal eller hexadecimalt med 0x-præfiks.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Brug: OpenJoystickDriver --headless map <command>\n\nKommandoer:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nKilde: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nMål: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAkseindstillinger:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurboindstillinger (kun tastatur- og museknapper):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktiveringsindstillinger (kun tastatur- og museknapper, gensidigt udelukkende med turbo):\n  --long-hold <ms>:<target>     f.eks. --long-hold 500:key:b\n  --double-tap <ms>:<target>    f.eks. --double-tap 300:key:c\n\n<profile> accepterer en UUID eller et nøjagtigt, versalfølsomt uafhængigt profilnavn.\n<id> accepterer decimal eller hexadecimalt med 0x-præfiks.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ skal være en 16-bit decimal eller 0x-præfikset hexadecimal identifikator.";
 "cli.mapping.jsonEncodeFailed" = "Kunne ikke kode UTF-8-JSON.";
 "cli.mapping.layer_action_unknown" = "Ukendt laghandling “%@”. Forventet: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver-programtjenesten kører ikke.";
 "cli.runtime.sample_limit" = "Konfigurationen ville indsamle %d samples; øg --interval-ms.";
 "cli.runtime.stable_note" = "En stabil, afgrænset soak er evidens for denne arbejdsbelastning, ikke bevis for at alle lækager mangler.";
-"cli.settings.reset.failed" = "Kunne ikke nulstille indstillinger. Start den installerede app, og kontrollér dens tilladelser.";
-"cli.settings.reset.next" = "Næste: kør compat set <identity> for at vælge kompatibilitetsidentitet.";
-"cli.settings.reset.success" = "OK: nulstillede programtjenesteindstillinger.";
 "cli.status.access_denied" = "Hvis adgang nægtes, kør --headless permissions request og godkend Inputovervågning og Tilgængelighed i Systemindstillinger.";
 "cli.status.heading" = "OpenJoystickDriver-status";
 "cli.status.json_error" = "Kunne ikke kode status-JSON: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Status: %@";
 "cli.updates.unknown_option" = "Ukendt updates-indstilling: %@";
 "common.unknown" = "Ukendt";
-"compatibility.appleGameController" = "Æble GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox - Det er ikke rigtigt.";
 "developer.buttons" = "Knapper";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B-knap";
 "inputTest.bCircle" = "B / cirkel";
 "inputTest.brightness" = "Højhed";
-"inputTest.circle" = "Cirkle";
 "inputTest.color" = "Farve";
 "inputTest.controls" = "Live-input";
-"inputTest.cross" = "- Krosser";
 "inputTest.disconnected" = "Kontroller afbrudt";
 "inputTest.dpadDown" = "D-pad ned";
 "inputTest.dpadLeft" = "D-pad venstre";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Der er ikke lysstyring til rådighed for denne styrer.";
 "inputTest.live" = "Indgang aktiv";
 "inputTest.menu" = "Mærke";
-"inputTest.minus" = "Minus";
 "inputTest.off" = "Fra";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Optioner";
 "inputTest.outputError" = "Fysisk outputfejl";
 "inputTest.outputRejected" = "Kontrolleren afviste denne udgangsprøve.";
 "inputTest.permissionRequired" = "Indgang Overvågning tilladelse kræves";
 "inputTest.playerIndicator" = "Indikator for spillerne";
-"inputTest.plus" = "- Og så.";
 "inputTest.pressed" = "Trykket";
-"inputTest.psButton" = "PS-knap";
 "inputTest.released" = "Slippe";
 "inputTest.rightBumper" = "Højre bumper";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Højre Y";
 "inputTest.rumble" = "Rumble";
 "inputTest.rumbleUnavailable" = "Rumble understøttes ikke af denne kontroller.";
-"inputTest.share" = "Del";
-"inputTest.square" = "Fjerde";
 "inputTest.stale" = "Indgang afbrydes";
 "inputTest.start" = "Start indgangstest";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Live-input";
 "inputTest.tabMotion" = "Forslag til afgørelse";
 "inputTest.tabOutput" = "Udgang";
-"inputTest.steamButton" = "Steam-knap";
 "inputTest.summary" = "Testen knapper, pinde, triggere, rumble og kontroller belysning.";
 "inputTest.testRumble" = "Test Rumble";
 "inputTest.title" = "Indgangstest";
-"inputTest.triangle" = "Trikant";
 "inputTest.unavailable" = "Indgang ikke tilgængelig";
 "inputTest.view" = "Udsigt";
 "inputTest.windowTitle" = "Indgangstest %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "De valgte Joy-Cons kunne ikke parres.";
 "profiles.joyConExplicitSession" = "Startet med en eksplicit par session";
 "profiles.joyConSessionState" = "Uforklaret paring";
-"profiles.gyro.virtualMotion" = "Forward kalibreret virtuel bevægelse";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ rumle (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Kontroller afbrudt";
 "controllers.resume" = "Prøv igen";
 "controllers.disconnectFromOJD" = "Kontroller afbrudt";
-"error.compatibilityTransitionDetailed" = "Det valgte controlleroutput kunne ikke aktiveres. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Det valgte controlleroutput kunne ikke aktiveres.";
 "cli.catalog.controller_disconnect.summary" = "Kontroller afbrudt";
 "cli.catalog.controller_resume.summary" = "Prøv igen — Kontroller afbrudt";
+"cli.catalog.controller_virtual_set.summary" = "Tilsidesæt en controllers virtuelle HID-profil";
+"cli.catalog.controller_virtual_reset.summary" = "Vælg en controllers virtuelle HID-profil automatisk, eller ryd alle tilsidesættelser med --all";
 "cli.controller.disconnected" = "Kontroller afbrudt";
 "cli.controller.resumed" = "Indgang aktiv";
 

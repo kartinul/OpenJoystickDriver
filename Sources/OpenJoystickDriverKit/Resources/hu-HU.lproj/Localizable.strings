@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Csatlakoztatott vezérlők ellenőrzése…";
 "status.refreshingProfile" = "A profilállapot frissítése…";
 "status.loadingProfiles" = "Profilok betöltése…";
-"status.updatingIdentity" = "A vezérlőazonosító frissítése…";
 "status.listening" = "Figyelés…";
 "status.readyToListen" = "Készen áll a figyelésre";
 "status.checkingInput" = "Ellenőrzés";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Vezérlők";
 "settings.controllerDisconnectedNotifications" = "Vezérlő leválasztva";
 "settings.controllerDisconnectedShort" = "Leválasztva";
-"settings.controllerIdentity" = "Vezérlőazonosító";
 "settings.controllerNotifications" = "Vezérlő csatlakoztatva";
 "settings.diagnostics" = "Diagnosztika";
 "settings.service" = "Szolgáltatás";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Merül";
 "controllers.charging" = "Töltés alatt";
 "controllers.batteryFull" = "Tele";
+"controllers.notChargeable" = "Nem tölthető";
 "controllers.batteryAccessibilityDetails" = "Akkumulátor: %@. Töltési állapot: %@. Kábel állapota: %@.";
 "controllers.activeProfile" = "Aktív profil";
 "controllers.profileChecking" = "Ellenőrzés…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Az aktív profil nem érhető el";
 "controllers.profileLoadError" = "Az aktív profilt nem sikerült betölteni";
 "controllers.protocol" = "Protokoll";
-"controllers.parser" = "Parzer";
 "controllers.serialNumber" = "Sorozatszám";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Bemeneti végpont";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Az aktív profil hibája: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokoll: %@. Parser: %@. Sorozatszám: %@. USB VID/PID: %@. Bemeneti végpont: %@. Kimeneti végpont: %@.";
 "controllers.publishedAs" = "Közzétéve mint";
-"identity.title" = "Vezérlőazonosító";
-"identity.needsAttention" = "Figyelmet igényel";
-"identity.error" = "Vezérlőazonosító-hiba";
-"identity.updating" = "A vezérlőazonosító frissítése…";
-"identity.reset" = "Ajánlott visszaállítása";
-"identity.checking" = "Ellenőrzés";
-"identity.globalScope" = "Az OpenJoystickDriver által közzétett összes virtuális vezérlőre vonatkozik.";
-"identity.unavailable" = "Nem érhető el";
-"identity.notSelected" = "Nincs kijelölve";
+"controllers.nativeGamepadNotPublished" = "Natív macOS-játékvezérlő, nincs közzétéve";
+"virtualProfile.advanced" = "Speciális";
+"virtualProfile.title" = "Virtuális HID-profil";
+"virtualProfile.modelScope" = "A modell minden csatlakoztatott vezérlőjére vonatkozik.";
+"virtualProfile.sourceOverride" = "Felülbírálás";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automatikus, felülbírálás elutasítva";
+"virtualProfile.none" = "Nincs virtuális HID-profil";
+"virtualProfile.unavailable" = "Egyetlen virtuális HID-profil sem tudja megjeleníteni ezt a vezérlőt.";
+"virtualProfile.updating" = "Virtuális HID-profil frissítése…";
+"virtualProfile.live" = "Aktív profil";
+"virtualProfile.failure.unknownProfile" = "Ez a virtuális HID-profil ismeretlen. Semmi sem lett mentve.";
+"virtualProfile.failure.controllerNotFound" = "A vezérlő leválasztódott vagy nem található. A felülbírálás nem változott.";
+"virtualProfile.failure.overrideRejected" = "A felülbírálás mentve, de ez a vezérlő nem tudja használni, ezért automatikusan választ.";
+"virtualProfile.failure.activationFailed" = "Az aktiválás sikertelen, ezért az előző virtuális HID-profil lett visszaállítva: %@";
+"virtualProfile.failure.outputDisabled" = "A felülbírálás mentve, és a virtuális kimenet bekapcsolásakor lép életbe.";
+"virtualProfile.failure.serverStopped" = "A szolgáltatás leállt. A felülbírálás nem változott.";
+"virtualProfile.failure.persistenceFailed" = "A felülbírálást nem sikerült menteni. Semmi sem lett mentve.";
+"virtualProfile.storeError" = "A virtuális HID-profil felülbírálásai nem olvashatók (%@). A vezérlők automatikusan választanak.";
+"virtualProfile.legacyIdentityRejected" = "A megszűnt %@ vezérlőazonosító-beállítás már nem érvényes. A törléshez futtasd a következőt: controller virtual reset --all.";
 "keyboard.noKey" = "Nincs kijelölt billentyű";
 "keyboard.pressKey" = "Nyomjon meg egy billentyűt…";
 "keyboard.captureKey" = "Billentyű rögzítése";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Jelenlegi állapot";
 "debug.runtime" = "Futtatókörnyezet";
 "debug.controllers" = "Vezérlők";
-"debug.controllerIdentity" = "Vezérlőazonosító";
 "debug.unavailable" = "Futtatókörnyezet · nem érhető el";
 "debug.needsAttention" = "Futtatókörnyezet · figyelmet igényel";
 "debug.diagnostics" = "Diagnosztika";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "A vezérlőkimenet ki van kapcsolva.";
 "debug.outputNeedsAttention" = "A vezérlőkimenet figyelmet igényel.";
 "debug.serviceUnavailable" = "A szolgáltatásdiagnosztika jelenleg nem érhető el.";
-"error.selectedOutputUnavailable" = "A kijelölt vezérlőkimenet nem érhető el.";
-"error.selectedOutputEnableFailed" = "A kijelölt vezérlőkimenetet nem sikerült engedélyezni.";
 "error.profileChanged" = "Ez a profil máshol módosult. Töltse be újra, vagy folytassa a szerkesztést.";
 "error.duplicateProfile" = "Már létezik ilyen nevű profil.";
 "error.profileMissing" = "Ez a profil már nem érhető el.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Futtatókörnyezet";
 "common.controllers" = "Vezérlők";
 "common.profiles" = "Profilok";
-"common.controllerIdentity" = "Vezérlőazonosító";
 "common.protocol" = "Protokoll";
-"common.parser" = "Parzer";
 "common.serialNumber" = "Sorozatszám";
 "common.inputEndpoint" = "Bemeneti végpont";
 "common.outputEndpoint" = "Kimeneti végpont";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "A kiválasztott profilállomány már nem áll rendelkezésre.";
 "cli.catalog.app_ready.summary" = "Hitelesített alkalmazásszolgáltatás készenlétének ellenőrzése";
 "cli.catalog.app_status.summary" = "Alkalmazásszolgáltatás állapotának megjelenítése";
-"cli.catalog.compat.summary" = "Virtuális vezérlő kompatibilitásának kezelése";
 "cli.catalog.controller_list.summary" = "Csatlakoztatott vezérlők listázása";
 "cli.catalog.controller_output.summary" = "Támogatott fizikai vezérlőkimenet tesztelése";
 "cli.catalog.controller_packets.summary" = "Legutóbbi vezérlőcsomagok megjelenítése";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Illesztőprogram és futtatókörnyezet állapotának megjelenítése";
 "cli.catalog.test.summary" = "Virtuális vezérlő bemenetkézbesítésének tesztelése";
 "cli.catalog.update.summary" = "Elérhető frissítések keresése a GitHubon";
-"cli.compat.identity" = "kompatibilitási identitás: %@";
-"cli.compat.identity_unknown" = "kompatibilitási identitás: ismeretlen";
-"cli.compat.set_failed" = "A kompatibilitási identitást nem sikerült %@ értékre állítani. Indítsa el a telepített alkalmazást, majd ellenőrizze a Bevitel figyelése és a Kisegítő lehetőségek hozzáférését.";
-"cli.compat.usage" = "Használat: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "felhasználói tér állapota: %@";
 "cli.controller.allAppleEntries" = "Az Apple-katalógus összes pontos bejegyzése:";
 "cli.controller.appleIDs" = "    Apple-azonosítók: %@";
 "cli.controller.applePairs" = "  Apple-párok  : %d pontos VID/PID bejegyzés";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Nincs csatlakoztatott vezérlő, amely illeszkedne a --device %@ értékhez.";
 "cli.controller.selection.multiple" = "Több vezérlő illeszkedik. Válasszon egyet a --device kapcsolóval:\n  %@";
 "cli.controller.selection.none" = "Nincs csatlakoztatott vezérlő.";
+"cli.controller.virtual.live" = "Virtuális HID-profil: %@ (%@)";
+"cli.controller.virtual.none" = "Virtuális HID-profil: nincs (%@)";
+"cli.controller.virtual.failed" = "A virtuális HID-profil kérése sikertelen: %@";
+"cli.controller.virtual.unknown_profile" = "Ismeretlen virtuális HID-profil: „%@“. Használja ezek egyikét: %@.";
+"cli.controller.virtual.missing_profile" = "A „controller virtual set“ parancshoz virtuális HID-profil szükséges. Használja ezek egyikét: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "A „--all“ nem kombinálható a --vid, --pid vagy --device kapcsolóval.";
+"cli.controller.virtual.reset_all.success" = "OK: minden virtuális HID-profil-felülbírálás törölve.";
+"cli.controller.virtual.reset_all.failed" = "A beállítások visszaállítása sikertelen. Indítsa el a telepített alkalmazást, és ellenőrizze az engedélyeit.";
 "cli.controller.selection.vid_pid_missing" = "Nincs csatlakoztatott vezérlő, amely illeszkedne ehhez: %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Adja meg a VID és a PID értékét is, vagy hagyja el mindkettőt.";
 "cli.controller.serviceControllers" = "Vezérlők (a futó alkalmazásszolgáltatásból):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Tipp: adja meg a szükséges jogosultságot és a Bevitel figyelése hozzáférést.";
 "cli.controller.usbControllers" = "USB-vezérlők (osztály 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Adja meg a VID és a PID értékét is, vagy hagyja el mindkettőt, ha egy vezérlő van csatlakoztatva.";
-"cli.diagnose.advisory_candidate" = "    Tanácsadó protokolljelölt: %@";
 "cli.diagnose.app_missing" = "  Alkalmazás: hiányzik itt: %@";
 "cli.diagnose.app_missing_fix" = "  Javítás: fordítsa le és telepítse az alkalmazást ide: /Applications";
 "cli.diagnose.app_present" = "  Alkalmazás: jelen van";
 "cli.diagnose.binary_path" = "Bináris: %@";
-"cli.diagnose.catalog_conflict" = "      A megfigyelés ütközik a katalóguscsaláddal; a parser változatlan";
-"cli.diagnose.catalog_parser" = "      A katalógus parser %@ marad (%@)";
 "cli.diagnose.dext_found" = "  Talált .dext csomagok:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      0x végpont%02X %@ %@ maxPacket=%@ Intervallum =%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Ismeretlen válasgörbe: „%@“.";
 "cli.mapping.double_tap_format" = "A --double-tap formátuma <ms>:<target>, pl. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Használat: OpenJoystickDriver --headless map <command>\n\nParancsok:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nForrás: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nCél: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nTengelykapcsolók:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbókapcsolók (csak billentyűzet- és egérgombok):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktiválási kapcsolók (csak billentyűzet- és egérgombok, a turbóval kölcsönösen kizáró):\n  --long-hold <ms>:<target>     pl. --long-hold 500:key:b\n  --double-tap <ms>:<target>    pl. --double-tap 300:key:c\n\nA <profile> UUID-t vagy pontos, kis- és nagybetűt nem megkülönböztető profilnevet fogad el.\nAz <id> tizes vagy 0x előtagú hexadecimális értéket fogad el.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Használat: OpenJoystickDriver --headless map <command>\n\nParancsok:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nForrás: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nCél: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nTengelykapcsolók:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbókapcsolók (csak billentyűzet- és egérgombok):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktiválási kapcsolók (csak billentyűzet- és egérgombok, a turbóval kölcsönösen kizáró):\n  --long-hold <ms>:<target>     pl. --long-hold 500:key:b\n  --double-tap <ms>:<target>    pl. --double-tap 300:key:c\n\nA <profile> UUID-t vagy pontos, kis- és nagybetűt nem megkülönböztető profilnevet fogad el.\nAz <id> tizes vagy 0x előtagú hexadecimális értéket fogad el.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ 16 bites tizes vagy 0x előtagú hexadecimális azonosító kell legyen.";
 "cli.mapping.jsonEncodeFailed" = "A UTF-8 JSON kódolása sikertelen.";
 "cli.mapping.layer_action_unknown" = "Ismeretlen rétegművelet: „%@“. Várt: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "Az OpenJoystickDriver alkalmazásszolgáltatás nem fut.";
 "cli.runtime.sample_limit" = "A konfiguráció %d mintát gyűjtene; növelje a --interval-ms értéket.";
 "cli.runtime.stable_note" = "A stabil, korlátozott áztatás erre a terhelésre bizonyíték, nem annak bizonyítéka, hogy nincsenek szivárgások.";
-"cli.settings.reset.failed" = "A beállítások visszaállítása sikertelen. Indítsa el a telepített alkalmazást, és ellenőrizze az engedélyeit.";
-"cli.settings.reset.next" = "Következő: futtassa a compat set <identity> parancsot a kompatibilitási identitás kiválasztásához.";
-"cli.settings.reset.success" = "OK: az alkalmazásszolgáltatás beállításai visszaállítva.";
 "cli.status.access_denied" = "Ha a hozzáférés megtagadva, futtassa a --headless permissions request parancsot, majd hagyja jóvá a Bevitel figyelése és a Kisegítő lehetőségek hozzáférést a Rendszerbeállításokban.";
 "cli.status.heading" = "OpenJoystickDriver állapot";
 "cli.status.json_error" = "Az állapot JSON kódolása sikertelen: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Állapot     : %@";
 "cli.updates.unknown_option" = "Ismeretlen updates kapcsoló: %@";
 "common.unknown" = "Ismeretlen";
-"compatibility.appleGameController" = "Apple GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (Originális)";
 "developer.buttons" = "Gombok";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B gomb";
 "inputTest.bCircle" = "B / Kör";
 "inputTest.brightness" = "Világosság";
-"inputTest.circle" = "Kör";
 "inputTest.color" = "Színe";
 "inputTest.controls" = "Élő bemenet";
-"inputTest.cross" = "Kereszt";
 "inputTest.disconnected" = "A vezérlő le van kapcsolva";
 "inputTest.dpadDown" = "Iránykapcsoló le";
 "inputTest.dpadLeft" = "Iránykapcsoló balra";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "A vezérlőre nem áll rendelkezésre a világítás vezérlője.";
 "inputTest.live" = "Beadási aktiv";
 "inputTest.menu" = "Menü";
-"inputTest.minus" = "Mínusz";
 "inputTest.off" = "Ki";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Beállítások";
 "inputTest.outputError" = "Fizikai kimeneti hiba";
 "inputTest.outputRejected" = "A vezérlő elutasította ezt a kimeneti vizsgálatot.";
 "inputTest.permissionRequired" = "Beadási bevitel Szükséges a felügyeleti engedély";
 "inputTest.playerIndicator" = "A játékos jelzője";
-"inputTest.plus" = "Plusz";
 "inputTest.pressed" = "Lenyomva";
-"inputTest.psButton" = "PS gomb";
 "inputTest.released" = "Felengedve";
 "inputTest.rightBumper" = "Jobb vállgomb";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Jobb Y";
 "inputTest.rumble" = "Rümble";
 "inputTest.rumbleUnavailable" = "A Rumble-t nem támogatja ez a vezérlő.";
-"inputTest.share" = "Megosztás";
-"inputTest.square" = "Négyzet";
 "inputTest.stale" = "Bejárat megszakadt";
 "inputTest.start" = "Kezdjük a bejuttatási teszteket";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Élő bemenet";
 "inputTest.tabMotion" = "A javaslat";
 "inputTest.tabOutput" = "A kivitel";
-"inputTest.steamButton" = "Steam gomb";
 "inputTest.summary" = "A teszt gombok, a pálcok, a kiutatók, a rumble és a vezérlő világítás.";
 "inputTest.testRumble" = "Teszt Rumble";
 "inputTest.title" = "Bejárati teszt";
-"inputTest.triangle" = "Háromszög";
 "inputTest.unavailable" = "Nem elérhető beadás";
 "inputTest.view" = "Nézet";
 "inputTest.windowTitle" = "Bejárati teszt %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "A kiválasztott Joy-Cons nem párosult, frissítse a csatlakoztatott vezérlőket, és próbáljon meg újra.";
 "profiles.joyConExplicitSession" = "Egy kifejezett párbeszédből kezdődött.";
 "profiles.joyConSessionState" = "Kihívott párosítás";
-"profiles.gyro.virtualMotion" = "Előre kalibrált virtuális mozgás";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (Rumble)%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "A vezérlő le van kapcsolva";
 "controllers.resume" = "Újra";
 "controllers.disconnectFromOJD" = "A vezérlő le van kapcsolva";
-"error.compatibilityTransitionDetailed" = "A kijelölt vezérlőkimenetet nem sikerült engedélyezni. (%@, %@)";
 "error.controllerSessionChangeRejected" = "A kijelölt vezérlőkimenetet nem sikerült engedélyezni.";
 "cli.catalog.controller_disconnect.summary" = "A vezérlő le van kapcsolva";
 "cli.catalog.controller_resume.summary" = "Újra — A vezérlő le van kapcsolva";
+"cli.catalog.controller_virtual_set.summary" = "Vezérlő virtuális HID-profiljának felülbírálása";
+"cli.catalog.controller_virtual_reset.summary" = "Vezérlő virtuális HID-profiljának automatikus kiválasztása, vagy az összes felülbírálás törlése a --all paranccsal";
 "cli.controller.disconnected" = "A vezérlő le van kapcsolva";
 "cli.controller.resumed" = "Beadási aktiv";
 

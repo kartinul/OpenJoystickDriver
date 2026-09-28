@@ -15,6 +15,7 @@ struct GIPConstantsTests {
     #expect(GIPDeviceState.enroll.rawValue == 0x06)
     #expect(GIPDeviceState.reset.rawValue == 0x07)
   }
+
   @Test
   func test_authState_expectedPayloadSize_matches_windows_driver() {
     #expect(GIPAuthState.hostInit.expectedPayloadSize == 40)
@@ -25,6 +26,7 @@ struct GIPConstantsTests {
     #expect(GIPAuthState.hostResponse5.expectedPayloadSize == 36)
     #expect(GIPAuthState.hostComplete.expectedPayloadSize == 68)
   }
+
   @Test
   func test_authState_isDeviceToHost_correct_for_all_cases() {
     // Device -> Host states (rawValue < 0x20)
@@ -41,6 +43,7 @@ struct GIPConstantsTests {
     ]
     for state in hostStates { #expect(!state.isDeviceToHost) }
   }
+
   @Test
   func test_deviceState_has_all_8_states() {
     let allStates: [GIPDeviceState] = [
@@ -50,6 +53,7 @@ struct GIPConstantsTests {
     let rawValues = Set(allStates.map(\.rawValue))
     #expect(rawValues.count == 8)
   }
+
   @Test
   func test_deviceState_expectedPayloadSize_nil_for_device_states() {
     let deviceStates: [GIPAuthState] = [
@@ -58,6 +62,7 @@ struct GIPConstantsTests {
     ]
     for state in deviceStates { #expect(state.expectedPayloadSize == nil) }
   }
+
   @Test
   func test_command_constants_match_protocol() {
     #expect(GIPCommand.acknowledge == 0x01)
@@ -70,6 +75,7 @@ struct GIPConstantsTests {
     #expect(GIPCommand.led == 0x0A)
     #expect(GIPCommand.input == 0x20)
   }
+
   @Test
   func test_option_constants_match_protocol() {
     #expect(GIPOption.acknowledge == 0x10)
@@ -77,6 +83,7 @@ struct GIPConstantsTests {
     #expect(GIPOption.chunkStart == 0x40)
     #expect(GIPOption.chunk == 0x80)
   }
+
   @Test
   func test_authType_constants() {
     #expect(GIPAuthType.host == 0x41)

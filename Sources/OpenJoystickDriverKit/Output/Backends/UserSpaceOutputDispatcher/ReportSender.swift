@@ -1,6 +1,6 @@
 import Foundation
 
-/// One bounded, ordered stream for event reports, keepalives, and host-protocol replies.
+/// One bounded, ordered stream for event reports and host-protocol replies.
 /// Closing revokes new submissions and detaches the backend before the active native send drains.
 final class UserSpaceReportSender: @unchecked Sendable {
   enum Failure: Error, Equatable, LocalizedError, Sendable {

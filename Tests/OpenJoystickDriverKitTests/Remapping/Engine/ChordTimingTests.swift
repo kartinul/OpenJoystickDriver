@@ -9,10 +9,10 @@ struct RemappingChordTimingTests {
     var state = RemappingEngineState()
     let profile = profile(mode: .simultaneous)
     #expect(
-      state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0).isEmpty
+      state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0).isEmpty
     )
     let actions = state.process(
-      events: [.buttonPressed(.b)],
+      inputs: [.press(.faceEast)],
       from: identifier,
       profile: profile,
       at: delay
@@ -24,10 +24,10 @@ struct RemappingChordTimingTests {
   func modifierDoesNotRequireSimultaneousPresses() {
     var state = RemappingEngineState()
     let profile = profile(mode: .modifier)
-    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
+    _ = state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0)
     #expect(
       state.process(
-        events: [.buttonPressed(.b)],
+        inputs: [.press(.faceEast)],
         from: identifier,
         profile: profile,
         at: 5_000_000_000
@@ -39,22 +39,22 @@ struct RemappingChordTimingTests {
   func releaseAndRepressUsesFreshPressTime() {
     var state = RemappingEngineState()
     let profile = profile(mode: .simultaneous)
-    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
+    _ = state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0)
     _ = state.process(
-      events: [.buttonPressed(.b)],
+      inputs: [.press(.faceEast)],
       from: identifier,
       profile: profile,
       at: 100_000_000
     )
     _ = state.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: identifier,
       profile: profile,
       at: 110_000_000
     )
     #expect(
       state.process(
-        events: [.buttonPressed(.a)],
+        inputs: [.press(.faceSouth)],
         from: identifier,
         profile: profile,
         at: 120_000_000
@@ -62,7 +62,7 @@ struct RemappingChordTimingTests {
     )
     #expect(
       state.process(
-        events: [.buttonReleased(.b)],
+        inputs: [.release(.faceEast)],
         from: identifier,
         profile: profile,
         at: 130_000_000

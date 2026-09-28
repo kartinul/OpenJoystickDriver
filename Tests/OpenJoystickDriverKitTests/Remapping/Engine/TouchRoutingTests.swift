@@ -22,31 +22,31 @@ struct RemappingTouchRoutingTests {
     let second = device(2)
 
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: true, x: 10, y: 10))],
+      inputs: [.touch(sample(.primary, slot: 0, active: true, x: percent(10), y: percent(10)))],
       from: first,
       using: profile,
       at: 1
     )
     try await engine.process(
-      events: [.touchSample(sample(.left, id: 0, active: true, x: 10, y: 10))],
+      inputs: [.touch(sample(.left, slot: 0, active: true, x: percent(10), y: percent(10)))],
       from: first,
       using: profile,
       at: 2
     )
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: true, x: 80, y: 10))],
+      inputs: [.touch(sample(.primary, slot: 0, active: true, x: percent(80), y: percent(10)))],
       from: first,
       using: profile,
       at: 3
     )
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: false, x: 80, y: 10))],
+      inputs: [.touch(sample(.primary, slot: 0, active: false, x: percent(80), y: percent(10)))],
       from: first,
       using: profile,
       at: 4
     )
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: true, x: 10, y: 10))],
+      inputs: [.touch(sample(.primary, slot: 0, active: true, x: percent(10), y: percent(10)))],
       from: second,
       using: profile,
       at: 5
@@ -61,7 +61,7 @@ struct RemappingTouchRoutingTests {
   }
 
   @Test
-  func pointerUsesSurfaceGeometryAndResetsBaselineOnGeometryOrContactChange() async throws {
+  func pointerUsesNormalizedSpanAndResetsBaselineOnContactChange() async throws {
     let recorder = TouchOutputRecorder()
     let engine = RemappingEventEngine(sink: recorder)
     let profile = makeProfile(touchMappings: [
@@ -69,21 +69,56 @@ struct RemappingTouchRoutingTests {
     ])
 
     for (index, event) in [
-      sample(.left, id: 0, active: true, x: -32_768, y: -32_768, width: 65_536, height: 65_536),
-      sample(.left, id: 0, active: true, x: 0, y: -16_384, width: 65_536, height: 65_536),
-      sample(.right, id: 0, active: true, x: 90, y: 90),
-      sample(.left, id: 0, active: true, x: 50, y: 50),
-      sample(.left, id: 1, active: true, x: 75, y: 75),
+      sample(.left, slot: 0, active: true, x: 0, y: 0),
+      sample(.left, slot: 0, active: true, x: 32_768, y: 16_384),
+      sample(.right, slot: 0, active: true, x: 58_982, y: 58_982),
+      sample(.left, slot: 1, active: true, x: 49_151, y: 49_151),
     ].enumerated() {
       try await engine.process(
-        events: [.touchSample(event)],
+        inputs: [.touch(event)],
         from: device(1),
         using: profile,
         at: UInt64(index)
       )
     }
 
-    #expect(recorder.systemActions == [.pointerDelta(x: 500, y: 250)])
+    // Pointer sensitivity is points per complete span: 65535 steps.
+    let span = Double(UInt16.max)
+    let expected = RemappingSystemInputAction.pointerDelta(
+      x: 32_768 / span * 1_000,
+      y: 16_384 / span * 1_000
+    )
+    #expect(recorder.systemActions == [expected])
+  }
+
+  @Test
+  func aJumpWithinOneContactIsMotionAndALiftThenRetouchStartsAFreshContact() async throws {
+    let recorder = TouchOutputRecorder()
+    let engine = RemappingEventEngine(sink: recorder)
+    let profile = makeProfile(touchMappings: [
+      RemappingTouchMapping(surface: .primary, mode: .pointer, pointerSensitivity: 1_000)
+    ])
+
+    for (index, event) in [
+      sample(.primary, slot: 1, active: true, x: 0, y: 0),
+      sample(.primary, slot: 1, active: true, x: 65_535, y: 0),
+      sample(.primary, slot: 1, active: false, x: 65_535, y: 0),
+      sample(.primary, slot: 1, active: true, x: 0, y: 0),
+      sample(.primary, slot: 1, active: true, x: 0, y: 65_535),
+    ].enumerated() {
+      try await engine.process(
+        inputs: [.touch(event)],
+        from: device(1),
+        using: profile,
+        at: UInt64(index)
+      )
+    }
+
+    // Slots, not device tracking IDs, identify contacts: without an inactive frame a jump reads
+    // as motion; after one, the slot starts a new contact with a fresh baseline.
+    #expect(
+      recorder.systemActions == [.pointerDelta(x: 1_000, y: 0), .pointerDelta(x: 0, y: 1_000)]
+    )
   }
 
   @Test
@@ -95,20 +130,20 @@ struct RemappingTouchRoutingTests {
     ])
 
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: true, x: 10, y: 10))],
+      inputs: [.touch(sample(.primary, slot: 0, active: true, x: percent(10), y: percent(10)))],
       from: device(1),
       using: profile,
       at: 1
     )
     #expect(recorder.systemActions == [.keyDown(.a)])
     try await engine.process(
-      events: [.buttonPressed(.touchpad), .buttonReleased(.touchpad)],
+      inputs: [.press(.touchpadClick), .release(.touchpadClick)],
       from: device(1),
       using: profile,
       at: 2
     )
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: false, x: 10, y: 10))],
+      inputs: [.touch(sample(.primary, slot: 0, active: false, x: percent(10), y: percent(10)))],
       from: device(1),
       using: profile,
       at: 3
@@ -123,25 +158,30 @@ struct RemappingTouchRoutingTests {
     let profile = makeProfile(
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
       touchMappings: [
-        RemappingTouchMapping(surface: .primary, mode: .leftStick, stickRadius: 0.5, deadzone: 0)
+        RemappingTouchMapping(
+          surface: .primary,
+          mode: .leftStick,
+          stickRadius: stickRadius,
+          deadzone: 0
+        )
       ]
     )
     let identifier = device(1)
 
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: true, x: 25, y: 50))],
+      inputs: [.touch(sample(.primary, slot: 0, active: true, x: 0, y: percent(50)))],
       from: identifier,
       using: profile,
       at: 1
     )
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: true, x: 75, y: 50))],
+      inputs: [.touch(sample(.primary, slot: 0, active: true, x: halfSpan, y: percent(50)))],
       from: identifier,
       using: profile,
       at: 2
     )
     try await engine.process(
-      events: [.touchSample(sample(.primary, id: 0, active: false, x: 75, y: 50))],
+      inputs: [.touch(sample(.primary, slot: 0, active: false, x: halfSpan, y: percent(50)))],
       from: identifier,
       using: profile,
       at: 3
@@ -157,7 +197,12 @@ struct RemappingTouchRoutingTests {
     let profile = makeProfile(
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .mapped),
       touchMappings: [
-        RemappingTouchMapping(surface: .primary, mode: .leftStick, stickRadius: 0.5, deadzone: 0)
+        RemappingTouchMapping(
+          surface: .primary,
+          mode: .leftStick,
+          stickRadius: stickRadius,
+          deadzone: 0
+        )
       ],
       bindings: [binding(.touchContact(.primary), .a)]
     )
@@ -165,9 +210,9 @@ struct RemappingTouchRoutingTests {
     let second = device(2)
     for identifier in [first, second] {
       try await engine.process(
-        events: [
-          .touchSample(sample(.primary, id: 0, active: true, x: 25, y: 50)),
-          .touchSample(sample(.primary, id: 0, active: true, x: 75, y: 50)),
+        inputs: [
+          .touch(sample(.primary, slot: 0, active: true, x: 0, y: percent(50))),
+          .touch(sample(.primary, slot: 0, active: true, x: halfSpan, y: percent(50))),
         ],
         from: identifier,
         using: profile,
@@ -212,33 +257,28 @@ struct RemappingTouchRoutingTests {
     DeviceIdentifier(vendorID: 1, productID: 2, locationID: locationID)
   }
 
+  /// The largest travel below half the span, and a stick radius equal to it, so a contact that
+  /// travels it deflects the stick by exactly 1 without saturating.
+  private let halfSpan: UInt16 = 32_767
+  private let stickRadius = 32_767.0 / 65_535
+
+  /// Contacts in percent of the surface span use `percent`; others pass normalized steps.
   private func sample(
     _ surface: ControllerTouchSurface,
-    id: UInt8,
+    slot: UInt8,
     active: Bool,
-    x: Int32,
-    y: Int32,
-    width: UInt32 = 100,
-    height: UInt32 = 100
+    x: UInt16,
+    y: UInt16
   ) -> ControllerTouchSample {
     ControllerTouchSample(
-      reportTimestamp: ControllerSampleTimestamp(
-        rawCounter: 0,
-        elapsedNanoseconds: 0,
-        tickNanosecondsNumerator: nil,
-        tickNanosecondsDenominator: nil,
-        sequenceIndex: 0,
-        basis: .hostEstimate
-      ),
-      rawTouchCounter: nil,
-      historyIndex: 0,
-      width: width,
-      height: height,
-      contacts: [ControllerTouchContact(id: id, isActive: active, x: x, y: y)],
       surface: surface,
-      originX: width == 65_536 ? -32_768 : 0,
-      originY: width == 65_536 ? -32_768 : 0
+      timestamp: MonotonicTimestamp(nanoseconds: 0),
+      contacts: [ControllerTouchContact(slot: slot, isActive: active, x: x, y: y)]
     )
+  }
+
+  private func percent(_ value: UInt16) -> UInt16 {
+    UInt16((Double(value) / 100 * Double(UInt16.max)).rounded())
   }
 }
 

@@ -23,7 +23,7 @@ struct DeveloperToolsTests {
     let packet = try packetEntry(timestamp: 1, hex: "01")
     let gateway = GatewayStub(
       statusPayload: statusPayload(device: device()),
-      inputState: inputState(button: .mute),
+      inputState: inputState(button: .microphone),
       packetEntries: [packet]
     )
     let model = DeveloperToolsViewModel(gateway: gateway)
@@ -32,7 +32,7 @@ struct DeveloperToolsTests {
 
     #expect(model.loadState == .ready)
     #expect(model.packets.map(\.hex) == ["01"])
-    #expect(model.observedExtraInputs == [Button.mute.rawValue])
+    #expect(model.observedExtraInputs == [.microphone])
   }
 
   @Test
@@ -47,7 +47,7 @@ struct DeveloperToolsTests {
 
     await model.refresh()
 
-    #expect(model.observedExtraInputs == [Button.share.rawValue])
+    #expect(model.observedExtraInputs == [.share])
   }
 
   @Test
@@ -178,8 +178,8 @@ struct DeveloperToolsTests {
     let gateway = GatewayStub(
       statusPayload: statusPayload(devices: [firstDevice, secondDevice]),
       inputStatesByRuntimeIdentifier: [
-        firstDevice.runtimeIdentifier: inputState(button: .mute),
-        secondDevice.runtimeIdentifier: inputState(button: .touchpad),
+        firstDevice.runtimeIdentifier: inputState(button: .microphone),
+        secondDevice.runtimeIdentifier: inputState(button: .touchpadClick),
       ],
       packetEntriesByRuntimeIdentifier: [
         firstDevice.runtimeIdentifier: [firstPacket],
@@ -198,7 +198,7 @@ struct DeveloperToolsTests {
     await waitUntil { model.packets.map(\.hex) == ["02"] }
 
     #expect(model.selectedDevice?.runtimeIdentifier == secondDevice.runtimeIdentifier)
-    #expect(model.latestInput?.pressedButtons == [Button.touchpad.rawValue])
+    #expect(model.latestInput?.pressed == [.touchpadClick])
     #expect(model.packets.map(\.hex) == ["02"])
   }
 
@@ -229,8 +229,8 @@ struct DeveloperToolsTests {
     let gateway = GatewayStub(
       statusPayload: statusPayload(devices: [firstDevice, secondDevice]),
       inputStatesByRuntimeIdentifier: [
-        firstDevice.runtimeIdentifier: inputState(button: .mute),
-        secondDevice.runtimeIdentifier: inputState(button: .touchpad),
+        firstDevice.runtimeIdentifier: inputState(button: .microphone),
+        secondDevice.runtimeIdentifier: inputState(button: .touchpadClick),
       ],
       packetEntriesByRuntimeIdentifier: [
         firstDevice.runtimeIdentifier: [firstPacket],
@@ -268,11 +268,10 @@ struct DeveloperToolsTests {
       name: "Controller",
       vendorID: 0x1234,
       productID: 0x5678,
-      parser: "GIP",
+      protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
       discoverySource: .rawUSB,
       serialNumber: nil,
-      protocolVariant: .xboxOne,
       inputEndpoint: 0x82,
       outputEndpoint: 0x02,
       runtimeIdentifier: runtimeIdentifier
@@ -291,14 +290,13 @@ struct DeveloperToolsTests {
       accessibility: "granted",
       connectedDevices: devices,
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "ready",
-      compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+      userSpaceVirtualDeviceStatus: "ready"
     )
   }
 
-  private func inputState(button: Button?) -> DeviceInputState {
-    var state = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    if let button { state.pressedButtons = [button.rawValue] }
+  private func inputState(button: ControlID?) -> ControllerState {
+    var state = ControllerState.neutral
+    if let button { state.pressed = [button] }
     return state
   }
 

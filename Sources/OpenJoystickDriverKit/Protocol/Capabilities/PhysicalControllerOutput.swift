@@ -167,164 +167,25 @@ public struct PhysicalUSBOutputPacket: Equatable, Sendable {
   }
 }
 
-/// Reports that must be written in order as one physical HID command.
-public struct PhysicalHIDOutputPlan: Equatable, Sendable {
-  public let reports: [PhysicalHIDOutputReport]
+/// One write a driver asks its pipeline to perform; each write names its own destination.
+public enum PhysicalOutputWrite: Equatable, Sendable {
+  /// An interrupt OUT packet. A tolerated rejection (I/O error, timeout, missing or unsupported
+  /// endpoint) is logged and does not fail the lifecycle step that produced the write.
+  case usb(PhysicalUSBOutputPacket, toleratesRejection: Bool = false)
+  /// A HID output report on the bound HID device.
+  case hidOutput(PhysicalHIDOutputReport)
+  /// A HID feature report on the bound HID device.
+  case hidFeature(PhysicalHIDOutputReport)
+}
+
+/// Writes that carry one physical output command, sent in order at `intervalNanoseconds`
+/// spacing; each write names its own destination.
+public struct PhysicalOutputPlan: Equatable, Sendable {
+  public let writes: [PhysicalOutputWrite]
   public let intervalNanoseconds: UInt64
 
-  public init(reports: [PhysicalHIDOutputReport], intervalNanoseconds: UInt64 = 0) {
-    self.reports = reports
+  public init(writes: [PhysicalOutputWrite], intervalNanoseconds: UInt64 = 0) {
+    self.writes = writes
     self.intervalNanoseconds = intervalNanoseconds
   }
-}
-
-/// Optional physical output support exposed by USB-backed controller protocols.
-public protocol PhysicalRumbleOutput: AnyObject {
-  /// Rumble motors the protocol implementation can address.
-  var physicalRumbleMotors: [PhysicalRumbleMotor] { get }
-
-  /// True when the protocol has source-backed physical rumble output.
-  var supportsPhysicalRumble: Bool { get }
-
-  /// Builds the transport packet for physical rumble.
-  func physicalRumblePacket(
-    left: UInt8,
-    right: UInt8,
-    lt: UInt8,
-    rt: UInt8
-  ) -> PhysicalUSBOutputPacket
-}
-
-extension PhysicalRumbleOutput {
-  public var physicalRumbleMotors: [PhysicalRumbleMotor] { [.leftMain, .rightMain] }
-
-  public var supportsPhysicalRumble: Bool { !physicalRumbleMotors.isEmpty }
-}
-
-/// Optional physical output support exposed by HID-backed controller protocols.
-public protocol PhysicalHIDRumbleOutput: AnyObject {
-  var physicalRumbleMotors: [PhysicalRumbleMotor] { get }
-  var physicalBinaryRumbleMotors: [PhysicalRumbleMotor] { get }
-  var minimumPhysicalOutputIntervalNanoseconds: UInt64 { get }
-  var supportsPhysicalRumble: Bool { get }
-
-  func physicalRumbleReport(
-    left: UInt8,
-    right: UInt8,
-    lt: UInt8,
-    rt: UInt8
-  ) -> PhysicalHIDOutputReport
-}
-
-extension PhysicalHIDRumbleOutput {
-  public var physicalRumbleMotors: [PhysicalRumbleMotor] { [.leftMain, .rightMain] }
-
-  public var physicalBinaryRumbleMotors: [PhysicalRumbleMotor] { [] }
-  public var minimumPhysicalOutputIntervalNanoseconds: UInt64 { 0 }
-
-  public var supportsPhysicalRumble: Bool { !physicalRumbleMotors.isEmpty }
-}
-
-/// Optional feature-report haptics used by controllers without conventional rumble motors.
-public protocol PhysicalHIDFeatureHapticOutput: AnyObject {
-  var physicalRumbleMotors: [PhysicalRumbleMotor] { get }
-
-  func physicalHapticReports(
-    left: UInt8,
-    right: UInt8,
-    durationMs: Int
-  ) -> [PhysicalHIDOutputReport]
-}
-
-/// Optional RGB lightbar support delivered through a HID output report.
-public protocol PhysicalHIDColorOutput: AnyObject {
-  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
-  var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { get }
-  func physicalColorReport(red: UInt8, green: UInt8, blue: UInt8) -> PhysicalHIDOutputReport
-}
-
-extension PhysicalHIDColorOutput {
-  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableColor] }
-}
-
-/// Ordered RGB writes for devices whose lighting command spans several HID reports.
-public protocol PhysicalHIDColorOutputPlan: AnyObject {
-  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
-  var physicalDefaultColor: (red: UInt8, green: UInt8, blue: UInt8) { get }
-  func physicalColorOutputPlan(red: UInt8, green: UInt8, blue: UInt8) -> PhysicalHIDOutputPlan?
-}
-
-extension PhysicalHIDColorOutputPlan {
-  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableColor] }
-}
-
-/// Optional scalar LED-brightness support delivered through a HID feature report.
-public protocol PhysicalHIDFeatureBrightnessOutput: AnyObject {
-  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
-  func physicalBrightnessReport(_ brightness: UInt8) -> PhysicalHIDOutputReport
-}
-
-extension PhysicalHIDFeatureBrightnessOutput {
-  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableBrightness] }
-}
-
-/// Ordered brightness writes for devices using HID output rather than a feature report.
-public protocol PhysicalHIDBrightnessOutputPlan: AnyObject {
-  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
-  func physicalBrightnessOutputPlan(_ brightness: UInt8) -> PhysicalHIDOutputPlan?
-}
-
-extension PhysicalHIDBrightnessOutputPlan {
-  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableBrightness] }
-}
-
-/// Ordered brightness writes for raw-USB protocols.
-public protocol PhysicalUSBBrightnessOutputPlan: AnyObject {
-  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
-  func physicalBrightnessOutputPackets(_ brightness: UInt8) -> [PhysicalUSBOutputPacket]?
-}
-
-extension PhysicalUSBBrightnessOutputPlan {
-  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.programmableBrightness] }
-}
-
-/// Optional physical player-indicator support exposed by HID-backed protocols.
-public protocol PhysicalHIDPlayerIndicatorOutput: AnyObject {
-  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
-
-  func physicalPlayerIndicatorReport(
-    _ indicator: PhysicalPlayerIndicator
-  ) -> PhysicalHIDOutputReport
-}
-
-/// Optional adaptive-trigger support delivered through a HID output report.
-public protocol PhysicalHIDAdaptiveTriggerOutput: AnyObject {
-  var physicalAdaptiveTriggers: [PhysicalAdaptiveTrigger] { get }
-  func physicalAdaptiveTriggerReport(
-    _ trigger: PhysicalAdaptiveTrigger,
-    effect: PhysicalAdaptiveTriggerEffect
-  ) -> PhysicalHIDOutputReport
-}
-
-extension PhysicalHIDAdaptiveTriggerOutput {
-  public var physicalAdaptiveTriggers: [PhysicalAdaptiveTrigger] {
-    PhysicalAdaptiveTrigger.allCases
-  }
-}
-
-extension PhysicalHIDPlayerIndicatorOutput {
-  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.playerIndicator] }
-}
-
-/// Optional physical player-indicator support exposed by USB-backed protocols.
-public protocol PhysicalPlayerIndicatorOutput: AnyObject {
-  var physicalLightingFeatures: [PhysicalLightingFeature] { get }
-
-  func physicalPlayerIndicatorPacket(
-    _ indicator: PhysicalPlayerIndicator
-  ) -> PhysicalUSBOutputPacket
-}
-
-extension PhysicalPlayerIndicatorOutput {
-  public var physicalLightingFeatures: [PhysicalLightingFeature] { [.playerIndicator] }
 }

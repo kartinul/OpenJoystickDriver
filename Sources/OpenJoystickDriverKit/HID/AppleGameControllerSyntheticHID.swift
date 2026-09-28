@@ -1,4 +1,3 @@
-import CoreHID
 import Foundation
 import IOKit
 import IOKit.hid
@@ -7,8 +6,8 @@ import IOKit.hid
 ///
 /// GameController.framework publishes an `AppleGCSyntheticDevice` HID shim (product
 /// `GamePad-1`, typically `045E:028E` / `_GCSyntheticDeviceType=Xbox360Controller`)
-/// when it binds an Xbox pad. `IOHIDDeviceCreate` / CoreHID `HIDDeviceClient`
-/// load `AppleSyntheticGameController.plugin` and `IOServiceOpen` that node.
+/// when it binds an Xbox pad. `IOHIDDeviceCreate` loads
+/// `AppleSyntheticGameController.plugin` and `IOServiceOpen`s that node.
 /// A wedged shim hangs stock SDL `hid_init` match-all and can hang OJD if discovery
 /// opens it. Apple documents excluding these nodes from IOHID/IOService matching
 /// with `"GCSyntheticDevice" = false` (`GCSyntheticDeviceKeys.h`).
@@ -31,19 +30,6 @@ public enum AppleGameControllerSyntheticHID: Sendable {
   /// Adds Apple's documented synthetic exclusion to an existing HID matching dictionary.
   public static func ioHIDMatchingExcludingSynthetics(_ matching: [String: Any]) -> [String: Any] {
     matching.merging(ioHIDMatchingExclusion) { _, new in new }
-  }
-
-  @available(macOS 15, *)
-  public static func coreHIDMatchingCriteria(
-    primaryUsage: HIDUsage? = nil,
-    vendorID: UInt32? = nil,
-    productID: UInt32? = nil
-  ) -> HIDDeviceManager.DeviceMatchingCriteria {
-    HIDDeviceManager.DeviceMatchingCriteria(
-      primaryUsage: primaryUsage,
-      vendorID: vendorID,
-      productID: productID
-    )
   }
 
   public static func isSyntheticProperty(_ value: Any?) -> Bool {
@@ -85,15 +71,6 @@ public enum AppleGameControllerSyntheticHID: Sendable {
       deviceType: stringProperty(service, deviceTypePropertyKey),
       pluginPath: pluginPaths(service).first { isSyntheticPluginPath($0) }
     )
-  }
-
-  /// Looks up a registry entry ID and classifies it. Does not `IOServiceOpen`.
-  public static func isSyntheticRegistryEntry(id: UInt64) -> Bool {
-    guard id != 0 else { return false }
-    let service = IOServiceGetMatchingService(kIOMasterPortDefault, IORegistryEntryIDMatching(id))
-    guard service != 0 else { return false }
-    defer { IOObjectRelease(service) }
-    return isSynthetic(service: service)
   }
 
   public static func isSynthetic(device: IOHIDDevice) -> Bool {

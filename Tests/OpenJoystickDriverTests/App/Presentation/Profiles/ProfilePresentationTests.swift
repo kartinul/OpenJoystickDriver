@@ -52,13 +52,9 @@ struct ProfilePresentationTests {
   }
 
   @Test
-  func controllerDetailsAndIdentitiesChangeColumnsOnlyAtDocumentedBoundaries() {
+  func controllerDetailsChangeColumnsOnlyAtDocumentedBoundaries() {
     #expect(ControllerDetailLayoutPolicy.factColumnCount(for: 559) == 1)
     #expect(ControllerDetailLayoutPolicy.factColumnCount(for: 560) == 2)
-    #expect(ControllerDetailLayoutPolicy.identityColumnCount(for: 359) == 1)
-    #expect(ControllerDetailLayoutPolicy.identityColumnCount(for: 360) == 2)
-    #expect(ControllerDetailLayoutPolicy.identityColumnCount(for: 679) == 2)
-    #expect(ControllerDetailLayoutPolicy.identityColumnCount(for: 680) == 4)
   }
 
   @Test

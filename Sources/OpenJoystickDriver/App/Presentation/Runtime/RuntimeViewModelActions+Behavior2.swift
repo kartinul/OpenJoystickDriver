@@ -125,12 +125,6 @@ extension RuntimeViewModel {
     if statusState != nextState { statusState = nextState }
   }
 
-  func updateStatusCompatibilityIdentity(_ identity: CompatibilityIdentity?) {
-    guard case .available(let status) = statusState else { return }
-    let nextState = RuntimeStatusState.available(status.applyingCompatibilityIdentity(identity))
-    if statusState != nextState { statusState = nextState }
-  }
-
   func updateStatusRemappingSnapshot(
     _ snapshot: ApplicationServiceRemappingSnapshotPayload,
     postEventAccess: RemappingPostEventAccessState?

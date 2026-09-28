@@ -2,12 +2,14 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 3660,
   "productID": 4355,
-  "transport": "usb",
   "protocol": {
-    "driver": "XID",
-    "variant": "xid",
-    "quirks": [
-      "triggersToButtons"
+    "family": "xbox.xid",
+    "variant": "gamepad"
+  },
+  "capabilities": {
+    "absent": [
+      "left-trigger",
+      "right-trigger"
     ]
   }
 }

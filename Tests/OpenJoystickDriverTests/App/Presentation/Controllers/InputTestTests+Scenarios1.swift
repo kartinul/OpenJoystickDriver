@@ -39,19 +39,25 @@ extension InputTestTests {
   @Test
   @MainActor
   func closeCancelsTheActiveLookup() async {
-    var first = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    first.pressedButtons = ["A"]
+    var first = ControllerState.neutral
+    first.pressed = [.faceSouth]
     let gateway = InputTestGatewayStub(inputSequence: [first], inputDelayNanoseconds: 200_000_000)
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
     model.selectDevice(makeInputTestDevice())
 
     model.open()
-    try? await Task.sleep(nanoseconds: 20_000_000)
+    var deadline = ContinuousClock.now.advanced(by: .seconds(5))
+    while await gateway.counts().input == 0, ContinuousClock.now < deadline {
+      try? await Task.sleep(nanoseconds: 5_000_000)
+    }
     #expect(model.sessionState == .starting)
     #expect(await gateway.counts().input == 1)
 
     model.close()
-    try? await Task.sleep(nanoseconds: 20_000_000)
+    deadline = ContinuousClock.now.advanced(by: .seconds(5))
+    while await gateway.counts().cancelled == 0, ContinuousClock.now < deadline {
+      try? await Task.sleep(nanoseconds: 5_000_000)
+    }
 
     #expect(model.sessionState == .idle)
     #expect(await gateway.counts().cancelled == 1)
@@ -61,16 +67,20 @@ extension InputTestTests {
   @Test
   @MainActor
   func liveSamplingPublishesNormalizedState() async {
-    var pressed = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    pressed.pressedButtons = ["A", "D-pad Up"]
-    pressed.leftStickX = 0.75
-    pressed.rightTrigger = 0.5
+    var pressed = ControllerState.neutral
+    pressed.pressed = [.faceSouth]
+    pressed.hat = .north
+    pressed.leftStick.x = BipolarValue(normalized: 0.75)
+    pressed.rightTrigger = UnipolarValue(normalized: 0.5)
     let gateway = InputTestGatewayStub(inputSequence: [pressed])
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000_000)
     model.selectDevice(makeInputTestDevice())
 
     model.open()
-    try? await Task.sleep(nanoseconds: 20_000_000)
+    let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+    while model.latestInput != pressed, ContinuousClock.now < deadline {
+      try? await Task.sleep(nanoseconds: 5_000_000)
+    }
 
     #expect(model.sessionState == .live)
     #expect(model.latestInput == pressed)
@@ -81,7 +91,7 @@ extension InputTestTests {
   @Test
   @MainActor
   func unchangedSnapshotsDoNotRepublishInputState() async {
-    let snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
+    let snapshot = ControllerState.neutral
     let gateway = InputTestGatewayStub(
       inputSequence: Array(repeating: snapshot, count: 4),
       inputDelayNanoseconds: 1_000_000
@@ -108,8 +118,8 @@ extension InputTestTests {
     var broadInvalidations = 0
     let observation = model.objectWillChange.sink { broadInvalidations += 1 }
     var snapshot = model.latestInput
-    snapshot.leftStickX = 0.75
-    snapshot.pressedButtons = [Button.a.rawValue]
+    snapshot.leftStick.x = BipolarValue(normalized: 0.75)
+    snapshot.pressed = [.faceSouth]
 
     model.liveState.update(snapshot)
 
@@ -188,8 +198,8 @@ extension InputTestTests {
   @Test
   @MainActor
   func repeatedFailuresRetainTheLastSnapshotAndFinishStale() async {
-    var snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    snapshot.pressedButtons = [Button.a.rawValue]
+    var snapshot = ControllerState.neutral
+    snapshot.pressed = [.faceSouth]
     let gateway = InputTestGatewayStub(inputSequence: [snapshot])
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000)
     model.selectDevice(makeInputTestDevice())
@@ -208,7 +218,7 @@ extension InputTestTests {
   @Test
   @MainActor
   func samplingNeverOverlapsInputRequests() async {
-    let snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
+    let snapshot = ControllerState.neutral
     let gateway = InputTestGatewayStub(
       inputSequence: Array(repeating: snapshot, count: 8),
       inputDelayNanoseconds: 5_000_000

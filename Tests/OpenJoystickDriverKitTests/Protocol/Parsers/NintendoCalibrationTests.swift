@@ -6,50 +6,47 @@ import Testing
 struct NintendoCalibrationTests {
   @Test(arguments: [NintendoControllerLayout.pro, .leftJoyCon, .rightJoyCon])
   func factoryReplyCalibratesAllThreeSamples(_ layout: NintendoControllerLayout) throws {
-    let parser = SwitchProParser(layout: layout)
-    let requests = parser.hidStartupReports(transport: "Bluetooth")
+    let parser = Switch1Driver(layout: layout, isBluetooth: true)
+    let requests = parser.startupWrites().hidOutputs
     #expect(Array(requests[3].bytes.suffix(6)) == [0x10, 0x20, 0x60, 0, 0, 24])
     #expect(Array(requests[4].bytes.suffix(6)) == [0x10, 0x26, 0x80, 0, 0, 20])
-    #expect(try parser.parse(data: reply(), receivedAtNanoseconds: 1).isEmpty)
+    #expect(try parser.parseReport(reply(), at: 1) == nil)
     let samples = try samples(parser)
     #expect(samples.count == 3)
     #expect(samples.map(\.timestamp.sequenceIndex) == [0, 1, 2])
     let right = layout == .rightJoyCon
     for sample in samples {
-      #expect(sample.rawGyroscope == ControllerRawSensorVector(x: 110, y: 220, z: 330))
-      let reading = try #require(sample.physicalReading)
-      #expect(reading.calibrationSource == .deviceFactory)
-      #expect(reading.calibrationRevision == 1)
+      #expect(sample.calibrationSource == .deviceFactory)
+      #expect(sample.calibrationRevision == 1)
       #expect(
-        reading.gyroscopeDegreesPerSecond
-          == ControllerMotionVector(x: right ? 20 : -20, y: right ? -30 : 30, z: -10)
+        isClose(sample.angularVelocity, radiansPerSecond(right ? 20 : -20, 10, right ? -30 : 30))
       )
       #expect(
-        reading.accelerationG == ControllerMotionVector(x: right ? 2 : -2, y: right ? -3 : 3, z: -1)
+        isClose(sample.acceleration, metresPerSecondSquared(right ? 2 : -2, 1, right ? -3 : 3))
       )
     }
   }
 
   @Test
   func unrelatedMalformedAndUnsolicitedRepliesCannotInstallCalibration() throws {
-    let parser = SwitchProParser()
-    _ = try parser.parse(data: reply())
-    #expect(try samples(parser).first?.physicalReading?.calibrationSource == .nominalDeviceScale)
-    _ = parser.hidStartupReports(transport: "USB")
+    let parser = Switch1Driver()
+    _ = try parser.parseReport(reply())
+    #expect(try samples(parser).first?.calibrationSource == .nominalDeviceScale)
+    _ = parser.startupWrites()
     for offset in [13, 14, 15, 16, 17, 18, 19] {
       var invalid = reply()
       invalid[offset] = 0x7F
-      _ = try parser.parse(data: invalid)
-      #expect(try samples(parser).first?.physicalReading?.calibrationSource == .nominalDeviceScale)
+      _ = try parser.parseReport(invalid)
+      #expect(try samples(parser).first?.calibrationSource == .nominalDeviceScale)
     }
-    _ = try parser.parse(data: reply().prefix(43))
-    #expect(try samples(parser).first?.physicalReading?.calibrationSource == .nominalDeviceScale)
+    _ = try parser.parseReport(reply().prefix(43))
+    #expect(try samples(parser).first?.calibrationSource == .nominalDeviceScale)
     var erased = reply()
     erased.replaceSubrange(20..<44, with: Array(repeating: UInt8(255), count: 24))
-    _ = try parser.parse(data: erased)
-    #expect(try samples(parser).first?.physicalReading?.calibrationSource == .nominalDeviceScale)
-    _ = try parser.parse(data: reply())
-    #expect(try samples(parser).first?.physicalReading?.calibrationSource == .deviceFactory)
+    _ = try parser.parseReport(erased)
+    #expect(try samples(parser).first?.calibrationSource == .nominalDeviceScale)
+    _ = try parser.parseReport(reply())
+    #expect(try samples(parser).first?.calibrationSource == .deviceFactory)
   }
 
   private func reply() -> Data {
@@ -72,85 +69,81 @@ struct NintendoCalibrationTests {
 
   @Test(arguments: [false, true])
   func userOffsetsCombineWithFactorySensitivityInEitherOrder(userFirst: Bool) throws {
-    let parser = SwitchProParser()
-    _ = parser.hidStartupReports(transport: "Bluetooth")
+    let parser = Switch1Driver(isBluetooth: true)
+    _ = parser.startupWrites()
     let first = userFirst ? userReply() : reply()
     let second = userFirst ? reply() : userReply()
-    _ = try parser.parse(data: first)
+    _ = try parser.parseReport(first)
     #expect(
-      try samples(parser).first?.physicalReading?.calibrationSource
+      try samples(parser).first?.calibrationSource
         == (userFirst ? .nominalDeviceScale : .deviceFactory)
     )
-    _ = try parser.parse(data: second)
-    let reading = try #require(samples(parser).first?.physicalReading)
-    #expect(reading.calibrationSource == .factoryWithUserOffsets)
-    #expect(reading.calibrationRevision == (userFirst ? 1 : 2))
+    _ = try parser.parseReport(second)
+    let sample = try #require(samples(parser).first)
+    let reading = Calibrated(sample)
+    #expect(reading.source == .factoryWithUserOffsets)
+    #expect(reading.revision == (userFirst ? 1 : 2))
     // User offsets equal the fixture's raw gyro readings, so the calibrated rotation is zero.
-    #expect(reading.gyroscopeDegreesPerSecond == ControllerMotionVector(x: 0, y: 0, z: 0))
-    #expect(reading.accelerationG == ControllerMotionVector(x: -4, y: 6, z: -2))
+    #expect(isClose(reading.angularVelocity, ControllerMotionVector(x: 0, y: 0, z: 0)))
+    #expect(isClose(reading.acceleration, metresPerSecondSquared(-4, 2, 6)))
     #expect(
-      try JSONDecoder().decode(ControllerMotionReading.self, from: JSONEncoder().encode(reading))
-        == reading
+      try JSONDecoder().decode(ControllerMotionSample.self, from: JSONEncoder().encode(sample))
+        == sample
     )
     // Duplicate replies cannot replace a completed acquisition's snapshot.
-    _ = try parser.parse(data: userReply(invalid: true))
-    #expect(try samples(parser).first?.physicalReading == reading)
+    _ = try parser.parseReport(userReply(invalid: true))
+    #expect(try samples(parser).first.map(Calibrated.init) == reading)
   }
 
   @Test
   func invalidUserRangesRetainFactoryAndNewParserStartsNominal() throws {
-    let parser = SwitchProParser()
-    _ = parser.hidStartupReports(transport: "Bluetooth")
-    _ = try parser.parse(data: reply())
-    let factory = try #require(samples(parser).first?.physicalReading)
-    _ = try parser.parse(data: userReply(invalid: true))
-    #expect(try samples(parser).first?.physicalReading == factory)
-    #expect(
-      try samples(SwitchProParser()).first?.physicalReading?.calibrationSource
-        == .nominalDeviceScale
-    )
+    let parser = Switch1Driver(isBluetooth: true)
+    _ = parser.startupWrites()
+    _ = try parser.parseReport(reply())
+    let factory = try #require(samples(parser).first.map(Calibrated.init))
+    _ = try parser.parseReport(userReply(invalid: true))
+    #expect(try samples(parser).first.map(Calibrated.init) == factory)
+    #expect(try samples(Switch1Driver()).first?.calibrationSource == .nominalDeviceScale)
   }
 
   @Test
   func reacquisitionOnlyAdvancesForChangedCoefficients() throws {
-    let parser = SwitchProParser()
-    _ = parser.hidStartupReports(transport: "Bluetooth")
-    _ = try parser.parse(data: reply())
-    #expect(try samples(parser).first?.physicalReading?.calibrationRevision == 1)
-    _ = parser.hidStartupReports(transport: "Bluetooth")
-    _ = try parser.parse(data: reply())
-    #expect(try samples(parser).first?.physicalReading?.calibrationRevision == 1)
-    _ = parser.hidStartupReports(transport: "Bluetooth")
+    let parser = Switch1Driver(isBluetooth: true)
+    _ = parser.startupWrites()
+    _ = try parser.parseReport(reply())
+    #expect(try samples(parser).first?.calibrationRevision == 1)
+    _ = parser.startupWrites()
+    _ = try parser.parseReport(reply())
+    #expect(try samples(parser).first?.calibrationRevision == 1)
+    _ = parser.startupWrites()
     var changed = reply()
     write(11, into: &changed, at: 32)
-    _ = try parser.parse(data: changed)
-    #expect(try samples(parser).first?.physicalReading?.calibrationRevision == 2)
+    _ = try parser.parseReport(changed)
+    #expect(try samples(parser).first?.calibrationRevision == 2)
   }
 
   @Test
   func recoveryOnlyRetriesPendingReadsAndExpiryRetainsAcceptedCalibration() throws {
-    let parser = SwitchProParser()
-    _ = parser.hidStartupReports(transport: "Bluetooth")
-    let retry = parser.pendingHIDStartupReports()
+    let parser = Switch1Driver(isBluetooth: true)
+    _ = parser.startupWrites()
+    let retry = parser.startupRecoveryWrites().hidOutputs
     #expect(retry.count == 2)
     #expect(retry.map { $0.bytes[1] } == [5, 6])
-    _ = try parser.parse(data: reply())
-    let factory = try #require(samples(parser).first?.physicalReading)
-    let remaining = parser.pendingHIDStartupReports()
+    _ = try parser.parseReport(reply())
+    let factory = try #require(samples(parser).first.map(Calibrated.init))
+    let remaining = parser.startupRecoveryWrites().hidOutputs
     #expect(remaining.count == 1)
     #expect(Array(try #require(remaining.first).bytes.suffix(5)) == [0x26, 0x80, 0, 0, 20])
-    parser.expireHIDStartupRequests()
-    #expect(parser.pendingHIDStartupReports().isEmpty)
-    _ = try parser.parse(data: userReply())
-    #expect(try samples(parser).first?.physicalReading == factory)
+    parser.expireStartupRecovery()
+    #expect(parser.startupRecoveryWrites().hidOutputs.isEmpty)
+    _ = try parser.parseReport(userReply())
+    #expect(try samples(parser).first.map(Calibrated.init) == factory)
     // A later explicit acquisition begins fresh and can combine both new replies.
-    _ = parser.hidStartupReports(transport: "Bluetooth")
-    _ = try parser.parse(data: userReply())
-    #expect(try samples(parser).first?.physicalReading == factory)
-    _ = try parser.parse(data: reply())
-    #expect(
-      try samples(parser).first?.physicalReading?.calibrationSource == .factoryWithUserOffsets
-    )
+    _ = parser.startupWrites()
+    _ = try parser.parseReport(userReply())
+    #expect(try samples(parser).first.map(Calibrated.init) == factory)
+    _ = try parser.parseReport(reply())
+    #expect(try samples(parser).first?.calibrationSource == .factoryWithUserOffsets)
   }
 
   @Test
@@ -158,15 +151,15 @@ struct NintendoCalibrationTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 0x057E, productID: 0x2009),
       transport: .hid(locationID: 84),
-      parser: SwitchProParser(),
+      driver: Switch1Driver(isBluetooth: true),
       dispatcher: LoggingOutputDispatcher()
     )
     await pipeline.start()
-    _ = await pipeline.hidStartupOutputPlan(transport: "Bluetooth")
-    #expect(await pipeline.pendingHIDStartupReports().count == 2)
+    _ = await pipeline.hidStartupWrites()
+    #expect(await pipeline.hidStartupRecoveryWrites().count == 2)
     await pipeline.stop()
     await pipeline.start()
-    #expect(await pipeline.pendingHIDStartupReports().isEmpty)
+    #expect(await pipeline.hidStartupRecoveryWrites().isEmpty)
     await pipeline.stop()
   }
 
@@ -187,7 +180,7 @@ struct NintendoCalibrationTests {
     return data
   }
 
-  private func samples(_ parser: SwitchProParser) throws -> [ControllerMotionSample] {
+  private func samples(_ parser: Switch1Driver) throws -> [ControllerMotionSample] {
     var data = Data(repeating: 0, count: 49)
     data[0] = 0x30
     for index in 0..<3 {
@@ -196,15 +189,27 @@ struct NintendoCalibrationTests {
         write(Int16((axis + 1) * 110), into: &data, at: 19 + index * 12 + axis * 2)
       }
     }
-    return try parser.parse(data: data, receivedAtNanoseconds: 100).compactMap {
-      if case .motionSample(let sample) = $0 { return sample }
-      return nil
-    }
+    return try parser.parseReport(data, at: 100)?.motion ?? []
   }
 
   private func write(_ value: Int16, into data: inout Data, at offset: Int) {
     let raw = UInt16(bitPattern: value)
     data[offset] = UInt8(truncatingIfNeeded: raw)
     data[offset + 1] = UInt8(truncatingIfNeeded: raw >> 8)
+  }
+}
+
+/// The calibrated values of a sample without its per-report timestamp.
+private struct Calibrated: Equatable {
+  let angularVelocity: ControllerMotionVector
+  let acceleration: ControllerMotionVector
+  let source: ControllerMotionCalibrationSource
+  let revision: UInt64
+
+  init(_ sample: ControllerMotionSample) {
+    angularVelocity = sample.angularVelocity
+    acceleration = sample.acceleration
+    source = sample.calibrationSource
+    revision = sample.calibrationRevision
   }
 }

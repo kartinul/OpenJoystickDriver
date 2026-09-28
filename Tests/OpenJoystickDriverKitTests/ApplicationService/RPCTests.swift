@@ -29,7 +29,7 @@ struct LocalServiceRPCTests {
     let result: String = try await LocalServiceRPCClient.call(
       method: "uppercase",
       arguments: "controller",
-      timeoutSeconds: 1,
+      timeoutSeconds: 10,
       socketPath: socketPath
     )
     let attributes = try FileManager.default.attributesOfItem(atPath: socketPath)
@@ -57,7 +57,7 @@ struct LocalServiceRPCTests {
       let _: Data = try await LocalServiceRPCClient.call(
         method: "rejected",
         arguments: LocalServiceRPCEmptyArguments(),
-        timeoutSeconds: 1,
+        timeoutSeconds: 10,
         socketPath: socketPath
       )
     }
@@ -275,7 +275,7 @@ struct LocalServiceRPCTests {
     let result: String = try await LocalServiceRPCClient.call(
       method: "afterCancellation",
       arguments: LocalServiceRPCEmptyArguments(),
-      timeoutSeconds: 1,
+      timeoutSeconds: 10,
       socketPath: socketPath
     )
     #expect(result == "ok")

@@ -5,19 +5,11 @@
   import OpenJoystickDriverKit
 
   protocol InputTestDeviceGateway: MotionCalibrationGateway {
-    func inputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState?
-    func sendRumble(
-      for selector: RuntimeDeviceSelector,
-      left: UInt8,
-      right: UInt8,
-      leftTrigger: UInt8,
-      rightTrigger: UInt8,
-      durationMilliseconds: Int
-    ) async throws -> Bool
-    func setPlayerIndicator(
-      for selector: RuntimeDeviceSelector,
-      indicator: PhysicalPlayerIndicator
-    ) async throws -> Bool
+    func controllerState(for selector: RuntimeDeviceSelector) async throws -> ControllerState?
+    func sendControllerOutput(
+      _ command: ControllerOutputCommand,
+      for selector: RuntimeDeviceSelector
+    ) async throws -> ControllerOutputResult
     func previewColor(
       for selector: RuntimeDeviceSelector,
       token: UUID,
@@ -26,7 +18,6 @@
       blue: UInt8
     ) async throws -> Bool
     func releaseColorPreview(for selector: RuntimeDeviceSelector, token: UUID) async throws -> Bool
-    func setBrightness(for selector: RuntimeDeviceSelector, brightness: UInt8) async throws -> Bool
   }
 
   /// View-owned physical-output values are isolated from session state so continuous controls do

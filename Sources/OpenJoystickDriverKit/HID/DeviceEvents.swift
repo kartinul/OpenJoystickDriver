@@ -64,23 +64,40 @@ public struct HIDElementValue: Sendable, Equatable {
 ///
 /// ``HIDManager`` sends these to ``DeviceManager`` to report when a
 /// HID controller is plugged in, unplugged, or sends an input report.
+public struct HIDDeviceConnection: Equatable, Sendable {
+  /// Unique to one observed connect-to-disconnect lifetime, even if a backend reuses its route ID.
+  public let connectionID: UUID
+  /// Exact immutable physical facts captured when this connection was admitted.
+  public let physicalDevice: PhysicalDevice
+  /// Backend routing key, distinct from the optional physical location in `physicalDevice`.
+  public let routingLocationID: UInt32
+
+  public init(
+    connectionID: UUID = UUID(),
+    physicalDevice: PhysicalDevice,
+    routingLocationID: UInt32
+  ) {
+    self.connectionID = connectionID
+    self.physicalDevice = physicalDevice
+    self.routingLocationID = routingLocationID
+  }
+}
+
 public enum HIDDeviceEvent: Sendable {
-  /// A HID controller was plugged in. Carries its USB identifiers and name.
-  case connected(
-    vendorID: UInt16,
-    productID: UInt16,
-    serialNumber: String?,
-    locationID: UInt32,
-    productName: String?,
-    transport: String?,
-    ownership: HIDInputOwnership = .unknown
-  )
+  /// A HID controller was plugged in with the immutable facts available from its
+  /// OS HID service. `routingLocationID` remains the backend's runtime routing key;
+  /// the physical location in `physicalDevice` can be unavailable.
+  case connected(connection: HIDDeviceConnection, ownership: HIDInputOwnership = .unknown)
   /// Access changed while the physical controller remains connected.
   case ownershipChanged(locationID: UInt32, ownership: HIDInputOwnership)
-  /// A previously connected HID controller was unplugged.
-  case disconnected(vendorID: UInt16, productID: UInt16, locationID: UInt32)
-  /// The controller sent a raw input report (button presses, stick positions, etc.).
-  case inputReport(locationID: UInt32, reportID: UInt8, data: Data)
-  /// IOKit decoded one descriptor-defined input element.
-  case inputValue(locationID: UInt32, value: HIDElementValue)
+  /// The active HID access stream failed. Cancellation is not reported as an access failure.
+  case accessFailure(PhysicalHIDFailure)
+  /// A previously connected HID controller was unplugged; this is the same snapshot and
+  /// connection token that were emitted when it connected.
+  case disconnected(connection: HIDDeviceConnection)
+  /// The controller sent a raw input report (button presses, stick positions, etc.) on the
+  /// connection `connectionID` at routing location `locationID`.
+  case inputReport(locationID: UInt32, connectionID: UUID, reportID: UInt8, data: Data)
+  /// IOKit decoded one descriptor-defined input element of the connection `connectionID`.
+  case inputValue(locationID: UInt32, connectionID: UUID, value: HIDElementValue)
 }

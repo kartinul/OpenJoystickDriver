@@ -28,4 +28,25 @@ struct CommandCatalogTests {
     #expect(InstalledCommandCatalog.commands.first?.path == "status [--json]")
   }
 
+  @Test
+  func listsTheVirtualProfileOverrideCommandsInsteadOfCompat() throws {
+    let commands = InstalledCommandCatalog.commands
+
+    for prefix in ["controller virtual set ", "controller virtual reset "] {
+      let command = try #require(commands.first { $0.path.hasPrefix(prefix) })
+      #expect(command.audience == .advanced)
+      #expect(command.sideEffect == .persistentConfiguration)
+    }
+    #expect(
+      commands.first { $0.path.hasPrefix("controller virtual set ") }?.path.contains(
+        "<hid-xbox-one-s-bt|hid-generic>"
+      ) == true
+    )
+    #expect(
+      commands.first { $0.path.hasPrefix("controller virtual reset ") }?.summary.contains("--all")
+        == true
+    )
+    #expect(!commands.contains { $0.path.hasPrefix("compat") })
+  }
+
 }

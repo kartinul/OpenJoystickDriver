@@ -16,14 +16,9 @@ extension GyroRoutingTests {
       gyroOutput: RemappingGyroOutput(mode: .rightStick, fullStickDegreesPerSecond: 100),
       bindings: []
     )
-    _ = engine.process(
-      events: [.motionSample(sample(0, time: 0))],
-      from: device,
-      profile: profile,
-      at: 0
-    )
+    _ = engine.process(inputs: [.motion(sample(0, time: 0))], from: device, profile: profile, at: 0)
     let movement = engine.process(
-      events: [.motionSample(sample(1, time: 10_000_000))],
+      inputs: [.motion(sample(1, time: 10_000_000))],
       from: device,
       profile: profile,
       at: 10_000_000
@@ -57,28 +52,28 @@ extension GyroRoutingTests {
       bindings: []
     )
     let baseline = engine.process(
-      events: [.motionSample(sample(0, time: 0))],
+      inputs: [.motion(sample(0, time: 0))],
       from: device,
       profile: profile,
       at: 0
     )
     #expect(baseline.isEmpty)
     let movement = engine.process(
-      events: [.motionSample(sample(1, time: 10_000_000))],
+      inputs: [.motion(sample(1, time: 10_000_000))],
       from: device,
       profile: profile,
       at: 10_000_000
     )
     #expect(movement == [.system(.pointerDelta(x: -2, y: -1))])
     let duplicate = engine.process(
-      events: [.motionSample(sample(1, time: 10_000_000))],
+      inputs: [.motion(sample(1, time: 10_000_000))],
       from: device,
       profile: profile,
       at: 10_000_000
     )
     #expect(duplicate.isEmpty)
     let gap = engine.process(
-      events: [.motionSample(sample(2, time: 500_000_000))],
+      inputs: [.motion(sample(2, time: 500_000_000))],
       from: device,
       profile: profile,
       at: 500_000_000
@@ -88,24 +83,19 @@ extension GyroRoutingTests {
   }
 
   func sample(_ index: UInt64, time: UInt64) -> ControllerMotionSample {
-    ControllerMotionSample(
+    ControllerMotionSample.engineSpace(
       timestamp: ControllerSampleTimestamp(
 
         rawCounter: 0,
-        elapsedNanoseconds: time,
+        monotonic: MonotonicTimestamp(nanoseconds: time),
         tickNanosecondsNumerator: nil,
         tickNanosecondsDenominator: nil,
         sequenceIndex: index,
         basis: .hostEstimate
       ),
-      rawGyroscope: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      rawAccelerometer: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      physicalReading: ControllerMotionReading(
-        gyroscopeDegreesPerSecond: ControllerMotionVector(x: 50, y: 100, z: 0),
-        accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
-
-        calibrationSource: .nominalDeviceScale
-      )
+      gyroDegreesPerSecond: ControllerMotionVector(x: 50, y: 100, z: 0),
+      accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
+      calibrationSource: .nominalDeviceScale
     )
   }
 }

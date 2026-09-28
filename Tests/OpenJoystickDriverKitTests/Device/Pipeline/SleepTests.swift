@@ -4,17 +4,17 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct DevicePipelineSleepTests {
+  /// The analog-only scripted trigger also gets its normalization-derived trigger button.
   @Test(arguments: [
-    (UInt8(3), ControllerEvent.leftStickChanged(x: 0.8, y: 0)),
-    (UInt8(4), ControllerEvent.buttonPressed(.b)), (UInt8(6), ControllerEvent.dpadChanged(.north)),
-    (UInt8(7), ControllerEvent.leftTriggerChanged(0.75)),
+    (UInt8(3), [InputChange.leftStick(x: 0.8, y: 0)]), (UInt8(4), [.press(.faceEast)]),
+    (UInt8(6), [.hat(.north)]), (UInt8(7), [.leftTrigger(0.75), .press(.leftTriggerButton)]),
   ])
-  func testIdlePipelineForwardsTheFirstWakeInput(code: UInt8, expected: ControllerEvent) async {
+  func testIdlePipelineForwardsTheFirstWakeInput(code: UInt8, expected: [InputChange]) async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
       transport: .hid(locationID: 1),
-      parser: ScriptedInputParser(),
+      driver: ScriptedInputParser(),
       dispatcher: dispatcher,
       idleTimeoutNanoseconds: 5_000_000,
       idleMonitorIntervalNanoseconds: 10_000_000
@@ -28,7 +28,11 @@ struct DevicePipelineSleepTests {
 
     await pipeline.feedHIDData(Data([code]))
 
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a), .buttonReleased(.a), expected])
+    #expect(
+      dispatcher.states == [
+        snapshot(.press(.faceSouth)), .neutral, ControllerState.neutral.applying(expected),
+      ]
+    )
   }
 
   @Test
@@ -37,7 +41,7 @@ struct DevicePipelineSleepTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
       transport: .hid(locationID: 1),
-      parser: ScriptedInputParser(),
+      driver: ScriptedInputParser(),
       dispatcher: dispatcher,
       idleTimeoutNanoseconds: 5_000_000_000,
       idleMonitorIntervalNanoseconds: 5_000_000_000
@@ -45,18 +49,18 @@ struct DevicePipelineSleepTests {
 
     await pipeline.start()
     await pipeline.feedHIDData(Data([1]))
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a)])
+    #expect(dispatcher.states == [snapshot(.press(.faceSouth))])
 
     await pipeline.setExternalOutputAllowed(false)
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a), .buttonReleased(.a)])
+    #expect(dispatcher.states == [snapshot(.press(.faceSouth)), .neutral])
 
     await pipeline.setExternalOutputAllowed(true)
     await pipeline.feedHIDData(Data([2]))
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a), .buttonReleased(.a)])
+    #expect(dispatcher.states == [snapshot(.press(.faceSouth)), .neutral])
 
     await pipeline.feedHIDData(Data([4]))
     #expect(
-      dispatcher.flattenedEvents == [.buttonPressed(.a), .buttonReleased(.a), .buttonPressed(.b)]
+      dispatcher.states == [snapshot(.press(.faceSouth)), .neutral, snapshot(.press(.faceEast))]
     )
   }
 
@@ -66,7 +70,7 @@ struct DevicePipelineSleepTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
       transport: .hid(locationID: 1),
-      parser: ScriptedInputParser(),
+      driver: ScriptedInputParser(),
       dispatcher: dispatcher,
       idleTimeoutNanoseconds: 5_000_000_000,
       idleMonitorIntervalNanoseconds: 5_000_000_000
@@ -74,27 +78,20 @@ struct DevicePipelineSleepTests {
 
     await pipeline.start()
     await pipeline.feedHIDData(Data([3]))
-    #expect(dispatcher.flattenedEvents == [.leftStickChanged(x: 0.8, y: 0)])
+    #expect(dispatcher.states == [snapshot(.leftStick(x: 0.8, y: 0))])
 
     await pipeline.setExternalOutputAllowed(false)
-    #expect(
-      dispatcher.flattenedEvents == [
-        .leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0),
-      ]
-    )
+    #expect(dispatcher.states == [snapshot(.leftStick(x: 0.8, y: 0)), .neutral])
 
     await pipeline.setExternalOutputAllowed(true)
     await pipeline.feedHIDData(Data([5]))
-    #expect(
-      dispatcher.flattenedEvents == [
-        .leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0),
-      ]
-    )
+    #expect(dispatcher.states == [snapshot(.leftStick(x: 0.8, y: 0)), .neutral])
 
     await pipeline.feedHIDData(Data([4]))
+    // The stick held across the gate stays hidden until it changes.
     #expect(
-      dispatcher.flattenedEvents == [
-        .leftStickChanged(x: 0.8, y: 0), .leftStickChanged(x: 0, y: 0), .buttonPressed(.b),
+      dispatcher.states == [
+        snapshot(.leftStick(x: 0.8, y: 0)), .neutral, snapshot(.press(.faceEast)),
       ]
     )
   }
@@ -105,7 +102,7 @@ struct DevicePipelineSleepTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
       transport: .hid(locationID: 1),
-      parser: ScriptedInputParser(),
+      driver: ScriptedInputParser(),
       dispatcher: dispatcher,
       idleTimeoutNanoseconds: 5_000_000_000,
       idleMonitorIntervalNanoseconds: 5_000_000_000
@@ -115,16 +112,16 @@ struct DevicePipelineSleepTests {
     await pipeline.setExternalOutputAllowed(true)
     await pipeline.feedHIDData(Data([4]))
 
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.b)])
+    #expect(dispatcher.states == [snapshot(.press(.faceEast))])
   }
 
   @Test
-  func testPipelineSuppressesContradictoryDuplicateAndInvalidParserEvents() async {
+  func testPipelineSkipsSnapshotsThatDoNotChangeTheDispatchedState() async {
     let dispatcher = RecordingOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
       transport: .hid(locationID: 1),
-      parser: ScriptedInputParser(),
+      driver: ScriptedInputParser(),
       dispatcher: dispatcher,
       idleTimeoutNanoseconds: 5_000_000_000,
       idleMonitorIntervalNanoseconds: 5_000_000_000
@@ -133,11 +130,11 @@ struct DevicePipelineSleepTests {
     await pipeline.start()
     await pipeline.feedHIDData(Data([9]))
     await pipeline.feedHIDData(Data([11]))
-    #expect(dispatcher.flattenedEvents.isEmpty)
+    #expect(dispatcher.states.isEmpty)
 
     await pipeline.feedHIDData(Data([1]))
     await pipeline.feedHIDData(Data([10]))
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a)])
+    #expect(dispatcher.states == [snapshot(.press(.faceSouth))])
   }
 
   @Test
@@ -146,7 +143,7 @@ struct DevicePipelineSleepTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
       transport: .hid(locationID: 1),
-      parser: ScriptedInputParser(),
+      driver: ScriptedInputParser(),
       dispatcher: dispatcher,
       idleTimeoutNanoseconds: 5_000_000_000,
       idleMonitorIntervalNanoseconds: 5_000_000_000
@@ -157,7 +154,7 @@ struct DevicePipelineSleepTests {
     await pipeline.stop()
     try? await Task.sleep(nanoseconds: 20_000_000)
 
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a), .buttonReleased(.a)])
+    #expect(dispatcher.states == [snapshot(.press(.faceSouth)), .neutral])
   }
 
   @Test
@@ -166,7 +163,7 @@ struct DevicePipelineSleepTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 100, productID: 200),
       transport: .hid(locationID: 1),
-      parser: ScriptedInputParser(),
+      driver: ScriptedInputParser(),
       dispatcher: dispatcher,
       idleTimeoutNanoseconds: 5_000_000_000,
       idleMonitorIntervalNanoseconds: 5_000_000_000
@@ -179,11 +176,37 @@ struct DevicePipelineSleepTests {
     try? await Task.sleep(nanoseconds: 20_000_000)
 
     #expect(
-      dispatcher.flattenedEvents == [
-        .dpadChanged(.north), .leftStickChanged(x: 0.8, y: 0), .dpadChanged(.neutral),
-        .leftStickChanged(x: 0, y: 0),
+      dispatcher.states == [
+        snapshot(.hat(.north)), snapshot(.hat(.north), .leftStick(x: 0.8, y: 0)), .neutral,
       ]
     )
+  }
+
+  @Test
+  func testReconnectDoesNotKeepAForegroundMaskFromTheEndedConnection() async {
+    let dispatcher = RecordingOutputDispatcher()
+    let pipeline = DevicePipeline(
+      identifier: DeviceIdentifier(vendorID: 10462, productID: 4418),
+      transport: .hid(locationID: 1),
+      driver: ScriptedLifecycleInputParser(),
+      dispatcher: dispatcher,
+      idleTimeoutNanoseconds: 5_000_000_000,
+      idleMonitorIntervalNanoseconds: 5_000_000_000
+    )
+
+    await pipeline.start()
+    await pipeline.feedHIDData(Data([7]))
+    await pipeline.feedHIDData(Data([1]))
+    // Lifting the gate with South held masks it until it changes.
+    await pipeline.setExternalOutputAllowed(false)
+    await pipeline.setExternalOutputAllowed(true)
+    await pipeline.feedHIDData(Data([8]))
+    await pipeline.feedHIDData(Data([7]))
+    await pipeline.feedHIDData(Data([1]))
+
+    // The reconnected controller's first press is visible; the old connection's mask is gone.
+    #expect(dispatcher.states.last == snapshot(.press(.faceSouth)))
+    await pipeline.stop()
   }
 
   @Test
@@ -192,68 +215,81 @@ struct DevicePipelineSleepTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 10462, productID: 4418),
       transport: .hid(locationID: 1),
-      parser: ScriptedLifecycleInputParser(),
+      driver: ScriptedLifecycleInputParser(),
       dispatcher: dispatcher,
       idleTimeoutNanoseconds: 5_000_000_000,
       idleMonitorIntervalNanoseconds: 5_000_000_000
     )
 
     await pipeline.start()
-    #expect(await pipeline.hidShutdownFeatureReports().isEmpty)
+    #expect(await pipeline.hidDeactivationWrites().isEmpty)
 
     await pipeline.feedHIDData(Data([1]))
-    #expect(dispatcher.flattenedEvents.isEmpty)
+    #expect(dispatcher.states.isEmpty)
 
     let connectReports = await pipeline.feedHIDData(Data([7]))
-    #expect(dispatcher.batches == [[]])
-    #expect(connectReports == [PhysicalHIDOutputReport(reportID: 0, bytes: [0xAA])])
+    #expect(dispatcher.activations == 1 && dispatcher.states.isEmpty)
+    #expect(connectReports == [.hidFeature(PhysicalHIDOutputReport(reportID: 0, bytes: [0xAA]))])
 
     await pipeline.feedHIDData(Data([1]))
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a)])
-    let shutdownReports = await pipeline.hidShutdownFeatureReports()
-    #expect(shutdownReports == [PhysicalHIDOutputReport(reportID: 0, bytes: [0xBB])])
+    #expect(dispatcher.states == [snapshot(.press(.faceSouth))])
+    let shutdownReports = await pipeline.hidDeactivationWrites()
+    #expect(shutdownReports == [.hidFeature(PhysicalHIDOutputReport(reportID: 0, bytes: [0xBB]))])
 
     let disconnectReports = await pipeline.feedHIDData(Data([8]))
-    #expect(dispatcher.flattenedEvents == [.buttonPressed(.a), .buttonReleased(.a)])
-    #expect(disconnectReports == [PhysicalHIDOutputReport(reportID: 0, bytes: [0xBB])])
-    #expect(await pipeline.hidShutdownFeatureReports().isEmpty)
+    #expect(dispatcher.states == [snapshot(.press(.faceSouth)), .neutral])
+    #expect(disconnectReports == [.hidFeature(PhysicalHIDOutputReport(reportID: 0, bytes: [0xBB]))])
+    #expect(await pipeline.hidDeactivationWrites().isEmpty)
     #expect(dispatcher.stoppedIdentifiers == [DeviceIdentifier(vendorID: 10462, productID: 4418)])
   }
 
 }
 
-private final class ScriptedInputParser: InputParser {
-  func parse(data: Data) throws -> [ControllerEvent] {
+private final class ScriptedInputParser: PhysicalProtocolDriver {
+  let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
+  let sessionPlan = DriverSessionPlan()
+  let outputCapabilities = PhysicalControllerOutputCapabilities.none
+  let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
+  private var script = ScriptedState()
+  func consumeInputConnectionStateChange() -> ControllerInputConnectionState? { nil }
+  func parse(report data: Data, receivedAt: MonotonicTimestamp) throws -> ControllerEvent? {
+    let changes: [InputChange]
     switch data.first {
-    case 1: return [.buttonPressed(.a)]
-    case 2: return [.buttonReleased(.a)]
-    case 3: return [.leftStickChanged(x: 0.8, y: 0)]
-    case 4: return [.buttonPressed(.b)]
-    case 5: return [.leftStickChanged(x: 0.6, y: 0)]
-    case 6: return [.dpadChanged(.north)]
-    case 7: return [.leftTriggerChanged(0.75)]
-    case 9: return [.buttonPressed(.a), .buttonReleased(.a)]
-    case 10: return [.buttonPressed(.a), .buttonPressed(.a)]
-    case 11: return [.leftStickChanged(x: .nan, y: .infinity)]
-    default: return []
+    case 1: changes = [.press(.faceSouth)]
+    case 2: changes = [.release(.faceSouth)]
+    case 3: changes = [.leftStick(x: 0.8, y: 0)]
+    case 4: changes = [.press(.faceEast)]
+    case 5: changes = [.leftStick(x: 0.6, y: 0)]
+    case 6: changes = [.hat(.north)]
+    case 7: changes = [.leftTrigger(0.75)]
+    case 9: changes = [.press(.faceSouth), .release(.faceSouth)]
+    case 10: changes = [.press(.faceSouth), .press(.faceSouth)]
+    case 11: changes = [.leftStick(x: .nan, y: .infinity)]
+    default: return nil
     }
+    return script.event(changes, at: receivedAt)
   }
 }
 
-private final class ScriptedLifecycleInputParser: InputParser, ControllerInputConnectionLifecycle,
-  HIDStartupFeatureReportProvider, HIDShutdownFeatureReportProvider
-{
+private final class ScriptedLifecycleInputParser: PhysicalProtocolDriver {
+  let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
+  let sessionPlan = DriverSessionPlan(requiresInputConnectionBeforeOutput: true)
+  let outputCapabilities = PhysicalControllerOutputCapabilities.none
+  let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
   private var connected = false
   private var pendingState: ControllerInputConnectionState?
+  private var script = ScriptedState()
 
-  var requiresInputConnectionBeforeOutput: Bool { true }
-
-  func hidStartupFeatureReports() -> [PhysicalHIDOutputReport] {
-    [PhysicalHIDOutputReport(reportID: 0, bytes: [0xAA])]
+  func activationWrites() -> [PhysicalOutputWrite] {
+    [.hidFeature(PhysicalHIDOutputReport(reportID: 0, bytes: [0xAA]))]
   }
 
-  func hidShutdownFeatureReports() -> [PhysicalHIDOutputReport] {
-    [PhysicalHIDOutputReport(reportID: 0, bytes: [0xBB])]
+  func deactivationWrites() -> [PhysicalOutputWrite] {
+    [.hidFeature(PhysicalHIDOutputReport(reportID: 0, bytes: [0xBB]))]
+  }
+
+  func inputConnectionWrites(for state: ControllerInputConnectionState) -> [PhysicalOutputWrite] {
+    state == .connected ? activationWrites() : deactivationWrites()
   }
 
   func consumeInputConnectionStateChange() -> ControllerInputConnectionState? {
@@ -262,18 +298,19 @@ private final class ScriptedLifecycleInputParser: InputParser, ControllerInputCo
     return state
   }
 
-  func parse(data: Data) throws -> [ControllerEvent] {
+  func parse(report data: Data, receivedAt: MonotonicTimestamp) throws -> ControllerEvent? {
     switch data.first {
     case 7:
       connected = true
       pendingState = .connected
-      return []
+      return nil
     case 8:
       connected = false
       pendingState = .disconnected
-      return []
-    case 1 where connected: return [.buttonPressed(.a)]
-    default: return []
+      script = ScriptedState()
+      return nil
+    case 1 where connected: return script.event([.press(.faceSouth)], at: receivedAt)
+    default: return nil
     }
   }
 }
@@ -282,20 +319,21 @@ private final class RecordingOutputDispatcher: OutputDispatcher, @unchecked Send
   var suppressOutput = false
 
   private let lock = NSLock()
-  private var recordedBatches: [[ControllerEvent]] = []
+  private var recordedStates: [ControllerState] = []
+  private var recordedActivations = 0
   private var recordedStops: [DeviceIdentifier] = []
 
-  var batches: [[ControllerEvent]] { lock.withLock { recordedBatches } }
-
+  var states: [ControllerState] { lock.withLock { recordedStates } }
+  var activations: Int { lock.withLock { recordedActivations } }
   var stoppedIdentifiers: [DeviceIdentifier] { lock.withLock { recordedStops } }
 
-  var dispatchCount: Int { lock.withLock { recordedBatches.count } }
+  func dispatch(
+    _ event: ControllerEvent,
+    labels _: ControllerButtonLabels,
+    from _: DeviceIdentifier
+  ) { lock.withLock { recordedStates.append(event.state) } }
 
-  var flattenedEvents: [ControllerEvent] { lock.withLock { recordedBatches.flatMap { $0 } } }
-
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {
-    lock.withLock { recordedBatches.append(events) }
-  }
+  func activateOutput(for _: DeviceIdentifier) { lock.withLock { recordedActivations += 1 } }
 }
 
 extension RecordingOutputDispatcher: ControllerLifecycleListener {

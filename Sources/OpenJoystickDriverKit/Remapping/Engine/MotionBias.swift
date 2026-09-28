@@ -33,7 +33,7 @@ struct RemappingMotionBias {
   }
 
   mutating func update(
-    _ reading: ControllerMotionReading,
+    _ reading: RemappingMotionReading,
     deltaTime: Double,
     automatic: Bool
   ) -> ControllerMotionVector {

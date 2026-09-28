@@ -4,22 +4,30 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct VirtualInputEventTests {
-  private func apply(_ events: [ControllerEvent], to state: inout VirtualGamepadState) {
-    let dispatcher = UserSpaceOutputDispatcher { _ in
-      throw UserSpaceOutputDispatcher.CreationError.createFailed
-    }
-    for event in events {
-      dispatcher.applyEvent(
-        event,
-        stickTransfer: .init(deadzone: 0, rescalesDeadzone: false),
-        state: &state
-      )
-    }
+  /// Maps a parsed snapshot onto the virtual state with no stick dead zone.
+  private func apply(
+    _ event: ControllerEvent?,
+    labels: ControllerButtonLabels = .standard,
+    to state: inout VirtualGamepadState
+  ) {
+    guard let event else { return }
+    UserSpaceOutputDispatcher.apply(
+      event.state,
+      labels: labels,
+      stickTransfer: .init(deadzone: 0, rescalesDeadzone: false),
+      emitsXboxGuideReport: false,
+      to: &state
+    )
+  }
+
+  /// The `hid-xbox-one-s-bt` input report for `state`.
+  private func xboxOneSReport(_ state: VirtualGamepadState) throws -> [UInt8] {
+    try XboxGeckoHIDReportFormat().buildInputReport(from: state)
   }
 
   @Test(arguments: [false, true])
   func ds4USBAndBluetoothFixturesReachVirtualReports(bluetooth: Bool) throws {
-    let parser = DS4Parser(prefersBluetooth: bluetooth)
+    let parser = DualShock4Driver(prefersBluetooth: bluetooth)
     var packet = [UInt8](repeating: 0, count: bluetooth ? 78 : 64)
     let base = bluetooth ? 3 : 1
     packet[0] = bluetooth ? 0x11 : 0x01
@@ -41,105 +49,65 @@ struct VirtualInputEventTests {
     packet[base + 29] = bluetooth ? 0x19 : 0x09
     if bluetooth { applyDS4BluetoothInputCRC(to: &packet) }
 
-    let events = try parser.parse(data: Data(packet))
+    let events = try parser.parseReport(Data(packet))
     var state = VirtualGamepadState()
-    apply(events, to: &state)
-    let virtualReport = DualShock4USBHIDReportFormat().buildInputReport(from: state)
+    apply(events, labels: .playStation, to: &state)
+    let virtualReport = try xboxOneSReport(state)
 
-    #expect(events.contains(.buttonPressed(.cross)))
-    #expect(events.contains(.buttonPressed(.l1)))
-    #expect(events.contains(.buttonPressed(.ps)))
-    #expect(
-      events.contains {
-        if case .motionSample = $0 { return true }
-        return false
-      }
-    )
+    #expect(events.contains(.press(.faceSouth)))
+    #expect(events.contains(.press(.leftShoulder)))
+    #expect(events.contains(.press(.guide)))
+    #expect(events?.motion.count == 1)
     #expect(state.leftStickX > 32_000)
     #expect(state.leftStickY == -Int16.max)
     #expect(state.rightStickX == -Int16.max)
     #expect(state.rightStickY > 32_000)
-    #expect(virtualReport[5] & 0xF0 == 0x20)
-    #expect(virtualReport[6] & 0x01 == 0x01)
-    #expect(virtualReport[7] & 0x01 == 0x01)
-    #expect(virtualReport[8] == 255)
-    #expect(virtualReport[9] == 127)
+    #expect(virtualReport[14] == 0x11)
+    #expect(virtualReport[15] == 0x04)
+    #expect(Array(virtualReport[9...10]) == [0xFF, 0x03])
+    #expect(virtualReport[13] == 0)
     #expect(
-      parser.batteryTelemetry
-        == ControllerBatteryTelemetry(
-          percentage: 95,
-          percentageRange: 90...99,
-          chargingState: bluetooth ? .charging : .discharging,
-          cableState: bluetooth ? .connected : .disconnected
+      parser.power
+        == ControllerConnectionState.Power(
+          charging: bluetooth ? .charging : .discharging,
+          battery: BatteryLevel(percentage: 90...99),
+          wiredPower: bluetooth
         )
     )
   }
 
   @Test
   func nintendoDigitalTriggersSurviveParserAndVirtualOutput() throws {
-    let parser = SwitchProParser()
+    let parser = Switch1Driver()
     var packet: [UInt8] = [0x30, 0, 0x91, 0, 0, 0, 0, 8, 128, 0, 8, 128]
     var state = VirtualGamepadState()
-    apply(try parser.parse(data: Data(packet)), to: &state)
+    apply(try parser.parseReport(Data(packet)), to: &state)
     packet[3] = 0x80
     packet[5] = 0x80
-    apply(try parser.parse(data: Data(packet)), to: &state)
+    apply(try parser.parseReport(Data(packet)), to: &state)
     #expect(state.leftTriggerPressed)
     #expect(state.rightTriggerPressed)
-    let nintendo = SwitchProUSBHIDReportFormat().buildInputReport(from: state)
-    #expect(nintendo[3] & 0x80 == 0x80)
-    #expect(nintendo[5] & 0x80 == 0x80)
-    let sony = DualSenseUSBHIDReportFormat().buildInputReport(from: state)
-    #expect(sony[5] == 255)
-    #expect(sony[6] == 255)
-    let xbox = Xbox360MacHIDReportFormat().buildInputReport(from: state)
-    #expect(xbox[4] == 255)
-    #expect(xbox[5] == 255)
+    #expect(Array(try xboxOneSReport(state)[9...12]) == [0xFF, 0x03, 0xFF, 0x03])
     packet[3] = 0
     packet[5] = 0
-    apply(try parser.parse(data: Data(packet)), to: &state)
+    apply(try parser.parseReport(Data(packet)), to: &state)
     #expect(state.leftTriggerPressed == false)
     #expect(state.rightTriggerPressed == false)
-    #expect(DualSenseUSBHIDReportFormat().buildInputReport(from: state)[5...6] == [0, 0])
-    #expect(Xbox360MacHIDReportFormat().buildInputReport(from: state)[4...5] == [0, 0])
-  }
-
-  @Test
-  func sonyTouchpadAndMuteSurviveParserPressAndRelease() throws {
-    let parser = DualSenseParser()
-    var packet = [UInt8](repeating: 0, count: 64)
-    packet[0] = 1
-    for index in 1...4 { packet[index] = 128 }
-    packet[8] = 8
-    var state = VirtualGamepadState()
-    apply(try parser.parse(data: Data(packet)), to: &state)
-    packet[10] = 0x06
-    apply(try parser.parse(data: Data(packet)), to: &state)
-    #expect(state.touchpadPressed)
-    #expect(state.mutePressed)
-    #expect(DualSenseUSBHIDReportFormat().buildInputReport(from: state)[10] == 0x06)
-    #expect(DualSenseUSBHIDReportFormat().buildInputReport(from: state)[33] == 0x80)
-    #expect(DualSenseUSBHIDReportFormat().buildInputReport(from: state)[37] == 0x80)
-    #expect(DualShock4USBHIDReportFormat().buildInputReport(from: state)[7] == 0x02)
-    #expect(DualShock4USBHIDReportFormat().buildInputReport(from: state)[35] == 0x80)
-    #expect(DualShock4USBHIDReportFormat().buildInputReport(from: state)[39] == 0x80)
-    packet[10] = 0
-    apply(try parser.parse(data: Data(packet)), to: &state)
-    #expect(state.touchpadPressed == false)
-    #expect(state.mutePressed == false)
-    #expect(DualSenseUSBHIDReportFormat().buildInputReport(from: state)[10] == 0)
-    #expect(DualShock4USBHIDReportFormat().buildInputReport(from: state)[7] == 0)
+    #expect(Array(try xboxOneSReport(state)[9...12]) == [0, 0, 0, 0])
   }
 
   @Test
   func digitalTriggerTransitionsDoNotReplaceAnalogPressure() {
     var state = VirtualGamepadState()
-    apply([.leftTriggerChanged(0.5), .buttonPressed(.l2Digital)], to: &state)
+    var input = snapshot(.leftTrigger(0.5), .press(.leftTriggerButton))
+    apply(ControllerEvent(timestamp: MonotonicTimestamp(nanoseconds: 0), state: input), to: &state)
     #expect(state.leftTrigger == 16_383)
     #expect(state.effectiveLeftTrigger == 16_383)
-    apply([.buttonReleased(.l2Digital)], to: &state)
+    input = input.applying([.release(.leftTriggerButton)])
+    apply(ControllerEvent(timestamp: MonotonicTimestamp(nanoseconds: 0), state: input), to: &state)
     #expect(state.effectiveLeftTrigger == 16_383)
-    apply([.leftTriggerChanged(0)], to: &state)
+    input = input.applying([.leftTrigger(0)])
+    apply(ControllerEvent(timestamp: MonotonicTimestamp(nanoseconds: 0), state: input), to: &state)
     #expect(state.effectiveLeftTrigger == 0)
   }
 
@@ -149,11 +117,11 @@ struct VirtualInputEventTests {
     packet[1] = 20
     packet[2] = 10
     var state = VirtualGamepadState()
-    let parser = XIDParser()
-    apply(try parser.parse(data: Data(packet)), to: &state)
-    #expect(DualSenseUSBHIDReportFormat().buildInputReport(from: state)[8] & 0x0F == 3)
+    let parser = XIDDriver()
+    apply(try parser.parseReport(Data(packet)), to: &state)
+    #expect(try xboxOneSReport(state)[13] == 0x04)
     packet[2] = 0
-    apply(try parser.parse(data: Data(packet)), to: &state)
-    #expect(DualSenseUSBHIDReportFormat().buildInputReport(from: state)[8] & 0x0F == 8)
+    apply(try parser.parseReport(Data(packet)), to: &state)
+    #expect(try xboxOneSReport(state)[13] == 0)
   }
 }

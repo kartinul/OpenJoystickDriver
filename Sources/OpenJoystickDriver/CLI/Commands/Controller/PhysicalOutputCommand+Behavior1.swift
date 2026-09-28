@@ -7,7 +7,7 @@ extension PhysicalOutputCommand {
     let name: String
     let vendorID: UInt16
     let productID: UInt16
-    let parser: String
+    let protocolBinding: ProtocolBindingID
     let connection: String
     let physicalOutputCapabilities: PhysicalControllerOutputCapabilities
 
@@ -16,7 +16,7 @@ extension PhysicalOutputCommand {
       name = device.name
       vendorID = device.vendorID
       productID = device.productID
-      parser = device.parser
+      protocolBinding = device.protocolBinding
       connection = device.connection
       physicalOutputCapabilities = device.physicalOutputCapabilities
     }
@@ -147,76 +147,40 @@ extension PhysicalOutputCommand {
       productID: productID,
       runtimeIdentifier: parsed.runtimeIdentifier
     )
-    let capabilities = device.physicalOutputCapabilities
-    guard capabilities.supportsRumble else {
-      fail(
-        CLILocalized.text(
+    // All-zero is a stop; otherwise the daemon ends the rumble after the duration.
+    let intensities = RumbleIntensities(
+      leftMain: UnipolarValue(byte: left),
+      rightMain: UnipolarValue(byte: right),
+      leftTrigger: UnipolarValue(byte: lt),
+      rightTrigger: UnipolarValue(byte: rt)
+    ).mirroringMainOntoHaptics()
+    let result = sendOutput(
+      intensities == .off
+        ? .stopRumble : .setRumble(intensities, duration: .milliseconds(durationMs)),
+      to: device,
+      unsupported: Message(
+        key: "cli.controller.noRumble",
+        english: "The selected controller has no physical rumble implementation."
+      ),
+      failed: Message(
+        key: "cli.controller.rumbleFailed",
+        english: "The application service could not send the physical rumble command."
+      )
+    )
+    var messages = droppedTriggerMotorMessages(result)
+    let requested = intensities.activeMotors
+    // A request whose every channel was dropped drove nothing: it fails with the last message.
+    if !requested.isEmpty, requested.allSatisfy(result.droppedRumbleChannels.contains) {
+      let failure =
+        messages.popLast()
+        ?? CLILocalized.text(
           "cli.controller.noRumble",
           "The selected controller has no physical rumble implementation."
         )
-      )
+      for message in messages { CLIOutput.warning(message) }
+      fail(failure)
     }
-    if lt > 0 && !capabilities.rumbleMotors.contains(.leftTrigger) {
-      fail(
-        CLILocalized.text(
-          "cli.controller.noLeftTriggerMotor",
-          "The selected controller does not expose a left trigger motor."
-        )
-      )
-    }
-    if rt > 0 && !capabilities.rumbleMotors.contains(.rightTrigger) {
-      fail(
-        CLILocalized.text(
-          "cli.controller.noRightTriggerMotor",
-          "The selected controller does not expose a right trigger motor."
-        )
-      )
-    }
-
-    let rumbleLeft = left
-    let rumbleRight = right
-    let rumbleLT = lt
-    let rumbleRT = rt
-    let rumbleDurationMs = durationMs
-    let hasActiveMotor = left != 0 || right != 0 || lt != 0 || rt != 0
-    let client = ApplicationServiceClient()
-    client.connect()
-    defer { client.disconnect() }
-    let sent: Bool? = runSyncOptionalResult(timeout: applicationServiceCallTimeoutSeconds + 5.0) {
-      guard
-        (try? await client.sendPhysicalRumble(
-          vendorID: vendorID,
-          productID: productID,
-          runtimeIdentifier: device.runtimeIdentifier,
-          left: rumbleLeft,
-          right: rumbleRight,
-          lt: rumbleLT,
-          rt: rumbleRT,
-          durationMs: rumbleDurationMs
-        )) == true
-      else { return false }
-      guard hasActiveMotor, rumbleDurationMs > 0 else { return true }
-      try? await Task.sleep(nanoseconds: UInt64(rumbleDurationMs) * 1_000_000)
-      return
-        (try? await client.sendPhysicalRumble(
-          vendorID: vendorID,
-          productID: productID,
-          runtimeIdentifier: device.runtimeIdentifier,
-          left: 0,
-          right: 0,
-          lt: 0,
-          rt: 0,
-          durationMs: 0
-        )) == true
-    }
-    guard sent == true else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.rumbleFailed",
-          "The application service could not send the physical rumble command."
-        )
-      )
-    }
+    for message in messages { CLIOutput.warning(message) }
     print(
       CLILocalized.format(
         "cli.controller.rumbleSent",
@@ -255,34 +219,18 @@ extension PhysicalOutputCommand {
       productID: productID,
       runtimeIdentifier: parsed.runtimeIdentifier
     )
-    guard device.physicalOutputCapabilities.supportsPlayerIndicator else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.noPlayerIndicator",
-          "The selected controller has no source-backed player-indicator implementation."
-        )
+    sendOutput(
+      .setPlayerIndicator(indicator),
+      to: device,
+      unsupported: Message(
+        key: "cli.controller.noPlayerIndicator",
+        english: "The selected controller has no source-backed player-indicator implementation."
+      ),
+      failed: Message(
+        key: "cli.controller.playerIndicatorFailed",
+        english: "The application service could not set the physical player indicator."
       )
-    }
-
-    let client = ApplicationServiceClient()
-    client.connect()
-    defer { client.disconnect() }
-    let sent: Bool? = runSyncOptionalResult(timeout: applicationServiceCallTimeoutSeconds) {
-      try? await client.setPhysicalPlayerIndicator(
-        vendorID: vendorID,
-        productID: productID,
-        runtimeIdentifier: device.runtimeIdentifier,
-        indicator: indicator
-      )
-    }
-    guard sent == true else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.playerIndicatorFailed",
-          "The application service could not set the physical player indicator."
-        )
-      )
-    }
+    )
     print(
       CLILocalized.format(
         "cli.controller.playerIndicatorSet",

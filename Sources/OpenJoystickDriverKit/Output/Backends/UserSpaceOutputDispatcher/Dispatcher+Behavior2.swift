@@ -1,4 +1,3 @@
-import CoreHID
 import Darwin
 import Foundation
 import IOKit
@@ -8,13 +7,13 @@ import Security
 extension UserSpaceOutputDispatcher {
 
   internal func deliver(
-    events: [ControllerEvent],
+    input: ControllerState?,
+    labels: ControllerButtonLabels,
     from identifier: DeviceIdentifier,
-    remappedState: RemappingGamepadState?,
-    motionUpdate: RemappingVirtualMotionState??
+    remappedState: RemappingGamepadState?
   ) async throws {
-    let neutralizing = remappedState == .neutral || motionUpdate == .some(nil)
-    let remapped = remappedState != nil || motionUpdate != nil
+    let neutralizing = remappedState == .neutral
+    let remapped = remappedState != nil
     let outputSuppressed = isOutputSuppressed(remapped: remapped)
     guard lifecycle.isOpen, !outputSuppressed || neutralizing || !remapped else {
       throw CancellationError()
@@ -43,41 +42,32 @@ extension UserSpaceOutputDispatcher {
       try await activeEntry.sender.submit(whileActive: isActive, requireActive: true) {
         [self, activeEntry] in
         guard isActive() else { throw CancellationError() }
-        let primaryReport: [UInt8]?
-        if let motionUpdate {
-          guard motionUpdate == nil || activeEntry.inputReportState.supportsMotion else {
-            throw RemappingEventEngineError.sinkUnavailable
-          }
-          primaryReport = activeEntry.inputReportState.updateMotion(motionUpdate)
-        } else {
-          primaryReport = activeEntry.inputReportState.update(remapped: remapped) { state in
-            if let remappedState {
-              let motion = state.motion
-              let motionSamples = state.motionSamples
-              let motionTimestamp = state.motionTimestampNanoseconds
-              state = VirtualGamepadState()
-              state.motion = motion
-              state.motionSamples = motionSamples
-              state.motionTimestampNanoseconds = motionTimestamp
-              for event in remappedState.events(since: .neutral) {
-                applyEvent(event, stickTransfer: stickTransfer, state: &state)
-              }
-            } else {
-              for event in events { applyEvent(event, stickTransfer: stickTransfer, state: &state) }
-            }
+        let primaryReport = activeEntry.inputReportState.update(remapped: remapped) { state in
+          if let remappedState {
+            apply(remappedState, to: &state)
+          } else if let input {
+            Self.apply(
+              input,
+              labels: labels,
+              stickTransfer: stickTransfer,
+              emitsXboxGuideReport: emitsXboxGuideReport,
+              to: &state
+            )
           }
         }
-        var reports = primaryReport.map { [$0] } ?? []
+        var reports =
+          activeEntry.inputReportState.claimDelivery(of: primaryReport) ? [primaryReport] : []
         if emitsXboxGuideReport {
           if let remappedState {
-            reports.append([0x02, remappedState.buttons.contains(.guide) ? 0x01 : 0x00])
-          } else {
-            reports += events.compactMap { xboxGuideReport(for: $0) }
+            reports.append(Self.xboxGuideReport(pressed: remappedState.buttons.contains(.guide)))
+          } else if let input,
+            let guide = activeEntry.inputReportState.updateGuide(input.pressed.contains(.guide))
+          {
+            reports.append(Self.xboxGuideReport(pressed: guide))
           }
         }
         return reports
       }.value()
-      startInputReportKeepalive(activeEntry)
       registryLock.withLock { recomputeStatusLocked() }
     } catch {
       let removed = registryLock.withLock { () -> Entry? in

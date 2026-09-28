@@ -1,10 +1,64 @@
 import Foundation
+import OpenJoystickDriverKit
 import ProtocolPacketFixtures
 import Testing
 
 @testable import OpenJoystickDriverUSB
 
 extension PassiveUSBDescriptorProbeTests {
+  @Test
+  func runtimeObservationSelectsOnlyTheExactRegistryEntry() throws {
+    let device = USBTransportDevice(
+      route: .ioUSBHost,
+      serviceID: 12,
+      vendorID: 0x3537,
+      productID: 0x1010,
+      locationID: 42
+    )
+    let source = SpySource(matches: [
+      runtimeDeviceRoot(registryEntryID: 11, release: 0x0110),
+      runtimeDeviceRoot(registryEntryID: 12, release: 0x0220),
+    ])
+
+    let maybeObservation = try PassiveUSBDescriptorProbe.physicalDeviceObservation(
+      for: device,
+      source: source
+    )
+    let observation = try #require(maybeObservation)
+
+    #expect(observation.serviceIdentity == device.serviceIdentity)
+    #expect(observation.deviceRelease == 0x0220)
+    #expect(observation.interfaces?.first?.endpoints?.first?.address == 0x01)
+    #expect(
+      source.calls == [
+        SpySource.Call(
+          className: "IOUSBHostDevice",
+          properties: ["idVendor": 0x3537, "idProduct": 0x1010]
+        )
+      ]
+    )
+  }
+
+  @Test(arguments: [nil, Optional(UInt64(11))])
+  func runtimeObservationDoesNotFallBackToLocationWithoutExactRegistryID(
+    registryEntryID: UInt64?
+  ) throws {
+    let device = USBTransportDevice(
+      route: .ioUSBHost,
+      serviceID: 12,
+      vendorID: 0x3537,
+      productID: 0x1010,
+      locationID: 42
+    )
+    let source = SpySource(matches: [
+      runtimeDeviceRoot(registryEntryID: registryEntryID, release: 0x0110)
+    ])
+
+    #expect(
+      try PassiveUSBDescriptorProbe.physicalDeviceObservation(for: device, source: source) == nil
+    )
+  }
+
   @Test
   func identicalAliasesParseAndDifferentAliasesAreAmbiguous() throws {
     let bytes = ProtocolPacketFixtures.PassiveUSB.emptyConfiguration
@@ -36,6 +90,7 @@ extension PassiveUSBDescriptorProbeTests {
     #expect(ambiguous.parsedDescriptorFacts.state == .ambiguous)
     #expect(ambiguous.parsedDescriptorFacts.configuration == nil)
   }
+
   @Test
   func boundedBlobAndOwnershipBoundaryCasesAreIndependent() throws {
     #expect(throws: PassiveUSBDescriptorBlobError.unsafeSize) {
@@ -82,6 +137,7 @@ extension PassiveUSBDescriptorProbeTests {
       ])
     }
   }
+
   @Test
   func matchingFailuresRemainTypedAndInterpolated() {
     let source = SpySource(error: .matchingFailed(-536_870_181))
@@ -95,6 +151,7 @@ extension PassiveUSBDescriptorProbeTests {
       PassiveUSBDescriptorProbeError.matchingFailed(-7).errorDescription?.contains("-7") == true
     )
   }
+
   @Test
   func speedAliasesAreObservedOrAmbiguousWithoutPromotingUnknownSpeed() {
     let root = fixtureRoot()
@@ -125,6 +182,7 @@ extension PassiveUSBDescriptorProbeTests {
     #expect(ambiguous.observedUSBFacts.speedObservation.state == .ambiguous)
     #expect(ambiguous.parsedDescriptorFacts.state == .parsed)
   }
+
   func fixtureRoot(children: [PassiveUSBRegistryNode]? = nil) -> PassiveUSBRegistryNode {
     let interface = interface(number: 0, alternate: 0, endpoint: 0)
     return PassiveUSBRegistryNode(
@@ -142,6 +200,22 @@ extension PassiveUSBDescriptorProbeTests {
       children: children ?? [interface]
     )
   }
+
+  func runtimeDeviceRoot(registryEntryID: UInt64?, release: UInt64) -> PassiveUSBRegistryNode {
+    let root = fixtureRoot()
+    let properties = root.properties.merging([
+      "idVendor": .unsignedInteger(0x3537), "idProduct": .unsignedInteger(0x1010),
+      "locationID": .unsignedInteger(42), "bcdDevice": .unsignedInteger(release),
+    ]) { _, new in new }
+    return PassiveUSBRegistryNode(
+      serviceClass: root.serviceClass,
+      properties: properties,
+      children: root.children,
+      registryPath: "/fixture/usb/service",
+      registryEntryID: registryEntryID
+    )
+  }
+
   func interface(number: UInt8, alternate: UInt8, endpoint: UInt8) -> PassiveUSBRegistryNode {
     let endpoint = PassiveUSBRegistryNode(
       serviceClass: "IOUSBHostPipe",
@@ -162,6 +236,7 @@ extension PassiveUSBDescriptorProbeTests {
       children: [endpoint]
     )
   }
+
   func catalogInference() -> PassiveUSBCatalogInference {
     PassiveUSBCatalogInference(
       source: "OpenJoystickDriver catalog",
@@ -170,6 +245,7 @@ extension PassiveUSBDescriptorProbeTests {
       endpoints: ["input": 0x81]
     )
   }
+
   func noSensitiveKeys(_ value: Any) -> Bool {
     if let dictionary = value as? [String: Any] {
       return dictionary.allSatisfy { key, child in

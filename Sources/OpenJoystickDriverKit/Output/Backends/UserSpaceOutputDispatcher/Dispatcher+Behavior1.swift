@@ -1,4 +1,3 @@
-import CoreHID
 import Darwin
 import Foundation
 import IOKit
@@ -6,14 +5,14 @@ import IOKit.hid
 import Security
 
 extension UserSpaceOutputDispatcher {
-  public typealias RumbleCommandHandler = @Sendable (DeviceIdentifier, VirtualRumbleCommand) -> Void
+  public typealias OutputCommandHandler =
+    @Sendable (DeviceIdentifier, ControllerOutputCommand) -> Void
 
   public enum CreationError: Error, CustomStringConvertible, Sendable {
     case createFailed
     case inputMonitoringDenied
     case accessibilityDenied
     case missingEntitlement(String)
-    case provisioningProfileExcludesHost
 
     public var description: String {
       switch self {
@@ -21,8 +20,6 @@ extension UserSpaceOutputDispatcher {
       case .inputMonitoringDenied: return "Input Monitoring denied for IOKit virtual device"
       case .accessibilityDenied: return "Accessibility denied for IOKit virtual device"
       case .missingEntitlement(let entitlement): return "Missing entitlement: \(entitlement)"
-      case .provisioningProfileExcludesHost:
-        return "Development provisioning profile does not include this Mac"
       }
     }
   }
@@ -49,21 +46,6 @@ extension UserSpaceOutputDispatcher {
 
   internal struct IOKitReportError: Error, Sendable { let code: IOReturn }
 
-  /// Interrupt IN for IOKit clients (`hid_read`). GetReport is a separate control path.
-  static func publishIOKitInputReport(_ device: IOHIDUserDevice, report: [UInt8]) throws {
-    let result = report.withUnsafeBytes { pointer -> IOReturn in
-      guard let base = pointer.baseAddress else { return kIOReturnBadArgument }
-      return IOHIDUserDeviceHandleReportWithTimeStamp(
-        device,
-        mach_absolute_time(),
-        base.assumingMemoryBound(to: UInt8.self),
-        pointer.count
-      )
-    }
-    guard result == kIOReturnSuccess else { throw IOKitReportError(code: result) }
-  }
-
-  @available(macOS, introduced: 10.15, obsoleted: 15.0)
   internal final class IOHIDBackend: VirtualDeviceBackend, @unchecked Sendable {
     internal var device: IOHIDUserDevice?
     let queue: DispatchQueue
@@ -81,7 +63,17 @@ extension UserSpaceOutputDispatcher {
       guard let device = lock.withLock({ isClosed ? nil : device }) else {
         throw CancellationError()
       }
-      try UserSpaceOutputDispatcher.publishIOKitInputReport(device, report: report)
+      // Interrupt IN for IOKit clients (`hid_read`). GetReport is a separate control path.
+      let result = report.withUnsafeBytes { pointer -> IOReturn in
+        guard let base = pointer.baseAddress else { return kIOReturnBadArgument }
+        return IOHIDUserDeviceHandleReportWithTimeStamp(
+          device,
+          mach_absolute_time(),
+          base.assumingMemoryBound(to: UInt8.self),
+          pointer.count
+        )
+      }
+      guard result == kIOReturnSuccess else { throw IOKitReportError(code: result) }
     }
 
     func close() {
@@ -92,44 +84,6 @@ extension UserSpaceOutputDispatcher {
         return self.device
       }
       if let device { IOHIDUserDeviceCancel(device) }
-    }
-  }
-
-  @available(macOS 15, *)
-  internal final class CoreHIDBackend: VirtualDeviceBackend, @unchecked Sendable {
-    internal var device: HIDVirtualDevice?
-    internal var delegateOwner: CoreHIDDelegate?
-    internal let lock = NSLock()
-    internal var isClosed = false
-
-    init(device: HIDVirtualDevice, delegate: CoreHIDDelegate) {
-      self.device = device
-      delegateOwner = delegate
-    }
-
-    func send(_ report: [UInt8]) async throws {
-      guard let device = lock.withLock({ isClosed ? nil : device }) else {
-        throw CancellationError()
-      }
-      // CoreHID GetReport is the delegate. HIDAPI `hid_read` is IOKit interrupt IN
-      // via HandleReport. dispatchInputReport alone can leave that queue idle.
-      if #available(macOS 26, *), let userDevice = device.hidDevice {
-        try UserSpaceOutputDispatcher.publishIOKitInputReport(userDevice, report: report)
-      }
-      try await device.dispatchInputReport(data: Data(report), timestamp: SuspendingClock.now)
-    }
-
-    func close() {
-      let device = lock.withLock { () -> HIDVirtualDevice? in
-        guard !isClosed else { return nil }
-        isClosed = true
-        delegateOwner = nil
-        defer { self.device = nil }
-        return self.device
-      }
-      if #available(macOS 26, *), let userDevice = device?.hidDevice {
-        IOHIDUserDeviceCancel(userDevice)
-      }
     }
   }
 
@@ -179,7 +133,6 @@ extension UserSpaceOutputDispatcher {
         guard lifecycle.isOpen else { throw CancellationError() }
         try await entry.sender.submit { [entry] in [entry.inputReportState.currentReport()] }
           .value()
-        startInputReportKeepalive(entry)
 
       }
       registryLock.withLock { recomputeStatusLocked() }
@@ -195,7 +148,6 @@ extension UserSpaceOutputDispatcher {
       let entry = try await entry(for: identifier)
       guard lifecycle.isOpen else { throw CancellationError() }
       try await entry.sender.submit { [entry] in [entry.inputReportState.currentReport()] }.value()
-      startInputReportKeepalive(entry)
       registryLock.withLock { recomputeStatusLocked() }
     } catch {
       await close()
@@ -227,36 +179,28 @@ extension UserSpaceOutputDispatcher {
     }
   }
 
-  internal func startInputReportKeepalive(_ entry: Entry) {
-    entry.startInputReportKeepalive(
-      isActive: { [weak self, weak entry] in
-        guard let self, let entry else { return false }
-        return self.lifecycle.isOpen
-          && !self.isOutputSuppressed(remapped: entry.inputReportState.isRemapped)
-      },
-      onFailure: { [weak self, weak entry] error in
-        guard let self, let entry else { return }
-        let removed = self.registryLock.withLock { () -> Entry? in
-          guard let identifier = self.entries.first(where: { $0.value === entry })?.key else {
-            return nil
-          }
-          self._status = "error: keepalive failed: \(error)"
-          return self.entries.removeValue(forKey: identifier)
-        }
-        _ = removed?.beginClose()
-      }
-    )
+  public func dispatch(
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
+    from identifier: DeviceIdentifier
+  ) async {
+    try? await deliver(input: event.state, labels: labels, from: identifier, remappedState: nil)
   }
 
-  public func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) async {
-    try? await deliver(events: events, from: identifier, remappedState: nil, motionUpdate: nil)
+  public func activateOutput(for identifier: DeviceIdentifier) async {
+    try? await deliver(input: nil, labels: .standard, from: identifier, remappedState: nil)
+  }
+
+  public func activateOutputReportingFailure(for identifier: DeviceIdentifier) async throws {
+    try await deliver(input: nil, labels: .standard, from: identifier, remappedState: nil)
   }
 
   public func dispatchReportingFailure(
-    events: [ControllerEvent],
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
     from identifier: DeviceIdentifier
   ) async throws {
-    try await deliver(events: events, from: identifier, remappedState: nil, motionUpdate: nil)
+    try await deliver(input: event.state, labels: labels, from: identifier, remappedState: nil)
   }
 
   public func send(_ state: RemappingGamepadState, for identifier: DeviceIdentifier) async throws {
@@ -264,14 +208,7 @@ extension UserSpaceOutputDispatcher {
       await close()
       return
     }
-    try await deliver(events: [], from: identifier, remappedState: state, motionUpdate: nil)
-  }
-
-  public func send(
-    _ motion: RemappingVirtualMotionState?,
-    for identifier: DeviceIdentifier
-  ) async throws {
-    try await deliver(events: [], from: identifier, remappedState: nil, motionUpdate: .some(motion))
+    try await deliver(input: nil, labels: .standard, from: identifier, remappedState: state)
   }
 
   internal func isOutputSuppressed(remapped: Bool) -> Bool {

@@ -69,7 +69,6 @@
 "status.checkingControllers" = "연결된 컨트롤러 확인 중…";
 "status.refreshingProfile" = "프로파일 상태 새로 고치는 중…";
 "status.loadingProfiles" = "프로파일 로드 중…";
-"status.updatingIdentity" = "컨트롤러 식별 업데이트 중…";
 "status.listening" = "수신 대기 중…";
 "status.readyToListen" = "수신 대기 준비됨";
 "status.checkingInput" = "확인 중";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "컨트롤러";
 "settings.controllerDisconnectedNotifications" = "컨트롤러 연결 해제됨";
 "settings.controllerDisconnectedShort" = "연결 해제됨";
-"settings.controllerIdentity" = "컨트롤러 식별";
 "settings.controllerNotifications" = "컨트롤러 연결됨";
 "settings.diagnostics" = "진단";
 "settings.service" = "서비스";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "방전 중";
 "controllers.charging" = "충전 중";
 "controllers.batteryFull" = "완충";
+"controllers.notChargeable" = "충전 불가";
 "controllers.batteryAccessibilityDetails" = "배터리: %@. 충전 상태: %@. 케이블 상태: %@.";
 "controllers.activeProfile" = "활성 프로파일";
 "controllers.profileChecking" = "확인 중…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "활성 프로파일을 사용할 수 없음";
 "controllers.profileLoadError" = "활성 프로파일을 로드할 수 없음";
 "controllers.protocol" = "프로토콜";
-"controllers.parser" = "파서";
 "controllers.serialNumber" = "일련 번호";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "입력 엔드포인트";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "활성 프로파일 오류: %@";
 "controllers.accessibilityDetails" = "%@. %@. 프로토콜: %@. Parser: %@. 일련 번호: %@. USB VID/PID: %@. 입력 엔드포인트: %@. 출력 엔드포인트: %@.";
 "controllers.publishedAs" = "다음으로 게시됨";
-"identity.title" = "컨트롤러 식별";
-"identity.needsAttention" = "확인 필요";
-"identity.error" = "컨트롤러 식별 오류";
-"identity.updating" = "컨트롤러 식별 업데이트 중…";
-"identity.reset" = "권장 설정으로 재설정";
-"identity.checking" = "확인 중";
-"identity.globalScope" = "OpenJoystickDriver가 게시하는 모든 가상 컨트롤러에 적용됩니다.";
-"identity.unavailable" = "사용할 수 없음";
-"identity.notSelected" = "선택되지 않음";
+"controllers.nativeGamepadNotPublished" = "macOS 기본 게임패드, 게시 안 됨";
+"virtualProfile.advanced" = "고급";
+"virtualProfile.title" = "가상 HID 프로필";
+"virtualProfile.modelScope" = "이 모델의 연결된 모든 컨트롤러에 적용됩니다.";
+"virtualProfile.sourceOverride" = "재정의";
+"virtualProfile.sourceAutomaticAfterRejecting" = "자동, 재정의 거부됨";
+"virtualProfile.none" = "가상 HID 프로필 없음";
+"virtualProfile.unavailable" = "이 컨트롤러를 표현할 수 있는 가상 HID 프로필이 없습니다.";
+"virtualProfile.updating" = "가상 HID 프로필 업데이트 중…";
+"virtualProfile.live" = "현재 프로필";
+"virtualProfile.failure.unknownProfile" = "이 가상 HID 프로필은 알 수 없습니다. 저장된 항목이 없습니다.";
+"virtualProfile.failure.controllerNotFound" = "컨트롤러 연결이 끊겼거나 찾을 수 없습니다. 재정의는 변경되지 않았습니다.";
+"virtualProfile.failure.overrideRejected" = "재정의는 저장되었지만 이 컨트롤러에서 사용할 수 없으므로 자동으로 선택합니다.";
+"virtualProfile.failure.activationFailed" = "활성화에 실패하여 이전 가상 HID 프로필을 복원했습니다: %@";
+"virtualProfile.failure.outputDisabled" = "재정의가 저장되었으며 가상 출력이 활성화되면 적용됩니다.";
+"virtualProfile.failure.serverStopped" = "서비스가 중지되었습니다. 재정의는 변경되지 않았습니다.";
+"virtualProfile.failure.persistenceFailed" = "재정의를 저장할 수 없습니다. 저장된 항목이 없습니다.";
+"virtualProfile.storeError" = "가상 HID 프로필 재정의를 읽을 수 없습니다(%@). 컨트롤러가 자동으로 선택합니다.";
+"virtualProfile.legacyIdentityRejected" = "폐기된 컨트롤러 식별 설정 %@은(는) 더 이상 적용되지 않습니다. 지우려면 controller virtual reset --all을(를) 실행하세요.";
 "keyboard.noKey" = "선택된 키 없음";
 "keyboard.pressKey" = "키를 누르십시오…";
 "keyboard.captureKey" = "키 캡처";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "현재 상태";
 "debug.runtime" = "런타임";
 "debug.controllers" = "컨트롤러";
-"debug.controllerIdentity" = "컨트롤러 식별";
 "debug.unavailable" = "런타임 · 사용할 수 없음";
 "debug.needsAttention" = "런타임 · 확인 필요";
 "debug.diagnostics" = "진단";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "컨트롤러 출력이 꺼져 있습니다.";
 "debug.outputNeedsAttention" = "컨트롤러 출력에 확인이 필요합니다.";
 "debug.serviceUnavailable" = "지금은 서비스 진단을 사용할 수 없습니다.";
-"error.selectedOutputUnavailable" = "선택한 컨트롤러 출력을 사용할 수 없습니다.";
-"error.selectedOutputEnableFailed" = "선택한 컨트롤러 출력을 활성화할 수 없습니다.";
 "error.profileChanged" = "이 프로파일이 다른 곳에서 변경되었습니다. 다시 로드하거나 편집을 계속하십시오.";
 "error.duplicateProfile" = "해당 이름의 프로파일이 이미 있습니다.";
 "error.profileMissing" = "해당 프로파일을 더 이상 사용할 수 없습니다.";
@@ -443,9 +448,7 @@
 "common.runtime" = "런타임";
 "common.controllers" = "컨트롤러";
 "common.profiles" = "프로파일";
-"common.controllerIdentity" = "컨트롤러 식별";
 "common.protocol" = "프로토콜";
-"common.parser" = "파서";
 "common.serialNumber" = "일련 번호";
 "common.inputEndpoint" = "입력 엔드포인트";
 "common.outputEndpoint" = "출력 엔드포인트";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "선택된 프로필 항목은 더 이상 사용할 수 없습니다.";
 "cli.catalog.app_ready.summary" = "인증된 응용 프로그램 서비스 준비 상태 확인";
 "cli.catalog.app_status.summary" = "응용 프로그램 서비스 상태 표시";
-"cli.catalog.compat.summary" = "가상 컨트롤러 호환성 관리";
 "cli.catalog.controller_list.summary" = "연결된 컨트롤러 나열";
 "cli.catalog.controller_output.summary" = "지원되는 실제 컨트롤러 출력 테스트";
 "cli.catalog.controller_packets.summary" = "최근 컨트롤러 패킷 표시";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "드라이버 및 런타임 상태 표시";
 "cli.catalog.test.summary" = "가상 컨트롤러 입력 전달 테스트";
 "cli.catalog.update.summary" = "GitHub에서 사용 가능한 업데이트 확인";
-"cli.compat.identity" = "호환성 식별: %@";
-"cli.compat.identity_unknown" = "호환성 식별: 알 수 없음";
-"cli.compat.set_failed" = "호환성 식별을 %@로 설정하지 못했습니다. 설치된 앱을 실행하고 입력 모니터링 및 손쉬운 사용 접근을 확인하십시오.";
-"cli.compat.usage" = "사용법: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "사용자 공간 상태: %@";
 "cli.controller.allAppleEntries" = "모든 정확한 Apple 카탈로그 항목:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Apple 쌍      : VID/PID 정확 일치 %d개";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "--device %@와(과) 일치하는 연결된 컨트롤러가 없습니다.";
 "cli.controller.selection.multiple" = "여러 컨트롤러가 일치합니다. --device로 하나를 선택하십시오:\n  %@";
 "cli.controller.selection.none" = "컨트롤러가 연결되어 있지 않습니다.";
+"cli.controller.virtual.live" = "가상 HID 프로필: %@ (%@)";
+"cli.controller.virtual.none" = "가상 HID 프로필: 없음 (%@)";
+"cli.controller.virtual.failed" = "가상 HID 프로필 요청 실패: %@";
+"cli.controller.virtual.unknown_profile" = "알 수 없는 가상 HID 프로필 “%@”. 다음 중 하나를 사용하세요: %@.";
+"cli.controller.virtual.missing_profile" = "“controller virtual set”에는 가상 HID 프로필이 필요합니다. 다음 중 하나를 사용하세요: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "“--all”은 --vid, --pid 또는 --device와 함께 사용할 수 없습니다.";
+"cli.controller.virtual.reset_all.success" = "OK: 모든 가상 HID 프로필 재정의를 지웠습니다.";
+"cli.controller.virtual.reset_all.failed" = "설정을 재설정하지 못했습니다. 설치된 앱을 실행하고 권한을 확인하십시오.";
 "cli.controller.selection.vid_pid_missing" = "%@:%@와(과) 일치하는 연결된 컨트롤러가 없습니다.";
 "cli.controller.selection.vid_pid_pair" = "VID와 PID를 모두 전달하거나 둘 다 생략하십시오.";
 "cli.controller.serviceControllers" = "컨트롤러 (실행 중인 응용 프로그램 서비스에서):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "팁: 필요한 엔타이틀먼트와 입력 모니터링 접근을 허용하십시오.";
 "cli.controller.usbControllers" = "USB 컨트롤러 (class 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "VID와 PID를 모두 전달하거나, 컨트롤러가 한 대일 때 둘 다 생략하십시오.";
-"cli.diagnose.advisory_candidate" = "    참고 프로토콜 후보: %@";
 "cli.diagnose.app_missing" = "  앱: %@에 없음";
 "cli.diagnose.app_missing_fix" = "  수정: 앱을 빌드하여 /Applications에 설치";
 "cli.diagnose.app_present" = "  앱: 있음";
 "cli.diagnose.binary_path" = "바이너리: %@";
-"cli.diagnose.catalog_conflict" = "      관찰이 카탈로그 패밀리와 충돌함; 파서는 변경되지 않음";
-"cli.diagnose.catalog_parser" = "      카탈로그 파서는 %@ (%@)로 유지됨";
 "cli.diagnose.dext_found" = "  찾은 .dext 번들:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      최종점 0x%02X %@ %@ maxPacket=%@ 간격=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "알 수 없는 응답 곡선 “%@”.";
 "cli.mapping.double_tap_format" = "--double-tap은 <ms>:<target>을 기대합니다. 예: --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "사용법: OpenJoystickDriver --headless map <command>\n\n명령:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\n소스: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\n대상: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\n축 옵션:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\n터보 옵션 (키보드 및 마우스 버튼만):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\n활성화 옵션 (키보드 및 마우스 버튼만, 터보와 상호 배타적):\n  --long-hold <ms>:<target>     예: --long-hold 500:key:b\n  --double-tap <ms>:<target>    예: --double-tap 300:key:c\n\n<profile>은 UUID 또는 대소문자를 구분하지 않는 정확한 프로파일 이름을 받습니다.\n<id>는 십진수 또는 0x 접두사 십육진수를 받습니다.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "사용법: OpenJoystickDriver --headless map <command>\n\n명령:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\n소스: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\n대상: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\n축 옵션:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\n터보 옵션 (키보드 및 마우스 버튼만):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\n활성화 옵션 (키보드 및 마우스 버튼만, 터보와 상호 배타적):\n  --long-hold <ms>:<target>     예: --long-hold 500:key:b\n  --double-tap <ms>:<target>    예: --double-tap 300:key:c\n\n<profile>은 UUID 또는 대소문자를 구분하지 않는 정확한 프로파일 이름을 받습니다.\n<id>는 십진수 또는 0x 접두사 십육진수를 받습니다.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@은(는) 16비트 십진수 또는 0x 접두사 십육진 식별자여야 합니다.";
 "cli.mapping.jsonEncodeFailed" = "UTF-8 JSON을 인코딩할 수 없습니다.";
 "cli.mapping.layer_action_unknown" = "알 수 없는 레이어 동작 “%@”. 예상: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver 응용 프로그램 서비스가 실행 중이 아닙니다.";
 "cli.runtime.sample_limit" = "이 구성은 %d개 샘플을 수집합니다. --interval-ms를 늘리십시오.";
 "cli.runtime.stable_note" = "안정적이고 유계인 소크는 이 작업 부하에 대한 증거이지, 모든 누수가 없다는 증명은 아닙니다.";
-"cli.settings.reset.failed" = "설정을 재설정하지 못했습니다. 설치된 앱을 실행하고 권한을 확인하십시오.";
-"cli.settings.reset.next" = "다음: compat set <identity>를 실행하여 호환성 식별을 선택하십시오.";
-"cli.settings.reset.success" = "OK: 응용 프로그램 서비스 설정을 재설정했습니다.";
 "cli.status.access_denied" = "접근이 거부되면 --headless permissions request를 실행하고 시스템 설정에서 입력 모니터링과 손쉬운 사용을 승인하십시오.";
 "cli.status.heading" = "OpenJoystickDriver 상태";
 "cli.status.json_error" = "상태 JSON을 인코딩할 수 없음: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  상태         : %@";
 "cli.updates.unknown_option" = "알 수 없는 updates 옵션: %@";
 "common.unknown" = "알 수 없음";
-"compatibility.appleGameController" = "사과 GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (본)";
 "developer.buttons" = "버튼";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B 버튼";
 "inputTest.bCircle" = "B / 원";
 "inputTest.brightness" = "밝기";
-"inputTest.circle" = "원";
 "inputTest.color" = "색상";
 "inputTest.controls" = "실시간 입력";
-"inputTest.cross" = "크로스";
 "inputTest.disconnected" = "제어기 연결이 끊어졌다";
 "inputTest.dpadDown" = "십자 패드 아래";
 "inputTest.dpadLeft" = "십자 패드 왼쪽";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "이 컨트롤러에 대한 조명 컨트롤은 사용할 수 없습니다.";
 "inputTest.live" = "입력 활동";
 "inputTest.menu" = "메뉴";
-"inputTest.minus" = "마이너스";
 "inputTest.off" = "끔";
 "inputTest.open" = "입력 테스트 열기…";
-"inputTest.options" = "옵션";
 "inputTest.outputError" = "물리적 출력 오류";
 "inputTest.outputRejected" = "컨트롤러는 이 출력 테스트를 거부했습니다.";
 "inputTest.permissionRequired" = "입력 입력 모니터링 권한이 요구됩니다";
 "inputTest.playerIndicator" = "플레이어 지표";
-"inputTest.plus" = "플러스";
 "inputTest.pressed" = "누름";
-"inputTest.psButton" = "PS 버튼";
 "inputTest.released" = "뗌";
 "inputTest.rightBumper" = "오른쪽 범퍼";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "오른쪽 Y";
 "inputTest.rumble" = "진동";
 "inputTest.rumbleUnavailable" = "Rumble는 이 컨트롤러에서 지원되지 않습니다.";
-"inputTest.share" = "공유";
-"inputTest.square" = "스퀘어";
 "inputTest.stale" = "입력 중단";
 "inputTest.start" = "입력 테스트 시작";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "실시간 입력";
 "inputTest.tabMotion" = "이명박 의원";
 "inputTest.tabOutput" = "출력";
-"inputTest.steamButton" = "Steam 버튼";
 "inputTest.summary" = "버튼, 스틱, 트리거, 진동 및 컨트롤러 조명을 테스트합니다.";
 "inputTest.testRumble" = "테스트 럼블";
 "inputTest.title" = "입력 테스트";
-"inputTest.triangle" = "트라이앵글";
 "inputTest.unavailable" = "입력이 불가능";
 "inputTest.view" = "보기";
 "inputTest.windowTitle" = "입력 테스트 %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "선택된 Joy-Cons는 짝짓기 불가능해 연결된 컨트롤러를 새로워 다시 시도해 보세요.";
 "profiles.joyConExplicitSession" = "정식 쌍 세션으로 시작되었습니다";
 "profiles.joyConSessionState" = "명백한 결합";
-"profiles.gyro.virtualMotion" = "앞으로 가등화된 가상 운동";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "제어기 연결이 끊어졌다";
 "controllers.resume" = "다시 시도";
 "controllers.disconnectFromOJD" = "제어기 연결이 끊어졌다";
-"error.compatibilityTransitionDetailed" = "선택한 컨트롤러 출력을 활성화할 수 없습니다. (%@, %@)";
 "error.controllerSessionChangeRejected" = "선택한 컨트롤러 출력을 활성화할 수 없습니다.";
 "cli.catalog.controller_disconnect.summary" = "제어기 연결이 끊어졌다";
 "cli.catalog.controller_resume.summary" = "다시 시도 — 제어기 연결이 끊어졌다";
+"cli.catalog.controller_virtual_set.summary" = "컨트롤러의 가상 HID 프로필 재정의";
+"cli.catalog.controller_virtual_reset.summary" = "컨트롤러의 가상 HID 프로필 자동 선택, 또는 --all로 모든 재정의 삭제";
 "cli.controller.disconnected" = "제어기 연결이 끊어졌다";
 "cli.controller.resumed" = "입력 활동";
 

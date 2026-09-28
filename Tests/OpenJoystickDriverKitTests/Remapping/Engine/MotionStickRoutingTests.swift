@@ -30,15 +30,11 @@ struct MotionStickRoutingTests {
       ]
     )
     #expect(
-      engine.process(
-        events: [.motionSample(sample(0, time: 0))],
-        from: device,
-        profile: profile,
-        at: 0
-      ).isEmpty
+      engine.process(inputs: [.motion(sample(0, time: 0))], from: device, profile: profile, at: 0)
+        .isEmpty
     )
     let active = engine.process(
-      events: [.motionSample(sample(1, time: 10_000_000))],
+      inputs: [.motion(sample(1, time: 10_000_000))],
       from: device,
       profile: profile,
       at: 10_000_000
@@ -74,7 +70,7 @@ struct MotionStickRoutingTests {
       ]
     )
     _ = engine.process(
-      events: [.motionSample(sample(0, time: 0)), .motionSample(sample(1, time: 1))],
+      inputs: [.motion(sample(0, time: 0)), .motion(sample(1, time: 1))],
       from: device,
       profile: profile,
       at: 1
@@ -84,22 +80,18 @@ struct MotionStickRoutingTests {
   }
 
   private func sample(_ index: UInt64, time: UInt64) -> ControllerMotionSample {
-    ControllerMotionSample(
+    ControllerMotionSample.engineSpace(
       timestamp: ControllerSampleTimestamp(
         rawCounter: UInt32(index),
-        elapsedNanoseconds: time,
+        monotonic: MonotonicTimestamp(nanoseconds: time),
         tickNanosecondsNumerator: nil,
         tickNanosecondsDenominator: nil,
         sequenceIndex: index,
         basis: .hostEstimate
       ),
-      rawGyroscope: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      rawAccelerometer: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      physicalReading: ControllerMotionReading(
-        gyroscopeDegreesPerSecond: ControllerMotionVector(x: 0, y: 0, z: 0),
-        accelerationG: ControllerMotionVector(x: -0.5, y: sqrt(0.75), z: 0),
-        calibrationSource: .nominalDeviceScale
-      )
+      gyroDegreesPerSecond: ControllerMotionVector(x: 0, y: 0, z: 0),
+      accelerationG: ControllerMotionVector(x: -0.5, y: sqrt(0.75), z: 0),
+      calibrationSource: .nominalDeviceScale
     )
   }
 }

@@ -14,9 +14,12 @@ public protocol CompatibilityUserSpaceOutputDispatching: OutputDispatcher {
   func close() async
   /// Delivers input while preserving publication failures for recovery coordinators.
   func dispatchReportingFailure(
-    events: [ControllerEvent],
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
     from identifier: DeviceIdentifier
   ) async throws
+  /// Activates output for one controller while preserving publication failures.
+  func activateOutputReportingFailure(for identifier: DeviceIdentifier) async throws
 }
 
 /// Optional activation surface used to enforce a deadline for each controller in a set.
@@ -43,12 +46,23 @@ public protocol ControllerInputOwnershipListener: AnyObject, Sendable {
 extension CompatibilityUserSpaceOutputDispatching {
   public func setOutputSuppressed(_ suppressed: Bool) { suppressOutput = suppressed }
   public func dispatchReportingFailure(
-    events: [ControllerEvent],
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
     from identifier: DeviceIdentifier
-  ) async throws { await dispatch(events: events, from: identifier) }
+  ) async throws { await dispatch(event, labels: labels, from: identifier) }
+  public func activateOutputReportingFailure(for identifier: DeviceIdentifier) async throws {
+    await activateOutput(for: identifier)
+  }
 }
 
-/// Takes parsed controller events and sends them to an output target.
+/// Tells an observe-only pipeline whether any consumer uses its controller's input, so a native
+/// gamepad with no remapping costs no per-report dispatch. The answer follows route changes, so
+/// a profile selected later takes effect without reconnecting.
+public protocol ObservedInputDemand: AnyObject, Sendable {
+  func wantsObservedInput(from identifier: DeviceIdentifier) -> Bool
+}
+
+/// Takes controller state snapshots and sends them to an output target.
 ///
 /// Implement this inward-owned port to decide what happens when controller state changes.
 /// Production adapters live in their owning transport targets; the kit provides
@@ -59,13 +73,26 @@ public protocol OutputDispatcher: AnyObject, Sendable {
   var suppressOutput: Bool { get set }
   func setOutputSuppressed(_ suppressed: Bool) async
 
-  /// Receives a batch of events from one controller and writes them to the output.
+  /// Receives one controller's full state and writes it to the output.
   ///
-  /// Called by ``DevicePipeline`` every time the parser produces new events.
+  /// Called by ``DevicePipeline`` when the state changes or a report carries samples, and again
+  /// with an unchanged state to activate output for the controller.
   /// - Parameters:
-  ///   - events: The controller events to process.
-  ///   - identifier: Which controller the events came from.
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) async
+  ///   - event: The controller's state and the samples of the report that produced it.
+  ///   - labels: The family labels the controller's pipeline was bound with; the same source
+  ///     always passes the same labels.
+  ///   - identifier: Which controller the state came from.
+  func dispatch(
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
+    from identifier: DeviceIdentifier
+  ) async
+
+  /// Ensures output exists for the controller, for example a virtual device, without new input.
+  ///
+  /// Called by the pipeline and discovery once a controller's session can publish, and again
+  /// after it resumes or reconnects.
+  func activateOutput(for identifier: DeviceIdentifier) async
 }
 
 extension OutputDispatcher {
@@ -88,10 +115,19 @@ public final class LoggingOutputDispatcher: OutputDispatcher, @unchecked Sendabl
   /// Creates a new LoggingOutputDispatcher.
   public init() {}
 
-  /// Prints each event to standard output.
-  public func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {
-    for event in events {
-      print("[Output] " + "\(identifier.vendorID):\(identifier.productID)" + " -> \(event)")
-    }
+  /// Prints each state to standard output.
+  public func dispatch(
+    _ event: ControllerEvent,
+    labels _: ControllerButtonLabels,
+    from identifier: DeviceIdentifier
+  ) {
+    print(
+      "[Output] "
+        + "\(identifier.controllerIdentity.vendorID):\(identifier.controllerIdentity.productID)"
+        + " -> \(event.state)"
+    )
   }
+
+  /// Nothing to activate: this dispatcher only logs.
+  public func activateOutput(for _: DeviceIdentifier) {}
 }

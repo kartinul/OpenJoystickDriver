@@ -69,7 +69,6 @@
 "status.checkingControllers" = "正在檢查已連接的控制器…";
 "status.refreshingProfile" = "正在重新整理設定檔狀態…";
 "status.loadingProfiles" = "正在載入設定檔…";
-"status.updatingIdentity" = "正在更新控制器識別…";
 "status.listening" = "正在聆聽…";
 "status.readyToListen" = "已準備好聆聽";
 "status.checkingInput" = "正在檢查";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "控制器";
 "settings.controllerDisconnectedNotifications" = "控制器已斷線";
 "settings.controllerDisconnectedShort" = "已斷線";
-"settings.controllerIdentity" = "控制器識別";
 "settings.controllerNotifications" = "控制器已連接";
 "settings.diagnostics" = "診斷";
 "settings.service" = "服務";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "正在放電";
 "controllers.charging" = "正在充電";
 "controllers.batteryFull" = "已充滿";
+"controllers.notChargeable" = "不可充電";
 "controllers.batteryAccessibilityDetails" = "電池：%@。充電狀態：%@。連接線狀態：%@。";
 "controllers.activeProfile" = "使用中的設定檔";
 "controllers.profileChecking" = "正在檢查…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "使用中的設定檔無法使用";
 "controllers.profileLoadError" = "無法載入使用中的設定檔";
 "controllers.protocol" = "協定";
-"controllers.parser" = "解析器";
 "controllers.serialNumber" = "序號";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "輸入端點";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "使用中的設定檔發生錯誤：%@";
 "controllers.accessibilityDetails" = "%@。%@。協定：%@。Parser：%@。序號：%@。USB VID/PID：%@。輸入端點：%@。輸出端點：%@。";
 "controllers.publishedAs" = "發佈為";
-"identity.title" = "控制器識別";
-"identity.needsAttention" = "需要注意";
-"identity.error" = "控制器識別發生錯誤";
-"identity.updating" = "正在更新控制器識別…";
-"identity.reset" = "回復建議設定";
-"identity.checking" = "正在檢查";
-"identity.globalScope" = "套用至 OpenJoystickDriver 發佈的所有虛擬控制器。";
-"identity.unavailable" = "無法使用";
-"identity.notSelected" = "未選取";
+"controllers.nativeGamepadNotPublished" = "macOS 原生遊戲控制器，未發佈";
+"virtualProfile.advanced" = "進階";
+"virtualProfile.title" = "虛擬 HID 設定檔";
+"virtualProfile.modelScope" = "套用至此型號的所有已連接控制器。";
+"virtualProfile.sourceOverride" = "覆寫";
+"virtualProfile.sourceAutomaticAfterRejecting" = "自動（覆寫遭拒）";
+"virtualProfile.none" = "無虛擬 HID 設定檔";
+"virtualProfile.unavailable" = "沒有虛擬 HID 設定檔可以表示此控制器。";
+"virtualProfile.updating" = "正在更新虛擬 HID 設定檔…";
+"virtualProfile.live" = "目前設定檔";
+"virtualProfile.failure.unknownProfile" = "此虛擬 HID 設定檔不明。未儲存任何內容。";
+"virtualProfile.failure.controllerNotFound" = "控制器已中斷連線或找不到。覆寫未變更。";
+"virtualProfile.failure.overrideRejected" = "覆寫已儲存，但此控制器無法使用，因此將自動選擇。";
+"virtualProfile.failure.activationFailed" = "啟用失敗，已還原先前的虛擬 HID 設定檔：%@";
+"virtualProfile.failure.outputDisabled" = "覆寫已儲存，將在啟用虛擬輸出後套用。";
+"virtualProfile.failure.serverStopped" = "服務已停止。覆寫未變更。";
+"virtualProfile.failure.persistenceFailed" = "無法儲存覆寫。未儲存任何內容。";
+"virtualProfile.storeError" = "無法讀取虛擬 HID 設定檔覆寫（%@）。控制器將自動選擇。";
+"virtualProfile.legacyIdentityRejected" = "已停用的控制器識別設定 %@ 不再套用。執行 controller virtual reset --all 以清除它。";
 "keyboard.noKey" = "未選取按鍵";
 "keyboard.pressKey" = "請按一個鍵…";
 "keyboard.captureKey" = "擷取按鍵";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "目前狀態";
 "debug.runtime" = "執行階段";
 "debug.controllers" = "控制器";
-"debug.controllerIdentity" = "控制器識別";
 "debug.unavailable" = "執行階段 · 無法使用";
 "debug.needsAttention" = "執行階段 · 需要注意";
 "debug.diagnostics" = "診斷";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "控制器輸出已關閉。";
 "debug.outputNeedsAttention" = "控制器輸出需要注意。";
 "debug.serviceUnavailable" = "目前無法使用服務診斷。";
-"error.selectedOutputUnavailable" = "所選的控制器輸出無法使用。";
-"error.selectedOutputEnableFailed" = "無法啟用所選的控制器輸出。";
 "error.profileChanged" = "此設定檔已在其他位置更改。請重新載入或繼續編輯。";
 "error.duplicateProfile" = "已存在相同名稱的設定檔。";
 "error.profileMissing" = "該設定檔已無法使用。";
@@ -443,9 +448,7 @@
 "common.runtime" = "執行階段";
 "common.controllers" = "控制器";
 "common.profiles" = "設定檔";
-"common.controllerIdentity" = "控制器識別";
 "common.protocol" = "協定";
-"common.parser" = "解析器";
 "common.serialNumber" = "序號";
 "common.inputEndpoint" = "輸入端點";
 "common.outputEndpoint" = "輸出端點";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "已無法使用所選的專欄項.";
 "cli.catalog.app_ready.summary" = "檢查已認證應用程式服務的就緒狀態";
 "cli.catalog.app_status.summary" = "顯示應用程式服務狀態";
-"cli.catalog.compat.summary" = "管理虛擬控制器相容性";
 "cli.catalog.controller_list.summary" = "列出已連接的控制器";
 "cli.catalog.controller_output.summary" = "測試受支援的實體控制器輸出";
 "cli.catalog.controller_packets.summary" = "顯示最近的控制器封包";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "顯示驅動程式與執行階段狀態";
 "cli.catalog.test.summary" = "測試虛擬控制器輸入傳遞";
 "cli.catalog.update.summary" = "在 GitHub 上檢查可用更新";
-"cli.compat.identity" = "相容性識別: %@";
-"cli.compat.identity_unknown" = "相容性識別: 未知";
-"cli.compat.set_failed" = "無法將相容性識別設為 %@。請啟動已安裝的 App，並確認輸入監控與輔助使用取用權限。";
-"cli.compat.usage" = "用法: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "使用者空間狀態: %@";
 "cli.controller.allAppleEntries" = "所有精確的 Apple 目錄項目:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Apple 配對   : %d 筆精確 VID/PID 項目";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "沒有已連接的控制器符合 --device %@。";
 "cli.controller.selection.multiple" = "多台控制器符合。請用 --device 選擇一台:\n  %@";
 "cli.controller.selection.none" = "未連接控制器。";
+"cli.controller.virtual.live" = "虛擬 HID 設定檔: %@ (%@)";
+"cli.controller.virtual.none" = "虛擬 HID 設定檔: 無 (%@)";
+"cli.controller.virtual.failed" = "虛擬 HID 設定檔要求失敗: %@";
+"cli.controller.virtual.unknown_profile" = "未知的虛擬 HID 設定檔 「%@」。請使用下列其中之一: %@。";
+"cli.controller.virtual.missing_profile" = "「controller virtual set」 需要一個虛擬 HID 設定檔。請使用下列其中之一: %@。";
+"cli.controller.virtual.reset_all_with_selector" = "「--all」 不能與 --vid、--pid 或 --device 同時使用。";
+"cli.controller.virtual.reset_all.success" = "OK: 已清除所有虛擬 HID 設定檔覆寫。";
+"cli.controller.virtual.reset_all.failed" = "無法重設設定。請啟動已安裝的 App 並確認其權限。";
 "cli.controller.selection.vid_pid_missing" = "沒有已連接的控制器符合 %@:%@。";
 "cli.controller.selection.vid_pid_pair" = "請同時傳入 VID 與 PID，或同時省略。";
 "cli.controller.serviceControllers" = "控制器 (來自正在執行的應用程式服務):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "提示: 請授予所需權利與輸入監控取用權限。";
 "cli.controller.usbControllers" = "USB 控制器 (class 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "請同時傳入 VID 與 PID，或在只連接一台控制器時同時省略。";
-"cli.diagnose.advisory_candidate" = "    參考通訊協定候選: %@";
 "cli.diagnose.app_missing" = "  App: 在 %@ 缺失";
 "cli.diagnose.app_missing_fix" = "  修復: 建置並將 App 安裝到 /Applications";
 "cli.diagnose.app_present" = "  App: 存在";
 "cli.diagnose.binary_path" = "二進位: %@";
-"cli.diagnose.catalog_conflict" = "      觀測與目錄系列衝突；剖析器未更改";
-"cli.diagnose.catalog_parser" = "      目錄剖析器仍為 %@ (%@)";
 "cli.diagnose.dext_found" = "  找到的 .dext 套件:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      終點 0x%02X %@ %@ 沒有任何相關資訊%@ 該區域的時間%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "未知回應曲線 「%@」。";
 "cli.mapping.double_tap_format" = "--double-tap 需要 <ms>:<target>，例如 --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "用法: OpenJoystickDriver --headless map <command>\n\n指令:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\n來源: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\n目標: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\n軸選項:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\n連發選項 (僅限鍵盤與滑鼠按鈕):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\n啟動選項 (僅限鍵盤與滑鼠按鈕，與連發互斥):\n  --long-hold <ms>:<target>     例如 --long-hold 500:key:b\n  --double-tap <ms>:<target>    例如 --double-tap 300:key:c\n\n<profile> 接受 UUID 或不區分大小寫的精確設定檔名稱。\n<id> 接受十進位或帶 0x 前綴的十六進位。\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "用法: OpenJoystickDriver --headless map <command>\n\n指令:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\n來源: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\n目標: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\n軸選項:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\n連發選項 (僅限鍵盤與滑鼠按鈕):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\n啟動選項 (僅限鍵盤與滑鼠按鈕，與連發互斥):\n  --long-hold <ms>:<target>     例如 --long-hold 500:key:b\n  --double-tap <ms>:<target>    例如 --double-tap 300:key:c\n\n<profile> 接受 UUID 或不區分大小寫的精確設定檔名稱。\n<id> 接受十進位或帶 0x 前綴的十六進位。\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ 必須為 16 位元十進位或帶 0x 前綴的十六進位識別碼。";
 "cli.mapping.jsonEncodeFailed" = "無法編碼 UTF-8 JSON。";
 "cli.mapping.layer_action_unknown" = "未知圖層操作 「%@」。應為: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver 應用程式服務未執行。";
 "cli.runtime.sample_limit" = "此設定將收集 %d 個樣本；請增大 --interval-ms。";
 "cli.runtime.stable_note" = "穩定且有界的浸泡是此工作負載的證據，並不能證明不存在任何洩漏。";
-"cli.settings.reset.failed" = "無法重設設定。請啟動已安裝的 App 並確認其權限。";
-"cli.settings.reset.next" = "下一步: 執行 compat set <identity> 以選擇相容性識別。";
-"cli.settings.reset.success" = "OK: 已重設應用程式服務設定。";
 "cli.status.access_denied" = "如果取用被拒絕，請執行 --headless permissions request，並在系統設定中核准輸入監控與輔助使用。";
 "cli.status.heading" = "OpenJoystickDriver 狀態";
 "cli.status.json_error" = "無法編碼狀態 JSON: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  狀態         : %@";
 "cli.updates.unknown_option" = "未知 updates 選項: %@";
 "common.unknown" = "未知";
-"compatibility.appleGameController" = "果 GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox 沒有任何樓盤符合您的搜尋";
 "developer.buttons" = "按鈕";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B 按鈕";
 "inputTest.bCircle" = "B / 圈子";
 "inputTest.brightness" = "亮度";
-"inputTest.circle" = "圓圈";
 "inputTest.color" = "顏色";
 "inputTest.controls" = "即時輸入";
-"inputTest.cross" = "交叉";
 "inputTest.disconnected" = "控制器已斷線";
 "inputTest.dpadDown" = "方向鍵下";
 "inputTest.dpadLeft" = "方向鍵左";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "此控制器不提供燈光控制。";
 "inputTest.live" = "正在輸入";
 "inputTest.menu" = "選單";
-"inputTest.minus" = "減號";
 "inputTest.off" = "關閉";
 "inputTest.open" = "打開輸入測試…";
-"inputTest.options" = "選項";
 "inputTest.outputError" = "實體輸出錯誤";
 "inputTest.outputRejected" = "控制器拒絕了此次輸出測試。";
 "inputTest.permissionRequired" = "需要「輸入監控」權限";
 "inputTest.playerIndicator" = "玩家指示燈";
-"inputTest.plus" = "加號";
 "inputTest.pressed" = "已按下";
-"inputTest.psButton" = "PS 按鈕";
 "inputTest.released" = "已放開";
 "inputTest.rightBumper" = "右保險鍵";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "右 Y";
 "inputTest.rumble" = "震動";
 "inputTest.rumbleUnavailable" = "此控制器不支援震動。";
-"inputTest.share" = "分享";
-"inputTest.square" = "方塊";
 "inputTest.stale" = "輸入已中斷";
 "inputTest.start" = "開始輸入測試";
 "inputTest.starting" = "正在啟動…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "即時輸入";
 "inputTest.tabMotion" = "提議";
 "inputTest.tabOutput" = "輸出";
-"inputTest.steamButton" = "Steam 按鈕";
 "inputTest.summary" = "測試按鈕、搖桿、扳機、震動和控制器燈光。";
 "inputTest.testRumble" = "測試震動";
 "inputTest.title" = "輸入測試";
-"inputTest.triangle" = "三角";
 "inputTest.unavailable" = "無法輸入";
 "inputTest.view" = "檢視";
 "inputTest.windowTitle" = "輸入測試 — %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "請重新啟動連接的控制器, 再嘗試.";
 "profiles.joyConExplicitSession" = "開始了一個明顯的對會";
 "profiles.joyConSessionState" = "顯示對對";
-"profiles.gyro.virtualMotion" = "進行加利伯式虛擬運動";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "控制器已斷線";
 "controllers.resume" = "再試一次";
 "controllers.disconnectFromOJD" = "控制器已斷線";
-"error.compatibilityTransitionDetailed" = "無法啟用所選的控制器輸出。 (%@, %@)";
 "error.controllerSessionChangeRejected" = "無法啟用所選的控制器輸出。";
 "cli.catalog.controller_disconnect.summary" = "控制器已斷線";
 "cli.catalog.controller_resume.summary" = "再試一次 — 控制器已斷線";
+"cli.catalog.controller_virtual_set.summary" = "覆寫控制器的虛擬 HID 設定檔";
+"cli.catalog.controller_virtual_reset.summary" = "自動選擇控制器的虛擬 HID 設定檔，或使用 --all 清除所有覆寫";
 "cli.controller.disconnected" = "控制器已斷線";
 "cli.controller.resumed" = "正在輸入";
 

@@ -19,7 +19,6 @@ public struct LocalServiceRPCResponse: Codable, Sendable {
 
 public struct LocalServiceRPCEmptyArguments: Codable, Sendable {}
 public struct LocalServiceRPCBoolArguments: Codable, Sendable { public let value: Bool }
-public struct LocalServiceRPCStringArguments: Codable, Sendable { public let value: String }
 public struct LocalServiceRPCIntArguments: Codable, Sendable { public let value: Int }
 public struct LocalServiceRPCPermissionArguments: Codable, Sendable {
   public let requirement: PermissionManager.Requirement
@@ -37,47 +36,24 @@ public struct LocalServiceRPCDeviceArguments: Codable, Sendable {
     self.runtimeIdentifier = runtimeIdentifier
   }
 }
-public struct LocalServiceRPCRumbleArguments: Codable, Sendable {
-  public let vendorID: Int
-  public let productID: Int
+/// Arguments of `sendControllerOutput`: the controller selector and one output command, whose
+/// JSON shape `ControllerOutputCommand` documents. An ID outside `UInt16` fails decoding.
+public struct LocalServiceRPCControllerOutputArguments: Codable, Sendable {
+  public let vendorID: UInt16
+  public let productID: UInt16
   public let runtimeIdentifier: String?
-  public let left: Int
-  public let right: Int
-  public let leftTrigger: Int
-  public let rightTrigger: Int
-  public let durationMilliseconds: Int
+  public let command: ControllerOutputCommand
 
   public init(
-    vendorID: Int,
-    productID: Int,
+    vendorID: UInt16,
+    productID: UInt16,
     runtimeIdentifier: String? = nil,
-    left: Int,
-    right: Int,
-    leftTrigger: Int,
-    rightTrigger: Int,
-    durationMilliseconds: Int
+    command: ControllerOutputCommand
   ) {
     self.vendorID = vendorID
     self.productID = productID
     self.runtimeIdentifier = runtimeIdentifier
-    self.left = left
-    self.right = right
-    self.leftTrigger = leftTrigger
-    self.rightTrigger = rightTrigger
-    self.durationMilliseconds = durationMilliseconds
-  }
-}
-public struct LocalServiceRPCPlayerIndicatorArguments: Codable, Sendable {
-  public let vendorID: Int
-  public let productID: Int
-  public let runtimeIdentifier: String?
-  public let playerIndex: Int
-
-  public init(vendorID: Int, productID: Int, runtimeIdentifier: String? = nil, playerIndex: Int) {
-    self.vendorID = vendorID
-    self.productID = productID
-    self.runtimeIdentifier = runtimeIdentifier
-    self.playerIndex = playerIndex
+    self.command = command
   }
 }
 public struct LocalServiceRPCColorArguments: Codable, Sendable {
@@ -142,19 +118,6 @@ public struct LocalServiceRPCColorPreviewReleaseArguments: Codable, Sendable {
     self.productID = productID
     self.runtimeIdentifier = runtimeIdentifier
     self.token = token
-  }
-}
-public struct LocalServiceRPCBrightnessArguments: Codable, Sendable {
-  public let vendorID: Int
-  public let productID: Int
-  public let runtimeIdentifier: String?
-  public let brightness: Int
-
-  public init(vendorID: Int, productID: Int, runtimeIdentifier: String? = nil, brightness: Int) {
-    self.vendorID = vendorID
-    self.productID = productID
-    self.runtimeIdentifier = runtimeIdentifier
-    self.brightness = brightness
   }
 }
 

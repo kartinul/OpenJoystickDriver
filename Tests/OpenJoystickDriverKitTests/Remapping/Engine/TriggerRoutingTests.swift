@@ -9,17 +9,17 @@ struct TriggerRoutingTests {
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = profile(mode: .exclusive)
     #expect(
-      engine.process(events: [.leftTriggerChanged(0.2)], from: device, profile: profile, at: 0) == [
+      engine.process(inputs: [.leftTrigger(0.2)], from: device, profile: profile, at: 0) == [
         .system(.keyDown(.a))
       ]
     )
     #expect(
-      engine.process(events: [.leftTriggerChanged(1)], from: device, profile: profile, at: 1) == [
+      engine.process(inputs: [.leftTrigger(1)], from: device, profile: profile, at: 1) == [
         .system(.keyUp(.a)), .system(.keyDown(.b)),
       ]
     )
     #expect(
-      engine.process(events: [.leftTriggerChanged(0)], from: device, profile: profile, at: 2) == [
+      engine.process(inputs: [.leftTrigger(0)], from: device, profile: profile, at: 2) == [
         .system(.keyUp(.b))
       ]
     )
@@ -31,8 +31,7 @@ struct TriggerRoutingTests {
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = profile(mode: .preferFull)
     #expect(
-      engine.process(events: [.leftTriggerChanged(0.2)], from: device, profile: profile, at: 10)
-        .isEmpty
+      engine.process(inputs: [.leftTrigger(0.2)], from: device, profile: profile, at: 10).isEmpty
     )
     #expect(
       engine.nextScheduledTick(after: 10, continuousIntervalNanoseconds: 1_000_000) == 100_000_010
@@ -41,12 +40,7 @@ struct TriggerRoutingTests {
     #expect(engine.releaseController(device) == [.system(.keyUp(.a))])
     #expect(!engine.hasScheduledOutput)
 
-    _ = engine.process(
-      events: [.leftTriggerChanged(0.2)],
-      from: device,
-      profile: profile,
-      at: 200_000_000
-    )
+    _ = engine.process(inputs: [.leftTrigger(0.2)], from: device, profile: profile, at: 200_000_000)
     #expect(engine.releaseController(device).isEmpty)
     #expect(!engine.hasScheduledOutput)
   }
@@ -56,16 +50,73 @@ struct TriggerRoutingTests {
     var engine = RemappingEngineState()
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = profile(mode: .simultaneous, passthrough: true)
+    let actions = engine.process(inputs: [.leftTrigger(0.5)], from: device, profile: profile, at: 0)
+    #expect(
+      actions == [
+        .system(.keyDown(.a)),
+        .gamepad(RemappingGamepadState(axes: [.leftTrigger: quantizedTrigger(0.5)]), device),
+      ]
+    )
+  }
+
+  @Test
+  func consumedTriggerMappingAlsoWithholdsTheTriggerClickFromPassthrough() {
+    var engine = RemappingEngineState()
+    let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let actions = engine.process(
-      events: [.leftTriggerChanged(0.5)],
+      inputs: [.leftTrigger(0.6), .press(.leftTriggerButton)],
+      from: device,
+      profile: profile(mode: .simultaneous),
+      at: 0
+    )
+    #expect(actions == [.system(.keyDown(.a))])
+  }
+
+  @Test
+  func boundTriggerAxisAlsoWithholdsTheTriggerClickFromPassthrough() {
+    var engine = RemappingEngineState()
+    let device = DeviceIdentifier(vendorID: 1, productID: 2)
+    let profile = passthroughProfile(
+      binding: RemappingBinding(
+        source: .axisDirection(.leftTrigger, .positive),
+        destination: .keyboard(key: .a, modifiers: [])
+      )
+    )
+    let actions = engine.process(
+      inputs: [.leftTrigger(0.6), .press(.leftTriggerButton)],
       from: device,
       profile: profile,
       at: 0
     )
-    #expect(
-      actions == [
-        .system(.keyDown(.a)), .gamepad(RemappingGamepadState(axes: [.leftTrigger: 0.5]), device),
-      ]
+    #expect(!actions.contains { if case .gamepad = $0 { true } else { false } })
+  }
+
+  @Test
+  func boundTriggerClickAlsoWithholdsTheAnalogTriggerFromPassthrough() {
+    var engine = RemappingEngineState()
+    let device = DeviceIdentifier(vendorID: 1, productID: 2)
+    let profile = passthroughProfile(
+      binding: RemappingBinding(
+        source: .button(.leftTriggerClick),
+        destination: .keyboard(key: .a, modifiers: [])
+      )
+    )
+    let actions = engine.process(
+      inputs: [.leftTrigger(0.6), .press(.leftTriggerButton)],
+      from: device,
+      profile: profile,
+      at: 0
+    )
+    #expect(actions == [.system(.keyDown(.a))])
+  }
+
+  private func passthroughProfile(binding: RemappingBinding) -> RemappingProfile {
+    RemappingProfile(
+      name: "Trigger passthrough",
+      device: RemappingDeviceScope(vendorID: 1, productID: 2),
+      applicationScope: .global,
+      outputPolicy: RemappingOutputPolicy(virtualGamepad: .passthrough),
+      bindings: [binding]
     )
   }
 

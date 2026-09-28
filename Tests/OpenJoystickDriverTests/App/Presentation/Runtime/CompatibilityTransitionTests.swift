@@ -22,11 +22,11 @@ actor CompatibilityTransitionGate {
 }
 
 actor CompatibilityFeedbackProbe {
-  private var commands: [VirtualRumbleCommand] = []
+  private var commands: [ControllerOutputCommand] = []
 
-  func append(_ command: VirtualRumbleCommand) { commands.append(command) }
+  func append(_ command: ControllerOutputCommand) { commands.append(command) }
   func count() -> Int { commands.count }
-  func values() -> [VirtualRumbleCommand] { commands }
+  func values() -> [ControllerOutputCommand] { commands }
 }
 
 final class CompatibilityTransitionProbe: CompatibilityUserSpaceOutputDispatching,
@@ -34,23 +34,14 @@ final class CompatibilityTransitionProbe: CompatibilityUserSpaceOutputDispatchin
 {
   struct ActivationFailure: Error, Sendable {}
 
-  let identity: CompatibilityIdentity
   let activationGate: CompatibilityTransitionGate?
-  let closeGate: CompatibilityTransitionGate?
   let failsActivation: Bool
   private let lock = NSLock()
   private var closeCount = 0
   private var activations: [[DeviceIdentifier]] = []
 
-  init(
-    identity: CompatibilityIdentity,
-    activationGate: CompatibilityTransitionGate? = nil,
-    closeGate: CompatibilityTransitionGate? = nil,
-    failsActivation: Bool = false
-  ) {
-    self.identity = identity
+  init(activationGate: CompatibilityTransitionGate? = nil, failsActivation: Bool = false) {
     self.activationGate = activationGate
-    self.closeGate = closeGate
     self.failsActivation = failsActivation
   }
 
@@ -70,12 +61,10 @@ final class CompatibilityTransitionProbe: CompatibilityUserSpaceOutputDispatchin
     try await activate(for: [identifier])
   }
 
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {}
+  func dispatch(_: ControllerEvent, labels _: ControllerButtonLabels, from _: DeviceIdentifier) {}
+  func activateOutput(for _: DeviceIdentifier) {}
   func setOutputSuppressed(_ suppressed: Bool) { suppressOutput = suppressed }
-  func close() async {
-    await closeGate?.wait()
-    lock.withLock { closeCount += 1 }
-  }
+  func close() { lock.withLock { closeCount += 1 } }
 }
 
 final class CompatibilityTransitionFactory: @unchecked Sendable {
@@ -83,20 +72,29 @@ final class CompatibilityTransitionFactory: @unchecked Sendable {
 
   private let lock = NSLock()
   private var probes: [CompatibilityTransitionProbe] = []
-  var buildFailures: Set<CompatibilityIdentity> = []
-  var activationFailures: Set<CompatibilityIdentity> = []
-  var firstActivationGate: CompatibilityTransitionGate?
-  var closeGates: [CompatibilityIdentity: CompatibilityTransitionGate] = [:]
+  private var failsBuild = false
+  private var failsActivation = false
+  private var gate: CompatibilityTransitionGate?
 
-  func make(_ identity: CompatibilityIdentity) throws -> any CompatibilityUserSpaceOutputDispatching
-  {
-    if buildFailures.contains(identity) { throw BuildFailure() }
-    return lock.withLock { () -> CompatibilityTransitionProbe in
+  var buildFails: Bool {
+    get { lock.withLock { failsBuild } }
+    set { lock.withLock { failsBuild = newValue } }
+  }
+  var activationFails: Bool {
+    get { lock.withLock { failsActivation } }
+    set { lock.withLock { failsActivation = newValue } }
+  }
+  var firstActivationGate: CompatibilityTransitionGate? {
+    get { lock.withLock { gate } }
+    set { lock.withLock { gate = newValue } }
+  }
+
+  func make() throws -> any CompatibilityUserSpaceOutputDispatching {
+    try lock.withLock { () throws -> CompatibilityTransitionProbe in
+      if failsBuild { throw BuildFailure() }
       let probe = CompatibilityTransitionProbe(
-        identity: identity,
-        activationGate: probes.isEmpty ? firstActivationGate : nil,
-        closeGate: closeGates[identity],
-        failsActivation: activationFailures.contains(identity)
+        activationGate: probes.isEmpty ? gate : nil,
+        failsActivation: failsActivation
       )
       probes.append(probe)
       return probe
@@ -110,17 +108,59 @@ final class CompatibilityTransitionFactory: @unchecked Sendable {
   }
 }
 
-final class IdentifierSnapshotBox: @unchecked Sendable {
-  private let lock = NSLock()
-  private var snapshots: [[DeviceIdentifier]]
+/// A server with no live output whose backends come from `factory`, over isolated defaults.
+struct CompatibilityTransitionFixture {
+  let server: ApplicationServiceServer
+  let defaults: UserDefaults
+  let suiteName: String
 
-  init(_ snapshots: [[DeviceIdentifier]]) { self.snapshots = snapshots }
+  init(
+    factory: CompatibilityTransitionFactory,
+    identifiers: [DeviceIdentifier],
+    timeouts: CompatibilityTransitionTimeouts = .standard,
+    clock: CompatibilityTransitionClock = .system
+  ) throws {
+    suiteName = "OpenJoystickDriverTests.CompatibilityTransition.\(UUID().uuidString)"
+    defaults = try #require(UserDefaults(suiteName: suiteName))
+    let compatibilityDispatcher = CompatibilityOutputDispatcher()
+    let profileLibrary = RemappingProfileLibrary()
+    let postEventAccess = CoreGraphicsPostEventAccess()
+    let remappingRouter = RemappingOutputRouter(
+      library: profileLibrary,
+      engine: RemappingEventEngine(sink: CoreGraphicsSystemInputSink(access: postEventAccess)),
+      compatibility: compatibilityDispatcher,
+      foregroundApplication: WorkspaceRemappingForegroundApplication(),
+      postEventAccess: postEventAccess
+    )
+    server = ApplicationServiceServer(
+      deviceManager: DeviceManager(dispatcher: remappingRouter),
+      permissionManager: PermissionManager(),
+      dispatcher: compatibilityDispatcher,
+      remappingProfileLibrary: profileLibrary,
+      remappingRouter: remappingRouter,
+      postEventAccess: postEventAccess,
+      userSpaceDispatcherBuilder: { try factory.make() },
+      connectedIdentifierProvider: { identifiers },
+      compatibilityTransitionTimeouts: timeouts,
+      compatibilityTransitionClock: clock,
+      defaults: defaults
+    )
+  }
 
-  func next() -> [DeviceIdentifier] {
-    lock.withLock {
-      guard snapshots.count > 1 else { return snapshots.first ?? [] }
-      return snapshots.removeFirst()
+  /// Installs `backend` as the live output, as a successful earlier activation would.
+  func installLive(_ backend: CompatibilityTransitionProbe) {
+    server.userSpaceLock.withLock {
+      server.userSpaceDispatcher = backend
+      server.userSpaceCloseSlot = CompatibilityBackendCloseSlot(backend)
+      server.userSpaceEnabled = true
+      server.userSpaceStatus = backend.status
+      server.dispatcher.setBackend(backend)
     }
+  }
+
+  func tearDown() async {
+    await server.stop()
+    defaults.removePersistentDomain(forName: suiteName)
   }
 }
 

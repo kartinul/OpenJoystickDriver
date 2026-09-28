@@ -69,7 +69,6 @@
 "status.checkingControllers" = "የተገናኙ መቆጣጠሪያዎች እየተፈተሹ ነው…";
 "status.refreshingProfile" = "የመገለጫ ሁኔታ እየታደሰ ነው…";
 "status.loadingProfiles" = "መገለጫዎች እየተጫኑ ነው…";
-"status.updatingIdentity" = "የመቆጣጠሪያ ማንነት እየዘመነ ነው…";
 "status.listening" = "እየሰማ ነው…";
 "status.readyToListen" = "ለመስማት ዝግጁ";
 "status.checkingInput" = "እየተፈተሸ";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "መቆጣጠሪያዎች";
 "settings.controllerDisconnectedNotifications" = "ተቆጣጣሪው ተቆርጧል";
 "settings.controllerDisconnectedShort" = "ተቆራኝቷል";
-"settings.controllerIdentity" = "የመቆጣጠሪያ ማንነት";
 "settings.controllerNotifications" = "ተቆጣጣሪ ተገናኝቷል";
 "settings.diagnostics" = "ምርመራ";
 "settings.service" = "አገልግሎት";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "እየተሟጠጠ ነው";
 "controllers.charging" = "በመሙላት ላይ";
 "controllers.batteryFull" = "ሙሉ";
+"controllers.notChargeable" = "ሊሞላ አይችልም";
 "controllers.batteryAccessibilityDetails" = "ባትሪ፡ %@። የመሙያ ሁኔታ፡ %@። የኬብል ሁኔታ፡ %@።";
 "controllers.activeProfile" = "ንቁ መገለጫ";
 "controllers.profileChecking" = "እየተፈተሸ ነው…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "ንቁ መገለጫ አይገኝም";
 "controllers.profileLoadError" = "ንቁ መገለጫን መጫን አልተቻለም";
 "controllers.protocol" = "ፕሮቶኮል";
-"controllers.parser" = "ፓርሰር";
 "controllers.serialNumber" = "ተከታታይ ቁጥር";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "የግቤት መጨረሻ ነጥብ";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "የንቁ መገለጫ ስህተት፦ %@";
 "controllers.accessibilityDetails" = "%@. %@. ፕሮቶኮል፦ %@. Parser፦ %@. ተከታታይ ቁጥር፦ %@. USB VID/PID፦ %@. የግቤት መጨረሻ ነጥብ፦ %@. የውጤት መጨረሻ ነጥብ፦ %@።";
 "controllers.publishedAs" = "በ";
-"identity.title" = "የመቆጣጠሪያ ማንነት";
-"identity.needsAttention" = "ትኩረት ይፈልጋል";
-"identity.error" = "የመቆጣጠሪያ ማንነት ስህተት";
-"identity.updating" = "የመቆጣጠሪያ ማንነት እየዘመነ ነው…";
-"identity.reset" = "ወደ የሚመከረው መልስ";
-"identity.checking" = "እየተፈተሸ";
-"identity.globalScope" = "በ OpenJoystickDriver.";
-"identity.unavailable" = "አይገኝም";
-"identity.notSelected" = "አልተመረጠም";
+"controllers.nativeGamepadNotPublished" = "የmacOS ቤተኛ የጨዋታ መቆጣጠሪያ፣ አልታተመም";
+"virtualProfile.advanced" = "የላቀ";
+"virtualProfile.title" = "ምናባዊ HID መገለጫ";
+"virtualProfile.modelScope" = "ለዚህ ሞዴል ለተገናኙ ሁሉም መቆጣጠሪያዎች ይተገበራል።";
+"virtualProfile.sourceOverride" = "መሻሪያ";
+"virtualProfile.sourceAutomaticAfterRejecting" = "ራስ-ሰር፣ መሻሪያው ተቀባይነት አላገኘም";
+"virtualProfile.none" = "ምናባዊ HID መገለጫ የለም";
+"virtualProfile.unavailable" = "ይህን መቆጣጠሪያ ሊወክል የሚችል ምናባዊ HID መገለጫ የለም።";
+"virtualProfile.updating" = "ምናባዊ HID መገለጫ እየዘመነ ነው…";
+"virtualProfile.live" = "የቀጥታ መገለጫ";
+"virtualProfile.failure.unknownProfile" = "ይህ ምናባዊ HID መገለጫ አይታወቅም። ምንም አልተቀመጠም።";
+"virtualProfile.failure.controllerNotFound" = "መቆጣጠሪያው ተቋርጧል ወይም ሊገኝ አልቻለም። መሻሪያው አልተቀየረም።";
+"virtualProfile.failure.overrideRejected" = "መሻሪያው ተቀምጧል፣ ግን ይህ መቆጣጠሪያ ሊጠቀምበት አይችልም፣ ስለዚህ በራስ-ሰር ይመርጣል።";
+"virtualProfile.failure.activationFailed" = "ማግበር አልተሳካም፣ ስለዚህ የቀድሞው ምናባዊ HID መገለጫ ተመልሷል፦ %@";
+"virtualProfile.failure.outputDisabled" = "መሻሪያው ተቀምጧል እና ምናባዊ ውፅዓት ሲነቃ ይተገበራል።";
+"virtualProfile.failure.serverStopped" = "አገልግሎቱ ቆሟል። መሻሪያው አልተቀየረም።";
+"virtualProfile.failure.persistenceFailed" = "መሻሪያው ሊቀመጥ አልቻለም። ምንም አልተቀመጠም።";
+"virtualProfile.storeError" = "የምናባዊ HID መገለጫ መሻሪያዎች ሊነበቡ አይችሉም (%@)። መቆጣጠሪያዎች በራስ-ሰር ይመርጣሉ።";
+"virtualProfile.legacyIdentityRejected" = "የተቋረጠው የመቆጣጠሪያ ማንነት ቅንብር %@ ከእንግዲህ አይተገበርም። ለማጽዳት controller virtual reset --all ያሂዱ።";
 "keyboard.noKey" = "ምንም ቁልፍ አልተመረጠም";
 "keyboard.pressKey" = "ቁልፍ ይጫኑ…";
 "keyboard.captureKey" = "ቁልፍ ቀረጽ";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "የአሁኑ ሁኔታ";
 "debug.runtime" = "አሂድ";
 "debug.controllers" = "መቆጣጠሪያዎች";
-"debug.controllerIdentity" = "የመቆጣጠሪያ ማንነት";
 "debug.unavailable" = "አሂድ · አይገኝም";
 "debug.needsAttention" = "አሂድ · ትኩረት ይፈልጋል";
 "debug.diagnostics" = "ምርመራ";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "የመቆጣጠሪያ ውጤት ጠፍቷል።";
 "debug.outputNeedsAttention" = "የመቆጣጠሪያ ውጤት ትኩረት ይፈልጋል።";
 "debug.serviceUnavailable" = "የአገልግሎት ምርመራ በአሁኑ ጊዜ አይገኝም።";
-"error.selectedOutputUnavailable" = "የተመረጠው የመቆጣጠሪያ ውጤት አይገኝም።";
-"error.selectedOutputEnableFailed" = "የተመረጠው የመቆጣጠሪያ ውጤት ማንቃት አልተቻለም።";
 "error.profileChanged" = "ይህ መገለጫ በሌላ ቦታ ተለውጧል። እንደገና ይጫኑ ወይም ማርትዕ ይቀጥሉ።";
 "error.duplicateProfile" = "በዚያ ስም መገለጫ አስቀድሞ አለ።";
 "error.profileMissing" = "ያ መገለጫ ከእንግዲህ አይገኝም።";
@@ -443,9 +448,7 @@
 "common.runtime" = "አሂድ";
 "common.controllers" = "መቆጣጠሪያዎች";
 "common.profiles" = "መገለጫዎች";
-"common.controllerIdentity" = "የመቆጣጠሪያ ማንነት";
 "common.protocol" = "ፕሮቶኮል";
-"common.parser" = "ፓርሰር";
 "common.serialNumber" = "ተከታታይ ቁጥር";
 "common.inputEndpoint" = "የግቤት መጨረሻ ነጥብ";
 "common.outputEndpoint" = "የውጤት መጨረሻ ነጥብ";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "የተመረጠው የመገለጫ ነጥብ ከአሁን በኋላ አይገኝም።";
 "cli.catalog.app_ready.summary" = "የተረጋገጠውን የመተግበሪያ አገልግሎት ዝግጁነት ፈትሽ";
 "cli.catalog.app_status.summary" = "የመተግበሪያ አገልግሎት ሁኔታን አሳይ";
-"cli.catalog.compat.summary" = "የምናባዊ መቆጣጠሪያ ተኳኋኝነትን አስተዳድር";
 "cli.catalog.controller_list.summary" = "የተገናኙ መቆጣጠሪያዎችን ዘርዝር";
 "cli.catalog.controller_output.summary" = "የሚደገፈውን አካላዊ መቆጣጠሪያ ውጤት ፈትሽ";
 "cli.catalog.controller_packets.summary" = "የቅርብ ጊዜ መቆጣጠሪያ ጥቅሎችን አሳይ";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "የአሽከርካሪ እና የአሂድ ሁኔታን አሳይ";
 "cli.catalog.test.summary" = "የምናባዊ መቆጣጠሪያ ግቤት አቅርቦትን ፈትሽ";
 "cli.catalog.update.summary" = "በGitHub ላይ የሚገኙ ዝማኔዎችን ፈትሽ";
-"cli.compat.identity" = "የተኳኋኝነት ማንነት: %@";
-"cli.compat.identity_unknown" = "የተኳኋኝነት ማንነት: ያልታወቀ";
-"cli.compat.set_failed" = "የተኳኋኝነት ማንነትን ወደ %@ ማስቀመጥ አልተሳካም። የተጫነውን መተግበሪያ ያስጀምሩ እና የግቤት ክትትል እና ተደራሽነት መዳረሻን ያረጋግጡ።";
-"cli.compat.usage" = "አጠቃቀም: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "የተጠቃሚ-ቦታ ሁኔታ: %@";
 "cli.controller.allAppleEntries" = "ሁሉም ትክክለኛ የApple ካታሎግ ግቤቶች:";
 "cli.controller.appleIDs" = "    የApple መታወቂያዎች: %@";
 "cli.controller.applePairs" = "  የApple ጥንዶች : %d ትክክለኛ VID/PID ግቤቶች";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "ምንም የተገናኘ መቆጣጠሪያ ከ--device %@ ጋር አይዛመድም።";
 "cli.controller.selection.multiple" = "ብዙ መቆጣጠሪያዎች ይዛመዳሉ። በ--device አንዱን ይምረጡ:\n  %@";
 "cli.controller.selection.none" = "መቆጣጠሪያ አልተገናኘም።";
+"cli.controller.virtual.live" = "ምናባዊ HID መገለጫ: %@ (%@)";
+"cli.controller.virtual.none" = "ምናባዊ HID መገለጫ: የለም (%@)";
+"cli.controller.virtual.failed" = "የምናባዊ HID መገለጫ ጥያቄ አልተሳካም: %@";
+"cli.controller.virtual.unknown_profile" = "ያልታወቀ ምናባዊ HID መገለጫ «%@»። ከእነዚህ አንዱን ይጠቀሙ: %@።";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» ምናባዊ HID መገለጫ ይፈልጋል። ከእነዚህ አንዱን ይጠቀሙ: %@።";
+"cli.controller.virtual.reset_all_with_selector" = "«--all» ከ --vid፣ --pid ወይም --device ጋር ሊጣመር አይችልም።";
+"cli.controller.virtual.reset_all.success" = "እሺ: ሁሉም የምናባዊ HID መገለጫ ምርጫዎች ተሰርዘዋል።";
+"cli.controller.virtual.reset_all.failed" = "ቅንብሮችን ዳግም ማስጀመር አልተሳካም። የተጫነውን መተግበሪያ ያስጀምሩ እና ፈቃዶቹን ያረጋግጡ።";
 "cli.controller.selection.vid_pid_missing" = "ምንም የተገናኘ መቆጣጠሪያ ከ%@:%@ ጋር አይዛመድም።";
 "cli.controller.selection.vid_pid_pair" = "VID እና PID ሁለቱንም ያስተላልፉ፣ ወይም ሁለቱንም ይተዉ።";
 "cli.controller.serviceControllers" = "መቆጣጠሪያዎች (ከሚሰራው የመተግበሪያ አገልግሎት):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "ምክር: የሚያስፈልገውን መብት እና የግቤት ክትትል መዳረሻ ይስጡ።";
 "cli.controller.usbControllers" = "የUSB መቆጣጠሪያዎች (ክፍል 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "VID እና PID ሁለቱንም ያስተላልፉ፣ ወይም አንድ መቆጣጠሪያ ሲገናኝ ሁለቱንም ይተዉ።";
-"cli.diagnose.advisory_candidate" = "    የምክር ፕሮቶኮል እጩ: %@";
 "cli.diagnose.app_missing" = "  መተግበሪያ: በ%@ ጠፍቷል";
 "cli.diagnose.app_missing_fix" = "  ጥገና: መተግበሪያውን ይገንቡ እና ወደ /Applications ይጫኑ";
 "cli.diagnose.app_present" = "  መተግበሪያ: አለ";
 "cli.diagnose.binary_path" = "ባይነሪ: %@";
-"cli.diagnose.catalog_conflict" = "      ምልከታ ከካታሎግ ቤተሰብ ጋር ይጋጫል፤ ተንታኙ አልተቀየረም";
-"cli.diagnose.catalog_parser" = "      የካታሎግ ተንታኝ %@ ይቀራል (%@)";
 "cli.diagnose.dext_found" = "  የተገኙ .dext ጥቅሎች:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      የመጨረሻ ነጥብ 0x%02X %@ %@ maxPacket=%@ ልዩነት=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "ያልታወቀ የምላሽ ኩርባ «%@»።";
 "cli.mapping.double_tap_format" = "--double-tap <ms>:<target> ይጠብቃል፣ ለምሳሌ --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "አጠቃቀም: OpenJoystickDriver --headless map <command>\n\nትዕዛዞች:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nምንጭ: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nግብ: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nየዘንግ አማራጮች:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nየቱርቦ አማራጮች (የቁልፍ ሰሌዳ እና መዳፊት አዝራሮች ብቻ):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nየማግበር አማራጮች (የቁልፍ ሰሌዳ እና መዳፊት አዝራሮች ብቻ፣ ከቱርቦ ጋር እርስ በርስ የሚገለሉ):\n  --long-hold <ms>:<target>     ለምሳሌ --long-hold 500:key:b\n  --double-tap <ms>:<target>    ለምሳሌ --double-tap 300:key:c\n\n<profile> UUID ወይም ትክክለኛ፣ የፊደል መጠን የማይለይ የመገለጫ ስም ይቀበላል።\n<id> አስርዮሽ ወይም በ0x የሚጀምር ሄክሳዴሲማል ይቀበላል።\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "አጠቃቀም: OpenJoystickDriver --headless map <command>\n\nትዕዛዞች:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nምንጭ: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nግብ: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nየዘንግ አማራጮች:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nየቱርቦ አማራጮች (የቁልፍ ሰሌዳ እና መዳፊት አዝራሮች ብቻ):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nየማግበር አማራጮች (የቁልፍ ሰሌዳ እና መዳፊት አዝራሮች ብቻ፣ ከቱርቦ ጋር እርስ በርስ የሚገለሉ):\n  --long-hold <ms>:<target>     ለምሳሌ --long-hold 500:key:b\n  --double-tap <ms>:<target>    ለምሳሌ --double-tap 300:key:c\n\n<profile> UUID ወይም ትክክለኛ፣ የፊደል መጠን የማይለይ የመገለጫ ስም ይቀበላል።\n<id> አስርዮሽ ወይም በ0x የሚጀምር ሄክሳዴሲማል ይቀበላል።\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ 16-ቢት አስርዮሽ ወይም በ0x የሚጀምር ሄክሳዴሲማል መታወቂያ መሆን አለበት።";
 "cli.mapping.jsonEncodeFailed" = "UTF-8 JSON መመስጠር አልተቻለም።";
 "cli.mapping.layer_action_unknown" = "ያልታወቀ የንብርብር እርምጃ «%@»። የሚጠበቀው: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "የOpenJoystickDriver የመተግበሪያ አገልግሎት አይሰራም።";
 "cli.runtime.sample_limit" = "ውቅሩ %d ናሙናዎችን ይሰበስባል፤ --interval-ms ይጨምሩ።";
 "cli.runtime.stable_note" = "የተረጋጋ የተገደበ ማጠጣት ለዚህ ሸክም ማስረጃ ነው እንጂ ሁሉም ፍሳሾች እንደሌሉ ማረጋገጫ አይደለም።";
-"cli.settings.reset.failed" = "ቅንብሮችን ዳግም ማስጀመር አልተሳካም። የተጫነውን መተግበሪያ ያስጀምሩ እና ፈቃዶቹን ያረጋግጡ።";
-"cli.settings.reset.next" = "ቀጣይ: የተኳኋኝነት ማንነትን ለመምረጥ compat set <identity> ያሂዱ።";
-"cli.settings.reset.success" = "እሺ: የመተግበሪያ አገልግሎት ቅንብሮች ዳግም ተጀምረዋል።";
 "cli.status.access_denied" = "መዳረሻ ከተከለከለ --headless permissions request ያሂዱ እና በስርዓት ቅንብሮች ውስጥ የግቤት ክትትል እና ተደራሽነትን ያጽድቁ።";
 "cli.status.heading" = "የOpenJoystickDriver ሁኔታ";
 "cli.status.json_error" = "የሁኔታ JSON መመስጠር አልተቻለም: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  ሁኔታ        : %@";
 "cli.updates.unknown_option" = "ያልታወቀ የዝማኔዎች አማራጭ: %@";
 "common.unknown" = "ያልታወቀ";
-"compatibility.appleGameController" = "አፕል GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (ኦሪጂናል)";
 "developer.buttons" = "አዝራሮች";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B አዝራር";
 "inputTest.bCircle" = "ቢ / ክበብ";
 "inputTest.brightness" = "ብሩህነት";
-"inputTest.circle" = "ክብ";
 "inputTest.color" = "ቀለም";
 "inputTest.controls" = "ቀጥተኛ ግቤት";
-"inputTest.cross" = "መስቀል";
 "inputTest.disconnected" = "ተቆጣጣሪው ተቆርጧል";
 "inputTest.dpadDown" = "የአቅጣጫ ሰሌዳ ታች";
 "inputTest.dpadLeft" = "የአቅጣጫ ሰሌዳ ግራ";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "ለዚህ መቆጣጠሪያ የብርሃን መቆጣጠሪያዎች አይገኙም.";
 "inputTest.live" = "የግብዓት ንቁ";
 "inputTest.menu" = "ምናሌ";
-"inputTest.minus" = "መቀነስ";
 "inputTest.off" = "ጠፍቷል";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "አማራጮች";
 "inputTest.outputError" = "አካላዊ የውጤት ስህተት";
 "inputTest.outputRejected" = "ተቆጣጣሪው ይህንን የውጤት ሙከራ ውድቅ አደረገ።";
 "inputTest.permissionRequired" = "መግቢያ የመቆጣጠሪያ ፈቃድ ያስፈልጋል";
 "inputTest.playerIndicator" = "የአጫዋች አመላካች";
-"inputTest.plus" = "መጨመር";
 "inputTest.pressed" = "ተጭኗል";
-"inputTest.psButton" = "PS አዝራር";
 "inputTest.released" = "ተለቅቋል";
 "inputTest.rightBumper" = "ቀኝ መጋጠሚያ";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "ቀኝ Y";
 "inputTest.rumble" = "የጭፈራ";
 "inputTest.rumbleUnavailable" = "Rumble በዚህ መቆጣጠሪያ አይደገፍም.";
-"inputTest.share" = "አጋራ";
-"inputTest.square" = "ካሬ";
 "inputTest.stale" = "የመግቢያ ጊዜ ተቋረጠ";
 "inputTest.start" = "የመግቢያ ሙከራ ይጀምሩ";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "ቀጥተኛ ግቤት";
 "inputTest.tabMotion" = "ጥያቄ";
 "inputTest.tabOutput" = "የውጤት";
-"inputTest.steamButton" = "Steam አዝራር";
 "inputTest.summary" = "የሙከራ ቁልፎች፣ ዱላዎች፣ ማስነሻዎች፣ የድምፅ ማጉያ እና የመቆጣጠሪያ መብራት።";
 "inputTest.testRumble" = "የሙከራ ሮብል";
 "inputTest.title" = "የመግቢያ ፈተና";
-"inputTest.triangle" = "ሦስት ማዕዘን";
 "inputTest.unavailable" = "መግቢያ አይገኝም";
 "inputTest.view" = "እይታ";
 "inputTest.windowTitle" = "የመግቢያ ፈተና %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "የተመረጡትን Joy-Cons ማጣመር አልተቻለም.";
 "profiles.joyConExplicitSession" = "በሁለት ጊዜ ክፍለ ጊዜ ተጀምሯል";
 "profiles.joyConSessionState" = "ግልፅ ማያያዝ";
-"profiles.gyro.virtualMotion" = "ወደፊት የሚለካ ምናባዊ እንቅስቃሴ";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (የሚባለው%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "ተቆጣጣሪው ተቆርጧል";
 "controllers.resume" = "እንደገና ሞክር";
 "controllers.disconnectFromOJD" = "ተቆጣጣሪው ተቆርጧል";
-"error.compatibilityTransitionDetailed" = "የተመረጠው የመቆጣጠሪያ ውጤት ማንቃት አልተቻለም። (%@, %@)";
 "error.controllerSessionChangeRejected" = "የተመረጠው የመቆጣጠሪያ ውጤት ማንቃት አልተቻለም።";
 "cli.catalog.controller_disconnect.summary" = "ተቆጣጣሪው ተቆርጧል";
 "cli.catalog.controller_resume.summary" = "እንደገና ሞክር — ተቆጣጣሪው ተቆርጧል";
+"cli.catalog.controller_virtual_set.summary" = "የተቆጣጣሪውን ምናባዊ HID መገለጫ ይሻሩ";
+"cli.catalog.controller_virtual_reset.summary" = "የተቆጣጣሪውን ምናባዊ HID መገለጫ በራስ-ሰር ይምረጡ፣ ወይም ሁሉንም መሻር በ --all ያጽዱ";
 "cli.controller.disconnected" = "ተቆጣጣሪው ተቆርጧል";
 "cli.controller.resumed" = "የግብዓት ንቁ";
 

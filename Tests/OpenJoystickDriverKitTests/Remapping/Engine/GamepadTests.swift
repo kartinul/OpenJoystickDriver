@@ -5,40 +5,42 @@ import Testing
 
 struct RemappingGamepadTests {
   @Test
-  func virtualTransitionsExplicitlyNeutralizeSmallAxesAndHeldControls() {
-    let state = RemappingGamepadState(
-      buttons: [.south, .touchpad],
-      dpad: [.up, .right],
-      axes: [.leftStickX: 0.001, .rightStickY: -0.5, .leftTrigger: 0.001, .rightTrigger: 1]
+  func remappedStateReplacesEveryInputFieldOfTheVirtualState() {
+    let dispatcher = Self.dispatcher()
+    var virtual = VirtualGamepadState()
+    dispatcher.apply(
+      RemappingGamepadState(
+        buttons: [.south, .touchpad],
+        dpad: [.up, .right],
+        axes: [.leftStickX: 0.001, .rightStickY: -0.5, .leftTrigger: 0.001, .rightTrigger: 1]
+      ),
+      to: &virtual
     )
-    #expect(
-      RemappingGamepadState.neutral.events(since: state) == [
-        .buttonReleased(.a), .buttonReleased(.touchpad), .dpadChanged(.neutral),
-        .leftStickChanged(x: 0, y: 0), .rightStickChanged(x: 0, y: 0), .leftTriggerChanged(0),
-        .rightTriggerChanged(0),
-      ]
-    )
-    #expect(state.events(since: state).isEmpty)
+    #expect(virtual.buttons == 1 | GamepadHIDDescriptor.dpadButtonBits(for: .northEast))
+    #expect(virtual.hat == .northEast)
+    #expect(virtual.leftStickX == 32 && virtual.rightStickY == -16383)
+    #expect(virtual.leftTrigger == 32 && virtual.rightTrigger == 32767)
+    dispatcher.apply(.neutral, to: &virtual)
+    #expect(virtual.buttons == 0 && virtual.hat == .neutral)
+    #expect(virtual.leftStickX == 0 && virtual.rightStickY == 0)
+    #expect(virtual.leftTrigger == 0 && virtual.rightTrigger == 0)
   }
 
   @Test
-  func virtualTransitionsCoalesceNamingAliasesBeforeReleasingButtons() {
-    let both = RemappingGamepadState(buttons: [.start, .options, .share])
-    #expect(both.events(since: .neutral) == [.buttonPressed(.share), .buttonPressed(.start)])
-    let remaining = RemappingGamepadState(buttons: [.options, .share])
-    #expect(remaining.events(since: both).isEmpty)
-    #expect(
-      RemappingGamepadState.neutral.events(since: remaining) == [
-        .buttonReleased(.share), .buttonReleased(.start),
-      ]
-    )
+  func remappedNamingAliasesShareOneBit() {
+    let dispatcher = Self.dispatcher()
+    var virtual = VirtualGamepadState()
+    dispatcher.apply(RemappingGamepadState(buttons: [.start, .options, .share]), to: &virtual)
+    #expect(virtual.buttons == 1 << 8 | 1 << 15)
+    dispatcher.apply(RemappingGamepadState(buttons: [.options, .share]), to: &virtual)
+    #expect(virtual.buttons == 1 << 8 | 1 << 15)
   }
 
-  @Test
-  func changingOneStickComponentPreservesTheOtherComponent() {
-    let previous = RemappingGamepadState(axes: [.leftStickX: 0.5, .leftStickY: -0.5])
-    let next = RemappingGamepadState(axes: [.leftStickX: 0.25, .leftStickY: -0.5])
-    #expect(next.events(since: previous) == [.leftStickChanged(x: 0.25, y: -0.5)])
+  private static func dispatcher() -> UserSpaceOutputDispatcher {
+    UserSpaceOutputDispatcher(
+      testBackendFactory: { _ in UserSpaceDispatcherTestBackend() },
+      format: OJDGenericGamepadFormat()
+    )
   }
 
   @Test

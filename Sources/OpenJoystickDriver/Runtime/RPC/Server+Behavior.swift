@@ -33,26 +33,20 @@ extension ApplicationServiceServer {
       timeout: compatibilityTransitionTimeouts.feedbackNanoseconds,
       clock: compatibilityTransitionClock
     )
-    let detached = userSpaceLock.withLock {
-      () -> (
-        backend: (any CompatibilityUserSpaceOutputDispatching)?,
-        slot: CompatibilityBackendCloseSlot?
-      ) in
+    let slot = userSpaceLock.withLock { () -> CompatibilityBackendCloseSlot? in
       dispatcher.setBackend(nil)
-      let old = userSpaceDispatcher
       let slot = userSpaceCloseSlot
       userSpaceDispatcher = nil
       userSpaceCloseSlot = nil
       userSpaceEnabled = false
-      compatibilityLiveIdentity = nil
       userSpaceStatus = "off"
-      return (old, slot)
+      return slot
     }
-    _ = await closeCompatibilityBackend(detached.backend, slot: detached.slot)
+    _ = await closeCompatibilityBackend(slot)
   }
 
   static func isTrustedClient(processIdentifier: Int32) -> Bool {
-    guard let expected = signingIdentityForCurrentProcess() else { return false }
+    guard let expected = currentProcessSigningIdentity else { return false }
     let attributes = [kSecGuestAttributePid as String: processIdentifier] as CFDictionary
     var guestCode: SecCode?
     guard
@@ -61,6 +55,9 @@ extension ApplicationServiceServer {
     else { return false }
     return actual == expected
   }
+
+  /// This process's code does not change while it runs; every client connection compares with it.
+  private static let currentProcessSigningIdentity = signingIdentityForCurrentProcess()
 
   private static func signingIdentityForCurrentProcess() -> SigningIdentity? {
     var currentCode: SecCode?
@@ -92,53 +89,52 @@ extension ApplicationServiceServer {
 
   // MARK: - Private
 
-  func buildUserSpaceDispatcher(identity: CompatibilityIdentity) throws -> UserSpaceDispatcherBuild
-  {
+  func buildUserSpaceDispatcher() throws -> UserSpaceDispatcherBuild {
     if let userSpaceDispatcherBuilder {
-      let dispatcher = try userSpaceDispatcherBuilder(identity)
+      let dispatcher = try userSpaceDispatcherBuilder()
       return UserSpaceDispatcherBuild(dispatcher: dispatcher, status: dispatcher.status)
     }
-    if identity == .automatic {
-      let automatic = AutomaticUserSpaceOutputDispatcher(
-        deviceManager: deviceManager,
-        consumerProvider: CompatibilityConsumerRouting.current
-      ) { [weak self] target in
+    let overrides = virtualHIDProfileOverrides
+    let automatic = AutomaticUserSpaceOutputDispatcher(
+      deviceManager: deviceManager,
+      builder: { [weak self] profileID in
         guard let self else { throw UserSpaceOutputDispatcher.CreationError.createFailed }
-        return try self.buildAutomaticUserSpaceDispatcher(target: target)
-      }
-      return UserSpaceDispatcherBuild(dispatcher: automatic, status: automatic.status)
-    }
-    let composition = try CompatibilityOutputCompositionFactory.make(identity: identity)
-    return try buildUserSpaceDispatcher(composition: composition, identity: identity)
+        return try self.buildAutomaticUserSpaceDispatcher(profileID: profileID)
+      },
+      overrideProvider: { overrides.override(vendorID: $0.vendorID, productID: $0.productID) }
+    )
+    return UserSpaceDispatcherBuild(dispatcher: automatic, status: automatic.status)
   }
 
+  /// The automatic dispatcher applies ownership and session policy per controller, so each
+  /// profile's backend publishes directly.
   private func buildAutomaticUserSpaceDispatcher(
-    target: AutomaticCompatibilityTarget
+    profileID: VirtualHIDProfileID
   ) throws -> any CompatibilityUserSpaceOutputDispatching {
-    let composition = try CompatibilityOutputCompositionFactory.make(target: target)
-    return try buildUserSpaceDispatcher(composition: composition, identity: target.identity)
-      .dispatcher
+    let profile = try profileID.makeProfile()
+    return try makeUserSpaceOutputDispatcher(
+      profile: profile.identity,
+      format: profile.reportFormat,
+      emitsXboxGuideReport: false
+    )
   }
 
-  func buildUserSpaceDispatcher(
-    composition: CompatibilityOutputComposition,
-    identity: CompatibilityIdentity
-  ) throws -> UserSpaceDispatcherBuild {
-    let compatibilityProfile = composition.profile
-    let profile = compatibilityProfile.deviceProfile
-    let format = composition.format
-
-    let rumbleHandler: UserSpaceOutputDispatcher.RumbleCommandHandler = {
+  private func makeUserSpaceOutputDispatcher(
+    profile: VirtualDeviceProfile,
+    format: any VirtualGamepadReportFormat,
+    emitsXboxGuideReport: Bool
+  ) throws -> UserSpaceOutputDispatcher {
+    let outputHandler: UserSpaceOutputDispatcher.OutputCommandHandler = {
       [weak self] identifier, command in
       guard let self else { return }
       self.feedbackGate.submit(identifier: identifier, command: command)
     }
 
-    let output = try UserSpaceOutputDispatcher(
+    return try UserSpaceOutputDispatcher(
       profile: profile,
       format: format,
-      emitsXboxGuideReport: compatibilityProfile.emitsXboxGuideReport,
-      onRumbleCommand: rumbleHandler
+      emitsXboxGuideReport: emitsXboxGuideReport,
+      onOutputCommand: outputHandler
     ) { [weak self] identifier in
       _ = await self?.feedbackGate.quiesceAndNeutralize(
         [identifier],
@@ -147,38 +143,6 @@ extension ApplicationServiceServer {
         clock: self?.compatibilityTransitionClock ?? .system,
         resumeWhenComplete: true
       )
-    }
-    let gated = CompatibilityUserSpaceOutputDispatchingAdapter(
-      backend: output,
-      deviceManager: deviceManager,
-      identity: identity
-    ) { [weak self] in await self?.deviceManager.connectedDeviceDescriptions() ?? [] }
-    return UserSpaceDispatcherBuild(dispatcher: gated, status: gated.status)
-  }
-
-  func initializeCompatibilityBackend() -> Bool {
-    if userSpaceEnabled, userSpaceDispatcher != nil { return true }
-    do {
-      let build = try buildUserSpaceDispatcher(identity: compatibilityIdentity)
-      userSpaceLock.withLock {
-        userSpaceDispatcher = build.dispatcher
-        userSpaceCloseSlot = build.closeSlot
-        dispatcher.setBackend(build.dispatcher)
-        userSpaceEnabled = true
-        userSpaceStatus = build.status
-        compatibilityLiveIdentity = compatibilityIdentity
-      }
-      print("[ApplicationServiceServer] Compatibility virtual gamepad ready")
-      return true
-    } catch {
-      userSpaceLock.withLock {
-        dispatcher.setBackend(nil)
-        userSpaceDispatcher = nil
-        userSpaceEnabled = false
-        userSpaceStatus = "error: \(error)"
-      }
-      print("[ApplicationServiceServer] Compatibility virtual gamepad unavailable: \(error)")
-      return false
     }
   }
 
@@ -200,9 +164,6 @@ extension ApplicationServiceServer {
   struct UserSpaceStatusSnapshot: Sendable {
     let enabled: Bool
     let status: String
-    let requestedIdentity: CompatibilityIdentity
-    let liveIdentity: CompatibilityIdentity?
-    let retrySnapshot: CompatibilityRetrySnapshot?
   }
 
   func userSpaceStatusSnapshot() -> UserSpaceStatusSnapshot {
@@ -217,29 +178,7 @@ extension ApplicationServiceServer {
       } else {
         status = userSpaceStatus
       }
-      return UserSpaceStatusSnapshot(
-        enabled: userSpaceEnabled,
-        status: status,
-        requestedIdentity: compatibilityIdentity,
-        liveIdentity: compatibilityLiveIdentity,
-        retrySnapshot: compatibilityRetrySnapshot
-      )
-    }
-  }
-
-  func compatibilityTransitionSnapshot() -> CompatibilityTransitionSnapshot {
-    userSpaceLock.withLock {
-      if userSpaceCloseSlot == nil, let userSpaceDispatcher {
-        userSpaceCloseSlot = CompatibilityBackendCloseSlot(userSpaceDispatcher)
-      }
-      return CompatibilityTransitionSnapshot(
-        requestedIdentity: compatibilityIdentity,
-        persistedIdentity: persistedCompatibilityIdentity,
-        liveIdentity: compatibilityLiveIdentity,
-        enabled: userSpaceEnabled,
-        dispatcher: userSpaceDispatcher,
-        closeSlot: userSpaceCloseSlot
-      )
+      return UserSpaceStatusSnapshot(enabled: userSpaceEnabled, status: status)
     }
   }
 
@@ -247,47 +186,12 @@ extension ApplicationServiceServer {
     userSpaceLock.withLock { compatibilityServerStopped }
   }
 
-  func closeCompatibilityBackend(
-    _ backend: (any CompatibilityUserSpaceOutputDispatching)?,
-    slot: CompatibilityBackendCloseSlot? = nil,
-    timeout: UInt64? = nil,
-    error: CompatibilityTransitionError = .candidateCloseTimedOut
-  ) async -> Bool {
-    guard let backend else { return true }
-    let closeSlot = userSpaceLock.withLock { () -> CompatibilityBackendCloseSlot in
-      if let slot { return slot }
-      if let userSpaceCloseSlot, userSpaceCloseSlot.backend === (backend as AnyObject) {
-        return userSpaceCloseSlot
-      }
-      let slot = CompatibilityBackendCloseSlot(backend)
-      if userSpaceDispatcher === backend { userSpaceCloseSlot = slot }
-      return slot
-    }
-    return await closeSlot.close(
-      timeout: timeout ?? compatibilityTransitionTimeouts.candidateCloseNanoseconds,
-      clock: compatibilityTransitionClock,
-      error: error
+  /// Closes the backend that `slot` owns within the candidate-close timeout; true when it closed.
+  func closeCompatibilityBackend(_ slot: CompatibilityBackendCloseSlot?) async -> Bool {
+    guard let slot else { return true }
+    return await slot.close(
+      timeout: compatibilityTransitionTimeouts.candidateCloseNanoseconds,
+      clock: compatibilityTransitionClock
     )
   }
-
-  static func loadCompatibilityRetrySnapshot(
-    defaults: UserDefaults = .standard
-  ) -> CompatibilityRetrySnapshot? {
-    guard let data = defaults.data(forKey: compatibilityRetrySnapshotDefaultsKey) else {
-      return nil
-    }
-    return try? JSONDecoder().decode(CompatibilityRetrySnapshot.self, from: data)
-  }
-
-  static func persistCompatibilityRetrySnapshot(
-    _ snapshot: CompatibilityRetrySnapshot?,
-    defaults: UserDefaults = .standard
-  ) {
-    guard let snapshot, let data = try? JSONEncoder().encode(snapshot) else {
-      defaults.removeObject(forKey: compatibilityRetrySnapshotDefaultsKey)
-      return
-    }
-    defaults.set(data, forKey: compatibilityRetrySnapshotDefaultsKey)
-  }
-
 }

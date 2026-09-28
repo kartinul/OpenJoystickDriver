@@ -7,32 +7,36 @@ import Testing
 extension PhysicalRumbleOutputTests {
   @Test
   func testSourceBackedParsersExposeExactOutputCapabilities() {
-    let gip = GIPParser()
-    let xbox360 = Xbox360Parser()
-    let xid = XIDParser()
-    let ds4 = DS4Parser()
-    let dualSense = DualSenseParser()
-    let ds3 = DS3Parser()
-    let switchPro = SwitchProParser()
-    let steamController = SteamControllerParser()
+    let gip = GIPDriver()
+    let xbox360 = XUSBDriver()
+    let xid = XIDDriver()
+    let ds4 = DualShock4Driver()
+    let dualSense = DualSenseDriver()
+    let ds3 = SixaxisDriver()
+    let switchPro = Switch1Driver()
+    let steamController = SteamControllerDriver()
 
     #expect(
-      Set(gip.physicalRumbleMotors) == Set([.leftMain, .rightMain, .leftTrigger, .rightTrigger])
+      Set(gip.outputCapabilities.rumbleMotors)
+        == Set([.leftMain, .rightMain, .leftTrigger, .rightTrigger])
     )
-    #expect(Set(xbox360.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
-    #expect(Set(xid.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
-    #expect(xbox360.physicalLightingFeatures == [.playerIndicator])
-    #expect(Set(ds4.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
-    #expect(Set(dualSense.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
-    #expect(Set(dualSense.physicalLightingFeatures) == Set([.playerIndicator, .programmableColor]))
-    #expect(ds4.physicalLightingFeatures == [.programmableColor])
-    #expect(Set(ds3.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
-    #expect(ds3.physicalBinaryRumbleMotors == [.rightMain])
-    #expect(ds3.physicalLightingFeatures == [.playerIndicator])
-    #expect(Set(switchPro.physicalRumbleMotors) == Set([.leftMain, .rightMain]))
-    #expect(switchPro.physicalLightingFeatures == [.playerIndicator])
-    #expect(steamController.physicalRumbleMotors == [.leftHaptic, .rightHaptic])
-    #expect(steamController.physicalLightingFeatures == [.programmableBrightness])
+    #expect(Set(xbox360.outputCapabilities.rumbleMotors) == Set([.leftMain, .rightMain]))
+    #expect(Set(xid.outputCapabilities.rumbleMotors) == Set([.leftMain, .rightMain]))
+    #expect(xbox360.outputCapabilities.lightingFeatures == [.playerIndicator])
+    #expect(Set(ds4.outputCapabilities.rumbleMotors) == Set([.leftMain, .rightMain]))
+    #expect(Set(dualSense.outputCapabilities.rumbleMotors) == Set([.leftMain, .rightMain]))
+    #expect(
+      Set(dualSense.outputCapabilities.lightingFeatures)
+        == Set([.playerIndicator, .programmableColor])
+    )
+    #expect(ds4.outputCapabilities.lightingFeatures == [.programmableColor])
+    #expect(Set(ds3.outputCapabilities.rumbleMotors) == Set([.leftMain, .rightMain]))
+    #expect(ds3.outputCapabilities.binaryRumbleMotors == [.rightMain])
+    #expect(ds3.outputCapabilities.lightingFeatures == [.playerIndicator])
+    #expect(Set(switchPro.outputCapabilities.rumbleMotors) == Set([.leftMain, .rightMain]))
+    #expect(switchPro.outputCapabilities.lightingFeatures == [.playerIndicator])
+    #expect(steamController.outputCapabilities.rumbleMotors == [.leftHaptic, .rightHaptic])
+    #expect(steamController.outputCapabilities.lightingFeatures == [.programmableBrightness])
     #expect(hasPhysicalRumble(gip))
     #expect(hasPhysicalRumble(xbox360))
     #expect(hasPhysicalRumble(xid))
@@ -49,7 +53,7 @@ extension PhysicalRumbleOutputTests {
       name: "Test",
       vendorID: 1,
       productID: 2,
-      parser: "Test",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil
     )
@@ -64,10 +68,9 @@ extension PhysicalRumbleOutputTests {
         "name": "Test",
         "vendorID": 1,
         "productID": 2,
-        "parser": "Test",
+        "protocolBinding": "hid.descriptor",
         "connection": "USB",
         "serialNumber": null,
-        "protocolVariant": "unknown",
         "runtimeIdentifier": "0001:0002:M"
       }
       """
@@ -83,10 +86,9 @@ extension PhysicalRumbleOutputTests {
         "name": "Test",
         "vendorID": 1,
         "productID": 2,
-        "parser": "Test",
+        "protocolBinding": "hid.descriptor",
         "connection": "USB",
         "serialNumber": null,
-        "protocolVariant": "unknown",
         "runtimeIdentifier": "0001:0002:M",
         "supportsPhysicalRumble": true
       }
@@ -106,7 +108,7 @@ extension PhysicalRumbleOutputTests {
       name: "Test",
       vendorID: 1,
       productID: 2,
-      parser: "GIP",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
       physicalOutputCapabilities: capabilities
@@ -122,117 +124,61 @@ extension PhysicalRumbleOutputTests {
 
   @Test
   func testXbox360PlayerIndicatorsMapToSteadyRingPatterns() {
-    #expect(Xbox360Parser.ledPattern(for: .off) == .allOff)
-    #expect(Xbox360Parser.ledPattern(for: .player1) == .player1On)
-    #expect(Xbox360Parser.ledPattern(for: .player2) == .player2On)
-    #expect(Xbox360Parser.ledPattern(for: .player3) == .player3On)
-    #expect(Xbox360Parser.ledPattern(for: .player4) == .player4On)
+    #expect(XUSBDriver.ledPattern(for: .off) == .allOff)
+    #expect(XUSBDriver.ledPattern(for: .player1) == .player1On)
+    #expect(XUSBDriver.ledPattern(for: .player2) == .player2On)
+    #expect(XUSBDriver.ledPattern(for: .player3) == .player3On)
+    #expect(XUSBDriver.ledPattern(for: .player4) == .player4On)
   }
 
   @Test
-  func testVirtualParserAcceptsXboxOneRumbleReports() {
-    let command = VirtualRumbleOutputReportParser.parse(
-      type: kIOHIDReportTypeOutput,
-      reportID: 3,
-      bytes: [0x0F, 10, 20, 30, 40, 5, 0, 0]
-    )
-
-    let expected = VirtualRumbleCommand(
-      left: 30,
-      right: 40,
-      leftTrigger: 10,
-      rightTrigger: 20,
-      durationMs: 50
-    )
-    #expect(command == expected)
-  }
-
-  @Test
-  func testVirtualParserAcceptsXboxOneRumbleReportWithCallbackReportIDPrefix() {
-    let command = VirtualRumbleOutputReportParser.parse(
-      type: kIOHIDReportTypeOutput,
-      reportID: 3,
-
-      bytes: [0x03, 0x0F, 10, 20, 30, 40, 5, 0, 0]
+  func testConsumerCodecDecodesXboxOneRumbleReportWithCallbackReportIDPrefix() throws {
+    let command = try consumerOutput(
+      3,
+      [0x03, 0x0F, 10, 20, 30, 40, 5, 0, 0],
+      in: XboxGeckoHIDReportFormat()
     )
 
     #expect(
       command
-        == VirtualRumbleCommand(
-          left: 30,
-          right: 40,
-          leftTrigger: 10,
-          rightTrigger: 20,
-          durationMs: 50
-        )
+        == .consumerRumble(left: 30, right: 40, leftTrigger: 10, rightTrigger: 20, durationMs: 50)
     )
+    // The payload after the report ID is exactly the declared 8 bytes.
+    #expect(throws: VirtualHostReportError.tooLarge) {
+      try consumerOutput(
+        3,
+        [0x03, 0x0F, 10, 20, 30, 40, 5, 0, 0, 0],
+        in: XboxGeckoHIDReportFormat()
+      )
+    }
+    // The rumble report is numbered; an unnumbered one is not a report the format declares.
+    #expect(throws: VirtualHostReportError.unsupported) {
+      try consumerOutput(0, [0x0F, 10, 20, 30, 40, 5, 0, 0], in: XboxGeckoHIDReportFormat())
+    }
   }
 
   @Test
-  func testVirtualParserAcceptsXboxGIPRumbleReports() {
-
-    let reportIDZeroCommand = VirtualRumbleOutputReportParser.parse(
-      type: kIOHIDReportTypeOutput,
-      reportID: 0,
-      bytes: [0x09, 0x00, 0x12, 0x09, 0x00, 0x0F, 10, 20, 30, 40, 5, 0, 0]
-    )
-    let reportIDNineCommand = VirtualRumbleOutputReportParser.parse(
-      type: kIOHIDReportTypeOutput,
-      reportID: 9,
-      bytes: [0x00, 0x12, 0x09, 0x00, 0x0F, 10, 20, 30, 40, 5, 0, 0]
-    )
-
-    let expected = VirtualRumbleCommand(
-      left: 30,
-      right: 40,
-      leftTrigger: 10,
-      rightTrigger: 20,
-      durationMs: 50
-    )
-    #expect(reportIDZeroCommand == expected)
-    #expect(reportIDNineCommand == expected)
-  }
-
-  @Test
-  func testVirtualParserAcceptsXboxGIPRumbleReportWithCallbackReportIDPrefix() {
-    let command = VirtualRumbleOutputReportParser.parse(
-      type: kIOHIDReportTypeOutput,
-      reportID: 9,
-      bytes: [0x09, 0x09, 0x00, 0x12, 0x09, 0x00, 0x0F, 10, 20, 30, 40, 5, 0, 0]
-    )
-
+  func testConsumerCodecDecodesXbox360ShortRumbleReports() throws {
+    let format = OJDGenericGamepadFormat()
     #expect(
-      command
-        == VirtualRumbleCommand(
-          left: 30,
-          right: 40,
-          leftTrigger: 10,
-          rightTrigger: 20,
-          durationMs: 50
-        )
+      try consumerOutput(0, [0x08, 0x00, 128, 64], in: format)
+        == .consumerRumble(left: 128, right: 64)
+    )
+    #expect(
+      try consumerOutput(0, [0x08, 0x00, 128, 64, 0, 0, 0], in: format)
+        == .consumerRumble(left: 128, right: 64)
     )
   }
 
   @Test
-  func testVirtualParserAcceptsXbox360RumbleReports() {
-    let command = VirtualRumbleOutputReportParser.parse(
-      type: kIOHIDReportTypeOutput,
-      reportID: 0,
-      bytes: [0x00, 0x08, 0x00, 128, 64, 0, 0, 0]
+  func testConsumerCodecDecodesOJDCompactRumbleReports() throws {
+    let command = try consumerOutput(
+      0,
+      [0x4F, 1, 2, 3, 4, 0x2C, 0x01],
+      in: OJDGenericGamepadFormat()
     )
 
-    #expect(command == VirtualRumbleCommand(left: 128, right: 64))
-  }
-
-  @Test
-  func testVirtualParserAcceptsOJDCompactRumbleReports() {
-    let command = VirtualRumbleOutputReportParser.parse(
-      type: kIOHIDReportTypeOutput,
-      reportID: 0,
-      bytes: [0x4F, 1, 2, 3, 4, 0x2C, 0x01]
-    )
-
-    let expected = VirtualRumbleCommand(
+    let expected = ControllerOutputCommand.consumerRumble(
       left: 1,
       right: 2,
       leftTrigger: 3,
@@ -243,22 +189,18 @@ extension PhysicalRumbleOutputTests {
   }
 
   @Test
-  func testVirtualParserRejectsUnmarkedCompactOutputReports() {
-    let command = VirtualRumbleOutputReportParser.parse(
-      type: kIOHIDReportTypeOutput,
-      reportID: 0,
-      bytes: [1, 2, 3, 4, 5, 6]
-    )
-
-    #expect(command == nil)
+  func testConsumerCodecRejectsUnmarkedCompactOutputReports() {
+    #expect(throws: VirtualHostReportError.malformed) {
+      try consumerOutput(0, [1, 2, 3, 4, 5, 6], in: OJDGenericGamepadFormat())
+    }
   }
 
   @Test
   func testDs3PhysicalOutputMatchesLinuxDefaultReport() {
-    let report = DS3Parser().physicalRumbleReport(left: 180, right: 90, lt: 255, rt: 64)
+    let report = SixaxisDriver().rumblePlan(left: 180, right: 90, lt: 255, rt: 64).onlyReport
 
     #expect(report.reportID == 0x01)
-    #expect(report.bytes.count == 36)
+    #expect(report.bytes.count == 49)
     #expect(Array(report.bytes[0...10]) == [0x01, 0x01, 0xFF, 0x01, 0xFF, 180, 0, 0, 0, 0, 0x02])
     #expect(
       Array(report.bytes[11...35]) == [
@@ -266,21 +208,22 @@ extension PhysicalRumbleOutputTests {
         0xFF, 0x27, 0x10, 0x00, 0x32, 0, 0, 0, 0, 0,
       ]
     )
+    #expect(report.bytes[36...].allSatisfy { $0 == 0 })
   }
 
   @Test
   func testDs3SmallMotorIsBinaryAndOutputStatePersistsAcrossLedChanges() {
-    let parser = DS3Parser()
-    let off = parser.physicalRumbleReport(left: 33, right: 0, lt: 0, rt: 0)
+    let parser = SixaxisDriver()
+    let off = parser.rumblePlan(left: 33, right: 0, lt: 0, rt: 0).onlyReport
     #expect(off.bytes[3] == 0)
-    let on = parser.physicalRumbleReport(left: 33, right: 1, lt: 0, rt: 0)
+    let on = parser.rumblePlan(left: 33, right: 1, lt: 0, rt: 0).onlyReport
     #expect(on.bytes[3] == 1)
 
-    let led = parser.physicalPlayerIndicatorReport(.player4)
+    let led = parser.encoded(.setPlayerIndicator(.player4)).onlyReport
     #expect(led.bytes[3] == 1)
     #expect(led.bytes[5] == 33)
     #expect(led.bytes[10] == 0x10)
-    let allOff = parser.physicalPlayerIndicatorReport(.off)
+    let allOff = parser.encoded(.setPlayerIndicator(.off)).onlyReport
     #expect(allOff.bytes[10] == 0x20)
   }
 
@@ -296,7 +239,7 @@ extension PhysicalRumbleOutputTests {
 
   @Test
   func testDualSensePhysicalRumbleUsesExactUSBOutputLayout() {
-    let report = DualSenseParser().physicalRumbleReport(left: 180, right: 90, lt: 255, rt: 64)
+    let report = DualSenseDriver().rumblePlan(left: 180, right: 90, lt: 255, rt: 64).onlyReport
 
     #expect(report.reportID == 0x02)
     #expect(report.bytes.count == 63)
@@ -309,26 +252,26 @@ extension PhysicalRumbleOutputTests {
 
   @Test
   func testDualSensePhysicalRumbleUsesSignedBluetoothOutputLayout() {
-    let parser = DualSenseParser(prefersBluetooth: true)
-    let report = parser.physicalRumbleReport(left: 180, right: 90, lt: 255, rt: 64)
+    let parser = DualSenseDriver(prefersBluetooth: true)
+    let report = parser.rumblePlan(left: 180, right: 90, lt: 255, rt: 64).onlyReport
 
     #expect(report.reportID == 0x31)
     #expect(report.bytes.count == 78)
     #expect(Array(report.bytes[0...6]) == [0x31, 0x00, 0x10, 0x03, 0x00, 90, 180])
     #expect(Array(report.bytes[74...77]) == [0xB9, 0x4F, 0xE2, 0xCD])
-    let next = parser.physicalRumbleReport(left: 0, right: 0, lt: 0, rt: 0)
+    let next = parser.rumblePlan(left: 0, right: 0, lt: 0, rt: 0).onlyReport
     #expect(next.bytes[1] == 0x10)
   }
 
   @Test
   func testDualSensePlayerIndicatorUsesCenteredLinuxPatterns() {
-    let parser = DualSenseParser()
+    let parser = DualSenseDriver()
     let expected: [(PhysicalPlayerIndicator, UInt8)] = [
       (.off, 0x00), (.player1, 0x04), (.player2, 0x0A), (.player3, 0x15), (.player4, 0x1B),
     ]
 
     for (indicator, pattern) in expected {
-      let report = parser.physicalPlayerIndicatorReport(indicator)
+      let report = parser.encoded(.setPlayerIndicator(indicator)).onlyReport
       #expect(report.reportID == 0x02)
       #expect(report.bytes.count == 63)
       #expect(report.bytes[2] == 0x10)
@@ -338,7 +281,8 @@ extension PhysicalRumbleOutputTests {
 
   @Test
   func testDualSenseBluetoothPlayerIndicatorIsSigned() {
-    let report = DualSenseParser(prefersBluetooth: true).physicalPlayerIndicatorReport(.player3)
+    let report = DualSenseDriver(prefersBluetooth: true).encoded(.setPlayerIndicator(.player3))
+      .onlyReport
 
     #expect(report.reportID == 0x31)
     #expect(report.bytes[4] == 0x10)

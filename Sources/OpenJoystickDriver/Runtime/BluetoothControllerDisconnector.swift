@@ -45,8 +45,10 @@ final class BluetoothControllerDisconnector: WirelessControllerDisconnecting, @u
         continuation.yield(outcome)
         continuation.finish()
       }
-      Task {
-        try? await Task.sleep(nanoseconds: timeoutNanoseconds)
+      // A GCD timer, like the close above, so the timeout does not wait for a cooperative thread.
+      DispatchQueue.global(qos: .userInitiated).asyncAfter(
+        deadline: .now() + .nanoseconds(Int(clamping: timeoutNanoseconds))
+      ) {
         continuation.yield(.timedOut)
         continuation.finish()
       }

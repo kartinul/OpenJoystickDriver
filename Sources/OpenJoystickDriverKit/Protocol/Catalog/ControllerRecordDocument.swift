@@ -11,14 +11,14 @@ struct ControllerRecordDocument: Decodable {
 
   let vendorID: Int
   let productID: Int
-  let transport: String
   let protocolInfo: ProtocolInfo
   let usb: USBOverride?
+  let capabilities: ControllerCapabilityDelta
 
   init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: DocumentKey.self)
     try container.rejectUnknown(allowed: [
-      "$schema", "vendorID", "productID", "transport", "protocol", "usb",
+      "$schema", "vendorID", "productID", "protocol", "usb", "capabilities",
     ])
     let schema = try container.decode(String.self, for: "$schema")
     guard schema == Self.schemaID else {
@@ -30,14 +30,29 @@ struct ControllerRecordDocument: Decodable {
     }
     vendorID = try container.decode(Int.self, for: "vendorID")
     productID = try container.decode(Int.self, for: "productID")
-    transport = try container.decode(String.self, for: "transport")
     protocolInfo = try container.decode(ProtocolInfo.self, for: "protocol")
     usb = try container.decodeOptional(USBOverride.self, for: "usb")
+    capabilities =
+      try container.decodeOptional(CapabilityDelta.self, for: "capabilities")?.delta ?? .none
+    // Only these deltas have a driver that acts on them: GIP drops rumble, DualSense Edge adds
+    // exactly its paddles and function buttons.
+    let presentAllowed =
+      capabilities.presentControls.isEmpty
+      || (protocolInfo.protocolID == .sonyDualSense
+        && capabilities.presentControls == DualSenseDriver.edgeControls)
+    guard !capabilities.rumbleAbsent || protocolInfo.protocolID == .xboxGIP, presentAllowed else {
+      throw DecodingError.dataCorrupted(
+        .init(
+          codingPath: decoder.codingPath + [DocumentKey("capabilities")],
+          debugDescription: "capabilities must be deltas their driver declares"
+        )
+      )
+    }
     if let endpoints = usb?.endpoints {
       let defaultEndpoints: (Int, Int)
-      switch protocolInfo.driver {
-      case "XUSB": defaultEndpoints = (129, 1)
-      case "XID": defaultEndpoints = (129, 2)
+      switch protocolInfo.protocolID {
+      case .xboxXUSB: defaultEndpoints = (129, 1)
+      case .xboxXID: defaultEndpoints = (129, 2)
       default: defaultEndpoints = (130, 2)
       }
       guard (endpoints.input, endpoints.output) != defaultEndpoints else {
@@ -52,138 +67,130 @@ struct ControllerRecordDocument: Decodable {
   }
 
   struct ProtocolInfo: Decodable {
-    let driver: String
-    let variant: String
-    let quirks: [String]?
-    let startupPackets: [String]?
+    let protocolID: PhysicalProtocolID
+    /// Nil unless the family stores its variant (``PhysicalProtocolID/storesVariant``).
+    let protocolVariant: PhysicalProtocolVariantID?
+    let quirks: [ControllerQuirk]
+    /// Named GIP initialization actions; nil selects the driver's default sequence.
+    let initialization: [GIPStartupPacket]?
     let keepAliveEnabled: Bool?
+    /// The named assembly policy; its vocabulary is empty, so every name fails.
+    let assembly: ControllerAssemblyPolicy?
 
     init(from decoder: any Decoder) throws {
       let container = try decoder.container(keyedBy: DocumentKey.self)
       try container.rejectUnknown(allowed: [
-        "driver", "variant", "quirks", "startupPackets", "keepAlive",
+        "family", "variant", "quirks", "initialization", "keepAlive", "assembly",
       ])
-      driver = try container.decode(String.self, for: "driver")
-      variant = try container.decode(String.self, for: "variant")
-      quirks = try container.decodeOptional([String].self, for: "quirks")
-      startupPackets = try container.decodeOptional([String].self, for: "startupPackets")
-      keepAliveEnabled = try container.decodeOptional(Bool.self, for: "keepAlive")
-      try Self.validateUniqueNonempty(quirks, field: "quirks", codingPath: decoder.codingPath)
-      try Self.validateUniqueNonempty(
-        startupPackets,
-        field: "startupPackets",
-        codingPath: decoder.codingPath
-      )
-      guard let contract = Self.contracts[driver], contract.variants.contains(variant) else {
+      let family = try container.decode(String.self, for: "family")
+      let variantName = try container.decodeOptional(String.self, for: "variant")
+      guard let protocolID = PhysicalProtocolID(rawValue: family) else {
         throw DecodingError.dataCorrupted(
-          .init(
-            codingPath: decoder.codingPath,
-            debugDescription: "driver and variant must match the current controller contract"
-          )
+          .init(codingPath: decoder.codingPath, debugDescription: "unknown family \(family)")
         )
       }
-      if let quirks, quirks.contains("joyConLeft"), quirks.contains("joyConRight") {
-        throw DecodingError.dataCorrupted(
-          .init(
-            codingPath: decoder.codingPath,
-            debugDescription: "Joy-Con layout must select one side"
-          )
-        )
-      }
-      let unknownQuirks = Set(quirks ?? []).subtracting(contract.quirks)
-      guard unknownQuirks.isEmpty else {
-        throw DecodingError.dataCorrupted(
-          .init(
-            codingPath: decoder.codingPath + [DocumentKey("quirks")],
-            debugDescription: "quirks must match the selected driver contract"
-          )
-        )
-      }
-    }
-
-    private static func validateUniqueNonempty(
-      _ values: [String]?,
-      field: String,
-      codingPath: [any CodingKey]
-    ) throws {
-      guard let values else { return }
-      guard !values.isEmpty, values.allSatisfy({ !$0.isEmpty }), Set(values).count == values.count
+      let variant = variantName.flatMap(PhysicalProtocolVariantID.init(rawValue:))
+      // Only families whose variant transport cannot decide store it, and it must be theirs.
+      guard protocolID.storesVariant == (variantName != nil),
+        variantName == nil || variant.map(protocolID.variants.contains) == true
       else {
         throw DecodingError.dataCorrupted(
           .init(
-            codingPath: codingPath + [DocumentKey(field)],
-            debugDescription: "\(field) must contain unique, nonempty values"
+            codingPath: decoder.codingPath,
+            debugDescription: "variant must be a stored variant of family \(family)"
           )
         )
       }
+      self.protocolID = protocolID
+      protocolVariant = variant
+      quirks = try container.decodeUniqueList(ControllerQuirk.self, for: "quirks") ?? []
+      initialization = try container.decodeUniqueList(GIPStartupPacket.self, for: "initialization")
+      keepAliveEnabled = try container.decodeOptional(Bool.self, for: "keepAlive")
+      if let name = try container.decodeOptional(String.self, for: "assembly") {
+        guard let policy = ControllerAssemblyPolicy(name: name) else {
+          throw DecodingError.dataCorrupted(
+            .init(codingPath: decoder.codingPath, debugDescription: "unknown assembly \(name)")
+          )
+        }
+        assembly = policy
+      } else {
+        assembly = nil
+      }
+      try validate(codingPath: decoder.codingPath)
     }
 
-    private static let contracts: [String: (variants: Set<String>, quirks: Set<String>)] = [
-      "GIP": (
-        ["xboxOne", "unknown"],
-        ["dpadToButtons", "triggersToButtons", "sticksToNull", "shareOffset", "inputOnly"]
-      ),
-      "XUSB": (
-        ["xbox360", "xbox360Wireless", "unknown"],
-        ["dpadToButtons", "triggersToButtons", "sticksToNull"]
-      ), "XID": (["xid", "unknown"], ["dpadToButtons", "triggersToButtons", "sticksToNull"]),
-      "DS3": (["dualShock3", "unknown"], ["gyro", "accelerometer", "battery"]),
-      "DS4": (
-        ["dualShock4", "unknown"], ["touchpad", "gyro", "accelerometer", "battery", "lightbar"]
-      ),
-      "DualSense": (
-        ["dualSense", "unknown"],
-        [
-          "touchpad", "gyro", "accelerometer", "battery", "lightbar", "microphoneMute",
-          "adaptiveTriggers", "edgeButtons",
-        ]
-      ),
-      "SteamController": (
-        ["steamController", "unknown"],
-        ["lizardMode", "trackpads", "gyro", "battery", "wirelessReceiver"]
-      ),
-      "SwitchPro": (
-        ["switchPro", "unknown"],
-        ["usbHandshake", "calibration", "imu", "rumble", "joyConLeft", "joyConRight"]
-      ),
-      "XboxAdaptiveJoystick": (
-        ["xboxAdaptiveJoystick", "unknown"], ["rawUSBPackets", "genericHIDPackets"]
-      ), "Flydigi": (["flydigi"], []), "GameSir": (["gameSirG7ProUSB", "gameSirEnhancedHID"], []),
-      "GenericHID": (["genericHID"], []),
-    ]
+    private func validate(codingPath: [any CodingKey]) throws {
+      let violation: String? =
+        if !quirks.allSatisfy({ $0.protocolID == protocolID }) {
+          "quirks must be declared by the selected driver"
+        } else if quirks.contains(.joyConLeft) && quirks.contains(.joyConRight) {
+          "Joy-Con layout must select one side"
+        } else if protocolID == .vendorGameSir && protocolVariant == .usb && !quirks.isEmpty {
+          "GameSir vendor USB declares no quirks"
+        } else if protocolVariant == .enhancedHID && quirks.count != 1 {
+          // An unknown model must not receive a guessed lighting-memory layout.
+          "GameSir enhanced HID must select exactly one model quirk"
+        } else if initialization != nil && protocolID != .xboxGIP {
+          "initialization actions must be declared by the selected driver"
+        } else if keepAliveEnabled != nil && protocolID != .xboxGIP {
+          "keep-alive policy requires the GIP driver"
+        } else { nil }
+      if let violation {
+        throw DecodingError.dataCorrupted(
+          .init(codingPath: codingPath, debugDescription: violation)
+        )
+      }
+    }
+  }
+
+  /// Capability corrections against the bound parser's declared defaults.
+  struct CapabilityDelta: Decodable {
+    let delta: ControllerCapabilityDelta
+
+    init(from decoder: any Decoder) throws {
+      let container = try decoder.container(keyedBy: DocumentKey.self)
+      try container.rejectUnknown(allowed: ["absent", "present", "rumble"])
+      let absent = Set(try container.decodeUniqueList(ControlID.self, for: "absent") ?? [])
+      let present = Set(try container.decodeUniqueList(ControlID.self, for: "present") ?? [])
+      let rumble = try container.decodeOptional(String.self, for: "rumble")
+      guard !container.allKeys.isEmpty, absent.isDisjoint(with: present),
+        rumble == nil || rumble == "absent"
+      else {
+        throw DecodingError.dataCorrupted(
+          .init(
+            codingPath: decoder.codingPath,
+            debugDescription:
+              "capabilities must be nonempty, disjoint, and declare rumble only as absent"
+          )
+        )
+      }
+      delta = ControllerCapabilityDelta(
+        absentControls: absent,
+        presentControls: present,
+        rumbleAbsent: rumble != nil
+      )
+    }
   }
 
   struct USBOverride: Decodable {
-    let interface: Int?
     let configuration: String?
     let postHandshakeSettleMilliseconds: Int?
     let endpoints: Endpoints?
 
     init(from decoder: any Decoder) throws {
       let container = try decoder.container(keyedBy: DocumentKey.self)
-      try container.rejectUnknown(allowed: [
-        "interface", "configuration", "postHandshakeSettleMs", "endpoints",
-      ])
+      try container.rejectUnknown(allowed: ["configuration", "postHandshakeSettleMs", "endpoints"])
       guard !container.allKeys.isEmpty else {
         throw DecodingError.dataCorrupted(
           .init(codingPath: decoder.codingPath, debugDescription: "usb must not be empty")
         )
       }
-      interface = try container.decodeOptional(Int.self, for: "interface")
       configuration = try container.decodeOptional(String.self, for: "configuration")
       postHandshakeSettleMilliseconds = try container.decodeOptional(
         Int.self,
         for: "postHandshakeSettleMs"
       )
       endpoints = try container.decodeOptional(Endpoints.self, for: "endpoints")
-      guard interface.map({ (1...255).contains($0) }) ?? true else {
-        throw DecodingError.dataCorrupted(
-          .init(
-            codingPath: decoder.codingPath + [DocumentKey("interface")],
-            debugDescription: "interface must be in 1...255"
-          )
-        )
-      }
       guard postHandshakeSettleMilliseconds.map({ (1...60_000).contains($0) }) ?? true else {
         throw DecodingError.dataCorrupted(
           .init(
@@ -204,7 +211,9 @@ struct ControllerRecordDocument: Decodable {
       try container.rejectUnknown(allowed: ["in", "out"])
       input = try container.decode(Int.self, for: "in")
       output = try container.decode(Int.self, for: "out")
-      guard (128...255).contains(input), (1...127).contains(output) else {
+      guard DeviceTransportProfile.inputEndpointRange.contains(input),
+        DeviceTransportProfile.outputEndpointRange.contains(output)
+      else {
         throw DecodingError.dataCorrupted(
           .init(
             codingPath: decoder.codingPath,
@@ -240,6 +249,24 @@ extension KeyedDecodingContainer where Key == DocumentKey {
       )
     }
     return try decode(type, forKey: codingKey)
+  }
+
+  /// Decodes a nonempty list of unique current identifiers; unknown values fail.
+  func decodeUniqueList<Value: RawRepresentable & Hashable>(
+    _ type: Value.Type,
+    for key: String
+  ) throws -> [Value]? where Value.RawValue == String {
+    guard let names = try decodeOptional([String].self, for: key) else { return nil }
+    let values = names.compactMap(Value.init(rawValue:))
+    guard !values.isEmpty, values.count == names.count, Set(values).count == values.count else {
+      throw DecodingError.dataCorrupted(
+        .init(
+          codingPath: codingPath + [DocumentKey(key)],
+          debugDescription: "\(key) must contain unique, current, nonempty values"
+        )
+      )
+    }
+    return values
   }
 
   func rejectUnknown(allowed: Set<String>) throws {

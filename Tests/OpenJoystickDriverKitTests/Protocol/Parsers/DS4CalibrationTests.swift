@@ -6,65 +6,81 @@ import Testing
 struct DS4CalibrationTests {
   @Test
   func onlyChangedAcceptedCoefficientsAdvanceRevision() throws {
-    let parser = DS4Parser()
-    let request = try #require(parser.hidStartupFeatureReadRequests().first)
-    #expect(try motion(parser).physicalReading?.calibrationRevision == 0)
+    let parser = DualShock4Driver()
+    let request = try #require(parser.startupFeatureReads().first)
+    #expect(try motion(parser).calibrationRevision == 0)
     var data = factory(bluetooth: false)
-    #expect(parser.consumeHIDFeatureReport(data, request: request, transport: "USB"))
-    #expect(try motion(parser).physicalReading?.calibrationRevision == 1)
-    #expect(parser.consumeHIDFeatureReport(data, request: request, transport: "USB"))
-    #expect(try motion(parser).physicalReading?.calibrationRevision == 1)
+    #expect(parser.consumeFeatureReply(data, request: request))
+    #expect(try motion(parser).calibrationRevision == 1)
+    #expect(parser.consumeFeatureReply(data, request: request))
+    #expect(try motion(parser).calibrationRevision == 1)
     write(21, into: &data, at: 1)
-    #expect(parser.consumeHIDFeatureReport(data, request: request, transport: "USB"))
-    #expect(try motion(parser).physicalReading?.calibrationRevision == 2)
+    #expect(parser.consumeFeatureReply(data, request: request))
+    #expect(try motion(parser).calibrationRevision == 2)
     data[0] = 0
-    #expect(!parser.consumeHIDFeatureReport(data, request: request, transport: "USB"))
-    #expect(try motion(parser).physicalReading?.calibrationRevision == 2)
+    #expect(!parser.consumeFeatureReply(data, request: request))
+    #expect(try motion(parser).calibrationRevision == 2)
   }
 
   @Test(arguments: [false, true])
   func factoryCalibrationUsesTransportLayout(bluetooth: Bool) throws {
-    let parser = DS4Parser(prefersBluetooth: bluetooth)
-    let requests = parser.hidStartupFeatureReadRequests()
+    let parser = DualShock4Driver(prefersBluetooth: bluetooth)
+    let requests = parser.startupFeatureReads()
     #expect(requests.map(\.reportID) == (bluetooth ? [5] : [2]))
     let request = try #require(requests.last)
     let data = factory(bluetooth: bluetooth)
-    #expect(parser.consumeHIDFeatureReport(data, request: request, transport: nil))
+    #expect(parser.consumeFeatureReply(data, request: request))
     let sample = try motion(parser)
-    #expect(sample.rawGyroscope == ControllerRawSensorVector(x: 36, y: -10, z: 64))
-    let reading = try #require(sample.physicalReading)
-    #expect(reading.calibrationSource == .deviceFactory)
-    #expect(reading.gyroscopeDegreesPerSecond == ControllerMotionVector(x: 1, y: 1, z: 1))
-    #expect(reading.accelerationG == ControllerMotionVector(x: 1, y: -1, z: 0))
+    // Calibrated sensor axes (1, 1, 1) °/s and (1, -1, 0) g land canonical as (x, -z, y).
+    #expect(sample.calibrationSource == .deviceFactory)
+    #expect(isClose(sample.angularVelocity, radiansPerSecond(1, -1, 1)))
+    #expect(isClose(sample.acceleration, metresPerSecondSquared(1, 0, -1)))
     var invalid = data
     invalid[24] = 0
-    #expect(!parser.consumeHIDFeatureReport(invalid, request: request, transport: nil))
-    #expect(try motion(parser).physicalReading == reading)
-    #expect(!parser.consumeHIDFeatureReport(data.dropLast(), request: request, transport: nil))
+    #expect(!parser.consumeFeatureReply(invalid, request: request))
+    let retained = try motion(parser)
+    #expect(retained.angularVelocity == sample.angularVelocity)
+    #expect(retained.acceleration == sample.acceleration)
+    #expect(retained.calibrationRevision == sample.calibrationRevision)
+    #expect(!parser.consumeFeatureReply(data.dropLast(), request: request))
   }
 
   @Test
   func bluetoothModeReplyCannotInstallUSBLayout() throws {
-    let parser = DS4Parser()
-    let requests = parser.hidStartupFeatureReadRequests(transport: "Bluetooth")
+    let parser = DualShock4Driver(prefersBluetooth: true)
+    let requests = parser.startupFeatureReads()
     #expect(requests.map(\.reportID) == [5])
-    #expect(
-      !parser.consumeHIDFeatureReport(
-        factory(bluetooth: false),
-        request: requests[0],
-        transport: "Bluetooth"
-      )
-    )
-    #expect(try motion(parser).physicalReading?.calibrationSource == .nominalDeviceScale)
+    #expect(!parser.consumeFeatureReply(factory(bluetooth: false), request: requests[0]))
+    #expect(try motion(parser).calibrationSource == .nominalDeviceScale)
     var corrupted = factory(bluetooth: true)
     corrupted[40] ^= 1
-    #expect(
-      !parser.consumeHIDFeatureReport(corrupted, request: requests[0], transport: "Bluetooth")
-    )
-    #expect(try motion(parser).physicalReading?.calibrationSource == .nominalDeviceScale)
+    #expect(!parser.consumeFeatureReply(corrupted, request: requests[0]))
+    #expect(try motion(parser).calibrationSource == .nominalDeviceScale)
   }
 
-  private func motion(_ parser: DS4Parser) throws -> ControllerMotionSample {
+  @Test
+  func thirdPartyControllerKeepsNominalScaleAfterAValidFactoryReport() throws {
+    let parser = DualShock4Driver(usesFactoryCalibration: false)
+    let request = try #require(parser.startupFeatureReads().first)
+    #expect(parser.consumeFeatureReply(factory(bluetooth: false), request: request))
+    let sample = try motion(parser)
+    #expect(sample.calibrationSource == .nominalDeviceScale)
+    #expect(sample.calibrationRevision == 0)
+  }
+
+  @Test
+  func registryInstallsFactoryCalibrationOnlyForSonyVendorID() throws {
+    let sony = try #require(
+      try catalogParser(DeviceIdentifier(vendorID: 0x054C, productID: 0x05C4)) as? DualShock4Driver
+    )
+    let hori = try #require(
+      try catalogParser(DeviceIdentifier(vendorID: 0x0F0D, productID: 0x0055)) as? DualShock4Driver
+    )
+    #expect(sony.usesFactoryCalibration)
+    #expect(!hori.usesFactoryCalibration)
+  }
+
+  private func motion(_ parser: DualShock4Driver) throws -> ControllerMotionSample {
     var data = Data(repeating: 0, count: 64)
     data[0] = 1
     for (index, value) in [Int16(36), -10, 64].enumerated() {
@@ -73,12 +89,7 @@ struct DS4CalibrationTests {
     for (index, value) in [Int16(8292), -8092, 100].enumerated() {
       write(value, into: &data, at: 19 + index * 2)
     }
-    return try #require(
-      parser.parse(data: data).compactMap { event -> ControllerMotionSample? in
-        if case .motionSample(let sample) = event { return sample }
-        return nil
-      }.first
-    )
+    return try #require(parser.parseReport(data)?.motion.first)
   }
 
   private func factory(bluetooth: Bool) -> Data {

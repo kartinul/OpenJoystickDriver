@@ -17,8 +17,9 @@ struct ProductCapabilityMatrixTests {
       .controllerState: [.inputTest], .controllerWatch: [.inputTest],
       .controllerOutput: [.inputTest], .controllerPackets: [.developerTools],
       .profileMapping: [.profiles], .permissions: [.overview],
-      .compatibilityIdentity: [.controllers], .logs: [.console], .supportReport: [.developerTools],
-      .extensionLifecycle: [.overview], .updateCheck: [.settings],
+      .virtualHIDProfileOverride: [.controllers], .logs: [.console],
+      .supportReport: [.developerTools], .extensionLifecycle: [.overview],
+      .updateCheck: [.settings],
     ]
 
     for (workflow, destinations) in expected {

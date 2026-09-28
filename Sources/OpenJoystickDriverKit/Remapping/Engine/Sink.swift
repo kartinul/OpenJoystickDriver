@@ -279,7 +279,6 @@ public enum RemappingEventEngineError: Error, Equatable, LocalizedError, Sendabl
 /// Completion must mean delivery has finished; enqueueing a detached send is insufficient.
 public protocol RemappingGamepadSink: AnyObject, Sendable {
   func send(_ state: RemappingGamepadState, for identifier: DeviceIdentifier) async throws
-  func send(_ motion: RemappingVirtualMotionState?, for identifier: DeviceIdentifier) async throws
 }
 
 /// Delivers mapping-owned physical-controller channel claims for one exact input device.
@@ -304,16 +303,10 @@ extension RemappingPhysicalOutputSink {
   ) async throws { await Task.yield() }
 }
 
-extension RemappingGamepadSink {
-  public func send(_ motion: RemappingVirtualMotionState?, for identifier: DeviceIdentifier) throws
-  { throw RemappingEventEngineError.sinkUnavailable }
-}
-
 /// Preserves the order of transient presses, releases, and mixed destination actions.
 enum RemappingEngineAction: Equatable, Sendable {
   case system(RemappingSystemInputAction)
   case gamepad(RemappingGamepadState, DeviceIdentifier)
-  case motion(RemappingVirtualMotionState?, DeviceIdentifier)
   case physical(RemappingPhysicalOutput, active: Bool, owner: UUID, DeviceIdentifier)
 }
 

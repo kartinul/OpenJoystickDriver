@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Ag seiceáil na rialtóirí ceangailte…";
 "status.refreshingProfile" = "Ag athnuachan stádais na próifíle…";
 "status.loadingProfiles" = "Ag lódáil próifílí…";
-"status.updatingIdentity" = "Ag nuashonrú aitheantais an rialtóra…";
 "status.listening" = "Ag éisteacht…";
 "status.readyToListen" = "Réidh le héisteacht";
 "status.checkingInput" = "Ag seiceáil";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Rialtóirí";
 "settings.controllerDisconnectedNotifications" = "Cluiche a chur ar fáil";
 "settings.controllerDisconnectedShort" = "Deasgháire";
-"settings.controllerIdentity" = "Aitheantas an rialtóra";
 "settings.controllerNotifications" = "Ceangal rialuithe";
 "settings.diagnostics" = "Diagnóisic";
 "settings.service" = "Seirbhís";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Ag díluchtú";
 "controllers.charging" = "Á luchtú";
 "controllers.batteryFull" = "Lán";
+"controllers.notChargeable" = "Ní féidir é a luchtú";
 "controllers.batteryAccessibilityDetails" = "Ceallraí: %@. Stádas luchtaithe: %@. Stádas an chábla: %@.";
 "controllers.activeProfile" = "Próifíl ghníomhach";
 "controllers.profileChecking" = "Ag seiceáil…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Níl an phróifíl ghníomhach ar fáil";
 "controllers.profileLoadError" = "Níorbh fhéidir an phróifíl ghníomhach a lódáil";
 "controllers.protocol" = "Prótacal";
-"controllers.parser" = "Parsálaí";
 "controllers.serialNumber" = "Sraithuimhir";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Críochphointe ionchuir";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Earráid na próifíle gníomhaí: %@";
 "controllers.accessibilityDetails" = "%@. %@. Prótacal: %@. Parser: %@. Sraithuimhir: %@. USB VID/PID: %@. Críochphointe ionchuir: %@. Críochphointe aschuir: %@.";
 "controllers.publishedAs" = "Foilsíodh mar";
-"identity.title" = "Aitheantas an rialtóra";
-"identity.needsAttention" = "Tá aird ag teastáil";
-"identity.error" = "Earráid aitheantais an rialtóra";
-"identity.updating" = "Ag nuashonrú aitheantais an rialtóra…";
-"identity.reset" = "Athshocraigh go dtí an moladh";
-"identity.checking" = "Ag seiceáil";
-"identity.globalScope" = "Tá feidhm ag an Rialachán seo maidir le gach rialaitheoir fíorúil a foilsítear ag OpenJoystickDriver.";
-"identity.unavailable" = "Níl ar fáil";
-"identity.notSelected" = "Gan roghnú";
+"controllers.nativeGamepadNotPublished" = "Cluicheadán dúchasach macOS, gan foilsiú";
+"virtualProfile.advanced" = "Ardleibhéal";
+"virtualProfile.title" = "Próifíl HID fhíorúil";
+"virtualProfile.modelScope" = "Baineann sé le gach rialaitheoir ceangailte den mhúnla seo.";
+"virtualProfile.sourceOverride" = "Sárú";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Uathoibríoch, diúltaíodh don sárú";
+"virtualProfile.none" = "Gan próifíl HID fhíorúil";
+"virtualProfile.unavailable" = "Ní féidir le haon phróifíl HID fhíorúil an rialaitheoir seo a léiriú.";
+"virtualProfile.updating" = "Próifíl HID fhíorúil á nuashonrú…";
+"virtualProfile.live" = "Próifíl bheo";
+"virtualProfile.failure.unknownProfile" = "Níl an phróifíl HID fhíorúil seo ar eolas. Níor stóráladh aon rud.";
+"virtualProfile.failure.controllerNotFound" = "Dícheanglaíodh an rialaitheoir nó ní féidir é a aimsiú. Níor athraíodh an sárú.";
+"virtualProfile.failure.overrideRejected" = "Tá an sárú stóráilte, ach ní féidir leis an rialaitheoir seo é a úsáid, mar sin roghnaíonn sé go huathoibríoch.";
+"virtualProfile.failure.activationFailed" = "Theip ar ghníomhachtú, mar sin athchóiríodh an phróifíl HID fhíorúil roimhe seo: %@";
+"virtualProfile.failure.outputDisabled" = "Tá an sárú stóráilte agus cuirfear i bhfeidhm é nuair a chumasófar aschur fíorúil.";
+"virtualProfile.failure.serverStopped" = "Stop an tseirbhís. Níor athraíodh an sárú.";
+"virtualProfile.failure.persistenceFailed" = "Níorbh fhéidir an sárú a shábháil. Níor stóráladh aon rud.";
+"virtualProfile.storeError" = "Ní féidir sáruithe na próifíle HID fíorúla a léamh (%@). Roghnaíonn rialaitheoirí go huathoibríoch.";
+"virtualProfile.legacyIdentityRejected" = "Ní chuirtear an socrú scortha aitheantais rialaitheora %@ i bhfeidhm a thuilleadh. Rith controller virtual reset --all chun é a ghlanadh.";
 "keyboard.noKey" = "Níl aon eochair roghnaithe";
 "keyboard.pressKey" = "Brúigh eochair…";
 "keyboard.captureKey" = "Gabh eochair";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Stádas reatha";
 "debug.runtime" = "Ritham";
 "debug.controllers" = "Rialtóirí";
-"debug.controllerIdentity" = "Aitheantas an rialtóra";
 "debug.unavailable" = "Ritham · Níl ar fáil";
 "debug.needsAttention" = "Ritham · Tá aird ag teastáil";
 "debug.diagnostics" = "Diagnóisic";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Tá aschur an rialtóra múchta.";
 "debug.outputNeedsAttention" = "Tá aird ag teastáil ó aschur an rialtóra.";
 "debug.serviceUnavailable" = "Níl diagnóisic na seirbhíse ar fáil faoi láthair.";
-"error.selectedOutputUnavailable" = "Níl aschur an rialtóra roghnaithe ar fáil.";
-"error.selectedOutputEnableFailed" = "Níorbh fhéidir aschur an rialtóra roghnaithe a chumasú.";
 "error.profileChanged" = "Athraíodh an phróifíl seo in áit eile. Athlódáil nó lean den eagarthóireacht.";
 "error.duplicateProfile" = "Tá próifíl leis an ainm sin ann cheana.";
 "error.profileMissing" = "Níl an phróifíl sin ar fáil a thuilleadh.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Ritham";
 "common.controllers" = "Rialtóirí";
 "common.profiles" = "Próifílí";
-"common.controllerIdentity" = "Aitheantas an rialtóra";
 "common.protocol" = "Prótacal";
-"common.parser" = "Parsálaí";
 "common.serialNumber" = "Sraithuimhir";
 "common.inputEndpoint" = "Críochphointe ionchuir";
 "common.outputEndpoint" = "Críochphointe aschuir";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Ní bheidh an t-alt próifíl roghnaithe ar fáil níos mó.";
 "cli.catalog.app_ready.summary" = "Seiceáil réidh na seirbhíse feidhmchláir fíordheimhnithe";
 "cli.catalog.app_status.summary" = "Taispeáin stádas na seirbhíse feidhmchláir";
-"cli.catalog.compat.summary" = "Bainistigh comhoiriúnacht rialtóirí fíorúla";
 "cli.catalog.controller_list.summary" = "Liostaigh na rialtóirí ceangailte";
 "cli.catalog.controller_output.summary" = "Tástáil aschur fisiciúil tacaíochta an rialtóra";
 "cli.catalog.controller_packets.summary" = "Taispeáin paicéid le déanaí an rialtóra";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Taispeáin stádas an tiománaí agus an rithaim";
 "cli.catalog.test.summary" = "Tástáil seachadadh ionchuir an rialtóra fhíorúil";
 "cli.catalog.update.summary" = "Seiceáil GitHub le haghaidh nuashonruithe atá ar fáil";
-"cli.compat.identity" = "aitheantas comhoiriúnachta: %@";
-"cli.compat.identity_unknown" = "aitheantas comhoiriúnachta: anaithnid";
-"cli.compat.set_failed" = "Theip ar shocrú an aitheantais comhoiriúnachta go %@. Seol an aip suiteáilte agus deimhnigh rochtain ar Mhonatóireacht ionchuir agus Inrochtaineacht.";
-"cli.compat.usage" = "Úsáid: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "stádas spáis úsáideora: %@";
 "cli.controller.allAppleEntries" = "Gach iontráil chruinn i gcatalóg Apple:";
 "cli.controller.appleIDs" = "    Aitheantais Apple: %@";
 "cli.controller.applePairs" = "  Péirí Apple  : %d iontráil chruinn VID/PID";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Ní thagann aon rialtóir ceangailte le --device %@.";
 "cli.controller.selection.multiple" = "Tagann iliomad rialtóirí leis. Roghnaigh ceann le --device:\n  %@";
 "cli.controller.selection.none" = "Níl aon rialtóir ceangailte.";
+"cli.controller.virtual.live" = "Próifíl HID fhíorúil: %@ (%@)";
+"cli.controller.virtual.none" = "Próifíl HID fhíorúil: dada (%@)";
+"cli.controller.virtual.failed" = "Theip ar an iarratas ar phróifíl HID fhíorúil: %@";
+"cli.controller.virtual.unknown_profile" = "Próifíl HID fhíorúil anaithnid «%@». Úsáid ceann de: %@.";
+"cli.controller.virtual.missing_profile" = "Teastaíonn próifíl HID fhíorúil ó «controller virtual set». Úsáid ceann de: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "Ní féidir «--all» a chomhcheangal le --vid, --pid ná --device.";
+"cli.controller.virtual.reset_all.success" = "OK: glanadh gach sárú próifíle HID fíorúla.";
+"cli.controller.virtual.reset_all.failed" = "Theip ar athshocrú na socruithe. Seol an aip suiteáilte agus deimhnigh a ceadanna.";
 "cli.controller.selection.vid_pid_missing" = "Ní thagann aon rialtóir ceangailte le %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Tabhair VID agus PID le chéile, nó fág an dá cheann ar lár.";
 "cli.controller.serviceControllers" = "Rialtóirí (ón tseirbhís feidhmchláir atá ag rith):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Leid: deonaigh an teidlíocht riachtanach agus rochtain ar Mhonatóireacht ionchuir.";
 "cli.controller.usbControllers" = "Rialtóirí USB (aicme 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Tabhair VID agus PID le chéile, nó fág an dá cheann ar lár nuair atá rialtóir amháin ceangailte.";
-"cli.diagnose.advisory_candidate" = "    Iarrthóir prótacail chomhairligh: %@";
 "cli.diagnose.app_missing" = "  Aip: in easnamh ag %@";
 "cli.diagnose.app_missing_fix" = "  Réiteach: tóg agus suiteáil an aip chuig /Applications";
 "cli.diagnose.app_present" = "  Aip: i láthair";
 "cli.diagnose.binary_path" = "Dénártha: %@";
-"cli.diagnose.catalog_conflict" = "      Tagann an bhreathnóireacht salach ar theaghlach na catalóige; parsálaí gan athrú";
-"cli.diagnose.catalog_parser" = "      Fanann parsálaí na catalóige %@ (%@)";
 "cli.diagnose.dext_found" = "  Beartáin .dext aimsithe:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      pointe deiridh 0x%02X %@ %@ maxPacket=%@ idirmheas =%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Cuar freagartha anaithnid «%@».";
 "cli.mapping.double_tap_format" = "Bíonn --double-tap ag súil le <ms>:<target>, m.sh. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Úsáid: OpenJoystickDriver --headless map <command>\n\nOrduithe:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nFoinse: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nSprioc: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nRoghanna aise:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nRoghanna turbo (cnaipí méarchláir agus luiche amháin):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nRoghanna gníomhachtaithe (cnaipí méarchláir agus luiche amháin, eisiach le turbo):\n  --long-hold <ms>:<target>     m.sh. --long-hold 500:key:b\n  --double-tap <ms>:<target>    m.sh. --double-tap 300:key:c\n\nGlacann <profile> le UUID nó ainm cruinn próifíle, gan aird ar chás.\nGlacann <id> le deachúlach nó heicsidheachúlach le réimír 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Úsáid: OpenJoystickDriver --headless map <command>\n\nOrduithe:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nFoinse: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nSprioc: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nRoghanna aise:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nRoghanna turbo (cnaipí méarchláir agus luiche amháin):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nRoghanna gníomhachtaithe (cnaipí méarchláir agus luiche amháin, eisiach le turbo):\n  --long-hold <ms>:<target>     m.sh. --long-hold 500:key:b\n  --double-tap <ms>:<target>    m.sh. --double-tap 300:key:c\n\nGlacann <profile> le UUID nó ainm cruinn próifíle, gan aird ar chás.\nGlacann <id> le deachúlach nó heicsidheachúlach le réimír 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "Caithfidh %@ a bheith ina aitheantóir 16-giotán deachúlach nó heicsidheachúlach le réimír 0x.";
 "cli.mapping.jsonEncodeFailed" = "Níorbh fhéidir JSON UTF-8 a ionchódú.";
 "cli.mapping.layer_action_unknown" = "Gníomh sraithe anaithnid «%@». Bhíothas ag súil le: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "Níl seirbhís feidhmchláir OpenJoystickDriver ag rith.";
 "cli.runtime.sample_limit" = "Bhaileodh an chumraíocht %d sampla; méadaigh --interval-ms.";
 "cli.runtime.stable_note" = "Is fianaise é súite cobhsaí teoranta don ualach seo, ní cruthúnas go bhfuil gach sceitheadh as láthair.";
-"cli.settings.reset.failed" = "Theip ar athshocrú na socruithe. Seol an aip suiteáilte agus deimhnigh a ceadanna.";
-"cli.settings.reset.next" = "Ar aghaidh: rith compat set <identity> chun an t-aitheantas comhoiriúnachta a roghnú.";
-"cli.settings.reset.success" = "OK: socruithe na seirbhíse feidhmchláir athshocraithe.";
 "cli.status.access_denied" = "Má dhiúltaítear an rochtain, rith --headless permissions request agus formheas Monatóireacht ionchuir agus Inrochtaineacht i Socruithe an Chórais.";
 "cli.status.heading" = "Stádas OpenJoystickDriver";
 "cli.status.json_error" = "Níorbh fhéidir JSON stádais a ionchódú: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Stádas      : %@";
 "cli.updates.unknown_option" = "Rogha updates anaithnid: %@";
 "common.unknown" = "Anaithnid";
-"compatibility.appleGameController" = "Úll GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (originál)";
 "developer.buttons" = "Cnaipí";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Cnaipe B";
 "inputTest.bCircle" = "B / Cearc";
 "inputTest.brightness" = "Bríth";
-"inputTest.circle" = "Ciorcal";
 "inputTest.color" = "Clúdach";
 "inputTest.controls" = "Ionchur beo";
-"inputTest.cross" = "Cros";
 "inputTest.disconnected" = "Cluiche a chur ar fáil";
 "inputTest.dpadDown" = "D-pad síos";
 "inputTest.dpadLeft" = "D-pad ar chlé";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Ní bhíonn rialaithe solais ar fáil don rialaitheoir seo.";
 "inputTest.live" = "Input Active";
 "inputTest.menu" = "Roghchlár";
-"inputTest.minus" = "Lúide";
 "inputTest.off" = "As";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Roghanna";
 "inputTest.outputError" = "Mearachta aschur fisiciúil";
 "inputTest.outputRejected" = "D'éirigh leis an rialaitheoir an tástáil aschur seo a dhiúltú.";
 "inputTest.permissionRequired" = "Tarraingthe ar an gcumas a riar";
 "inputTest.playerIndicator" = "Táscaire imreoir";
-"inputTest.plus" = "Móide";
 "inputTest.pressed" = "Brúite";
-"inputTest.psButton" = "Cnaipe PS";
 "inputTest.released" = "Scaoilte";
 "inputTest.rightBumper" = "Gualainn dheas";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Y deas";
 "inputTest.rumble" = "Romhchraing";
 "inputTest.rumbleUnavailable" = "Ní thacaíonn an rialtóir seo le Rumble.";
-"inputTest.share" = "Comhroinn";
-"inputTest.square" = "Cearnóg";
 "inputTest.stale" = "Innéacs ar an gcluiche";
 "inputTest.start" = "Tosaigh tástáil iontrála";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Ionchur beo";
 "inputTest.tabMotion" = "Tarraingthe";
 "inputTest.tabOutput" = "Úiscí";
-"inputTest.steamButton" = "Cnaipe Steam";
 "inputTest.summary" = "Ceapáin tástála, sticks, triggers, rumble, agus solais rialaitheoir.";
 "inputTest.testRumble" = "Téacs tástála";
 "inputTest.title" = "Teastáil iontrála";
-"inputTest.triangle" = "Triantán";
 "inputTest.unavailable" = "Níl an t-ionchur ar fáil";
 "inputTest.view" = "Amharc";
 "inputTest.windowTitle" = "Teastáil iontrála %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Ní raibh an Joy-Cons roghnaithe in ann a chur i dteagmháil.";
 "profiles.joyConExplicitSession" = "Thosaigh le seisiún páir explicit";
 "profiles.joyConSessionState" = "Cluiche Coinnithe";
-"profiles.gyro.virtualMotion" = "Gléas fíorúil réamh-chalibhraithe";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ tormáin (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Cluiche a chur ar fáil";
 "controllers.resume" = "Bain triail eile as";
 "controllers.disconnectFromOJD" = "Cluiche a chur ar fáil";
-"error.compatibilityTransitionDetailed" = "Níorbh fhéidir aschur an rialtóra roghnaithe a chumasú. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Níorbh fhéidir aschur an rialtóra roghnaithe a chumasú.";
 "cli.catalog.controller_disconnect.summary" = "Cluiche a chur ar fáil";
 "cli.catalog.controller_resume.summary" = "Bain triail eile as — Cluiche a chur ar fáil";
+"cli.catalog.controller_virtual_set.summary" = "Sáraigh próifíl HID fhíorúil rialaitheora";
+"cli.catalog.controller_virtual_reset.summary" = "Roghnaigh próifíl HID fhíorúil rialaitheora go huathoibríoch, nó glan gach sárú le --all";
 "cli.controller.disconnected" = "Cluiche a chur ar fáil";
 "cli.controller.resumed" = "Input Active";
 

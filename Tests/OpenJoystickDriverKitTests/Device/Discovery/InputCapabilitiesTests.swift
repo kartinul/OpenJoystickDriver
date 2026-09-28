@@ -9,136 +9,125 @@ struct InputCapabilitiesTests {
     let manager = DeviceManager(dispatcher: LoggingOutputDispatcher())
     await manager.handleHIDEvent(
       .connected(
-        vendorID: 0x054C,
-        productID: productID,
-        serialNumber: nil,
-        locationID: 77,
-        productName: "Test",
-        transport: "USB",
+        connection: HIDDeviceConnection(
+          physicalDevice: PhysicalDevice(
+            vendorID: 0x054C,
+            productID: productID,
+            productName: "Test",
+            transportProperty: "USB",
+            physicalLocationIdentifier: 77,
+            interfaces: [hostHIDInterface(.usb)]
+          ),
+          routingLocationID: 77,
+        ),
         ownership: .exclusive
       )
     )
     let descriptions = await manager.connectedDeviceDescriptions()
     let description = try #require(descriptions.first)
     #expect(description.vendorID == 0x054C && description.productID == productID)
-    #expect(description.physicalInputCapabilities.rawMotion)
-    #expect(description.physicalInputCapabilities.touchContactsPerFrame == 2)
-    #expect(description.physicalInputCapabilities.touchSurfaces == [.primary])
-    let expected: [Button]
+    #expect(description.capabilities.motion)
+    #expect(description.capabilities.touchContactCount == 2)
+    #expect(description.capabilities.touchSurfaces == [.primary])
+    let dualSense: Set<ControlID> = [
+      .guide, .leftTriggerButton, .rightTriggerButton, .touchpadClick, .microphone,
+    ]
+    let extra: Set<ControlID>
     switch productID {
-    case 0x0DF2:
-      expected = [.touchpad, .mute, .leftFunction, .rightFunction, .leftPaddle, .rightPaddle]
-    case 0x0CE6: expected = [.touchpad, .mute]
-    default: expected = [.touchpad]
+    case 0x0DF2: extra = dualSense.union([.paddleLeft1, .paddleRight1, .auxiliary1, .auxiliary2])
+    case 0x0CE6: extra = dualSense
+    default: extra = [.guide, .touchpadClick, .leftTriggerButton, .rightTriggerButton]
     }
-    #expect(description.physicalInputCapabilities.additionalButtons == expected)
+    #expect(description.capabilities.controls == ControlID.xboxLayout.union(extra))
     let encoded = try JSONEncoder().encode(description)
     let decoded = try JSONDecoder().decode(ApplicationServiceDeviceDescription.self, from: encoded)
-    #expect(decoded.physicalInputCapabilities == description.physicalInputCapabilities)
+    #expect(decoded.capabilities == description.capabilities)
     #expect(decoded.runtimeIdentifier == description.runtimeIdentifier)
     await manager.stop()
   }
 
   @Test
-  func olderDevicePayloadDefaultsToNoSensorCapability() throws {
+  func olderDevicePayloadDefaultsInputHealthButRequiresCapabilities() throws {
     let description = ApplicationServiceDeviceDescription(
       name: "Test",
       vendorID: 1,
       productID: 2,
-      parser: "Generic HID",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil
     )
     let data = try JSONEncoder().encode(description)
     var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
-    object.removeValue(forKey: "physicalInputCapabilities")
     object.removeValue(forKey: "inputHealth")
     let decoded = try JSONDecoder().decode(
       ApplicationServiceDeviceDescription.self,
       from: JSONSerialization.data(withJSONObject: object)
     )
-    #expect(decoded.physicalInputCapabilities == .none)
-    #expect(decoded.battery == nil)
+    #expect(decoded.connectionState == nil)
     #expect(decoded.inputHealth.state == .healthy)
+    object.removeValue(forKey: "capabilities")
+    #expect(throws: DecodingError.self) {
+      try JSONDecoder().decode(
+        ApplicationServiceDeviceDescription.self,
+        from: JSONSerialization.data(withJSONObject: object)
+      )
+    }
   }
 
   @Test
-  func devicePayloadRoundTripsBatteryTelemetry() throws {
-    let battery = ControllerBatteryTelemetry(
-      percentage: 95,
-      percentageRange: 90...99,
-      chargingState: .charging,
-      cableState: .connected
+  func devicePayloadRoundTripsConnectionState() throws {
+    let state = ControllerConnectionState(
+      transport: .bluetoothClassic,
+      backend: .ioHID,
+      isConnected: true,
+      power: ControllerConnectionState.Power(
+        charging: .charging,
+        battery: BatteryLevel(percentage: 90...99),
+        wiredPower: true
+      )
     )
     let description = ApplicationServiceDeviceDescription(
       name: "DualShock 4",
       vendorID: 0x054C,
       productID: 0x09CC,
-      parser: "DS4",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
-      battery: battery
+      connectionState: state
     )
 
     let encoded = try JSONEncoder().encode(description)
     let decoded = try JSONDecoder().decode(ApplicationServiceDeviceDescription.self, from: encoded)
 
-    #expect(decoded.battery == battery)
-    #expect(decoded.battery?.percentageDescription == "90–99%")
+    #expect(decoded.connectionState == state)
+    #expect(decoded.connectionState?.power.battery.percentageText == "90-99%")
     let object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
-    let encodedBattery = try #require(object["battery"] as? [String: Any])
-    let encodedRange = try #require(encodedBattery["percentageRange"] as? [Int])
-    #expect(encodedRange == [90, 99])
+    let encodedState = try #require(object["connectionState"] as? [String: Any])
+    #expect(encodedState["transport"] as? String == "bluetooth-classic")
+    #expect(encodedState["backend"] as? String == "iohid")
+    let encodedPower = try #require(encodedState["power"] as? [String: Any])
+    let encodedBattery = try #require(encodedPower["battery"] as? [String: Any])
+    #expect(encodedBattery["percentage"] as? [Int] == [90, 99])
   }
 
   @Test
-  func olderBatteryPayloadDecodesWithoutARange() throws {
-    let data = Data(#"{"percentage":100,"chargingState":"full","cableState":"connected"}"#.utf8)
-
-    let decoded = try JSONDecoder().decode(ControllerBatteryTelemetry.self, from: data)
-
-    #expect(decoded.percentage == 100)
-    #expect(decoded.percentageRange == nil)
-    #expect(decoded.percentageDescription == "100%")
+  func batteryLevelKeepsTheDevicePrecision() throws {
+    let exact = BatteryLevel(percentage: 73...73)
+    #expect(exact.percentageText == "73%")
+    #expect(try JSONEncoder().encode(exact) == Data(#"{"percentage":[73,73]}"#.utf8))
+    #expect(BatteryLevel.unknown.percentageText == nil)
+    #expect(try JSONEncoder().encode(BatteryLevel.unknown) == Data("{}".utf8))
+    for invalid in [#"{"percentage":[9,0]}"#, #"{"percentage":[95,101]}"#] {
+      #expect(throws: DecodingError.self) {
+        try JSONDecoder().decode(BatteryLevel.self, from: Data(invalid.utf8))
+      }
+    }
   }
 
   @Test
   func unsupportedParserDoesNotAdvertiseRawSamples() {
-    let parser = ParserRegistry().parser(for: DeviceIdentifier(vendorID: 1, productID: 2))
-    #expect(parser.physicalInputCapabilities == .none)
-  }
-}
-
-extension InputCapabilitiesTests {
-  @Test
-  func olderSensorCapabilityPayloadDefaultsToNoAdditionalButtons() throws {
-    let data = Data(#"{"rawMotion":true,"touchContactsPerFrame":2}"#.utf8)
-    let decoded = try JSONDecoder().decode(PhysicalControllerInputCapabilities.self, from: data)
-    #expect(decoded.rawMotion)
-    #expect(decoded.touchContactsPerFrame == 2)
-    #expect(decoded.additionalButtons.isEmpty)
-    #expect(decoded.touchSurfaces.isEmpty)
-  }
-
-  @Test(arguments: [
-    (UInt16(0x057E), UInt16(0x2006), [Button.leftSL, .leftSR]),
-    (UInt16(0x057E), UInt16(0x2007), [Button.rightSL, .rightSR]),
-    (UInt16(0x057E), UInt16(0x2009), [Button]()),
-    (UInt16(0x28DE), UInt16(0x1102), [Button.leftGrip, .rightGrip, .leftPadClick, .rightPadClick]),
-  ])
-  func additionalButtonCapabilitiesFollowTheSelectedParser(
-    vendorID: UInt16,
-    productID: UInt16,
-    expected: [Button]
-  ) throws {
-    let parser = ParserRegistry().parser(
-      for: DeviceIdentifier(vendorID: vendorID, productID: productID)
-    )
-    #expect(parser.physicalInputCapabilities.additionalButtons == expected)
-    let encoded = try JSONEncoder().encode(parser.physicalInputCapabilities)
-    #expect(
-      try JSONDecoder().decode(PhysicalControllerInputCapabilities.self, from: encoded)
-        == parser.physicalInputCapabilities
-    )
+    let parser = HIDDescriptorDriver(identifier: DeviceIdentifier(vendorID: 1, productID: 2))
+    #expect(!parser.capabilities.motion)
+    #expect(parser.capabilities.touchContactCount == 0)
   }
 }

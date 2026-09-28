@@ -1,3 +1,4 @@
+import OpenJoystickDriverKit
 import Testing
 
 @testable import OpenJoystickDriver
@@ -32,8 +33,6 @@ struct CLIGrammarTests {
     ("app login enable", CLIInvocation.appLogin(enable: true)),
     ("extension enable", CLIInvocation.extension(.enable)),
     ("permissions open input", CLIInvocation.permissions(["open", "input"])),
-    ("compat show", CLIInvocation.compatibility(.show)),
-    ("compat set sdl2-3", CLIInvocation.compatibility(.set("sdl2-3"))),
     ("test 10", CLIInvocation.selfTest(["10"])), ("diagnose", CLIInvocation.diagnose(.summary)),
     ("diagnose catalog --json", CLIInvocation.diagnose(.gameControllerCatalog(["--json"]))),
     (
@@ -44,6 +43,92 @@ struct CLIGrammarTests {
   func parsesApprovedGrammar(raw: String, expected: CLIInvocation) throws {
     let arguments = raw.split(separator: " ").map(String.init)
     #expect(try CLIGrammar(arguments: arguments).invocation == expected)
+  }
+
+  @Test(arguments: [
+    ("controller virtual set hid-generic", CLIVirtualProfileAction.change(.set(.generic), .init())),
+    (
+      "controller virtual set hid-xbox-one-s-bt --vid 0x045E --pid 736",
+      .change(.set(.xboxOneSBluetooth), .init(vendorID: 0x045E, productID: 736))
+    ),
+    (
+      "controller virtual set hid-generic --device device-1",
+      .change(.set(.generic), .init(runtimeIdentifier: "device-1"))
+    ),
+    (
+      "controller virtual set hid-generic --vid 1 --pid 2 --device device-1",
+      .change(.set(.generic), .init(vendorID: 1, productID: 2, runtimeIdentifier: "device-1"))
+    ), ("controller virtual reset", .change(.reset, .init())),
+    (
+      "controller virtual reset --vid 0x054C --pid 0x09CC",
+      .change(.reset, .init(vendorID: 1356, productID: 2508))
+    ),
+    (
+      "controller virtual reset --device device-1",
+      .change(.reset, .init(runtimeIdentifier: "device-1"))
+    ), ("controller virtual reset --all", .resetAll),
+  ])
+  func parsesVirtualProfileCommandsWithEachSelectorForm(
+    raw: String,
+    expected: CLIVirtualProfileAction
+  ) throws {
+    let arguments = raw.split(separator: " ").map(String.init)
+    #expect(try CLIGrammar(arguments: arguments).invocation == .controllerVirtual(expected))
+  }
+
+  @Test
+  func rejectsAnUnknownVirtualProfileAndListsBothProfiles() {
+    let error = #expect(throws: VirtualProfileCommand.UnknownProfile.self) {
+      try CLIGrammar(arguments: ["controller", "virtual", "set", "sdl2-3", "--device", "device-1"])
+    }
+    #expect(error == VirtualProfileCommand.UnknownProfile(value: "sdl2-3"))
+    let message = error?.errorDescription ?? ""
+    #expect(message.contains("sdl2-3"))
+    #expect(message.contains("hid-xbox-one-s-bt"))
+    #expect(message.contains("hid-generic"))
+  }
+
+  @Test
+  func rejectsAMissingVirtualProfileAndListsBothProfiles() {
+    let error = #expect(throws: VirtualProfileCommand.MissingProfile.self) {
+      try CLIGrammar(arguments: ["controller", "virtual", "set"])
+    }
+    let message = error?.errorDescription ?? ""
+    #expect(message.contains("controller virtual set"))
+    #expect(message.contains("hid-xbox-one-s-bt"))
+    #expect(message.contains("hid-generic"))
+  }
+
+  @Test
+  func rejectsMalformedVirtualProfileCommands() {
+    for arguments in [["controller", "virtual"], ["controller", "virtual", "show"]] {
+      #expect(throws: CLIParseError.self) { try CLIGrammar(arguments: arguments) }
+    }
+    for arguments in [
+      ["controller", "virtual", "reset", "--vid"],
+      ["controller", "virtual", "reset", "--vid", "zz", "--pid", "1"],
+      ["controller", "virtual", "set", "hid-generic", "--serial", "1"],
+    ] {
+      #expect(throws: ControllerSelector.InvalidArguments.self) {
+        try CLIGrammar(arguments: arguments)
+      }
+    }
+  }
+
+  @Test
+  func rejectsVirtualProfileResetAllCombinedWithASelector() {
+    for arguments in [
+      ["controller", "virtual", "reset", "--all", "--vid", "1", "--pid", "2"],
+      ["controller", "virtual", "reset", "--vid", "1", "--pid", "2", "--all"],
+      ["controller", "virtual", "reset", "--all", "--device", "device-1"],
+    ] {
+      let error = #expect(throws: VirtualProfileCommand.ResetAllWithSelector.self) {
+        try CLIGrammar(arguments: arguments)
+      }
+      #expect(
+        error?.errorDescription == "'--all' cannot be combined with --vid, --pid, or --device."
+      )
+    }
   }
 
   #if DEBUG
@@ -59,7 +144,8 @@ struct CLIGrammarTests {
   @Test(arguments: [
     [], ["run"], ["list"], ["input"], ["logs"], ["updates"], ["report"], ["physical-output"],
     ["compatibility"], ["selftest"], ["sysext"], ["install"], ["uninstall"], ["start"], ["restart"],
-    ["reset-settings"],
+    ["reset-settings"], ["compat"], ["compat", "show"], ["compat", "set", "hid-generic"],
+    ["compat", "reset"],
   ])
   func rejectsRemovedTopLevelSpellings(arguments: [String]) {
     #expect(throws: CLIParseError.self) { try CLIGrammar(arguments: arguments) }
@@ -72,7 +158,6 @@ struct CLIGrammarTests {
     #expect(throws: CLIParseError.self) {
       try CLIGrammar(arguments: ["extension", "status", "now"])
     }
-    #expect(throws: CLIParseError.self) { try CLIGrammar(arguments: ["compat", "set"]) }
   }
 
   @Test

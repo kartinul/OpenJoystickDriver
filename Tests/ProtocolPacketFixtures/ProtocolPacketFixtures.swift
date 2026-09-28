@@ -166,6 +166,22 @@ public enum ProtocolPacketFixtures {
     }
   }
 
+  /// Xbox 360 wireless receiver slot envelopes (Linux xpad `xpad360w_process_packet`).
+  public enum XUSBReceiver {
+    public static let presenceConnected = Data([0x08, 0x80])
+    public static let presenceDisconnected = Data([0x08, 0x00])
+
+    /// Pad data: the four-byte envelope with `data[1] == 0x01`, then one wired-format report.
+    public static func padData(buttons: UInt16 = 0) -> Data {
+      var report = [UInt8](repeating: 0, count: 24)
+      report[1] = 0x01
+      report[5] = 0x14
+      report[6] = UInt8(truncatingIfNeeded: buttons)
+      report[7] = UInt8(truncatingIfNeeded: buttons >> 8)
+      return Data(report)
+    }
+  }
+
   public enum XboxBluetooth {
     public static let neutralInputReport: [UInt8] = [
       1, 0, 128, 0, 128, 0, 128, 0, 128, 0, 0, 0, 0, 0, 0, 0, 0,

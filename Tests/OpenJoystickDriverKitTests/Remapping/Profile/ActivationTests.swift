@@ -18,7 +18,7 @@ struct RemappingActivationTests {
     let start: UInt64 = 1_000_000_000
 
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start
@@ -32,7 +32,7 @@ struct RemappingActivationTests {
     #expect(sink.actions() == [.keyDown(.b)])
 
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start + 800_000_000
@@ -54,7 +54,7 @@ struct RemappingActivationTests {
     let start: UInt64 = 1_000_000_000
 
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start
@@ -62,7 +62,7 @@ struct RemappingActivationTests {
     #expect(sink.actions().isEmpty)
 
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start + 200_000_000
@@ -84,7 +84,7 @@ struct RemappingActivationTests {
     let start: UInt64 = 1_000_000_000
 
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start
@@ -92,7 +92,7 @@ struct RemappingActivationTests {
     #expect(sink.actions().isEmpty)
 
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start + 100_000_000
@@ -100,7 +100,7 @@ struct RemappingActivationTests {
     #expect(sink.actions().isEmpty)
 
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start + 200_000_000
@@ -108,7 +108,7 @@ struct RemappingActivationTests {
     #expect(sink.actions() == [.keyDown(.c)])
 
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start + 300_000_000
@@ -130,13 +130,13 @@ struct RemappingActivationTests {
     let start: UInt64 = 1_000_000_000
 
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start
     )
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start + 100_000_000
@@ -154,7 +154,7 @@ struct RemappingActivationTests {
     let currentProfile = profile(bindings: [binding(source: .button(.south), key: .space)])
 
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 0
@@ -181,7 +181,7 @@ struct RemappingActivationTests {
     let start: UInt64 = 1_000_000_000
 
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start
@@ -189,7 +189,7 @@ struct RemappingActivationTests {
     #expect(sink.actions().isEmpty)
 
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: start + 200_000_000

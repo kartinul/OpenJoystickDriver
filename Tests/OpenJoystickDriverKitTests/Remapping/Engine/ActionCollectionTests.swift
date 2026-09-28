@@ -19,12 +19,12 @@ struct RemappingActionCollectionTests {
     #expect(profile.requiresSystemInputAccess)
     var state = RemappingEngineState()
     #expect(
-      state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0) == [
+      state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0) == [
         .gamepad(RemappingGamepadState(buttons: [.north]), identifier), .system(.keyDown(.a)),
       ]
     )
     #expect(
-      state.process(events: [.buttonReleased(.a)], from: identifier, profile: profile, at: 1) == [
+      state.process(inputs: [.release(.faceSouth)], from: identifier, profile: profile, at: 1) == [
         .gamepad(.neutral, identifier)
       ]
     )
@@ -54,13 +54,13 @@ struct RemappingActionCollectionTests {
     )
     var state = RemappingEngineState()
     #expect(
-      state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0).isEmpty
+      state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0).isEmpty
     )
     #expect(state.tick(at: 100_000_000) == [.system(.keyDown(.b))])
     #expect(state.tick(at: 200_000_000) == [.system(.keyDown(.d))])
     #expect(
       state.process(
-        events: [.buttonReleased(.a)],
+        inputs: [.release(.faceSouth)],
         from: identifier,
         profile: profile,
         at: 200_000_001
@@ -80,14 +80,10 @@ struct RemappingActionCollectionTests {
     )
     var state = RemappingEngineState()
     #expect(
-      state.process(
-        events: [.leftStickChanged(x: 0.5, y: 0)],
-        from: identifier,
-        profile: profile,
-        at: 0
-      ) == [.gamepad(RemappingGamepadState(axes: [.rightStickX: 0.5]), identifier)]
+      state.process(inputs: [.leftStick(x: 0.5, y: 0)], from: identifier, profile: profile, at: 0)
+        == [.gamepad(RemappingGamepadState(axes: [.rightStickX: quantizedStick(0.5)]), identifier)]
     )
-    #expect(state.tick(at: 1) == [.system(.mouseMoved(axis: .x, amount: 0.5))])
+    #expect(state.tick(at: 1) == [.system(.mouseMoved(axis: .x, amount: quantizedStick(0.5)))])
     _ = state.releaseController(identifier)
     #expect(!state.hasScheduledOutput)
   }

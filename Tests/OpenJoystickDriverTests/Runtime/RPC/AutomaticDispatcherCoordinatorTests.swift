@@ -89,7 +89,8 @@ final class InstallationBackend: CompatibilityUserSpaceOutputDispatching, @unche
     suppressOutput = value
   }
 
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {}
+  func dispatch(_: ControllerEvent, labels _: ControllerButtonLabels, from _: DeviceIdentifier) {}
+  func activateOutput(for _: DeviceIdentifier) {}
 
   func close() async {
     if stage == .retirement { await gate.suspend() }

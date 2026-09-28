@@ -44,9 +44,6 @@
 					"minProperties": 1,
 					"additionalProperties": false,
 					"properties": {
-						"transport": {
-							"enum": ["usb", "hid"]
-						},
 						"protocol": {
 							"$ref": "controller.schema.json#/$defs/protocol"
 						},

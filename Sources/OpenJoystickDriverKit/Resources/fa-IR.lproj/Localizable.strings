@@ -69,7 +69,6 @@
 "status.checkingControllers" = "در حال بررسی کنترلرهای وصل‌شده…";
 "status.refreshingProfile" = "در حال به‌روزرسانی وضعیت نمایه…";
 "status.loadingProfiles" = "در حال بارگذاری نمایه‌ها…";
-"status.updatingIdentity" = "در حال به‌روزرسانی هویت کنترلر…";
 "status.listening" = "در حال شنیدن…";
 "status.readyToListen" = "آماده شنیدن";
 "status.checkingInput" = "در حال بررسی";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "کنترلرها";
 "settings.controllerDisconnectedNotifications" = "کنترل کننده قطع شده";
 "settings.controllerDisconnectedShort" = "قطع شده";
-"settings.controllerIdentity" = "هویت کنترلر";
 "settings.controllerNotifications" = "کنترل کننده متصل شده";
 "settings.diagnostics" = "عیب‌یابی";
 "settings.service" = "سرویس";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "در حال تخلیه";
 "controllers.charging" = "در حال شارژ";
 "controllers.batteryFull" = "پر";
+"controllers.notChargeable" = "غیرقابل شارژ";
 "controllers.batteryAccessibilityDetails" = "باتری: %@. وضعیت شارژ: %@. وضعیت کابل: %@.";
 "controllers.activeProfile" = "نمایه فعال";
 "controllers.profileChecking" = "در حال بررسی…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "نمایه فعال در دسترس نیست";
 "controllers.profileLoadError" = "بارگذاری نمایه فعال ممکن نشد";
 "controllers.protocol" = "پروتکل";
-"controllers.parser" = "پارسر";
 "controllers.serialNumber" = "شماره سریال";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "نقطه پایانی ورودی";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "خطای نمایه فعال: %@";
 "controllers.accessibilityDetails" = "%@. %@. پروتکل: %@. Parser: %@. شماره سریال: %@. USB VID/PID: %@. نقطه پایانی ورودی: %@. نقطه پایانی خروجی: %@.";
 "controllers.publishedAs" = "به عنوان";
-"identity.title" = "هویت کنترلر";
-"identity.needsAttention" = "نیازمند توجه";
-"identity.error" = "خطای هویت کنترلر";
-"identity.updating" = "در حال به‌روزرسانی هویت کنترلر…";
-"identity.reset" = "بازنشانی به مقدار پیشنهادی";
-"identity.checking" = "در حال بررسی";
-"identity.globalScope" = "برای تمام کنترل کننده های مجازی که توسط OpenJoystickDriver.";
-"identity.unavailable" = "در دسترس نیست";
-"identity.notSelected" = "انتخاب نشده";
+"controllers.nativeGamepadNotPublished" = "دسته بازی بومی macOS، منتشر نشده";
+"virtualProfile.advanced" = "پیشرفته";
+"virtualProfile.title" = "نمایه HID مجازی";
+"virtualProfile.modelScope" = "برای همه کنترلرهای متصل از این مدل اعمال می‌شود.";
+"virtualProfile.sourceOverride" = "جایگزینی";
+"virtualProfile.sourceAutomaticAfterRejecting" = "خودکار، جایگزینی رد شد";
+"virtualProfile.none" = "بدون نمایه HID مجازی";
+"virtualProfile.unavailable" = "هیچ نمایه HID مجازی نمی‌تواند این کنترلر را نمایش دهد.";
+"virtualProfile.updating" = "در حال به‌روزرسانی نمایه HID مجازی…";
+"virtualProfile.live" = "نمایه فعال";
+"virtualProfile.failure.unknownProfile" = "این نمایه HID مجازی ناشناخته است. چیزی ذخیره نشد.";
+"virtualProfile.failure.controllerNotFound" = "اتصال کنترلر قطع شده یا پیدا نمی‌شود. جایگزینی تغییر نکرد.";
+"virtualProfile.failure.overrideRejected" = "جایگزینی ذخیره شد، اما این کنترلر نمی‌تواند از آن استفاده کند، پس به‌طور خودکار انتخاب می‌کند.";
+"virtualProfile.failure.activationFailed" = "فعال‌سازی ناموفق بود، پس نمایه HID مجازی قبلی بازیابی شد: %@";
+"virtualProfile.failure.outputDisabled" = "جایگزینی ذخیره شد و پس از فعال شدن خروجی مجازی اعمال می‌شود.";
+"virtualProfile.failure.serverStopped" = "سرویس متوقف شد. جایگزینی تغییر نکرد.";
+"virtualProfile.failure.persistenceFailed" = "جایگزینی ذخیره نشد. چیزی ذخیره نشد.";
+"virtualProfile.storeError" = "جایگزینی‌های نمایه HID مجازی قابل خواندن نیستند (%@). کنترلرها به‌طور خودکار انتخاب می‌کنند.";
+"virtualProfile.legacyIdentityRejected" = "تنظیم بازنشسته هویت کنترلر %@ دیگر اعمال نمی‌شود. برای پاک کردن آن controller virtual reset --all را اجرا کنید.";
 "keyboard.noKey" = "کلیدی انتخاب نشده";
 "keyboard.pressKey" = "یک کلید را فشار دهید…";
 "keyboard.captureKey" = "ثبت کلید";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "وضعیت فعلی";
 "debug.runtime" = "زمان اجرا";
 "debug.controllers" = "کنترلرها";
-"debug.controllerIdentity" = "هویت کنترلر";
 "debug.unavailable" = "زمان اجرا · در دسترس نیست";
 "debug.needsAttention" = "زمان اجرا · نیازمند توجه";
 "debug.diagnostics" = "عیب‌یابی";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "خروجی کنترلر خاموش است.";
 "debug.outputNeedsAttention" = "خروجی کنترلر نیازمند توجه است.";
 "debug.serviceUnavailable" = "عیب‌یابی سرویس فعلاً در دسترس نیست.";
-"error.selectedOutputUnavailable" = "خروجی کنترلر انتخاب‌شده در دسترس نیست.";
-"error.selectedOutputEnableFailed" = "فعال‌سازی خروجی کنترلر انتخاب‌شده ممکن نشد.";
 "error.profileChanged" = "این نمایه در جای دیگری تغییر کرد. دوباره بارگذاری کنید یا به ویرایش ادامه دهید.";
 "error.duplicateProfile" = "نمایه‌ای با این نام از قبل وجود دارد.";
 "error.profileMissing" = "آن نمایه دیگر در دسترس نیست.";
@@ -443,9 +448,7 @@
 "common.runtime" = "زمان اجرا";
 "common.controllers" = "کنترلرها";
 "common.profiles" = "نمایه‌ها";
-"common.controllerIdentity" = "هویت کنترلر";
 "common.protocol" = "پروتکل";
-"common.parser" = "پارسر";
 "common.serialNumber" = "شماره سریال";
 "common.inputEndpoint" = "نقطه پایانی ورودی";
 "common.outputEndpoint" = "نقطه پایانی خروجی";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "قطعه پروفایل انتخاب شده دیگر در دسترس نیست.";
 "cli.catalog.app_ready.summary" = "بررسی آمادگی سرویس برنامهٔ احرازشده";
 "cli.catalog.app_status.summary" = "نمایش وضعیت سرویس برنامه";
-"cli.catalog.compat.summary" = "مدیریت سازگاری کنترلر مجازی";
 "cli.catalog.controller_list.summary" = "فهرست کنترلرهای وصل‌شده";
 "cli.catalog.controller_output.summary" = "آزمایش خروجی پشتیبانی‌شدهٔ کنترلر فیزیکی";
 "cli.catalog.controller_packets.summary" = "نمایش بسته‌های اخیر کنترلر";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "نمایش وضعیت درایور و زمان اجرا";
 "cli.catalog.test.summary" = "آزمایش تحویل ورودی کنترلر مجازی";
 "cli.catalog.update.summary" = "بررسی GitHub برای به‌روزرسانی‌های موجود";
-"cli.compat.identity" = "هویت سازگاری: %@";
-"cli.compat.identity_unknown" = "هویت سازگاری: ناشناخته";
-"cli.compat.set_failed" = "تنظیم هویت سازگاری به %@ ناموفق بود. برنامهٔ نصب‌شده را اجرا کنید و دسترسی نظارت بر ورودی و دسترسی‌پذیری را بررسی کنید.";
-"cli.compat.usage" = "استفاده: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "وضعیت فضای کاربر: %@";
 "cli.controller.allAppleEntries" = "همهٔ ورودی‌های دقیق کاتالوگ Apple:";
 "cli.controller.appleIDs" = "    شناسه‌های Apple: %@";
 "cli.controller.applePairs" = "  جفت‌های Apple : %d ورودی دقیق VID/PID";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "هیچ کنترلر وصل‌شده‌ای با --device %@ مطابقت ندارد.";
 "cli.controller.selection.multiple" = "چند کنترلر مطابقت دارند. یکی را با --device انتخاب کنید:\n  %@";
 "cli.controller.selection.none" = "کنترلری وصل نیست.";
+"cli.controller.virtual.live" = "نمایهٔ HID مجازی: %@ (%@)";
+"cli.controller.virtual.none" = "نمایهٔ HID مجازی: هیچ (%@)";
+"cli.controller.virtual.failed" = "درخواست نمایهٔ HID مجازی ناموفق بود: %@";
+"cli.controller.virtual.unknown_profile" = "نمایهٔ HID مجازی ناشناخته «%@». یکی از این‌ها را به کار ببرید: %@.";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» به یک نمایهٔ HID مجازی نیاز دارد. یکی از این‌ها را به کار ببرید: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "«--all» را نمی‌توان با --vid، --pid یا --device ترکیب کرد.";
+"cli.controller.virtual.reset_all.success" = "OK: همهٔ جایگزینی‌های نمایهٔ HID مجازی پاک شد.";
+"cli.controller.virtual.reset_all.failed" = "بازنشانی تنظیمات ناموفق بود. برنامهٔ نصب‌شده را اجرا کنید و مجوزهایش را بررسی کنید.";
 "cli.controller.selection.vid_pid_missing" = "هیچ کنترلر وصل‌شده‌ای با %@:%@ مطابقت ندارد.";
 "cli.controller.selection.vid_pid_pair" = "هر دو VID و PID را بدهید، یا هر دو را حذف کنید.";
 "cli.controller.serviceControllers" = "کنترلرها (از سرویس برنامهٔ در حال اجرا):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "نکته: استحقاق لازم و دسترسی نظارت بر ورودی را اعطا کنید.";
 "cli.controller.usbControllers" = "کنترلرهای USB (رده 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "هر دو VID و PID را بدهید، یا وقتی یک کنترلر وصل است هر دو را حذف کنید.";
-"cli.diagnose.advisory_candidate" = "    نامزد پروتکل مشورتی: %@";
 "cli.diagnose.app_missing" = "  برنامه: در %@ موجود نیست";
 "cli.diagnose.app_missing_fix" = "  اصلاح: برنامه را بسازید و در /Applications نصب کنید";
 "cli.diagnose.app_present" = "  برنامه: موجود است";
 "cli.diagnose.binary_path" = "باینری: %@";
-"cli.diagnose.catalog_conflict" = "      مشاهده با خانوادهٔ کاتالوگ در تعارض است؛ تجزیه‌گر بدون تغییر";
-"cli.diagnose.catalog_parser" = "      تجزیه‌گر کاتالوگ %@ می‌ماند (%@)";
 "cli.diagnose.dext_found" = "  بسته‌های .dext یافت‌شده:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      نقطه پایان 0x%02X %@ %@ maxPacket=%@ فاصله=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "منحنی پاسخ ناشناخته «%@».";
 "cli.mapping.double_tap_format" = "--double-tap انتظار <ms>:<target> دارد، مثلاً --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "استفاده: OpenJoystickDriver --headless map <command>\n\nفرمان‌ها:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nمنبع: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nهدف: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nگزینه‌های محور:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nگزینه‌های توربو (فقط دکمه‌های صفحه‌کلید و ماوس):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nگزینه‌های فعال‌سازی (فقط دکمه‌های صفحه‌کلید و ماوس، ناسازگار با توربو):\n  --long-hold <ms>:<target>     مثلاً --long-hold 500:key:b\n  --double-tap <ms>:<target>    مثلاً --double-tap 300:key:c\n\n<profile> یک UUID یا نام نمایهٔ دقیق و بدون حساسیت به بزرگی حروف می‌پذیرد.\n<id> اعشاری یا هگزادسیمال با پیشوند 0x می‌پذیرد.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "استفاده: OpenJoystickDriver --headless map <command>\n\nفرمان‌ها:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nمنبع: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nهدف: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nگزینه‌های محور:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nگزینه‌های توربو (فقط دکمه‌های صفحه‌کلید و ماوس):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nگزینه‌های فعال‌سازی (فقط دکمه‌های صفحه‌کلید و ماوس، ناسازگار با توربو):\n  --long-hold <ms>:<target>     مثلاً --long-hold 500:key:b\n  --double-tap <ms>:<target>    مثلاً --double-tap 300:key:c\n\n<profile> یک UUID یا نام نمایهٔ دقیق و بدون حساسیت به بزرگی حروف می‌پذیرد.\n<id> اعشاری یا هگزادسیمال با پیشوند 0x می‌پذیرد.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ باید شناسهٔ ۱۶ بیتی اعشاری یا هگزادسیمال با پیشوند 0x باشد.";
 "cli.mapping.jsonEncodeFailed" = "نتوانست UTF-8 JSON را رمزگذاری کند.";
 "cli.mapping.layer_action_unknown" = "عمل لایه ناشناخته «%@». مورد انتظار: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "سرویس برنامهٔ OpenJoystickDriver در حال اجرا نیست.";
 "cli.runtime.sample_limit" = "پیکربندی %d نمونه جمع می‌کند؛ --interval-ms را افزایش دهید.";
 "cli.runtime.stable_note" = "غوطهٔ پایدار و محدود مدرکی برای این بار کاری است، نه اثبات غیاب همهٔ نشتی‌ها.";
-"cli.settings.reset.failed" = "بازنشانی تنظیمات ناموفق بود. برنامهٔ نصب‌شده را اجرا کنید و مجوزهایش را بررسی کنید.";
-"cli.settings.reset.next" = "بعدی: برای انتخاب هویت سازگاری compat set <identity> را اجرا کنید.";
-"cli.settings.reset.success" = "OK: تنظیمات سرویس برنامه بازنشانی شد.";
 "cli.status.access_denied" = "اگر دسترسی رد شد، --headless permissions request را اجرا کنید و نظارت بر ورودی و دسترسی‌پذیری را در تنظیمات سیستم تأیید کنید.";
 "cli.status.heading" = "وضعیت OpenJoystickDriver";
 "cli.status.json_error" = "نتوانست JSON وضعیت را رمزگذاری کند: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  وضعیت       : %@";
 "cli.updates.unknown_option" = "گزینهٔ به‌روزرسانی ناشناخته: %@";
 "common.unknown" = "نامشخص";
-"compatibility.appleGameController" = "سیب GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (اصلي)";
 "developer.buttons" = "دکمه‌ها";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "دکمه B";
 "inputTest.bCircle" = "B / دایره";
 "inputTest.brightness" = "روشنایی";
-"inputTest.circle" = "دایره";
 "inputTest.color" = "رنگ";
 "inputTest.controls" = "ورودی زنده";
-"inputTest.cross" = "ضربدر";
 "inputTest.disconnected" = "کنترل کننده قطع شده";
 "inputTest.dpadDown" = "جهت پایین";
 "inputTest.dpadLeft" = "جهت چپ";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "کنترل نور برای این کنترل کننده در دسترس نیست.";
 "inputTest.live" = "فعال ورودی";
 "inputTest.menu" = "منو";
-"inputTest.minus" = "منفی";
 "inputTest.off" = "خاموش";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "گزینه‌ها";
 "inputTest.outputError" = "خطای خارج کردن فیزیکی";
 "inputTest.outputRejected" = "کنترل کننده این آزمایش خروجی را رد کرد.";
 "inputTest.permissionRequired" = "ورودی مجوز نظارت مورد نیاز";
 "inputTest.playerIndicator" = "شاخص بازیگر";
-"inputTest.plus" = "مثبت";
 "inputTest.pressed" = "فشرده";
-"inputTest.psButton" = "دکمه PS";
 "inputTest.released" = "رهاشده";
 "inputTest.rightBumper" = "بامپر راست";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Y راست";
 "inputTest.rumble" = "رابل";
 "inputTest.rumbleUnavailable" = "Rumble توسط این کنترل کننده پشتیبانی نمی شود.";
-"inputTest.share" = "اشتراک";
-"inputTest.square" = "مربع";
 "inputTest.stale" = "ورودی قطع شده";
 "inputTest.start" = "شروع آزمون ورودی";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "ورودی زنده";
 "inputTest.tabMotion" = "پیشنهاد";
 "inputTest.tabOutput" = "تولید";
-"inputTest.steamButton" = "دکمه Steam";
 "inputTest.summary" = "دکمه هاي آزمون، چوب ها، تگرها، گنگ و نور کنترل کننده";
 "inputTest.testRumble" = "رابل آزمون";
 "inputTest.title" = "آزمون ورودی";
-"inputTest.triangle" = "مثلث";
 "inputTest.unavailable" = "ورودی در دسترس نیست";
 "inputTest.view" = "نمایش";
 "inputTest.windowTitle" = "آزمون ورودی %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = ".ملاحظه هاي خوشبختی که انتخاب شده اند نتونستن جفت شوند . کنترل کننده هاي متصل شده رو تازه کنيد و دوباره امتحان کنيد";
 "profiles.joyConExplicitSession" = "با جلسه دوگانه ای صریح شروع شد";
 "profiles.joyConSessionState" = "جفت بندی صریح";
-"profiles.gyro.virtualMotion" = "حرکت مجازی کالیبر شده به جلو";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (مرد)%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "کنترل کننده قطع شده";
 "controllers.resume" = "دوباره تلاش کنید";
 "controllers.disconnectFromOJD" = "کنترل کننده قطع شده";
-"error.compatibilityTransitionDetailed" = "فعال‌سازی خروجی کنترلر انتخاب‌شده ممکن نشد. (%@, %@)";
 "error.controllerSessionChangeRejected" = "فعال‌سازی خروجی کنترلر انتخاب‌شده ممکن نشد.";
 "cli.catalog.controller_disconnect.summary" = "کنترل کننده قطع شده";
 "cli.catalog.controller_resume.summary" = "دوباره تلاش کنید — کنترل کننده قطع شده";
+"cli.catalog.controller_virtual_set.summary" = "جایگزین کردن نمایهٔ HID مجازی یک دسته";
+"cli.catalog.controller_virtual_reset.summary" = "انتخاب خودکار نمایهٔ HID مجازی یک دسته، یا پاک‌کردن همهٔ نادیده‌گیری‌ها با --all";
 "cli.controller.disconnected" = "کنترل کننده قطع شده";
 "cli.controller.resumed" = "فعال ورودی";
 

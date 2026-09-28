@@ -6,14 +6,14 @@ import Testing
 struct JoyConParserTests {
   @Test(arguments: [UInt16(0x2006), UInt16(0x2007)])
   func catalogSelectsSideAndIgnoresTheAbsentStick(_ productID: UInt16) throws {
-    let registry = ParserRegistry()
+    let registry = ProtocolDriverRegistry()
     let identifier = DeviceIdentifier(vendorID: 0x057E, productID: productID)
-    let parser = try #require(registry.parser(for: identifier) as? SwitchProParser)
+    let parser = try #require(try catalogParser(identifier, registry: registry) as? Switch1Driver)
     let isLeft = productID == 0x2006
     #expect(parser.layout == (isLeft ? .leftJoyCon : .rightJoyCon))
-    #expect(registry.hidProfileIdentifiers().contains(identifier))
-    #expect(parser.physicalInputCapabilities.rawMotion)
-    #expect(parser.physicalRumbleMotors == (isLeft ? [.leftMain] : [.rightMain]))
+    #expect(registry.hidIdentifiers.contains(identifier))
+    #expect(parser.capabilities.motion)
+    #expect(parser.outputCapabilities.rumbleMotors == (isLeft ? [.leftMain] : [.rightMain]))
     var report = [UInt8](repeating: 0, count: 49)
     report[0] = 0x30
     // The unused stick field remains zero; only the present stick moves right.
@@ -21,20 +21,11 @@ struct JoyConParserTests {
     report[offset] = 255
     report[offset + 1] = 15
     report[offset + 2] = 128
-    let events = try parser.parse(data: Data(report), receivedAtNanoseconds: 100)
-    let axes = events.filter {
-      switch $0 {
-      case .leftStickChanged, .rightStickChanged: true
-      default: false
-      }
-    }
-    #expect(axes == [isLeft ? .leftStickChanged(x: 1, y: 0) : .rightStickChanged(x: 1, y: 0)])
-    #expect(
-      events.filter {
-        if case .motionSample = $0 { return true }
-        return false
-      }.count == 3
-    )
+    let events = try parser.parseReport(Data(report), at: 100)
+    #expect(events.contains(isLeft ? .leftStick(x: 1, y: 0) : .rightStick(x: 1, y: 0)))
+    #expect(events?.state.leftStick == (isLeft ? events?.state.leftStick : .center))
+    #expect(events?.state.rightStick == (isLeft ? .center : events?.state.rightStick))
+    #expect(events?.motion.count == 3)
   }
 
   @Test
@@ -44,25 +35,25 @@ struct JoyConParserTests {
     bytes[3] = 0xFF
     bytes[4] = 0xFF
     bytes[5] = 0xFF
-    let left = try SwitchProParser(layout: .leftJoyCon).parse(data: Data(bytes))
-    #expect(left.contains(.buttonPressed(.leftBumper)))
-    #expect(left.contains(.buttonPressed(.back)))
-    #expect(!left.contains(.buttonPressed(.rightBumper)))
-    #expect(!left.contains(.buttonPressed(.start)))
-    let right = try SwitchProParser(layout: .rightJoyCon).parse(data: Data(bytes))
-    #expect(right.contains(.buttonPressed(.rightBumper)))
-    #expect(right.contains(.buttonPressed(.start)))
-    #expect(!right.contains(.buttonPressed(.leftBumper)))
-    #expect(!right.contains(.buttonPressed(.back)))
+    let left = try Switch1Driver(layout: .leftJoyCon).parseReport(Data(bytes))
+    #expect(left.contains(.press(.leftShoulder)))
+    #expect(left.contains(.press(.view)))
+    #expect(!left.contains(.press(.rightShoulder)))
+    #expect(!left.contains(.press(.menu)))
+    let right = try Switch1Driver(layout: .rightJoyCon).parseReport(Data(bytes))
+    #expect(right.contains(.press(.rightShoulder)))
+    #expect(right.contains(.press(.menu)))
+    #expect(!right.contains(.press(.leftShoulder)))
+    #expect(!right.contains(.press(.view)))
   }
 
   @Test(arguments: [NintendoControllerLayout.leftJoyCon, .rightJoyCon])
   func joyConStartupAndRumbleOnlyAddressItsAvailableControls(_ layout: NintendoControllerLayout) {
-    let parser = SwitchProParser(layout: layout)
-    let startup = parser.hidStartupReports(transport: "Bluetooth")
+    let parser = Switch1Driver(layout: layout, isBluetooth: true)
+    let startup = parser.startupWrites().hidOutputs
     #expect(startup.map(\.reportID) == [1, 1, 1, 1, 1])
     #expect(startup.map { $0.bytes[10] } == [3, 0x40, 0x48, 0x10, 0x10])
-    let report = parser.physicalRumbleReport(left: 255, right: 255, lt: 0, rt: 0)
+    let report = parser.rumblePlan(left: 255, right: 255, lt: 0, rt: 0).onlyReport
     let absent = layout == .leftJoyCon ? Array(report.bytes[6..<10]) : Array(report.bytes[2..<6])
     #expect(absent == SwitchProRumbleCodec.encode(intensity: 0))
     let present = layout == .leftJoyCon ? Array(report.bytes[2..<6]) : Array(report.bytes[6..<10])
@@ -71,26 +62,22 @@ struct JoyConParserTests {
 
   @Test(arguments: [NintendoControllerLayout.pro, .leftJoyCon, .rightJoyCon])
   func railButtonsPreserveTheirSideAndRelease(_ layout: NintendoControllerLayout) throws {
-    let parser = SwitchProParser(layout: layout)
+    let parser = Switch1Driver(layout: layout)
     var bytes = [UInt8](repeating: 0, count: 12)
     bytes[0] = 0x30
     bytes[3] = 0x30
     bytes[5] = 0x30
-    let expected: [Button]
+    let expected: Set<ControlID>
     switch layout {
     case .pro: expected = []
-    case .leftJoyCon: expected = [.leftSL, .leftSR]
-    case .rightJoyCon: expected = [.rightSL, .rightSR]
+    case .leftJoyCon: expected = [.auxiliary3, .auxiliary4]
+    case .rightJoyCon: expected = [.auxiliary5, .auxiliary6]
     }
-    let pressed = try parser.parse(data: Data(bytes)).compactMap { event -> Button? in
-      if case .buttonPressed(let button) = event { return button }
-      return nil
-    }
-    #expect(pressed == expected)
-    #expect(try parser.parse(data: Data(bytes)).isEmpty)
+    let pressed = try parser.parseReport(Data(bytes))?.state.pressed ?? []
+    #expect(pressed.intersection([.auxiliary3, .auxiliary4, .auxiliary5, .auxiliary6]) == expected)
     bytes[3] = 0
     bytes[5] = 0
-    #expect(try parser.parse(data: Data(bytes)) == expected.map(ControllerEvent.buttonReleased))
+    #expect(try parser.parseReport(Data(bytes))?.state.pressed.isDisjoint(with: expected) == true)
   }
 
   @Test(arguments: [
@@ -105,14 +92,17 @@ struct JoyConParserTests {
     mask: UInt8,
     source: RemappingButton
   ) throws {
-    let parser = SwitchProParser(layout: layout)
+    let parser = Switch1Driver(layout: layout)
     let identifier = DeviceIdentifier(
       vendorID: 0x057E,
       productID: layout == .leftJoyCon ? 0x2006 : 0x2007
     )
     let profile = RemappingProfile(
       name: "Rail mapping",
-      device: RemappingDeviceScope(vendorID: identifier.vendorID, productID: identifier.productID),
+      device: RemappingDeviceScope(
+        vendorID: identifier.controllerIdentity.vendorID,
+        productID: identifier.controllerIdentity.productID
+      ),
       applicationScope: .global,
       outputPolicy: RemappingOutputPolicy(virtualGamepad: .passthrough),
       bindings: [RemappingBinding(source: .button(source), destination: .gamepadButton(.south))]
@@ -128,7 +118,8 @@ struct JoyConParserTests {
     var engine = RemappingEngineState()
     #expect(
       engine.process(
-        events: try parser.parse(data: Data(bytes)),
+        parsed: try parser.parseReport(Data(bytes)),
+        labels: .nintendo,
         from: identifier,
         profile: profile,
         at: 0
@@ -137,7 +128,8 @@ struct JoyConParserTests {
     bytes[offset] = 0
     #expect(
       engine.process(
-        events: try parser.parse(data: Data(bytes)),
+        parsed: try parser.parseReport(Data(bytes)),
+        labels: .nintendo,
         from: identifier,
         profile: profile,
         at: 1
@@ -149,10 +141,7 @@ struct JoyConParserTests {
   func conflictingSideSelectionIsRejected() throws {
     let record: [String: Any] = [
       "$schema": ControllerRecordDocument.schemaID, "vendorID": 1406, "productID": 8198,
-      "transport": "hid",
-      "protocol": [
-        "driver": "SwitchPro", "variant": "switchPro", "quirks": ["joyConLeft", "joyConRight"],
-      ],
+      "protocol": ["family": "nintendo.switch1", "quirks": ["joy-con-left", "joy-con-right"]],
     ]
     let encoded = try JSONSerialization.data(withJSONObject: record)
     #expect(throws: DecodingError.self) {

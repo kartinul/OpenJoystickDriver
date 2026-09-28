@@ -2,9 +2,9 @@ import Dispatch
 import Foundation
 import OpenJoystickDriverKit
 
-/// Exclusively selects compatibility output or system-input remapping per exact controller.
+/// Exclusively selects virtual gamepad output or system-input remapping per exact controller.
 final class RemappingOutputRouter: OutputDispatcher, ControllerLifecycleListener,
-  ControllerInputOwnershipListener, @unchecked Sendable
+  ControllerInputOwnershipListener, ObservedInputDemand, @unchecked Sendable
 {
   typealias UptimeReader = @Sendable () -> UInt64
   typealias TickerSleeper = @Sendable (UInt64) async throws -> Void
@@ -16,11 +16,7 @@ final class RemappingOutputRouter: OutputDispatcher, ControllerLifecycleListener
   let tickerIntervalNanoseconds: UInt64?
   let tickerSleeper: TickerSleeper
   let lock = NSLock()
-  var controls = RemappingRoutingControls(
-    outputSuppressed: false,
-    compatibilityOutputAllowed: true,
-    revision: 0
-  )
+  var controls = RemappingRoutingControls(outputSuppressed: false, revision: 0)
   var tickerTask: Task<Void, Never>?
   var tickerEnabled = false
   var tickerGeneration: UInt64 = 0
@@ -63,6 +59,12 @@ final class RemappingOutputRouter: OutputDispatcher, ControllerLifecycleListener
 
   deinit { tickerTask?.cancel() }
 
+  /// Only a remapping route consumes a native controller's input; virtual gamepad output never
+  /// publishes for it.
+  func wantsObservedInput(from identifier: DeviceIdentifier) -> Bool {
+    core.observedInputDemand.contains(identifier)
+  }
+
   func controllerInputOwnershipChanged(
     _ ownership: HIDInputOwnership,
     for identifier: DeviceIdentifier
@@ -73,14 +75,27 @@ final class RemappingOutputRouter: OutputDispatcher, ControllerLifecycleListener
     await reconcileTickerWithEngine()
   }
 
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) async {
-    do { try await dispatchCausally(events: events, from: identifier) } catch {
+  func dispatch(
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
+    from identifier: DeviceIdentifier
+  ) async {
+    do { try await dispatchCausally(.input(event, labels), from: identifier) } catch {
       // OutputDispatcher cannot surface errors. Callers that need causal failure
       // reporting use dispatchCausally or inspect the typed route status.
     }
   }
 
-  func dispatchCausally(events: [ControllerEvent], from identifier: DeviceIdentifier) async throws {
+  func activateOutput(for identifier: DeviceIdentifier) async {
+    do { try await dispatchCausally(.activation, from: identifier) } catch {
+      // As for dispatch: the typed route status retains the failure.
+    }
+  }
+
+  func dispatchCausally(
+    _ input: RemappingRoutedInput,
+    from identifier: DeviceIdentifier
+  ) async throws {
     guard let lease = try outputLeaseIfOpen() else {
       try await core.recordConnectedIdentifierWhileOutputClosed(identifier)
       return
@@ -94,7 +109,7 @@ final class RemappingOutputRouter: OutputDispatcher, ControllerLifecycleListener
       {
         // A transaction still admits exact controller identity while blocking output.
       }
-      try await core.dispatch(events: events, from: identifier, at: uptime(), requiring: permit)
+      try await core.dispatch(input, from: identifier, at: uptime(), requiring: permit)
     } catch {
       await reconcileTickerWithEngine()
       if error as? RemappingEventEngineError == .outputSuspended { return }
@@ -280,33 +295,12 @@ final class RemappingOutputRouter: OutputDispatcher, ControllerLifecycleListener
     try await applyControlsSnapshot(snapshot)
   }
 
-  func setCompatibilityOutputAllowed(_ allowed: Bool) async throws {
-    let snapshot = updateControls(compatibilityOutputAllowed: allowed)
-    try await applyControlsSnapshot(snapshot)
-  }
-
-  /// Applies the compatibility gate and causally re-evaluates application-scoped
-  /// remapping after a foreground-consumer lifecycle notification.
-  func foregroundStateDidChange(compatibilityOutputAllowed allowed: Bool) async throws {
-    let snapshot = updateControls(compatibilityOutputAllowed: allowed)
-    try await applyControlsSnapshot(snapshot, refreshEligibilityWhenUnchanged: true)
-  }
-
-  private func applyControlsSnapshot(
-    _ snapshot: RemappingRoutingControls,
-    refreshEligibilityWhenUnchanged: Bool = false
-  ) async throws {
-    await updateCompatibilitySuppression(controls: snapshot)
+  private func applyControlsSnapshot(_ snapshot: RemappingRoutingControls) async throws {
+    await updateOutputSuppression(controls: snapshot)
     guard let lease = try outputLeaseIfOpen() else { return }
     defer { lease.finish() }
     let permit = lease.permit
-    do {
-      try await core.apply(
-        snapshot,
-        requiring: permit,
-        refreshEligibilityWhenUnchanged: refreshEligibilityWhenUnchanged
-      )
-    } catch {
+    do { try await core.apply(snapshot, requiring: permit) } catch {
       await reconcileTickerWithEngine()
       throw error
     }

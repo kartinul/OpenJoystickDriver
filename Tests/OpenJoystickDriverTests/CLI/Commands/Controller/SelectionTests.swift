@@ -92,7 +92,7 @@ struct ConnectedControllerSelectionTests {
       name: name,
       vendorID: vendorID,
       productID: productID,
-      parser: "Generic HID",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "HID",
       serialNumber: nil,
       runtimeIdentifier: id

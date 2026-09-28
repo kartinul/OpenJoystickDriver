@@ -13,9 +13,9 @@ struct InputCaptureTests {
       productID: 0x5678,
       runtimeIdentifier: "live"
     )
-    let released = DeviceInputState(vendorID: selector.vendorID, productID: selector.productID)
+    let released = ControllerState.neutral
     var pressed = released
-    pressed.pressedButtons = ["A"]
+    pressed.pressed = [.faceSouth]
     let gateway = GatewayStub(inputSequence: [released, pressed])
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
 
@@ -29,7 +29,9 @@ struct InputCaptureTests {
     }
     #expect(capturedSelector == selector)
     #expect(detectedSource == .button(.south))
-    #expect(RuntimePresentation.detectedSource(from: capturedState) == .button(.south))
+    #expect(
+      RuntimePresentation.detectedSource(from: capturedState, labels: .standard) == .button(.south)
+    )
   }
 
   @Test
@@ -39,11 +41,11 @@ struct InputCaptureTests {
       productID: 0x5678,
       runtimeIdentifier: "live"
     )
-    var held = DeviceInputState(vendorID: selector.vendorID, productID: selector.productID)
-    held.pressedButtons = ["A"]
-    let released = DeviceInputState(vendorID: selector.vendorID, productID: selector.productID)
+    var held = ControllerState.neutral
+    held.pressed = [.faceSouth]
+    let released = ControllerState.neutral
     var pressedAgain = released
-    pressedAgain.pressedButtons = ["A"]
+    pressedAgain.pressed = [.faceSouth]
     let gateway = GatewayStub(inputSequence: [held, held, released, pressedAgain])
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
 
@@ -55,7 +57,7 @@ struct InputCaptureTests {
       return
     }
     #expect(detectedSource == .button(.south))
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.south))
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.south))
   }
 
   @Test
@@ -65,10 +67,10 @@ struct InputCaptureTests {
       productID: 0x5678,
       runtimeIdentifier: "live"
     )
-    var baseline = DeviceInputState(vendorID: selector.vendorID, productID: selector.productID)
-    baseline.pressedButtons = ["A"]
+    var baseline = ControllerState.neutral
+    baseline.pressed = [.faceSouth]
     var changed = baseline
-    changed.pressedButtons = ["A", "B"]
+    changed.pressed = [.faceSouth, .faceEast]
     let gateway = GatewayStub(inputSequence: [baseline, changed])
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
 
@@ -84,141 +86,157 @@ struct InputCaptureTests {
 
   @Test
   func detectedSourceUsesCanonicalButtonDpadAndAxisOrder() {
-    var state = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    state.pressedButtons = ["Circle", "A"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.south))
+    var state = ControllerState.neutral
+    state.pressed = [.faceEast, .faceSouth]
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.south))
 
-    state.pressedButtons = ["D-pad Left"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .dpad(.left))
+    state.pressed = []
+    state.hat = .west
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == .dpad(.left))
 
-    state.pressedButtons = []
-    state.leftStickX = -0.75
+    state.hat = .neutral
+    state.leftStick.x = BipolarValue(normalized: -0.75)
     #expect(
-      RuntimePresentation.detectedSource(from: state) == .axisDirection(.leftStickX, .negative)
+      RuntimePresentation.detectedSource(from: state, labels: .standard)
+        == .axisDirection(.leftStickX, .negative)
     )
 
-    state.leftStickX = 0.2
-    state.rightTrigger = 0.7
+    state.leftStick.x = BipolarValue(normalized: 0.2)
+    state.rightTrigger = UnipolarValue(normalized: 0.7)
     #expect(
-      RuntimePresentation.detectedSource(from: state) == .axisDirection(.rightTrigger, .positive)
+      RuntimePresentation.detectedSource(from: state, labels: .standard)
+        == .axisDirection(.rightTrigger, .positive)
     )
 
-    state.rightTrigger = 0.2
-    #expect(RuntimePresentation.detectedSource(from: state) == nil)
+    state.rightTrigger = UnipolarValue(normalized: 0.2)
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == nil)
   }
 
   @Test
   func detectedTransitionCapturesNewTouchSurfaceButNotHeldContactMovement() {
-    let previous = DeviceInputState(vendorID: 1, productID: 2)
+    let previous = ControllerState.neutral
     var touched = previous
-    touched.touchSamples = [touchSample(surface: .right, x: 10)]
+    touched.touch = [touchSample(surface: .right, x: 10)]
     var moved = touched
-    moved.touchSamples = [touchSample(surface: .right, x: 50)]
+    moved.touch = [touchSample(surface: .right, x: 50)]
 
     #expect(
-      RuntimePresentation.detectedTransition(from: previous, to: touched) == .touchContact(.right)
+      RuntimePresentation.detectedTransition(from: previous, to: touched, labels: .standard)
+        == .touchContact(.right)
     )
-    #expect(RuntimePresentation.detectedTransition(from: touched, to: moved) == nil)
+    #expect(
+      RuntimePresentation.detectedTransition(from: touched, to: moved, labels: .standard) == nil
+    )
   }
 
   @Test
   func detectedSourceIncludesNamedExtraAndDigitalControllerAliases() {
-    var state = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    state.pressedButtons = ["left_function"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.leftFunction))
+    var state = ControllerState.neutral
+    state.pressed = [.auxiliary1]
+    #expect(
+      RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.leftFunction)
+    )
 
-    state.pressedButtons = ["right_function"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.rightFunction))
+    state.pressed = [.auxiliary2]
+    #expect(
+      RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.rightFunction)
+    )
 
-    state.pressedButtons = ["left_paddle"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.leftPaddle))
+    state.pressed = [.paddleLeft1]
+    #expect(
+      RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.leftPaddle)
+    )
 
-    state.pressedButtons = ["right_paddle"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.rightPaddle))
+    state.pressed = [.paddleRight1]
+    #expect(
+      RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.rightPaddle)
+    )
 
-    state.pressedButtons = ["left_sl"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.leftSL))
+    state.pressed = [.auxiliary3]
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.leftSL))
 
-    state.pressedButtons = ["left_sr"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.leftSR))
+    state.pressed = [.auxiliary4]
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.leftSR))
 
-    state.pressedButtons = ["right_sl"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.rightSL))
+    state.pressed = [.auxiliary5]
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.rightSL))
 
-    state.pressedButtons = ["right_sr"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.rightSR))
+    state.pressed = [.auxiliary6]
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.rightSR))
 
-    state.pressedButtons = ["share"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.share))
+    state.pressed = [.share]
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == .button(.share))
 
-    state.pressedButtons = ["l2Digital"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.leftTriggerClick))
+    state.pressed = [.leftTriggerButton]
+    #expect(
+      RuntimePresentation.detectedSource(from: state, labels: .standard)
+        == .button(.leftTriggerClick)
+    )
 
-    state.pressedButtons = ["r2Digital"]
-    #expect(RuntimePresentation.detectedSource(from: state) == .button(.rightTriggerClick))
+    state.pressed = [.rightTriggerButton]
+    #expect(
+      RuntimePresentation.detectedSource(from: state, labels: .standard)
+        == .button(.rightTriggerClick)
+    )
   }
 
   @Test
   func detectedSourceIgnoresReservedGuideAndHomeControls() {
-    var state = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    state.pressedButtons = ["Guide"]
-    #expect(RuntimePresentation.detectedSource(from: state) == nil)
+    var state = ControllerState.neutral
+    state.pressed = [.guide]
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == nil)
 
-    state.pressedButtons = ["Home"]
-    #expect(RuntimePresentation.detectedSource(from: state) == nil)
+    state.pressed = [.guide]
+    #expect(RuntimePresentation.detectedSource(from: state, labels: .standard) == nil)
   }
 
   @Test
   func detectedTransitionUsesCanonicalAliasesAndAxisThresholds() {
-    let previous = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
+    let previous = ControllerState.neutral
     var current = previous
-    current.pressedButtons = ["mute"]
-    #expect(RuntimePresentation.detectedTransition(from: previous, to: current) == .button(.mute))
-
-    current.pressedButtons = []
-    current.leftStickX = 0.75
+    current.pressed = [.microphone]
     #expect(
-      RuntimePresentation.detectedTransition(from: previous, to: current)
+      RuntimePresentation.detectedTransition(from: previous, to: current, labels: .standard)
+        == .button(.mute)
+    )
+
+    current.pressed = []
+    current.leftStick.x = BipolarValue(normalized: 0.75)
+    #expect(
+      RuntimePresentation.detectedTransition(from: previous, to: current, labels: .standard)
         == .axisDirection(.leftStickX, .positive)
     )
 
     var held = current
-    held.leftStickX = 0.8
-    #expect(RuntimePresentation.detectedTransition(from: current, to: held) == nil)
-
-    held.leftStickX = -0.8
+    held.leftStick.x = BipolarValue(normalized: 0.8)
     #expect(
-      RuntimePresentation.detectedTransition(from: current, to: held)
+      RuntimePresentation.detectedTransition(from: current, to: held, labels: .standard) == nil
+    )
+
+    held.leftStick.x = BipolarValue(normalized: -0.8)
+    #expect(
+      RuntimePresentation.detectedTransition(from: current, to: held, labels: .standard)
         == .axisDirection(.leftStickX, .negative)
     )
   }
 
   @Test
   func detectedTransitionIgnoresReleaseOnlyChanges() {
-    var previous = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    previous.pressedButtons = ["A", "B"]
+    var previous = ControllerState.neutral
+    previous.pressed = [.faceSouth, .faceEast]
     var current = previous
-    current.pressedButtons = ["B"]
+    current.pressed = [.faceEast]
 
-    #expect(RuntimePresentation.detectedTransition(from: previous, to: current) == nil)
+    #expect(
+      RuntimePresentation.detectedTransition(from: previous, to: current, labels: .standard) == nil
+    )
   }
 
-  private func touchSample(surface: ControllerTouchSurface, x: Int32) -> ControllerTouchSample {
+  private func touchSample(surface: ControllerTouchSurface, x: UInt16) -> ControllerTouchSample {
     ControllerTouchSample(
-      reportTimestamp: ControllerSampleTimestamp(
-        rawCounter: 0,
-        elapsedNanoseconds: 0,
-        tickNanosecondsNumerator: nil,
-        tickNanosecondsDenominator: nil,
-        sequenceIndex: 0,
-        basis: .hostEstimate
-      ),
-      rawTouchCounter: nil,
-      historyIndex: 0,
-      width: 100,
-      height: 100,
-      contacts: [ControllerTouchContact(id: 0, isActive: true, x: x, y: 10)],
-      surface: surface
+      surface: surface,
+      timestamp: MonotonicTimestamp(nanoseconds: 0),
+      contacts: [ControllerTouchContact(slot: 0, isActive: true, x: x, y: 10)]
     )
   }
 }

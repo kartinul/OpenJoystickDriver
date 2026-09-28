@@ -77,11 +77,7 @@ func runRawUSBMonitor() {
       while Date() < deadline {
         for endpoint in endpoints where Date() < deadline && !disabledEndpoints.contains(endpoint) {
           do {
-            let bytes = try await session.readInterruptPacket(
-              endpoint: endpoint,
-              length: length,
-              timeout: timeout
-            )
+            let bytes = try await session.read(endpoint: endpoint, length: length, timeout: timeout)
             packets += 1
             print(
               "USB_REPORT endpoint=0x\(String(endpoint, radix: 16))"

@@ -4,12 +4,22 @@ import Testing
 
 @testable import OpenJoystickDriverKit
 
-private final class ControllerSessionOutputProbe: OutputDispatcher, ControllerLifecycleListener,
+/// Deterministic uptime for liveness timing; it moves only when a test advances it.
+final class ManualUptime: @unchecked Sendable {
+  private let lock = NSLock()
+  private var nanoseconds: UInt64 = 1_000_000_000
+
+  var now: @Sendable () -> UInt64 { { [self] in lock.withLock { nanoseconds } } }
+
+  func advance(by delta: UInt64) { lock.withLock { nanoseconds += delta } }
+}
+
+final class ControllerSessionOutputProbe: OutputDispatcher, ControllerLifecycleListener,
   @unchecked Sendable
 {
   private let lock = NSLock()
   private var storedSuppression = false
-  private var batches: [[ControllerEvent]] = []
+  private var states: [ControllerState] = []
   private var stopped: [DeviceIdentifier] = []
 
   var suppressOutput: Bool {
@@ -17,16 +27,46 @@ private final class ControllerSessionOutputProbe: OutputDispatcher, ControllerLi
     set { lock.withLock { storedSuppression = newValue } }
   }
 
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {
-    lock.withLock { batches.append(events) }
-  }
+  func dispatch(
+    _ event: ControllerEvent,
+    labels _: ControllerButtonLabels,
+    from _: DeviceIdentifier
+  ) { lock.withLock { states.append(event.state) } }
+
+  func activateOutput(for _: DeviceIdentifier) {}
 
   func controllerDidStop(_ identifier: DeviceIdentifier) {
     lock.withLock { stopped.append(identifier) }
   }
 
-  func snapshot() -> (batches: [[ControllerEvent]], stopped: [DeviceIdentifier]) {
-    lock.withLock { (batches, stopped) }
+  func snapshot() -> (states: [ControllerState], stopped: [DeviceIdentifier]) {
+    lock.withLock { (states, stopped) }
+  }
+}
+
+private actor DeferredPowerEventInvocationGate {
+  private var isPaused = false
+  private var isReleased = false
+  private var pauseContinuation: CheckedContinuation<Void, Never>?
+  private var reachedContinuation: CheckedContinuation<Void, Never>?
+
+  func pauseUntilReleased() async {
+    isPaused = true
+    reachedContinuation?.resume()
+    reachedContinuation = nil
+    guard !isReleased else { return }
+    await withCheckedContinuation { pauseContinuation = $0 }
+  }
+
+  func waitUntilPaused() async {
+    guard !isPaused else { return }
+    await withCheckedContinuation { reachedContinuation = $0 }
+  }
+
+  func release() {
+    isReleased = true
+    pauseContinuation?.resume()
+    pauseContinuation = nil
   }
 }
 
@@ -49,42 +89,35 @@ private final class WirelessDisconnectProbe: WirelessControllerDisconnecting, @u
   var calls: [String] { lock.withLock { addresses } }
 }
 
-private final class AbsoluteObservationParser: InputParser, ControllerInputReportObserver,
-  ControllerInputReportLivenessProvider
-{
-  let inputReportLivenessTimeoutNanoseconds: UInt64 = 1_000_000_000
-  private(set) var latestInputReportObservation: ControllerInputReportObservation?
+private final class AbsoluteStickParser: PhysicalProtocolDriver {
+  let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
+  let sessionPlan = DriverSessionPlan(inputReportLivenessTimeoutNanoseconds: 1_000_000_000)
+  let outputCapabilities = PhysicalControllerOutputCapabilities.none
+  let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
+  func consumeInputConnectionStateChange() -> ControllerInputConnectionState? { nil }
 
-  func parse(data: Data) throws -> [ControllerEvent] {
-    let controls: [ControllerEvent] =
-      data.first == 1 ? [.rightStickChanged(x: 1, y: 0)] : [.rightStickChanged(x: 0, y: 0)]
-    latestInputReportObservation = ControllerInputReportObservation(
-      controls: controls,
-      isFresh: true
-    )
-    return data.first == 1 ? controls : []
+  /// Each report carries the full right stick; report 1 pushes it right, any other centers it.
+  func parse(report data: Data, receivedAt: MonotonicTimestamp) throws -> ControllerEvent? {
+    ControllerEvent(data.first == 1 ? [.rightStick(x: 1, y: 0)] : [], at: receivedAt.nanoseconds)
   }
 }
 
 struct ControllerSessionTests {
   @Test
-  func absoluteObservationReconcilesAMissedRightStickDelta() async {
+  func absoluteSnapshotsCenterTheStickWithoutAReleaseDelta() async {
     let output = ControllerSessionOutputProbe()
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 1, productID: 2),
       transport: .hid(locationID: 6),
-      parser: AbsoluteObservationParser(),
-      dispatcher: output
+      driver: AbsoluteStickParser(),
+      dispatcher: output,
+      uptimeNanoseconds: ManualUptime().now
     )
     await pipeline.start()
     await pipeline.feedHIDData(Data([1]))
     await pipeline.feedHIDData(Data([2]))
 
-    #expect(
-      output.snapshot().batches.flatMap { $0 } == [
-        .rightStickChanged(x: 1, y: 0), .rightStickChanged(x: 0, y: 0),
-      ]
-    )
+    #expect(output.snapshot().states == [snapshot(.rightStick(x: 1, y: 0)), .neutral])
     await pipeline.stop()
   }
 
@@ -106,13 +139,18 @@ struct ControllerSessionTests {
     )
     await manager.handleHIDEvent(
       .connected(
-        vendorID: 0x054C,
-        productID: 0x09CC,
-        serialNumber: "aa-bb-cc-dd-ee-ff",
-        locationID: 71,
-        productName: "Wireless Controller",
-
-        transport: "Bluetooth",
+        connection: HIDDeviceConnection(
+          physicalDevice: PhysicalDevice(
+            vendorID: 0x054C,
+            productID: 0x09CC,
+            productName: "Wireless Controller",
+            serialNumber: "aa-bb-cc-dd-ee-ff",
+            transportProperty: "Bluetooth",
+            physicalLocationIdentifier: 71,
+            interfaces: [hostHIDInterface(.bluetoothClassic)]
+          ),
+          routingLocationID: 71,
+        ),
         ownership: .exclusive
       )
     )
@@ -157,12 +195,20 @@ struct ControllerSessionTests {
     )
     await manager.handleHIDEvent(
       .connected(
-        vendorID: 0x054C,
-        productID: 0x09CC,
-        serialNumber: serialNumber,
-        locationID: 72,
-        productName: "Controller",
-        transport: connection,
+        connection: HIDDeviceConnection(
+          physicalDevice: PhysicalDevice(
+            vendorID: 0x054C,
+            productID: 0x09CC,
+            productName: "Controller",
+            serialNumber: serialNumber,
+            transportProperty: connection,
+            physicalLocationIdentifier: 72,
+            interfaces: [
+              hostHIDInterface(HIDDeviceStream.hostTransport(forTransportProperty: connection))
+            ]
+          ),
+          routingLocationID: 72,
+        ),
         ownership: .exclusive
       )
     )
@@ -183,12 +229,14 @@ struct ControllerSessionTests {
   @Test
   func suspensionNeutralizesHeldInputAndIgnoresReportsUntilResume() async {
     let identifier = DeviceIdentifier(vendorID: 0x054C, productID: 0x09CC)
+    let clock = ManualUptime()
     let output = ControllerSessionOutputProbe()
     let pipeline = DevicePipeline(
       identifier: identifier,
       transport: .hid(locationID: 1),
-      parser: DS4Parser(),
-      dispatcher: output
+      driver: DualShock4Driver(),
+      dispatcher: output,
+      uptimeNanoseconds: clock.now
     )
     await pipeline.start()
     await pipeline.feedHIDData(ds4USBReport(buttons: 0x28, timestamp: 1))
@@ -201,7 +249,7 @@ struct ControllerSessionTests {
 
     let suspended = output.snapshot()
     #expect(suspended.stopped == [identifier])
-    #expect(suspended.batches.flatMap { $0 }.contains(.buttonReleased(.cross)))
+    #expect(suspended.states.last?.pressed.isEmpty == true)
 
     #expect(await pipeline.resumeControllerSession())
     #expect(await pipeline.controllerSessionState() == .active)
@@ -213,12 +261,17 @@ struct ControllerSessionTests {
     let manager = DeviceManager(dispatcher: ControllerSessionOutputProbe())
     await manager.handleHIDEvent(
       .connected(
-        vendorID: 0x054C,
-        productID: 0x09CC,
-        serialNumber: nil,
-        locationID: 73,
-        productName: "Controller",
-        transport: "USB",
+        connection: HIDDeviceConnection(
+          physicalDevice: PhysicalDevice(
+            vendorID: 0x054C,
+            productID: 0x09CC,
+            productName: "Controller",
+            transportProperty: "USB",
+            physicalLocationIdentifier: 73,
+            interfaces: [hostHIDInterface(.usb)]
+          ),
+          routingLocationID: 73,
+        ),
         ownership: .exclusive
       )
     )
@@ -237,113 +290,36 @@ struct ControllerSessionTests {
   }
 
   @Test
-  func ds4LivenessLossNeutralizesAndRequiresFreshNeutralReport() async throws {
-    let identifier = DeviceIdentifier(vendorID: 0x054C, productID: 0x09CC)
-    let output = ControllerSessionOutputProbe()
-    let pipeline = DevicePipeline(
-      identifier: identifier,
-      transport: .hid(locationID: 2),
-      parser: DS4Parser(),
-      dispatcher: output
+  func delayedPowerEventFromStoppedSessionCannotMutateRestartedManager() async {
+    let manager = DeviceManager(
+      dispatcher: ControllerSessionOutputProbe(),
+      hidManager: HIDManager(backend: RecoveryHIDBackend())
     )
-    await pipeline.start()
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x28))
-    try await Task.sleep(nanoseconds: 1_050_000_000)
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x48))
-    #expect(output.snapshot().batches.flatMap { $0 }.contains(.buttonReleased(.cross)))
-
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x08, timestamp: 3))
-    #expect(await pipeline.inputState().isEffectivelyNeutral)
-    await pipeline.stop()
-  }
-
-  @Test
-  func freshHeldReportsDoNotRecoverRetiredDS4Output() async throws {
-    let identifier = DeviceIdentifier(vendorID: 0x054C, productID: 0x09CC)
-    let output = ControllerSessionOutputProbe()
-    let pipeline = DevicePipeline(
-      identifier: identifier,
-      transport: .hid(locationID: 3),
-      parser: DS4Parser(),
-      dispatcher: output
-    )
-    await pipeline.start()
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x08, rightStickX: 255, timestamp: 1))
-    try await Task.sleep(nanoseconds: 1_050_000_000)
-
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x08, rightStickX: 255, timestamp: 2))
-    #expect(await pipeline.inputHealth().state == .waitingForNeutral)
-    #expect(output.snapshot().stopped == [identifier])
-
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x08, rightStickX: 255, timestamp: 3))
-    #expect(await pipeline.inputHealth().state == .waitingForNeutral)
-    #expect(await pipeline.inputHealth().recoveryCount == 0)
-
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x08, timestamp: 4))
-    #expect(await pipeline.inputHealth().state == .healthy)
-    #expect(await pipeline.inputHealth().recoveryCount == 1)
-    await pipeline.stop()
-  }
-
-  @Test
-  func repeatedNonAdvancingDS4ReportsBecomeStaleAndRetireOnce() async throws {
-    let identifier = DeviceIdentifier(vendorID: 0x054C, productID: 0x09CC)
-    let output = ControllerSessionOutputProbe()
-    let pipeline = DevicePipeline(
-      identifier: identifier,
-      transport: .hid(locationID: 4),
-      parser: DS4Parser(),
-      dispatcher: output,
-      idleMonitorIntervalNanoseconds: 50_000_000
-    )
-    await pipeline.start()
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x28, timestamp: 10))
-    for _ in 0..<4 {
-      try await Task.sleep(nanoseconds: 300_000_000)
-      await pipeline.feedHIDData(ds4USBReport(buttons: 0x28, timestamp: 10))
+    let stoppedSession = DeviceManagerSystemPowerEventSession()
+    let invocationGate = DeferredPowerEventInvocationGate()
+    let delayedSleep = Task {
+      await invocationGate.pauseUntilReleased()
+      await manager.systemWillSleep(session: stoppedSession)
     }
 
-    #expect(await pipeline.inputHealth().state == .waitingForNeutral)
-    #expect(await pipeline.inputHealth().failureReason == .freshnessNotAdvancing)
-    #expect(output.snapshot().stopped == [identifier])
-    await pipeline.stop()
-  }
+    await invocationGate.waitUntilPaused()
+    await manager.stop()
+    stoppedSession.invalidate()
+    await manager.start()
+    let restartedGeneration = await manager.lifecycleGeneration
 
-  @Test
-  func missingDS4ReportsRetireOutputAndFreshNeutralRecovers() async throws {
-    let identifier = DeviceIdentifier(vendorID: 0x054C, productID: 0x09CC)
-    let output = ControllerSessionOutputProbe()
-    let pipeline = DevicePipeline(
-      identifier: identifier,
-      transport: .hid(locationID: 5),
-      parser: DS4Parser(),
-      dispatcher: output,
-      idleMonitorIntervalNanoseconds: 50_000_000
-    )
-    await pipeline.start()
-    try await Task.sleep(nanoseconds: 1_100_000_000)
+    await invocationGate.release()
+    await delayedSleep.value
+    #expect(!(await manager.isSystemSleeping))
+    #expect(await manager.lifecycleGeneration == restartedGeneration)
 
-    #expect(await pipeline.inputHealth().state == .waitingForNeutral)
-    #expect(await pipeline.inputHealth().failureReason == .missingReports)
-    #expect(output.snapshot().stopped == [identifier])
+    let currentSession = DeviceManagerSystemPowerEventSession()
+    await manager.systemWillSleep(session: currentSession)
+    #expect(await manager.isSystemSleeping)
+    await manager.systemDidWake(session: currentSession)
+    #expect(!(await manager.isSystemSleeping))
 
-    await pipeline.feedHIDData(ds4USBReport(buttons: 0x08, timestamp: 1))
-    #expect(await pipeline.inputHealth().state == .healthy)
-    #expect(await pipeline.inputHealth().recoveryCount == 1)
-    await pipeline.stop()
-  }
-
-  private func ds4USBReport(buttons: UInt8, rightStickX: UInt8 = 128, timestamp: UInt16 = 0) -> Data
-  {
-    var report = [UInt8](repeating: 0, count: 64)
-    report[0] = 1
-    report[1] = 128
-    report[2] = 128
-    report[3] = rightStickX
-    report[4] = 128
-    report[5] = buttons
-    report[10] = UInt8(truncatingIfNeeded: timestamp)
-    report[11] = UInt8(truncatingIfNeeded: timestamp >> 8)
-    return Data(report)
+    currentSession.invalidate()
+    await manager.stop()
   }
 }

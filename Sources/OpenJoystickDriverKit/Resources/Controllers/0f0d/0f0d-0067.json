@@ -2,15 +2,13 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 3853,
   "productID": 103,
-  "transport": "usb",
   "protocol": {
-    "driver": "GIP",
-    "variant": "xboxOne",
-    "startupPackets": [
-      "horiAck",
-      "powerOn",
-      "ledOn",
-      "authDone"
+    "family": "xbox.gip",
+    "initialization": [
+      "xbox.gip/hori-ack",
+      "xbox.gip/power-on",
+      "xbox.gip/led-on",
+      "xbox.gip/auth-done"
     ]
   }
 }

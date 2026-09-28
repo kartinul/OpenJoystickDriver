@@ -18,21 +18,14 @@ extension RemappingMixedOutputTests {
 
       )
     ])
-    try await engine.process(events: [.buttonReleased(.a)], from: device, using: profile, at: 0)
+    try await engine.process(inputs: [.release(.faceSouth)], from: device, using: profile, at: 0)
     #expect(sink.actions.isEmpty)
-    try await engine.process(
-      events: [.buttonPressed(.a), .buttonPressed(.a)],
-      from: device,
-      using: profile,
-      at: 1
-    )
+    // A repeated identical snapshot is not a second press or release.
+    try await engine.process(inputs: [.press(.faceSouth)], from: device, using: profile, at: 1)
+    try await engine.process(inputs: [], from: device, using: profile, at: 1)
     #expect(sink.actions.count == (behavior == .tapOnPress ? 2 : 0))
-    try await engine.process(
-      events: [.buttonReleased(.a), .buttonReleased(.a)],
-      from: device,
-      using: profile,
-      at: 2
-    )
+    try await engine.process(inputs: [.release(.faceSouth)], from: device, using: profile, at: 2)
+    try await engine.process(inputs: [], from: device, using: profile, at: 2)
     #expect(
       sink.actions == [
         .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device),
@@ -56,9 +49,9 @@ extension RemappingMixedOutputTests {
       )
     ])
 
-    try await engine.process(events: [.buttonPressed(.a)], from: device, using: profile, at: 0)
+    try await engine.process(inputs: [.press(.faceSouth)], from: device, using: profile, at: 0)
     try await engine.releaseAll(for: device)
-    try await engine.process(events: [.buttonReleased(.a)], from: device, using: profile, at: 1)
+    try await engine.process(inputs: [.release(.faceSouth)], from: device, using: profile, at: 1)
     #expect(sink.actions.isEmpty)
   }
 
@@ -96,7 +89,7 @@ extension RemappingMixedOutputTests {
       ]
     )
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonPressed(.b), .buttonReleased(.b), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .press(.faceEast), .release(.faceEast), .release(.faceSouth)],
       from: device,
       using: profile,
       at: 0
@@ -104,7 +97,7 @@ extension RemappingMixedOutputTests {
     #expect(sink.actions.isEmpty)
     try await engine.process(
 
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: device,
       using: profile,
       at: 1
@@ -141,7 +134,7 @@ extension RemappingMixedOutputTests {
       ]
     )
     try await engine.process(
-      events: [.buttonPressed(.x), .buttonReleased(.x), .buttonPressed(.a)],
+      inputs: [.press(.faceWest), .release(.faceWest), .press(.faceSouth)],
       from: device,
       using: profile,
       at: 0
@@ -170,20 +163,20 @@ extension RemappingMixedOutputTests {
     )
     #expect(decoded == profile)
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: device,
       using: decoded,
       at: 0
     )
     #expect(sink.actions == [.gamepad(RemappingGamepadState(buttons: [.north]), device)])
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: device,
       using: decoded,
       at: 1
     )
     #expect(sink.actions.last == .gamepad(.neutral, device))
-    try await engine.process(events: [.buttonPressed(.a)], from: device, using: decoded, at: 2)
+    try await engine.process(inputs: [.press(.faceSouth)], from: device, using: decoded, at: 2)
     try await engine.releaseAll(for: device)
     #expect(sink.actions.last == .gamepad(.neutral, device))
   }
@@ -223,21 +216,22 @@ extension RemappingMixedOutputTests {
       ]
     )
     try await engine.process(
-      events: [.leftStickChanged(x: 0.5, y: 0)],
+      inputs: [.leftStick(x: 0.5, y: 0)],
       from: device,
       using: profile,
       at: 0
     )
     try await engine.tick(at: 1)
-    try await engine.process(events: [.buttonPressed(.b)], from: device, using: profile, at: 2)
+    try await engine.process(inputs: [.press(.faceEast)], from: device, using: profile, at: 2)
     let stopped: RemappingEngineAction =
       virtual ? .gamepad(.neutral, device) : .system(.mouseMoved(axis: .x, amount: 0))
     #expect(sink.actions.last == stopped)
     let count = sink.actions.count
     try await engine.tick(at: 3)
     #expect(sink.actions.count == count)
+    // Fresh input is a changed stick; an identical snapshot carries no new axis value.
     try await engine.process(
-      events: [.leftStickChanged(x: 0.5, y: 0)],
+      inputs: [.leftStick(x: 0.25, y: 0)],
       from: device,
       using: profile,
       at: 4
@@ -245,8 +239,8 @@ extension RemappingMixedOutputTests {
     try await engine.tick(at: 5)
     let resumed: RemappingEngineAction =
       virtual
-      ? .gamepad(RemappingGamepadState(axes: [.rightStickY: 0.5]), device)
-      : .system(.mouseMoved(axis: .y, amount: 0.5))
+      ? .gamepad(RemappingGamepadState(axes: [.rightStickY: quantizedStick(0.25)]), device)
+      : .system(.mouseMoved(axis: .y, amount: quantizedStick(0.25)))
     #expect(sink.actions.last == resumed)
     try await engine.releaseAll(for: device)
   }
@@ -270,21 +264,21 @@ extension RemappingMixedOutputTests {
         )
       ]
     )
-    try await engine.process(events: [.buttonPressed(.a)], from: device, using: profile, at: 0)
-    try await engine.process(events: [.buttonPressed(.b)], from: device, using: profile, at: 1)
+    try await engine.process(inputs: [.press(.faceSouth)], from: device, using: profile, at: 0)
+    try await engine.process(inputs: [.press(.faceEast)], from: device, using: profile, at: 1)
     #expect(
       sink.actions == [
         .gamepad(RemappingGamepadState(buttons: [.north]), device), .gamepad(.neutral, device),
       ]
     )
     try await engine.process(
-      events: [.buttonReleased(.a), .buttonPressed(.a)],
+      inputs: [.release(.faceSouth), .press(.faceSouth)],
       from: device,
       using: profile,
       at: 2
     )
     #expect(sink.actions.last == .gamepad(RemappingGamepadState(buttons: [.west]), device))
-    try await engine.process(events: [.buttonReleased(.b)], from: device, using: profile, at: 3)
+    try await engine.process(inputs: [.release(.faceEast)], from: device, using: profile, at: 3)
     #expect(sink.actions.last == .gamepad(.neutral, device))
     try await engine.drain()
   }
@@ -314,11 +308,10 @@ extension RemappingMixedOutputTests {
         ),
       ]
     )
-    let activators: [ControllerEvent] =
-      toggleLast
-      ? [.buttonPressed(.x), .buttonPressed(.b)] : [.buttonPressed(.b), .buttonPressed(.x)]
+    let activators: [InputChange] =
+      toggleLast ? [.press(.faceWest), .press(.faceEast)] : [.press(.faceEast), .press(.faceWest)]
     try await engine.process(
-      events: activators + [.buttonReleased(.b), .buttonPressed(.a)],
+      inputs: activators + [.release(.faceEast), .press(.faceSouth)],
       from: device,
       using: profile,
       at: 0

@@ -1,115 +1,121 @@
 import Foundation
 
+private struct HIDTeardownCandidate {
+  let identifier: DeviceIdentifier
+  let info: DeviceManager.DeviceInfo
+  let physicalDevice: PhysicalDevice
+  let connectionID: UUID
+  let pipeline: DevicePipeline?
+}
+
 extension DeviceManager {
   // MARK: - HID detection (class 0x03)
 
   func ensureHIDDetectionState(for state: PermissionManager.AccessState) async {
+    guard !isStopping else { return }
     switch state {
     case .granted:
       guard hidDetectionTask == nil else { return }
-      hidDetectionTask = Task { await self.runHIDDetection() }
+      let sessionID = UUID()
+      hidDetectionSessionID = sessionID
+      hidDetectionTask = Task { await self.runHIDDetection(sessionID: sessionID) }
     case .unknown, .denied:
-      hidDetectionTask?.cancel()
+      let task = hidDetectionTask
       hidDetectionTask = nil
+      hidDetectionSessionID = nil
+      task?.cancel()
       await removeHIDPipelines()
     }
   }
 
-  private func runHIDDetection() async {
+  private func runHIDDetection(sessionID: UUID) async {
+    defer { finishHIDDetection(sessionID: sessionID) }
+    guard hidDetectionSessionID == sessionID, !isStopping, !Task.isCancelled else { return }
     print("[DeviceManager] HID detection started" + " (class 0x03)")
     let events = await hidManager.deviceEvents()
+    guard hidDetectionSessionID == sessionID, !isStopping, !Task.isCancelled else { return }
     for await event in events {
+      guard hidDetectionSessionID == sessionID, !Task.isCancelled else { return }
+      // Teardown sends neutral and shutdown reports through this still-open session, then cancels
+      // the task; returning here instead would close the session under those writes.
+      guard !isStopping else { continue }
       switch event {
-      case .connected(
-        let vendorID,
-        let productID,
-        let serialNumber,
-        let locationID,
-        let productName,
-        let transport,
-        let ownership
-      ):
-        scheduleHIDDeviceInitialization(
-          vendorID: vendorID,
-          productID: productID,
-          serialNumber: serialNumber,
-          locationID: locationID,
-          productName: productName,
-          transport: transport,
-          ownership: ownership
-        )
-      case .disconnected(_, _, let locationID):
-        hidInitializationTasks.removeValue(forKey: locationID)?.cancel()
+      case .connected(let connection, _) where connection.physicalDevice.nativePassThrough:
+        // A native connection binds inline, so a later sibling's initialization at its location
+        // cannot cancel it; it sends no startup output to wait on.
+        await handleHIDEvent(event)
+      case .connected(let connection, let ownership):
+        scheduleHIDDeviceInitialization(connection: connection, ownership: ownership)
+      case .disconnected(let connection):
+        let key = hidInitializationKey(for: connection)
+        if hidInitializationTasks[key]?.connection.connectionID == connection.connectionID {
+          hidInitializationTasks.removeValue(forKey: key)?.task.cancel()
+        }
         await handleHIDEvent(event)
       case .ownershipChanged, .inputReport, .inputValue: await handleHIDEvent(event)
+      case .accessFailure:
+        await handleHIDEvent(event)
+        return
       }
     }
   }
 
-  func scheduleHIDDeviceInitialization(
-    vendorID: UInt16,
-    productID: UInt16,
-    serialNumber: String?,
-    locationID: UInt32,
-    productName: String?,
-    transport: String?,
-    ownership: HIDInputOwnership
-  ) {
-    hidInitializationTasks.removeValue(forKey: locationID)?.cancel()
-    hidInitializationTasks[locationID] = Task { [weak self] in
-      guard let self else { return }
-      await self.handleHIDDeviceConnected(
-        vendorID: vendorID,
-        productID: productID,
-        serialNumber: serialNumber,
-        locationID: locationID,
-        productName: productName,
-        transport: transport,
-        ownership: ownership
-      )
-      await self.finishHIDDeviceInitialization(locationID: locationID)
-    }
+  func finishHIDDetection(sessionID: UUID) {
+    guard hidDetectionSessionID == sessionID else { return }
+    hidDetectionSessionID = nil
+    hidDetectionTask = nil
   }
 
-  func finishHIDDeviceInitialization(locationID: UInt32) {
-    guard !Task.isCancelled else { return }
-    hidInitializationTasks.removeValue(forKey: locationID)
+  func scheduleHIDDeviceInitialization(
+    connection: HIDDeviceConnection,
+    ownership: HIDInputOwnership
+  ) {
+    guard !isStopping else { return }
+    let key = hidInitializationKey(for: connection)
+    hidInitializationTasks.removeValue(forKey: key)?.task.cancel()
+    let task = Task { [weak self] in
+      guard let self else { return }
+      await self.handleHIDDeviceConnected(connection: connection, ownership: ownership)
+      await self.finishHIDDeviceInitialization(connection: connection)
+    }
+    hidInitializationTasks[key] = HIDDeviceInitialization(connection: connection, task: task)
+  }
+
+  func finishHIDDeviceInitialization(connection: HIDDeviceConnection) {
+    let key = hidInitializationKey(for: connection)
+    if hidInitializationTasks[key]?.connection.connectionID == connection.connectionID {
+      hidInitializationTasks.removeValue(forKey: key)
+    }
+    guard hidInitializationTasks[key] == nil else { return }
+    removeOrphanedHIDInfo(after: connection)
   }
 
   /// Handles backend events in their delivered order, including ownership before input.
   func handleHIDEvent(_ event: HIDDeviceEvent) async {
+    guard !isStopping else { return }
     switch event {
-    case .connected(
-      let vid,
-      let pid,
-      let serial,
-      let loc,
-      let productName,
-      let transport,
-      let ownership
-    ):
-      await handleHIDDeviceConnected(
-        vendorID: vid,
-        productID: pid,
-        serialNumber: serial,
-        locationID: loc,
-        productName: productName,
-        transport: transport,
-        ownership: ownership
-      )
+    case .connected(let connection, let ownership):
+      await handleHIDDeviceConnected(connection: connection, ownership: ownership)
     case .ownershipChanged(let locationID, let ownership):
       await updateHIDOwnership(ownership, locationID: locationID)
-    case .disconnected(let vid, let pid, let loc):
-      await handleHIDDeviceDisconnected(vendorID: vid, productID: pid, locationID: loc)
-    case .inputReport(let loc, _, let data): await routeHIDInputReport(locationID: loc, data: data)
-    case .inputValue(let loc, let value): await routeHIDElementValue(locationID: loc, value: value)
+    case .accessFailure(let failure):
+      print("[DeviceManager] HID access stream failed: \(String(reflecting: failure))")
+      await removeHIDPipelines()
+    case .disconnected(let connection): await handleHIDDeviceDisconnected(connection: connection)
+    case .inputReport(let loc, let connectionID, _, let data):
+      await routeHIDInputReport(locationID: loc, connectionID: connectionID, data: data)
+    case .inputValue(let loc, let connectionID, let value):
+      await routeHIDElementValue(locationID: loc, connectionID: connectionID, value: value)
     }
   }
 
-  private func updateHIDOwnership(_ ownership: HIDInputOwnership, locationID: UInt32) async {
+  func updateHIDOwnership(_ ownership: HIDInputOwnership, locationID: UInt32) async {
     let identifiers = deviceInfos.keys.filter { $0.locationID == locationID }
     for identifier in identifiers {
-      guard let info = deviceInfos[identifier], case .hid = info.discoverySource else { continue }
+      // A location's ownership describes OJD's seize of other interfaces, never a native one.
+      guard let info = deviceInfos[identifier], case .hid = info.discoverySource,
+        info.physicalDevice?.nativePassThrough != true
+      else { continue }
       deviceInfos[identifier]?.hidInputOwnership = ownership
       if ownership == .ownedByAnotherClient, info.hidInputOwnership != .ownedByAnotherClient {
         if let pipeline = pipelines[identifier] {
@@ -119,17 +125,18 @@ extension DeviceManager {
       } else if ownership != .ownedByAnotherClient, info.hidInputOwnership == .ownedByAnotherClient
       {
         // A fresh parser and normalized state prevent replaying controls held before access loss.
-        pipelines.removeValue(forKey: identifier)
-        await handleHIDDeviceConnected(
-          vendorID: identifier.vendorID,
-          productID: identifier.productID,
-          serialNumber: identifier.serialNumber,
-          locationID: locationID,
-          productName: info.name,
-          transport: info.connection,
-          ownership: ownership
-        )
-        continue
+        if let physicalDevice = info.physicalDevice, let connectionID = info.hidConnectionID {
+          pipelines.removeValue(forKey: identifier)
+          await handleHIDDeviceConnected(
+            connection: HIDDeviceConnection(
+              connectionID: connectionID,
+              physicalDevice: physicalDevice,
+              routingLocationID: locationID
+            ),
+            ownership: ownership
+          )
+          continue
+        }
       }
       if let listener = dispatcher as? any ControllerInputOwnershipListener {
         await listener.controllerInputOwnershipChanged(ownership, for: identifier)
@@ -138,178 +145,103 @@ extension DeviceManager {
   }
 
   private func removeHIDPipelines() async {
-    for task in hidInitializationTasks.values { task.cancel() }
-    hidInitializationTasks = [:]
-    let hidIdentifiers = pipelines.keys.filter {
-      deviceInfos[$0]?.discoverySource.requiresInputMonitoring == true
+    clearUnboundHIDDevices()
+    clearPassThroughDevices()
+    hidRoleConnections.removeAll()
+    let hidIdentifiers = Set(
+      pipelines.keys.filter { deviceInfos[$0]?.discoverySource.requiresInputMonitoring == true }
+        + deviceInfos.keys.filter {
+          deviceInfos[$0]?.discoverySource.requiresInputMonitoring == true
+        }
+    )
+    let candidates = hidIdentifiers.compactMap { identifier -> HIDTeardownCandidate? in
+      guard let info = deviceInfos[identifier], case .hid = info.discoverySource,
+        let physicalDevice = info.physicalDevice, let connectionID = info.hidConnectionID
+      else { return nil }
+      return HIDTeardownCandidate(
+        identifier: identifier,
+        info: info,
+        physicalDevice: physicalDevice,
+        connectionID: connectionID,
+        pipeline: pipelines[identifier]
+      )
     }
+    let pendingInitializations = Array(hidInitializationTasks.values)
+    for initialization in pendingInitializations { initialization.task.cancel() }
+    hidInitializationTasks = [:]
+    for initialization in pendingInitializations { await initialization.task.value }
 
-    for identifier in hidIdentifiers {
-      guard let pipeline = pipelines.removeValue(forKey: identifier) else { continue }
+    for candidate in candidates {
+      let identifier = candidate.identifier
+      guard isCurrentHIDTeardownCandidate(candidate) else { continue }
+      // Only this connection's queue is removed below, never one a replacement has installed.
+      let outputQueue = physicalOutputQueue(for: identifier)
+      if let pipeline = candidate.pipeline, pipelines[identifier] === pipeline {
+        pipelines.removeValue(forKey: identifier)
+        hidPeriodicOutputTasks.removeValue(forKey: identifier)?.cancel()
+        // Pending output never reaches a disconnected controller; neutralization queues after.
+        hidOutputQueues[identifier]?.cancelAll()
+        await neutralizePhysicalOutputs(
+          for: identifier,
+          pipeline: pipeline,
+          detachedInfo: candidate.info
+        )
+        await pipeline.stop()
+      } else {
+        // A replacement can remove this pipeline while teardown awaits initialization. The
+        // matching DeviceInfo is still ours to clear if that replacement has since aborted.
+        await candidate.pipeline?.stop()
+      }
+      guard let key = hidInitializationKey(for: identifier, connectionID: candidate.connectionID),
+        isCurrentHIDTeardownInfo(candidate), pipelines[identifier] == nil,
+        hidInitializationTasks[key] == nil
+      else { continue }
       hidPeriodicOutputTasks.removeValue(forKey: identifier)?.cancel()
-      hidOutputQueues.removeValue(forKey: identifier)
-      await neutralizePhysicalOutputs(for: identifier, pipeline: pipeline)
+      retireOutputQueue(for: identifier, expected: outputQueue)
+      discardPhysicalOutputs(for: identifier)
       deviceInfos.removeValue(forKey: identifier)
       lastPhysicalHIDOutputNanoseconds.removeValue(forKey: identifier)
-      await pipeline.stop()
       print("[DeviceManager] HID pipeline removed: \(identifier)")
     }
   }
 
-  private func handleHIDDeviceConnected(
-    vendorID: UInt16,
-    productID: UInt16,
-    serialNumber: String?,
-    locationID: UInt32,
-    productName: String?,
-    transport: String?,
-    ownership: HIDInputOwnership
-  ) async {
-    guard !Task.isCancelled else { return }
-    let identifier = DeviceIdentifier(
-      vendorID: vendorID,
-      productID: productID,
-      serialNumber: serialNumber,
-      locationID: locationID
-    )
-
-    guard pipelines[identifier] == nil else {
-      await updateHIDOwnership(ownership, locationID: locationID)
-      return
-    }
-    if let existingIdentifier = Self.matchingPhysicalIdentifier(
-      for: identifier,
-      among: pipelines.keys
-    ) {
-      guard case .rawUSB = deviceInfos[existingIdentifier]?.discoverySource else { return }
-      let replacedPipeline = pipelines.removeValue(forKey: existingIdentifier)
-      hidPeriodicOutputTasks.removeValue(forKey: existingIdentifier)?.cancel()
-      hidOutputQueues.removeValue(forKey: existingIdentifier)
-      if let replacedPipeline {
-        await neutralizePhysicalOutputs(for: existingIdentifier, pipeline: replacedPipeline)
-      }
-      deviceInfos.removeValue(forKey: existingIdentifier)
-      lastPhysicalHIDOutputNanoseconds.removeValue(forKey: existingIdentifier)
-      await replacedPipeline?.stop()
-      print("[DeviceManager] Replacing duplicate raw USB pipeline with HID: \(identifier)")
-    }
-
-    let name = controllerDisplayName(
-      productName: productName,
-      vendorID: vendorID,
-      productID: productID
-    )
-    let connection = transport ?? "HID"
-    deviceInfos[identifier] = DeviceInfo(
-      name: name,
-      connection: connection,
-      serialNumber: serialNumber,
-      discoverySource: .hid,
-      hidInputOwnership: ownership
-    )
-    guard !Task.isCancelled else {
-      deviceInfos.removeValue(forKey: identifier)
-      return
-    }
-    await updateHIDOwnership(ownership, locationID: locationID)
-    guard deviceInfos[identifier] != nil, pipelines[identifier] == nil else { return }
-    print("[DeviceManager] HID device connected:" + " \(name) (\(identifier))")
-    let parser: any InputParser
-    if parserRegistry.parserName(for: identifier, transport: .hid) == "DS4",
-      connection == "Bluetooth"
-    {
-      parser = DS4Parser(prefersBluetooth: true)
-    } else if parserRegistry.parserName(for: identifier, transport: .hid) == "DualSense" {
-      let profile = parserRegistry.runtimeProfile(for: identifier)
-      parser = DualSenseParser(
-        prefersBluetooth: connection == "Bluetooth",
-        hasEdgeButtons: profile.quirks.contains("edgeButtons")
-      )
-    } else {
-      parser = parserRegistry.parser(for: identifier, transport: .hid)
-    }
-    let pipeline = DevicePipeline(
-      identifier: identifier,
-      transport: .hid(locationID: locationID),
-      parser: parser,
-      dispatcher: dispatcher,
-      externalOutputAllowed: false
-    )
-    let requiresSuccessfulStartupOutput = await pipeline.requiresSuccessfulHIDStartupOutput(
-      transport: transport
-    )
-    if !requiresSuccessfulStartupOutput {
-      await pipeline.setExternalOutputAllowed(externalOutputAllowed)
-    }
-    pipelines[identifier] = pipeline
-    notifyControllerInventoryChanged()
-    guard ownership != .ownedByAnotherClient else { return }
-    await pipeline.start()
-    guard pipelines[identifier] === pipeline else { return }
-    let outputPrecedesFeatureReads = await pipeline.hidStartupOutputPrecedesFeatureReads()
-    var startupOutputSucceeded = true
-    if outputPrecedesFeatureReads {
-      startupOutputSucceeded = await sendHIDStartupOutputReportsIfNeeded(
-        pipeline: pipeline,
-        locationID: locationID,
-        transport: transport
-      )
-    }
-    await sendHIDStartupFeatureReadRequestsIfNeeded(
-      pipeline: pipeline,
-      locationID: locationID,
-      transport: transport
-    )
-    if !(await pipeline.requiresInputConnectionBeforeOutput()) {
-      await sendHIDStartupFeatureReportsIfNeeded(
-        pipeline: pipeline,
-        locationID: locationID,
-        transport: transport
-      )
-    }
-    if !outputPrecedesFeatureReads {
-      startupOutputSucceeded = await sendHIDStartupOutputReportsIfNeeded(
-        pipeline: pipeline,
-        locationID: locationID,
-        transport: transport
-      )
-    }
-    if requiresSuccessfulStartupOutput {
-      guard startupOutputSucceeded else {
-        print("[DeviceManager] Required HID startup output failed for loc=\(locationID)")
-        return
-      }
-      await pipeline.setExternalOutputAllowed(externalOutputAllowed)
-    }
-    if !(await pipeline.requiresInputConnectionBeforeOutput()) {
-      await dispatcher.dispatch(events: [], from: identifier)
-    }
-    await requestHIDInputConnectionStatusIfNeeded(pipeline: pipeline, locationID: locationID)
-    scheduleHIDPeriodicOutput(for: identifier, pipeline: pipeline, locationID: locationID)
+  private func isCurrentHIDTeardownCandidate(_ candidate: HIDTeardownCandidate) -> Bool {
+    guard isCurrentHIDTeardownInfo(candidate) else { return false }
+    guard
+      let key = hidInitializationKey(
+        for: candidate.identifier,
+        connectionID: candidate.connectionID
+      ), hidInitializationTasks[key] == nil
+    else { return false }
+    guard let current = pipelines[candidate.identifier] else { return true }
+    guard let expected = candidate.pipeline else { return false }
+    return expected === current
   }
 
-  private func scheduleHIDPeriodicOutput(
-    for identifier: DeviceIdentifier,
-    pipeline: DevicePipeline,
-    locationID: UInt32
-  ) {
-    hidPeriodicOutputTasks.removeValue(forKey: identifier)?.cancel()
-    hidPeriodicOutputTasks[identifier] = Task { [weak self] in
-      guard let self else { return }
-      while !Task.isCancelled {
-        guard let plan = await pipeline.hidPeriodicOutputPlan(), plan.interval > 0 else { return }
-        do { try await Task.sleep(nanoseconds: plan.interval) } catch { return }
-        guard !Task.isCancelled, await self.isCurrentHIDStartupPipeline(pipeline) else { return }
-        let outputPlan = PhysicalHIDOutputPlan(reports: plan.reports)
-        if !(await self.sendHIDOutputPlan(
-          outputPlan,
-          locationID: locationID,
-          identifier: identifier,
-          pipeline: pipeline
-        )) {
-          print("[DeviceManager] HID periodic output failed for loc=\(locationID)")
-        }
-      }
+  private func isCurrentHIDTeardownInfo(_ candidate: HIDTeardownCandidate) -> Bool {
+    guard let info = deviceInfos[candidate.identifier], case .hid = info.discoverySource else {
+      return false
     }
+    return info.hidConnectionID == candidate.connectionID
+      && info.physicalDevice == candidate.physicalDevice
+  }
+
+  private func removeOrphanedHIDInfo(after connection: HIDDeviceConnection) {
+    guard !isStopping,
+      let identifier = hidIdentifier(
+        for: connection,
+        role: protocolDriverRegistry.hidConnectionRole(of: connection.physicalDevice)
+      )
+    else { return }
+    guard let info = deviceInfos[identifier], case .hid = info.discoverySource,
+      info.hidConnectionID != connection.connectionID, pipelines[identifier] == nil,
+      hidInitializationTasks[hidInitializationKey(for: connection)] == nil
+    else { return }
+    hidPeriodicOutputTasks.removeValue(forKey: identifier)?.cancel()
+    retireOutputQueue(for: identifier)
+    discardPhysicalOutputs(for: identifier)
+    deviceInfos.removeValue(forKey: identifier)
+    lastPhysicalHIDOutputNanoseconds.removeValue(forKey: identifier)
+    print("[DeviceManager] Aborted HID replacement left stale state: \(identifier)")
   }
 }

@@ -22,29 +22,20 @@ struct MotionCalibrationActorTests {
     await #expect(throws: RemappingMotionCalibrationError.motionUnavailable) {
       try await engine.calibrateMotion(.start, for: identifier)
     }
-    let sample = ControllerMotionSample(
+    let sample = ControllerMotionSample.engineSpace(
       timestamp: ControllerSampleTimestamp(
         rawCounter: 0,
-        elapsedNanoseconds: 0,
+        monotonic: MonotonicTimestamp(nanoseconds: 0),
         tickNanosecondsNumerator: nil,
         tickNanosecondsDenominator: nil,
         sequenceIndex: 0,
         basis: .hostEstimate
       ),
-      rawGyroscope: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      rawAccelerometer: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-      physicalReading: ControllerMotionReading(
-        gyroscopeDegreesPerSecond: ControllerMotionVector(x: 0, y: 0, z: 0),
-        accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
-        calibrationSource: .nominalDeviceScale
-      )
+      gyroDegreesPerSecond: ControllerMotionVector(x: 0, y: 0, z: 0),
+      accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
+      calibrationSource: .nominalDeviceScale
     )
-    try await engine.process(
-      events: [.motionSample(sample)],
-      from: identifier,
-      using: profile,
-      at: 0
-    )
+    try await engine.process(inputs: [.motion(sample)], from: identifier, using: profile, at: 0)
     let started = try await engine.calibrateMotion(.start, for: identifier)
     #expect(started.hasMotionBaseline && started.isCollecting)
     let oldPermit = try #require(engine.emissionBarrier.currentPermit())
@@ -66,12 +57,7 @@ struct MotionCalibrationActorTests {
     let previousSession = try #require(await engine.motionSessionIdentifier(for: identifier))
     try await engine.releaseAll(for: identifier)
     #expect(await engine.motionCalibrationStatus(for: identifier) == nil)
-    try await engine.process(
-      events: [.motionSample(sample)],
-      from: identifier,
-      using: profile,
-      at: 0
-    )
+    try await engine.process(inputs: [.motion(sample)], from: identifier, using: profile, at: 0)
     let currentSession = try #require(await engine.motionSessionIdentifier(for: identifier))
     #expect(currentSession != previousSession)
     let currentPermit = try #require(engine.emissionBarrier.currentPermit())

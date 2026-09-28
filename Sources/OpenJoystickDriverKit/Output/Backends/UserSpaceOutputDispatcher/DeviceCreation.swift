@@ -27,10 +27,11 @@ struct UserSpaceDeviceCreationRetryPolicy {
 }
 
 extension UserSpaceOutputDispatcher {
+  /// Creation attempts, most to least complete; usage-bearing attempts publish a game pad.
   static func deviceCreationAttempts(
-    baseProperties: [String: Any],
-    primaryUsage: Int
+    baseProperties: [String: Any]
   ) -> [UserSpaceDeviceCreationAttempt] {
+    let primaryUsage = Int(kHIDUsage_GD_GamePad)
     let usageProperties: [String: Any] = [
       kIOHIDPrimaryUsagePageKey as String: Int(kHIDPage_GenericDesktop),
       kIOHIDPrimaryUsageKey as String: primaryUsage,

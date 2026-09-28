@@ -15,19 +15,34 @@ final class AutomaticBackendProbe: CompatibilityUserSpaceOutputDispatching,
   var suppressOutput = false
   var status: String { "probe" }
   var lastRumbleStatus: String { "none" }
+
   init(failsActivation: Bool = false) { self.failsActivation = failsActivation }
+
   func activate(for identifiers: [DeviceIdentifier]) throws {
     activations.append(identifiers)
     if failsActivation { throw ActivationFailure() }
   }
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {}
+
+  func dispatch(_: ControllerEvent, labels _: ControllerButtonLabels, from _: DeviceIdentifier) {}
+  func activateOutput(for _: DeviceIdentifier) {}
+
   func controllerDidStop(_ identifier: DeviceIdentifier) {}
+
   func close() { closed = true }
 }
 
-final class AutomaticConsumerBox: @unchecked Sendable {
-  var value = CompatibilityConsumerFamily.sdlHIDAPI
-  var created: [AutomaticBackendProbe] = []
+final class AutomaticBackendBox: @unchecked Sendable { var created: [AutomaticBackendProbe] = [] }
+
+final class AutomaticProfileLog: @unchecked Sendable {
+  private let lock = NSLock()
+  private var built: [VirtualHIDProfileID] = []
+
+  func record(_ profile: VirtualHIDProfileID) -> AutomaticBackendProbe {
+    lock.withLock { built.append(profile) }
+    return AutomaticBackendProbe()
+  }
+
+  func profiles() -> [VirtualHIDProfileID] { lock.withLock { built } }
 }
 
 final class ConcurrentBackendProbe: CompatibilityUserSpaceOutputDispatching, @unchecked Sendable {
@@ -37,12 +52,19 @@ final class ConcurrentBackendProbe: CompatibilityUserSpaceOutputDispatching, @un
   var suppressOutput = false
   var status: String { "probe" }
   var lastRumbleStatus: String { "none" }
+
   func activate(for identifiers: [DeviceIdentifier]) throws {}
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {
+
+  func dispatch(_: ControllerEvent, labels _: ControllerButtonLabels, from _: DeviceIdentifier) {
     lock.withLock { dispatchCount += 1 }
   }
+
+  func activateOutput(for _: DeviceIdentifier) { lock.withLock { dispatchCount += 1 } }
+
   func controllerDidStop(_ identifier: DeviceIdentifier) {}
+
   func close() { lock.withLock { closeCount += 1 } }
+
   func counts() -> (Int, Int) { lock.withLock { (dispatchCount, closeCount) } }
 }
 
@@ -53,6 +75,7 @@ final class ConcurrentFactoryProbe: @unchecked Sendable {
   private(set) var entered = 0
   private(set) var backends: [ConcurrentBackendProbe] = []
   var gate: DispatchSemaphore?
+
   func make() -> ConcurrentBackendProbe {
     lock.withLock { entered += 1 }
     enteredSignal.signal()
@@ -64,9 +87,11 @@ final class ConcurrentFactoryProbe: @unchecked Sendable {
       return backend
     }
   }
+
   func snapshot() -> (Int, Int, [ConcurrentBackendProbe]) {
     lock.withLock { (created, entered, backends) }
   }
+
   func waitForEntered() async {
     await withCheckedContinuation { continuation in
       DispatchQueue.global().async {

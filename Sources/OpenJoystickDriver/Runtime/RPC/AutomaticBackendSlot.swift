@@ -11,7 +11,9 @@ final class AutomaticBackendSlot: @unchecked Sendable {
   private var nativeCloseTask: Task<Void, Never>?
   private var retirementWaiters: [CheckedContinuation<Void, Never>] = []
   private var closeWaiters: [CheckedContinuation<Void, Never>] = []
+
   init(_ backend: any CompatibilityUserSpaceOutputDispatching) { self.backend = backend }
+
   func acquire() -> AutomaticBackendLease? {
     lock.withLock {
       guard !retired && !closed else { return nil }
@@ -19,6 +21,7 @@ final class AutomaticBackendSlot: @unchecked Sendable {
       return AutomaticBackendLease(self)
     }
   }
+
   /// Revoke admission immediately. A stalled native close must not block other controllers.
   @discardableResult
   func retireAndWait() async -> Bool {
@@ -42,6 +45,7 @@ final class AutomaticBackendSlot: @unchecked Sendable {
       return false
     }
   }
+
   func release() async {
     let shouldClose = lock.withLock { () -> Bool in
       leases -= 1
@@ -49,6 +53,7 @@ final class AutomaticBackendSlot: @unchecked Sendable {
     }
     if shouldClose { await closeOnce() }
   }
+
   func closeOnce() async {
     let task = beginClose()
     await withTaskCancellationHandler {
@@ -57,6 +62,7 @@ final class AutomaticBackendSlot: @unchecked Sendable {
       task.cancel()
     }
   }
+
   @discardableResult
   private func beginClose() -> Task<Void, Never> {
     lock.withLock {
@@ -78,6 +84,7 @@ final class AutomaticBackendSlot: @unchecked Sendable {
       return task
     }
   }
+
   func waitForCloseCompletion() async {
     await withCheckedContinuation { continuation in
       let complete = lock.withLock { () -> Bool in
@@ -94,8 +101,11 @@ final class AutomaticBackendLease: @unchecked Sendable {
   private let slot: AutomaticBackendSlot
   private let lock = NSLock()
   private var released = false
+
   init(_ slot: AutomaticBackendSlot) { self.slot = slot }
+
   var backend: any CompatibilityUserSpaceOutputDispatching { slot.backend }
+
   func release() async {
     let shouldRelease = lock.withLock {
       guard !released else { return false }

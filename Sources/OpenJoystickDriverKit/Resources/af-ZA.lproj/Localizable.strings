@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Kontroleer gekoppelde kontroleerders…";
 "status.refreshingProfile" = "Verfris profielstatus…";
 "status.loadingProfiles" = "Laai profiele…";
-"status.updatingIdentity" = "Werk kontroleerderidentiteit by…";
 "status.listening" = "Luister…";
 "status.readyToListen" = "Gereed om te luister";
 "status.checkingInput" = "Kontroleer";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Kontroleerders";
 "settings.controllerDisconnectedNotifications" = "Beheerder ontkoppel";
 "settings.controllerDisconnectedShort" = "Afgekoppel";
-"settings.controllerIdentity" = "Kontroleerderidentiteit";
 "settings.controllerNotifications" = "Beheerder verbind";
 "settings.diagnostics" = "Diagnostiek";
 "settings.service" = "Diens";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Ontlaai";
 "controllers.charging" = "Laai";
 "controllers.batteryFull" = "Vol";
+"controllers.notChargeable" = "Nie herlaaibaar nie";
 "controllers.batteryAccessibilityDetails" = "Battery: %@. Laaistatus: %@. Kabelstatus: %@.";
 "controllers.activeProfile" = "Aktiewe profiel";
 "controllers.profileChecking" = "Kontroleer…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Aktiewe profiel nie beskikbaar nie";
 "controllers.profileLoadError" = "Aktiewe profiel kon nie gelaai word nie";
 "controllers.protocol" = "Protokol";
-"controllers.parser" = "Ontleder";
 "controllers.serialNumber" = "Reeksnommer";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Invoereindpunt";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Aktiewe profielfout: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokol: %@. Parser: %@. Reeksnommer: %@. USB VID/PID: %@. Invoereindpunt: %@. Uitvoereindpunt: %@.";
 "controllers.publishedAs" = "Gepubliseer as";
-"identity.title" = "Kontroleerderidentiteit";
-"identity.needsAttention" = "Benodig aandag";
-"identity.error" = "Kontroleerderidentiteitsfout";
-"identity.updating" = "Werk kontroleerderidentiteit by…";
-"identity.reset" = "Stel terug na aanbevole";
-"identity.checking" = "Kontroleer";
-"identity.globalScope" = "Gebruiksvoorwaardes OpenJoystickDriver.";
-"identity.unavailable" = "Nie beskikbaar nie";
-"identity.notSelected" = "Nie gekies nie";
+"controllers.nativeGamepadNotPublished" = "Inheemse macOS-speelpaneel, nie gepubliseer nie";
+"virtualProfile.advanced" = "Gevorderd";
+"virtualProfile.title" = "Virtuele HID-profiel";
+"virtualProfile.modelScope" = "Geld vir elke gekoppelde kontroleerder van hierdie model.";
+"virtualProfile.sourceOverride" = "Oorskrywing";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Outomaties, oorskrywing verwerp";
+"virtualProfile.none" = "Geen virtuele HID-profiel nie";
+"virtualProfile.unavailable" = "Geen virtuele HID-profiel kan hierdie kontroleerder voorstel nie.";
+"virtualProfile.updating" = "Werk virtuele HID-profiel by…";
+"virtualProfile.live" = "Lewendige profiel";
+"virtualProfile.failure.unknownProfile" = "Hierdie virtuele HID-profiel is onbekend. Niks is gestoor nie.";
+"virtualProfile.failure.controllerNotFound" = "Die kontroleerder is ontkoppel of kan nie gevind word nie. Die oorskrywing is onveranderd.";
+"virtualProfile.failure.overrideRejected" = "Die oorskrywing is gestoor, maar hierdie kontroleerder kan dit nie gebruik nie, dus kies dit outomaties.";
+"virtualProfile.failure.activationFailed" = "Aktivering het misluk, dus is die vorige virtuele HID-profiel herstel: %@";
+"virtualProfile.failure.outputDisabled" = "Die oorskrywing is gestoor en geld sodra virtuele uitset geaktiveer is.";
+"virtualProfile.failure.serverStopped" = "Die diens het gestop. Die oorskrywing is onveranderd.";
+"virtualProfile.failure.persistenceFailed" = "Die oorskrywing kon nie gestoor word nie. Niks is gestoor nie.";
+"virtualProfile.storeError" = "Virtuele HID-profieloorskrywings kan nie gelees word nie (%@). Kontroleerders kies outomaties.";
+"virtualProfile.legacyIdentityRejected" = "Die uitgetrede kontroleerderidentiteit-instelling %@ word nie meer toegepas nie. Voer controller virtual reset --all uit om dit uit te vee.";
 "keyboard.noKey" = "Geen sleutel gekies nie";
 "keyboard.pressKey" = "Druk ’n sleutel…";
 "keyboard.captureKey" = "Vang sleutel";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Huidige status";
 "debug.runtime" = "Looptyd";
 "debug.controllers" = "Kontroleerders";
-"debug.controllerIdentity" = "Kontroleerderidentiteit";
 "debug.unavailable" = "Looptyd · nie beskikbaar nie";
 "debug.needsAttention" = "Looptyd · benodig aandag";
 "debug.diagnostics" = "Diagnostiek";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Kontroleerderuitvoer is afgeskakel.";
 "debug.outputNeedsAttention" = "Kontroleerderuitvoer benodig aandag.";
 "debug.serviceUnavailable" = "Diensdiagnostiek is tans nie beskikbaar nie.";
-"error.selectedOutputUnavailable" = "Die gekose kontroleerderuitvoer is nie beskikbaar nie.";
-"error.selectedOutputEnableFailed" = "Die gekose kontroleerderuitvoer kon nie geaktiveer word nie.";
 "error.profileChanged" = "Hierdie profiel is elders verander. Herlaai of hou aan redigeer.";
 "error.duplicateProfile" = "’n Profiel met daardie naam bestaan al.";
 "error.profileMissing" = "Daardie profiel is nie meer beskikbaar nie.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Looptyd";
 "common.controllers" = "Kontroleerders";
 "common.profiles" = "Profiele";
-"common.controllerIdentity" = "Kontroleerderidentiteit";
 "common.protocol" = "Protokol";
-"common.parser" = "Ontleder";
 "common.serialNumber" = "Reeksnommer";
 "common.inputEndpoint" = "Invoereindpunt";
 "common.outputEndpoint" = "Uitvoereindpunt";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Die gekies profiel item is nie meer beskikbaar nie.";
 "cli.catalog.app_ready.summary" = "Kontroleer geverifieerde toepassingdiensgereedheid";
 "cli.catalog.app_status.summary" = "Wys toepassingdienstatus";
-"cli.catalog.compat.summary" = "Bestuur virtuele-kontroleerderversoenbaarheid";
 "cli.catalog.controller_list.summary" = "Lys gekoppelde kontroleerders";
 "cli.catalog.controller_output.summary" = "Toets ondersteunde fisiese kontroleerderuitset";
 "cli.catalog.controller_packets.summary" = "Wys onlangse kontroleerderpakkies";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Wys drywer- en looptydstatus";
 "cli.catalog.test.summary" = "Toets virtuele-kontroleerderinvoeraflewering";
 "cli.catalog.update.summary" = "Kontroleer GitHub vir beskikbare bywerkings";
-"cli.compat.identity" = "versoenbaarheidsidentiteit: %@";
-"cli.compat.identity_unknown" = "versoenbaarheidsidentiteit: onbekend";
-"cli.compat.set_failed" = "Kon nie versoenbaarheidsidentiteit op %@ stel nie. Begin die geïnstalleerde program en verifieer Invoermonitering- en Toeganklikheidstoegang.";
-"cli.compat.usage" = "Gebruik: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "gebruikersruimtestatus: %@";
 "cli.controller.allAppleEntries" = "Alle presiese Apple-katalogusinskrywings:";
 "cli.controller.appleIDs" = "    Apple-ID's: %@";
 "cli.controller.applePairs" = "  Apple-pare   : %d presiese VID/PID-inskrywings";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Geen gekoppelde kontroleerder pas by --device %@ nie.";
 "cli.controller.selection.multiple" = "Verskeie kontroleerders pas. Kies een met --device:\n  %@";
 "cli.controller.selection.none" = "Geen kontroleerder is gekoppel nie.";
+"cli.controller.virtual.live" = "Virtuele HID-profiel: %@ (%@)";
+"cli.controller.virtual.none" = "Virtuele HID-profiel: geen (%@)";
+"cli.controller.virtual.failed" = "Versoek vir virtuele HID-profiel het misluk: %@";
+"cli.controller.virtual.unknown_profile" = "Onbekende virtuele HID-profiel „%@“. Gebruik een van: %@.";
+"cli.controller.virtual.missing_profile" = "„controller virtual set“ vereis ’n virtuele HID-profiel. Gebruik een van: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "„--all“ kan nie saam met --vid, --pid of --device gebruik word nie.";
+"cli.controller.virtual.reset_all.success" = "OK: elke virtuele HID-profieloorskrywing is verwyder.";
+"cli.controller.virtual.reset_all.failed" = "Kon nie instellings terugstel nie. Begin die geïnstalleerde program en verifieer sy toestemmings.";
 "cli.controller.selection.vid_pid_missing" = "Geen gekoppelde kontroleerder pas by %@:%@ nie.";
 "cli.controller.selection.vid_pid_pair" = "Gee beide VID en PID, of laat albei weg.";
 "cli.controller.serviceControllers" = "Kontroleerders (van lopende toepassingdiens):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Wenk: verleen die vereiste reg en Invoermoniteringstoegang.";
 "cli.controller.usbControllers" = "USB-kontroleerders (klas 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Gee beide VID en PID, of laat albei weg wanneer een kontroleerder gekoppel is.";
-"cli.diagnose.advisory_candidate" = "    Adviserende protokolkandidaat: %@";
 "cli.diagnose.app_missing" = "  Program: ontbreek by %@";
 "cli.diagnose.app_missing_fix" = "  Herstel: bou + installeer die program na /Applications";
 "cli.diagnose.app_present" = "  Program: teenwoordig";
 "cli.diagnose.binary_path" = "Binêr: %@";
-"cli.diagnose.catalog_conflict" = "      Waarneming bots met die katalogusfamilie; ontleder onveranderd";
-"cli.diagnose.catalog_parser" = "      Katalogusontleder bly %@ (%@)";
 "cli.diagnose.dext_found" = "  Gevonde .dext-bundels:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      eindpunt 0x%02X %@ %@ maxPacket=%@ interval=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Onbekende responskurwe „%@“.";
 "cli.mapping.double_tap_format" = "--double-tap verwag <ms>:<target>, bv. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Gebruik: OpenJoystickDriver --headless map <command>\n\nOpdragte:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nBron: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nTeiken: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAs-opsies:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo-opsies (slegs sleutelbord- en muisknoppies):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktiveringsopsies (slegs sleutelbord- en muisknoppies, wedersyds uitsluitend met turbo):\n  --long-hold <ms>:<target>     bv. --long-hold 500:key:b\n  --double-tap <ms>:<target>    bv. --double-tap 300:key:c\n\n<profile> aanvaar 'n UUID of 'n presiese, kassensitief-onafhanklike profielnaam.\n<id> aanvaar desimaal of 0x-voorvoegsel heksadesimaal.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Gebruik: OpenJoystickDriver --headless map <command>\n\nOpdragte:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nBron: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nTeiken: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAs-opsies:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo-opsies (slegs sleutelbord- en muisknoppies):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktiveringsopsies (slegs sleutelbord- en muisknoppies, wedersyds uitsluitend met turbo):\n  --long-hold <ms>:<target>     bv. --long-hold 500:key:b\n  --double-tap <ms>:<target>    bv. --double-tap 300:key:c\n\n<profile> aanvaar 'n UUID of 'n presiese, kassensitief-onafhanklike profielnaam.\n<id> aanvaar desimaal of 0x-voorvoegsel heksadesimaal.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ moet 'n 16-bis desimale of 0x-voorvoegsel heksadesimale identifiseerder wees.";
 "cli.mapping.jsonEncodeFailed" = "Kon nie UTF-8 JSON enkodeer nie.";
 "cli.mapping.layer_action_unknown" = "Onbekende laaghandeling „%@“. Verwag: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver-toepassingdiens loop nie.";
 "cli.runtime.sample_limit" = "Konfigurasie sou %d monsters versamel; verhoog --interval-ms.";
 "cli.runtime.stable_note" = "'n Stabiele beperkte week is bewyse vir hierdie werklading, nie bewys dat alle lekkasies afwesig is nie.";
-"cli.settings.reset.failed" = "Kon nie instellings terugstel nie. Begin die geïnstalleerde program en verifieer sy toestemmings.";
-"cli.settings.reset.next" = "Volgende: voer compat set <identity> uit om die versoenbaarheidsidentiteit te kies.";
-"cli.settings.reset.success" = "OK: toepassingdiensinstellings is teruggestel.";
 "cli.status.access_denied" = "As toegang geweier word, voer --headless permissions request uit en keur Invoermonitering en Toeganklikheid in Stelselinstellings goed.";
 "cli.status.heading" = "OpenJoystickDriver-status";
 "cli.status.json_error" = "Kon nie status-JSON enkodeer nie: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Status: %@";
 "cli.updates.unknown_option" = "Onbekende updates-opsie: %@";
 "common.unknown" = "Onbekend";
-"compatibility.appleGameController" = "Appel GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (Oorspronklik)";
 "developer.buttons" = "Knoppies";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B-knoppie";
 "inputTest.bCircle" = "B / Sirkel";
 "inputTest.brightness" = "Helderheid";
-"inputTest.circle" = "Sirkel";
 "inputTest.color" = "Kleur";
 "inputTest.controls" = "Lewendige invoer";
-"inputTest.cross" = "Kruis";
 "inputTest.disconnected" = "Beheerder ontkoppel";
 "inputTest.dpadDown" = "D-pad af";
 "inputTest.dpadLeft" = "D-pad links";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Verligtingskontroles is nie beskikbaar vir hierdie beheerder nie.";
 "inputTest.live" = "Invoer aktief";
 "inputTest.menu" = "Kieslys";
-"inputTest.minus" = "Minus";
 "inputTest.off" = "Af";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Opsies";
 "inputTest.outputError" = "Fisiese uitsetfout";
 "inputTest.outputRejected" = "Die beheerder het hierdie uitsettoets verwerp.";
 "inputTest.permissionRequired" = "Invoer Monitoring toestemming vereis";
 "inputTest.playerIndicator" = "Speler aanwyser";
-"inputTest.plus" = "Plus";
 "inputTest.pressed" = "Ingedruk";
-"inputTest.psButton" = "PS-knoppie";
 "inputTest.released" = "Losgelaat";
 "inputTest.rightBumper" = "Regterbumper";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Regter-Y";
 "inputTest.rumble" = "Rompel";
 "inputTest.rumbleUnavailable" = "Rumble word nie deur hierdie beheerder ondersteun nie.";
-"inputTest.share" = "Deel";
-"inputTest.square" = "Vierkant";
 "inputTest.stale" = "Invoer onderbreek";
 "inputTest.start" = "Begin Invoer toets";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Lewendige invoer";
 "inputTest.tabMotion" = "Versoek";
 "inputTest.tabOutput" = "Uitvoer";
-"inputTest.steamButton" = "Steam-knoppie";
 "inputTest.summary" = "Toetsknoppies, stokke, triggers, rumble, en beheerlig.";
 "inputTest.testRumble" = "Toets Rumble";
 "inputTest.title" = "Invoertoets";
-"inputTest.triangle" = "Driehoek";
 "inputTest.unavailable" = "Invoer nie beskikbaar nie";
 "inputTest.view" = "Bekyk";
 "inputTest.windowTitle" = "Invoertoets %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Die gekose Joy-Cons kon nie gekoppel word nie. Verfris die gekoppelde beheerders en probeer weer.";
 "profiles.joyConExplicitSession" = "Begin met 'n eksplisiete paar sessie";
 "profiles.joyConSessionState" = "Uitdruklike koppeling";
-"profiles.gyro.virtualMotion" = "Voorwaarts kalibreer virtuele beweging";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ roer (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Beheerder ontkoppel";
 "controllers.resume" = "Probeer weer";
 "controllers.disconnectFromOJD" = "Beheerder ontkoppel";
-"error.compatibilityTransitionDetailed" = "Die gekose kontroleerderuitvoer kon nie geaktiveer word nie. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Die gekose kontroleerderuitvoer kon nie geaktiveer word nie.";
 "cli.catalog.controller_disconnect.summary" = "Beheerder ontkoppel";
 "cli.catalog.controller_resume.summary" = "Probeer weer — Beheerder ontkoppel";
+"cli.catalog.controller_virtual_set.summary" = "Oorskryf ’n beheerder se virtuele HID-profiel";
+"cli.catalog.controller_virtual_reset.summary" = "Kies ’n beheerder se virtuele HID-profiel outomaties, of maak elke oorskrywing skoon met --all";
 "cli.controller.disconnected" = "Beheerder ontkoppel";
 "cli.controller.resumed" = "Invoer aktief";
 

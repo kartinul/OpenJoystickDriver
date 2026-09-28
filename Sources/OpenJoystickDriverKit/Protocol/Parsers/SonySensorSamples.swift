@@ -1,8 +1,10 @@
-/// Unwraps an ordered device counter. A decrease denotes one wrap; reconnect creates a new clock.
+/// Unwraps an ordered device counter. A decrease denotes one wrap; a transport reset re-anchors.
 /// Multiple wraps during a report gap cannot be recovered from the wire counter alone.
+/// Sample time is the first counted report's receipt time plus the unwrapped counter time.
 struct SonySensorClock {
   let mask: UInt32
   let tickNumerator: UInt32
+  private var anchor: UInt64?
   private var previous: UInt32?
   private var elapsed: UInt64 = 0
   private var remainder: UInt64 = 0
@@ -13,7 +15,14 @@ struct SonySensorClock {
     self.tickNumerator = tickNumerator
   }
 
-  mutating func timestamp(_ counter: UInt32) -> ControllerSampleTimestamp {
+  /// Starts a new time session at the next report; the sequence index keeps counting.
+  mutating func reset() {
+    let next = anchor == nil ? sequence : sequence + 1
+    self = Self(mask: mask, tickNumerator: tickNumerator)
+    sequence = next
+  }
+
+  mutating func timestamp(_ counter: UInt32, receivedAt: UInt64) -> ControllerSampleTimestamp {
     let raw = counter & mask
     if let previous {
       let ticks = UInt64((raw &- previous) & mask)
@@ -23,9 +32,11 @@ struct SonySensorClock {
       sequence += 1
     }
     previous = raw
+    let start = anchor ?? receivedAt
+    anchor = start
     return ControllerSampleTimestamp(
       rawCounter: raw,
-      elapsedNanoseconds: elapsed,
+      monotonic: MonotonicTimestamp(nanoseconds: start + elapsed),
       tickNanosecondsNumerator: tickNumerator,
       tickNanosecondsDenominator: 3,
       sequenceIndex: sequence
@@ -33,79 +44,92 @@ struct SonySensorClock {
   }
 }
 
-/// Packet facts follow Linux hid-playstation; values remain uncalibrated ADC readings.
+/// The ordered samples of one report.
+struct ControllerReportSamples: Equatable {
+  var motion: [ControllerMotionSample] = []
+  var touch: [ControllerTouchSample] = []
+}
+
+/// Packet facts follow Linux hid-playstation; `SonyMotionCalibration.sample` converts to SI.
+/// Touch frames carry the report's sensor-clock time: DS4 history frames have no timed counter,
+/// so every frame of one report shares that report's time.
 enum SonySensorSamples {
+  /// hid-playstation `DS4_TOUCHPAD_WIDTH`/`HEIGHT` and `DS_TOUCHPAD_WIDTH`/`HEIGHT`; raw Y grows
+  /// downward from the top edge.
+  static let dualShock4Touchpad = ControllerTouchGeometry(
+    originX: 0,
+    originY: 0,
+    width: 1920,
+    height: 942,
+    rawYIncreasesUpward: false
+  )
+  static let dualSenseTouchpad = ControllerTouchGeometry(
+    originX: 0,
+    originY: 0,
+    width: 1920,
+    height: 1080,
+    rawYIncreasesUpward: false
+  )
+
   static func dualShock4(
     _ bytes: [UInt8],
     bluetooth: Bool,
+    receivedAt: UInt64,
     clock: inout SonySensorClock,
     calibration: SonyMotionCalibration = .nominal
-  ) -> [ControllerEvent] {
-    guard bytes.count >= 32 else { return [] }
-    let timestamp = clock.timestamp(UInt32(unsigned16(bytes, at: 9)))
-    var events: [ControllerEvent] = [
-      motion(bytes, at: 12, timestamp: timestamp, calibration: calibration)
-    ]
-    guard bytes.count > 32 else { return events }
+  ) -> ControllerReportSamples {
+    guard bytes.count >= 32 else { return ControllerReportSamples() }
+    let timestamp = clock.timestamp(UInt32(unsigned16(bytes, at: 9)), receivedAt: receivedAt)
+    var samples = ControllerReportSamples(
+      motion: motion(bytes, at: 12, timestamp: timestamp, calibration: calibration)
+    )
+    guard bytes.count > 32 else { return samples }
     let count = Int(bytes[32])
-    guard count <= (bluetooth ? 4 : 3), bytes.count >= 33 + count * 9 else { return events }
+    guard count <= (bluetooth ? 4 : 3), bytes.count >= 33 + count * 9 else { return samples }
     for index in 0..<count {
       let offset = 33 + index * 9
-      events.append(
-        .touchSample(
-          ControllerTouchSample(
-            reportTimestamp: timestamp,
-            rawTouchCounter: bytes[offset],
-            historyIndex: UInt8(index),
-            width: 1920,
-            height: 942,
-            contacts: contacts(bytes, at: offset + 1)
-          )
+      samples.touch.append(
+        ControllerTouchSample(
+          timestamp: timestamp.monotonic,
+          contacts: contacts(bytes, at: offset + 1, geometry: dualShock4Touchpad)
         )
       )
     }
-    return events
+    return samples
   }
 
   static func dualSense(
     _ bytes: [UInt8],
+    receivedAt: UInt64,
     clock: inout SonySensorClock,
     calibration: SonyMotionCalibration = .nominal
-  ) -> [ControllerEvent] {
-    guard bytes.count >= 40 else { return [] }
+  ) -> ControllerReportSamples {
+    guard bytes.count >= 40 else { return ControllerReportSamples() }
     let counter = UInt32(unsigned16(bytes, at: 27)) | (UInt32(unsigned16(bytes, at: 29)) << 16)
-    let timestamp = clock.timestamp(counter)
-    return [
-      motion(bytes, at: 15, timestamp: timestamp, calibration: calibration),
-      .touchSample(
+    let timestamp = clock.timestamp(counter, receivedAt: receivedAt)
+    return ControllerReportSamples(
+      motion: motion(bytes, at: 15, timestamp: timestamp, calibration: calibration),
+      touch: [
         ControllerTouchSample(
-          reportTimestamp: timestamp,
-          rawTouchCounter: nil,
-          historyIndex: 0,
-          width: 1920,
-          height: 1080,
-          contacts: contacts(bytes, at: 32)
+          timestamp: timestamp.monotonic,
+          contacts: contacts(bytes, at: 32, geometry: dualSenseTouchpad)
         )
-      ),
-    ]
+      ]
+    )
   }
 
   private static func motion(
     _ bytes: [UInt8],
     at offset: Int,
     timestamp: ControllerSampleTimestamp,
-    calibration: SonyMotionCalibration? = nil
-  ) -> ControllerEvent {
-    let gyro = vector(bytes, at: offset)
-    let accel = vector(bytes, at: offset + 6)
-    return .motionSample(
-      ControllerMotionSample(
-        timestamp: timestamp,
-        rawGyroscope: gyro,
-        rawAccelerometer: accel,
-        physicalReading: calibration?.reading(gyro: gyro, accel: accel)
-      )
+    calibration: SonyMotionCalibration
+  ) -> [ControllerMotionSample] {
+    let sample = calibration.sample(
+      timestamp: timestamp,
+      gyro: vector(bytes, at: offset),
+      accel: vector(bytes, at: offset + 6)
     )
+    return sample.map { [$0] } ?? []
   }
 
   private static func vector(_ bytes: [UInt8], at offset: Int) -> ControllerRawSensorVector {
@@ -120,15 +144,21 @@ enum SonySensorSamples {
     UInt16(bytes[offset]) | (UInt16(bytes[offset + 1]) << 8)
   }
 
-  private static func contacts(_ bytes: [UInt8], at offset: Int) -> [ControllerTouchContact] {
-    [offset, offset + 4].map { start in
+  /// Slot is the contact's index in the report, as in hid-playstation's `input_mt_slot` loop; the
+  /// low seven bits of each contact byte are a per-finger tracking counter and are not published.
+  private static func contacts(
+    _ bytes: [UInt8],
+    at offset: Int,
+    geometry: ControllerTouchGeometry
+  ) -> [ControllerTouchContact] {
+    [offset, offset + 4].enumerated().map { slot, start in
       let x = UInt16(bytes[start + 1]) | (UInt16(bytes[start + 2] & 0x0F) << 8)
       let y = UInt16(bytes[start + 2] >> 4) | (UInt16(bytes[start + 3]) << 4)
-      return ControllerTouchContact(
-        id: bytes[start] & 0x7F,
+      return geometry.contact(
+        slot: UInt8(slot),
         isActive: bytes[start] & 0x80 == 0,
-        x: Int32(x),
-        y: Int32(y)
+        rawX: Int32(x),
+        rawY: Int32(y)
       )
     }
   }

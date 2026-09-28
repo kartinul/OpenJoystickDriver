@@ -5,7 +5,7 @@ import Testing
 
 struct JoyConPairingRoutingTests {
   @Test
-  func exactHalvesCombineIntoOneOutputAndDisconnectReturnsTheSurvivorToCompatibility() async throws
+  func exactHalvesCombineIntoOneOutputAndDisconnectReturnsTheSurvivorToVirtualGamepad() async throws
   {
     let profile = pairProfile()
     let harness = try await RemappingRouterHarness.make()
@@ -15,7 +15,7 @@ struct JoyConPairingRoutingTests {
     let right = joyCon(productID: 0x2007, location: 2)
     for member in [left, right] {
       await harness.router.controllerInputOwnershipChanged(.exclusive, for: member)
-      try await harness.router.dispatchCausally(events: [], from: member)
+      try await harness.router.dispatchCausally(.activation, from: member)
     }
     harness.recorder.removeAll()
 
@@ -24,8 +24,8 @@ struct JoyConPairingRoutingTests {
       rightRuntimeIdentifier: right.runtimeIdentifier,
       profile: profile
     )
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.leftSL)], from: left)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: right)
+    try await harness.router.dispatchCausally(changes: [.press(.auxiliary3)], from: left)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: right)
 
     #expect(
       harness.recorder.snapshot().suffix(2) == [
@@ -41,11 +41,17 @@ struct JoyConPairingRoutingTests {
       harness.recorder.snapshot().suffix(2) == [.gamepad(.neutral, left), .compatibilityStop(left)]
     )
     #expect(await harness.router.statusSnapshot().joyConPairs.isEmpty)
-    #expect(await harness.router.status(for: left)?.selection == .compatibility)
+    #expect(await harness.router.status(for: left)?.selection == .virtualGamepad)
     #expect(await harness.router.status(for: right) == nil)
     harness.recorder.removeAll()
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: right)
-    #expect(harness.recorder.snapshot() == [.compatibility([.buttonPressed(.a)], right)])
+    // The stopped half reconnects with a fresh pipeline, whose first snapshot holds South.
+    InputScript.of(harness.router).reset(right)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: right)
+    #expect(
+      harness.recorder.snapshot() == [
+        .virtualGamepad(ControllerState.neutral.applying([.press(.faceSouth)]), right)
+      ]
+    )
     #expect(await harness.router.statusSnapshot().joyConPairs.isEmpty)
   }
 
@@ -57,7 +63,7 @@ struct JoyConPairingRoutingTests {
     try await harness.library.create(profile)
     let left = joyCon(productID: 0x2006, location: 11)
     let right = joyCon(productID: 0x2007, location: 12)
-    try await harness.router.dispatchCausally(events: [], from: left)
+    try await harness.router.dispatchCausally(.activation, from: left)
     await #expect(throws: RemappingJoyConPairError.controllerUnavailable) {
       _ = try await harness.router.pairJoyCons(
         leftRuntimeIdentifier: left.runtimeIdentifier,
@@ -65,7 +71,7 @@ struct JoyConPairingRoutingTests {
         profile: profile
       )
     }
-    try await harness.router.dispatchCausally(events: [], from: right)
+    try await harness.router.dispatchCausally(.activation, from: right)
     let first = try await harness.router.pairJoyCons(
       leftRuntimeIdentifier: left.runtimeIdentifier,
       rightRuntimeIdentifier: right.runtimeIdentifier,
@@ -93,18 +99,18 @@ struct JoyConPairingRoutingTests {
     let right = joyCon(productID: 0x2007, location: 22)
     for member in [left, right] {
       await harness.router.controllerInputOwnershipChanged(.exclusive, for: member)
-      try await harness.router.dispatchCausally(events: [], from: member)
+      try await harness.router.dispatchCausally(.activation, from: member)
     }
     _ = try await harness.router.pairJoyCons(
       leftRuntimeIdentifier: left.runtimeIdentifier,
       rightRuntimeIdentifier: right.runtimeIdentifier,
       profile: profile
     )
-    try await harness.router.dispatchCausally(events: [motionSample()], from: left)
+    try await harness.router.dispatchCausally(changes: [gyroMotion()], from: left)
     await #expect(throws: RemappingMotionCalibrationError.motionUnavailable) {
       try await harness.router.motionCalibration(for: left.runtimeIdentifier)
     }
-    try await harness.router.dispatchCausally(events: [motionSample()], from: right)
+    try await harness.router.dispatchCausally(changes: [gyroMotion()], from: right)
     #expect(
       try await harness.router.motionCalibration(for: right.runtimeIdentifier).hasMotionBaseline
     )
@@ -112,8 +118,8 @@ struct JoyConPairingRoutingTests {
     let transaction = try await harness.router.beginProfileTransaction()
     #expect(await harness.router.statusSnapshot().joyConPairs.isEmpty)
     try await harness.router.rollBackProfileTransaction(transaction)
-    #expect(await harness.router.status(for: left)?.selection == .compatibility)
-    #expect(await harness.router.status(for: right)?.selection == .compatibility)
+    #expect(await harness.router.status(for: left)?.selection == .virtualGamepad)
+    #expect(await harness.router.status(for: right)?.selection == .virtualGamepad)
   }
 
   private func pairProfile(
@@ -136,24 +142,20 @@ struct JoyConPairingRoutingTests {
     DeviceIdentifier(vendorID: 0x057E, productID: productID, locationID: location)
   }
 
-  private func motionSample() -> ControllerEvent {
-    .motionSample(
-      ControllerMotionSample(
+  private func gyroMotion() -> InputChange {
+    .motion(
+      ControllerMotionSample.engineSpace(
         timestamp: ControllerSampleTimestamp(
           rawCounter: 1,
-          elapsedNanoseconds: 10_000_000,
+          monotonic: MonotonicTimestamp(nanoseconds: 10_000_000),
           tickNanosecondsNumerator: nil,
           tickNanosecondsDenominator: nil,
           sequenceIndex: 1,
           basis: .hostEstimate
         ),
-        rawGyroscope: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-        rawAccelerometer: ControllerRawSensorVector(x: 0, y: 0, z: 0),
-        physicalReading: ControllerMotionReading(
-          gyroscopeDegreesPerSecond: ControllerMotionVector(x: 0, y: 1, z: 0),
-          accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
-          calibrationSource: .nominalDeviceScale
-        )
+        gyroDegreesPerSecond: ControllerMotionVector(x: 0, y: 1, z: 0),
+        accelerationG: ControllerMotionVector(x: 0, y: 1, z: 0),
+        calibrationSource: .nominalDeviceScale
       )
     )
   }

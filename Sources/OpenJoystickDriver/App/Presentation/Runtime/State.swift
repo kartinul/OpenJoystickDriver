@@ -23,10 +23,10 @@ final class RuntimeViewModel: ObservableObject {
   var permissionState: RuntimePermissionLoadState = .unavailable
   @Published
   var postEventAccessState: RuntimePostEventAccessLoadState = .loading
+  /// Virtual HID profile override requests keyed by controller runtime identifier.
   @Published
-  var compatibilityState: RuntimeCompatibilityState = .loading
-  @Published
-  var compatibilityError: String?
+  var virtualHIDProfileOverrideStates:
+    [RuntimeControllerModel: RuntimeVirtualHIDProfileOverrideState] = [:]
   @Published
   var mutationState: RuntimeMutationState = .idle
   @Published
@@ -56,21 +56,12 @@ final class RuntimeViewModel: ObservableObject {
   var isScopedRefreshInFlight = false
   let scopedRefreshInFlightPublisher = CurrentValueSubject<Bool, Never>(false)
 
-  var requestedCompatibilityIdentity: CompatibilityIdentity {
-    if let authoritativeCompatibilityIdentity { return authoritativeCompatibilityIdentity }
-    guard case .available(let status) = statusState, let identity = status.compatibilityIdentity
-    else { return .automatic }
-    return identity
-  }
-
   var refreshGeneration = 0
   var liveStatusGeneration = 0
   var permissionRefreshGeneration = 0
   var postEventAccessGeneration = 0
-  var compatibilityGeneration = 0
   var authoritativePermissionSummary: RuntimePermissionSummary?
   var authoritativePostEventAccess: RemappingPostEventAccessState?
-  var authoritativeCompatibilityIdentity: CompatibilityIdentity?
   var inputGeneration = 0
   var supportDiagnosticsGeneration = 0
   var supportReportGeneration = 0
@@ -134,15 +125,10 @@ final class RuntimeViewModel: ObservableObject {
     let permissionGeneration = permissionRefreshGeneration
     postEventAccessGeneration += 1
     let postEventGeneration = postEventAccessGeneration
-    compatibilityGeneration += 1
-    let compatibilityOperationGeneration = compatibilityGeneration
     authoritativePermissionSummary = nil
     authoritativePostEventAccess = nil
-    authoritativeCompatibilityIdentity = nil
     permissionState = .loading
     postEventAccessState = .loading
-    compatibilityState = .loading
-    compatibilityError = nil
     lastError = nil
     var loadedAny = false
 
@@ -164,7 +150,7 @@ final class RuntimeViewModel: ObservableObject {
       }
       let presentation = RuntimeStatusPresentation(payload: payload).applyingPermissions(
         permissions
-      ).applyingCompatibilityIdentity(authoritativeCompatibilityIdentity)
+      )
       statusState = .available(presentation)
       publishControllerInventory(payload.connectedDevices)
       if permissionGeneration == permissionRefreshGeneration {
@@ -207,31 +193,6 @@ final class RuntimeViewModel: ObservableObject {
           RuntimePresentation.isUnavailable(error) ? .unavailable(message) : .error(message)
       }
       lastError = lastError ?? message
-    }
-
-    do {
-      let identity = try await gateway.compatibilityIdentity()
-      guard generation == refreshGeneration else { return }
-      // A scoped Output action may have started while the broader refresh was in flight.  Keep
-      // that newer operation authoritative instead of letting this older read roll it back.
-      if compatibilityOperationGeneration == compatibilityGeneration {
-        authoritativeCompatibilityIdentity = identity
-        compatibilityState = .available(identity)
-        compatibilityError = nil
-        updateStatusCompatibilityIdentity(identity)
-        loadedAny = true
-      }
-    } catch {
-      guard generation == refreshGeneration else { return }
-      if compatibilityOperationGeneration == compatibilityGeneration {
-        let message = RuntimePresentation.userFacingError(error)
-        compatibilityState =
-          RuntimePresentation.isUnavailable(error) ? .unavailable(message) : .error(message)
-        compatibilityError = message
-        authoritativeCompatibilityIdentity = nil
-        updateStatusCompatibilityIdentity(nil)
-        lastError = lastError ?? message
-      }
     }
 
     guard generation == refreshGeneration else { return }

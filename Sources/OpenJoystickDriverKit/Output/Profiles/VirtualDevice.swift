@@ -35,7 +35,7 @@ public enum UserSpaceVirtualDeviceConstants {
     (locationID & 0xFFFF_0000) == VirtualDeviceIdentityConstants.userSpaceLocationIDNamespace
   }
 
-  /// Fail-closed admission check shared by the IOKit and CoreHID input backends.
+  /// Fail-closed admission check used by the IOKit physical HID input backend.
   ///
   /// Compatibility devices intentionally spoof third-party product names, transports, and
   /// VID/PID tuples. Apple does not guarantee that every property is surfaced on every callback,
@@ -91,11 +91,14 @@ public enum UserSpaceVirtualDeviceConstants {
   // MARK: - Private helpers
 
   private static func stableKey(for identifier: DeviceIdentifier) -> String {
-    // Prefer physical serial when available, fall back to locationID.
+    // Prefer physical serial when available, fall back to locationID. The interface keeps each
+    // logical controller of one physical device distinct.
     // IMPORTANT: this key is only used as hash input; it is not exposed to consumers.
-    let sn = identifier.serialNumber ?? ""
+    let identity = identifier.controllerIdentity
+    let sn = identity.serialNumber ?? ""
     let loc = identifier.locationID.map { "\($0)" } ?? ""
-    return "\(identifier.vendorID):\(identifier.productID):\(sn):\(loc)"
+    let interface = identifier.interfaceNumber.map { "\($0)" } ?? ""
+    return "\(identity.vendorID):\(identity.productID):\(sn):\(loc):\(interface)"
   }
 
   private static func fnv1a64(_ s: String) -> UInt64 {
@@ -143,31 +146,68 @@ public enum PhysicalHIDBackendEventPolicy {
 public struct PhysicalHIDTrackingStateMachine {
   private struct Device {
     let locationID: UInt32
+    let serviceID: UInt64?
+    let nativePassThrough: Bool
+    let disconnectsIndividually: Bool
     var ownership: HIDInputOwnership
   }
 
   private var devices: [UInt64: Device] = [:]
   private var deviceIDsByLocation: [UInt32: Set<UInt64>] = [:]
+  private var deviceIDsByService: [UInt64: UInt64] = [:]
+  /// Native devices by shared routing location; location 0 identifies no controller.
+  private var nativeDeviceIDsByLocation: [UInt32: Set<UInt64>] = [:]
 
   public init() {}
 
+  /// Registers one device object. `serviceID` is the IORegistry entry ID of the backing
+  /// service: IOHIDManager creates a separate device object for each matching dictionary a
+  /// service satisfies, so only the first object per service is admitted. A native pass-through
+  /// device is never seized, so it stays out of its location's ownership and disconnect state.
+  /// A device that `disconnectsIndividually` (an interface of a family with HID protocol roles)
+  /// shares its location's ownership but disconnects on its own removal.
   @discardableResult
   public mutating func register(
     deviceID: UInt64,
     locationID: UInt32,
     syntheticProperty: Any?,
-    ownership: HIDInputOwnership = .unknown
+    ownership: HIDInputOwnership = .unknown,
+    serviceID: UInt64? = nil,
+    nativePassThrough: Bool = false,
+    disconnectsIndividually: Bool = false
   ) -> Bool {
     guard PhysicalHIDBackendEventPolicy.accepts(.deviceAdded, syntheticProperty: syntheticProperty),
       devices[deviceID] == nil
     else { return false }
-    devices[deviceID] = Device(locationID: locationID, ownership: ownership)
-    deviceIDsByLocation[locationID, default: []].insert(deviceID)
+    if let serviceID {
+      guard deviceIDsByService[serviceID] == nil else { return false }
+      deviceIDsByService[serviceID] = deviceID
+    }
+    devices[deviceID] = Device(
+      locationID: locationID,
+      serviceID: serviceID,
+      nativePassThrough: nativePassThrough,
+      disconnectsIndividually: disconnectsIndividually,
+      ownership: ownership
+    )
+    if !nativePassThrough {
+      deviceIDsByLocation[locationID, default: []].insert(deviceID)
+    } else if locationID != 0 {
+      nativeDeviceIDsByLocation[locationID, default: []].insert(deviceID)
+    }
     return true
   }
 
+  /// Whether a native device holds this routing location, whose other interfaces macOS keeps.
+  public func hasNativeDevice(locationID: UInt32) -> Bool {
+    nativeDeviceIDsByLocation[locationID] != nil
+  }
+
+  /// A native device's location routes only that device's input: a sibling interface of the same
+  /// controller is left to macOS.
   public func acceptsInput(deviceID: UInt64) -> Bool {
     guard let device = devices[deviceID] else { return false }
+    if !device.nativePassThrough, hasNativeDevice(locationID: device.locationID) { return false }
     return device.ownership != .ownedByAnotherClient
   }
 
@@ -192,12 +232,32 @@ public struct PhysicalHIDTrackingStateMachine {
 
   public func acceptsFeedback(locationID: UInt32) -> Bool { acceptsInput(locationID: locationID) }
 
-  /// Removes one device and returns true only when its location is now fully disconnected.
+  /// Whether removing this device disconnects it while other devices stay tracked at its
+  /// location: a device that disconnects individually and has siblings.
+  public func disconnectsBeforeItsLocation(deviceID: UInt64) -> Bool {
+    guard let device = devices[deviceID], device.disconnectsIndividually else { return false }
+    return deviceIDsByLocation[device.locationID]?.contains { $0 != deviceID } == true
+  }
+
+  /// Removes one device and returns true when it disconnects: a native pass-through device or
+  /// one that disconnects individually always, any other device only when its location is now
+  /// fully disconnected.
   @discardableResult
   public mutating func remove(deviceID: UInt64) -> Bool {
-    guard let locationID = devices.removeValue(forKey: deviceID)?.locationID else { return false }
+    guard let device = devices.removeValue(forKey: deviceID) else { return false }
+    let locationID = device.locationID
+    if let serviceID = device.serviceID { deviceIDsByService.removeValue(forKey: serviceID) }
+    guard !device.nativePassThrough else {
+      nativeDeviceIDsByLocation[locationID]?.remove(deviceID)
+      if nativeDeviceIDsByLocation[locationID]?.isEmpty == true {
+        nativeDeviceIDsByLocation.removeValue(forKey: locationID)
+      }
+      return true
+    }
     deviceIDsByLocation[locationID]?.remove(deviceID)
-    guard deviceIDsByLocation[locationID]?.isEmpty == true else { return false }
+    guard deviceIDsByLocation[locationID]?.isEmpty == true else {
+      return device.disconnectsIndividually
+    }
     deviceIDsByLocation.removeValue(forKey: locationID)
     return true
   }
@@ -207,7 +267,11 @@ public struct PhysicalHIDTrackingStateMachine {
   public mutating func remove(locationID: UInt32) -> Bool {
     guard let deviceIDs = deviceIDsByLocation.removeValue(forKey: locationID), !deviceIDs.isEmpty
     else { return false }
-    deviceIDs.forEach { devices.removeValue(forKey: $0) }
+    for deviceID in deviceIDs {
+      if let serviceID = devices.removeValue(forKey: deviceID)?.serviceID {
+        deviceIDsByService.removeValue(forKey: serviceID)
+      }
+    }
     return true
   }
 }
@@ -244,18 +308,28 @@ public struct PhysicalHIDBackendEventAdapter {
     deviceID: UInt64,
     locationID: UInt32,
     syntheticProperty: Any?,
-    ownership: HIDInputOwnership = .unknown
+    ownership: HIDInputOwnership = .unknown,
+    serviceID: UInt64? = nil,
+    nativePassThrough: Bool = false,
+    disconnectsIndividually: Bool = false
   ) -> Bool {
     tracking.register(
       deviceID: deviceID,
       locationID: locationID,
       syntheticProperty: syntheticProperty,
-      ownership: ownership
+      ownership: ownership,
+      serviceID: serviceID,
+      nativePassThrough: nativePassThrough,
+      disconnectsIndividually: disconnectsIndividually
     )
   }
 
   public func ownership(locationID: UInt32) -> HIDInputOwnership {
     tracking.ownership(locationID: locationID)
+  }
+
+  public func hasNativeDevice(locationID: UInt32) -> Bool {
+    tracking.hasNativeDevice(locationID: locationID)
   }
 
   @discardableResult
@@ -286,12 +360,13 @@ public struct PhysicalHIDBackendEventAdapter {
         shouldEmitDisconnect: false
       )
     }
-    let locationRemoved = tracking.remove(deviceID: deviceID)
+    let siblingsRemain = tracking.disconnectsBeforeItsLocation(deviceID: deviceID)
+    let disconnects = tracking.remove(deviceID: deviceID)
     return RemovalDecision(
       wasTracked: true,
-      locationRemoved: locationRemoved,
+      locationRemoved: disconnects && !siblingsRemain,
       shouldCancelNotification: true,
-      shouldEmitDisconnect: locationRemoved
+      shouldEmitDisconnect: disconnects
     )
   }
 
@@ -312,20 +387,30 @@ public final class SynchronizedPhysicalHIDBackendEventAdapter: @unchecked Sendab
     deviceID: UInt64,
     locationID: UInt32,
     syntheticProperty: Any?,
-    ownership: HIDInputOwnership = .unknown
+    ownership: HIDInputOwnership = .unknown,
+    serviceID: UInt64? = nil,
+    nativePassThrough: Bool = false,
+    disconnectsIndividually: Bool = false
   ) -> Bool {
     lock.withLock {
       adapter.add(
         deviceID: deviceID,
         locationID: locationID,
         syntheticProperty: syntheticProperty,
-        ownership: ownership
+        ownership: ownership,
+        serviceID: serviceID,
+        nativePassThrough: nativePassThrough,
+        disconnectsIndividually: disconnectsIndividually
       )
     }
   }
 
   public func ownership(locationID: UInt32) -> HIDInputOwnership {
     lock.withLock { adapter.ownership(locationID: locationID) }
+  }
+
+  public func hasNativeDevice(locationID: UInt32) -> Bool {
+    lock.withLock { adapter.hasNativeDevice(locationID: locationID) }
   }
 
   @discardableResult

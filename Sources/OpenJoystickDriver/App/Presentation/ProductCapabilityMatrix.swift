@@ -10,7 +10,7 @@
     case controllerPackets
     case profileMapping
     case permissions
-    case compatibilityIdentity
+    case virtualHIDProfileOverride
     case logs
     case supportReport
     case extensionLifecycle
@@ -45,7 +45,7 @@
       case .controllerPackets: return [.developerTools]
       case .profileMapping: return [.profiles]
       case .permissions, .extensionLifecycle: return [.overview]
-      case .compatibilityIdentity: return [.controllers]
+      case .virtualHIDProfileOverride: return [.controllers]
       case .logs: return [.console]
       case .supportReport: return [.developerTools]
       case .updateCheck: return [.settings]

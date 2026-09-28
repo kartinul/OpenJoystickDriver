@@ -33,9 +33,9 @@ actor GatewayStub: ApplicationServiceGateway {
   var snapshotPayload: ApplicationServiceRemappingSnapshotPayload
   var statusShouldFail: Bool
   let statusReadDelayNanoseconds: UInt64
-  let inputState: DeviceInputState?
-  let inputSequence: [DeviceInputState]?
-  let inputStatesByRuntimeIdentifier: [String: DeviceInputState]
+  let inputState: ControllerState?
+  let inputSequence: [ControllerState]?
+  let inputStatesByRuntimeIdentifier: [String: ControllerState]
   var packetEntries: [PacketLogEntry]
   let packetSequence: [[PacketLogEntry]]?
   let packetEntriesByRuntimeIdentifier: [String: [PacketLogEntry]]
@@ -43,8 +43,8 @@ actor GatewayStub: ApplicationServiceGateway {
   let updateShouldConflict: Bool
   let updateDelayNanoseconds: UInt64
   let deleteShouldFail: Bool
-  let setIdentityResult: Bool
-  let compatibilityReadDelayNanoseconds: UInt64
+  var overrideFailure: VirtualHIDProfileOverrideFailure?
+  var overrideError: ApplicationServiceClientError?
   var lastExpectedCurrent: RemappingProfile?
   var lastInputSelector: RuntimeDeviceSelector?
   var updateCallCount = 0
@@ -61,8 +61,9 @@ actor GatewayStub: ApplicationServiceGateway {
   var statusReadContinuations: [CheckedContinuation<Void, Never>] = []
   var statusCallWaiters: [(count: Int, continuation: CheckedContinuation<Void, Never>)] = []
   var remappingSnapshotCallCount = 0
-  var setIdentityCallCount = 0
-  var selectedIdentity: CompatibilityIdentity = .sdl2_3
+  var overrideRequests: [(profile: VirtualHIDProfileID?, selector: RuntimeDeviceSelector)] = []
+  var overrideRequestsAreGated = false
+  var overrideContinuations: [CheckedContinuation<Void, Never>] = []
 
   init(
     statusPayload: ApplicationServiceStatusPayload = ApplicationServiceStatusPayload(
@@ -70,8 +71,7 @@ actor GatewayStub: ApplicationServiceGateway {
       accessibility: "granted",
       connectedDevices: [],
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "ready",
-      compatibilityIdentity: CompatibilityIdentity.sdl2_3.rawValue
+      userSpaceVirtualDeviceStatus: "ready"
     ),
     snapshotPayload: ApplicationServiceRemappingSnapshotPayload =
       ApplicationServiceRemappingSnapshotPayload(
@@ -82,9 +82,9 @@ actor GatewayStub: ApplicationServiceGateway {
       ),
     statusShouldFail: Bool = false,
     statusReadDelayNanoseconds: UInt64 = 0,
-    inputState: DeviceInputState? = nil,
-    inputSequence: [DeviceInputState]? = nil,
-    inputStatesByRuntimeIdentifier: [String: DeviceInputState] = [:],
+    inputState: ControllerState? = nil,
+    inputSequence: [ControllerState]? = nil,
+    inputStatesByRuntimeIdentifier: [String: ControllerState] = [:],
     packetEntries: [PacketLogEntry] = [],
     packetSequence: [[PacketLogEntry]]? = nil,
     packetEntriesByRuntimeIdentifier: [String: [PacketLogEntry]] = [:],
@@ -92,8 +92,7 @@ actor GatewayStub: ApplicationServiceGateway {
     updateShouldConflict: Bool = false,
     updateDelayNanoseconds: UInt64 = 0,
     deleteShouldFail: Bool = false,
-    setIdentityResult: Bool = true,
-    compatibilityReadDelayNanoseconds: UInt64 = 0
+    overrideFailure: VirtualHIDProfileOverrideFailure? = nil
   ) {
     self.statusPayload = statusPayload
     self.snapshotPayload = snapshotPayload
@@ -109,8 +108,7 @@ actor GatewayStub: ApplicationServiceGateway {
     self.updateShouldConflict = updateShouldConflict
     self.updateDelayNanoseconds = updateDelayNanoseconds
     self.deleteShouldFail = deleteShouldFail
-    self.setIdentityResult = setIdentityResult
-    self.compatibilityReadDelayNanoseconds = compatibilityReadDelayNanoseconds
+    self.overrideFailure = overrideFailure
   }
 
   func status() async throws -> ApplicationServiceStatusPayload {
@@ -165,7 +163,7 @@ actor GatewayStub: ApplicationServiceGateway {
     _ requirement: PermissionManager.Requirement
   ) throws -> PermissionManager.Snapshot { try requestPermissions() }
 
-  func deviceInputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState? {
+  func controllerState(for selector: RuntimeDeviceSelector) async throws -> ControllerState? {
     activeDeviceReads += 1
     maximumConcurrentDeviceReads = max(maximumConcurrentDeviceReads, activeDeviceReads)
     defer { activeDeviceReads -= 1 }
@@ -310,17 +308,54 @@ actor GatewayStub: ApplicationServiceGateway {
   func unpairRemappingJoyCons(sessionID: UUID) throws -> ApplicationServiceRemappingSnapshotPayload
   { snapshotPayload }
 
-  func compatibilityIdentity() async throws -> CompatibilityIdentity {
-    let identity = selectedIdentity
-    if compatibilityReadDelayNanoseconds > 0 {
-      try await Task.sleep(nanoseconds: compatibilityReadDelayNanoseconds)
-    }
-    return identity
+  func setVirtualHIDProfileOverride(
+    _ profile: VirtualHIDProfileID,
+    for selector: RuntimeDeviceSelector
+  ) async throws -> VirtualHIDProfileOverrideResult {
+    try await recordOverrideRequest(profile, selector: selector)
+    return VirtualHIDProfileOverrideResult(
+      requested: profile,
+      live: overrideFailure == nil ? profile : .generic,
+      source: overrideFailure == nil ? "override" : "automatic",
+      failure: overrideFailure
+    )
   }
 
-  func setCompatibilityIdentity(_ identity: CompatibilityIdentity) throws -> Bool {
-    setIdentityCallCount += 1
-    if setIdentityResult { selectedIdentity = identity }
-    return setIdentityResult
+  func resetVirtualHIDProfileOverride(
+    for selector: RuntimeDeviceSelector
+  ) async throws -> VirtualHIDProfileOverrideResult {
+    try await recordOverrideRequest(nil, selector: selector)
+    return VirtualHIDProfileOverrideResult(
+      requested: nil,
+      live: .generic,
+      source: "automatic",
+      failure: overrideFailure
+    )
+  }
+
+  func setOverrideFailure(_ failure: VirtualHIDProfileOverrideFailure?) {
+    overrideFailure = failure
+  }
+
+  func setOverrideError(_ error: ApplicationServiceClientError?) { overrideError = error }
+
+  func gateOverrideRequests() { overrideRequestsAreGated = true }
+
+  func releaseOverrideRequests() {
+    overrideRequestsAreGated = false
+    let continuations = overrideContinuations
+    overrideContinuations = []
+    continuations.forEach { $0.resume() }
+  }
+
+  private func recordOverrideRequest(
+    _ profile: VirtualHIDProfileID?,
+    selector: RuntimeDeviceSelector
+  ) async throws {
+    overrideRequests.append((profile, selector))
+    if overrideRequestsAreGated {
+      await withCheckedContinuation { overrideContinuations.append($0) }
+    }
+    if let overrideError { throw overrideError }
   }
 }

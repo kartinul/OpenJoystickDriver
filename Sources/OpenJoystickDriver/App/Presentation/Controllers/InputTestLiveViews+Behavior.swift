@@ -20,50 +20,50 @@
 
     var content: some View {
       let snapshot = liveState.snapshot
-      let pressedButtons = Set(snapshot.pressedButtons)
+      let labels = liveState.labels
+      let pressed = snapshot.pressed
       let presentation = publishedProfile.presentation
       let symbols = InputTestControllerSymbolSet.resolve(for: presentation.glyphFamily)
       return VStack(spacing: 10) {
-        shoulderRow(snapshot: snapshot, pressedButtons: pressedButtons, symbols: symbols)
+        shoulderRow(snapshot: snapshot, symbols: symbols)
         Divider()
         HStack(alignment: .center, spacing: 18) {
-          dpadCluster(pressedButtons: pressedButtons).frame(maxWidth: .infinity)
-          systemCluster(
-            pressedButtons: pressedButtons,
-            symbols: symbols,
-            publishedProfile: publishedProfile
-          ).frame(maxWidth: .infinity)
-          faceButtonCluster(pressedButtons: pressedButtons, symbols: symbols).frame(
+          dpadCluster(hat: snapshot.hat).frame(maxWidth: .infinity)
+          systemCluster(pressed: pressed, labels: labels, symbols: symbols).frame(
             maxWidth: .infinity
           )
+          faceButtonCluster(pressed: pressed, symbols: symbols).frame(maxWidth: .infinity)
         }
         Divider()
         HStack(alignment: .top, spacing: 24) {
           InputTestStickView(
             title: OJDLocalized.string("inputTest.leftStick", fallback: "Left stick"),
-            x: snapshot.leftStickX,
-            y: snapshot.leftStickY,
+            x: snapshot.leftStick.x.normalized,
+            y: -snapshot.leftStick.y.normalized,
             clickPresentation: symbols.leftStickClick,
-            clickActive: isPressed([.leftStick], in: pressedButtons)
+            clickActive: pressed.contains(.leftStickClick)
           )
           InputTestStickView(
             title: OJDLocalized.string("inputTest.rightStick", fallback: "Right stick"),
-            x: snapshot.rightStickX,
-            y: snapshot.rightStickY,
+            x: snapshot.rightStick.x.normalized,
+            y: -snapshot.rightStick.y.normalized,
             clickPresentation: symbols.rightStickClick,
-            clickActive: isPressed([.rightStick], in: pressedButtons)
+            clickActive: pressed.contains(.rightStickClick)
           )
         }
-        let additionalButtons = InputTestButtonPresentation.additionalButtons(in: snapshot)
+        let additionalButtons = InputTestButtonPresentation.additionalControls(
+          in: snapshot,
+          labels: labels
+        )
         if !additionalButtons.isEmpty {
           Divider()
           VStack(alignment: .leading, spacing: 8) {
             Text(OJDLocalized.string("inputTest.additionalButtons", fallback: "Additional buttons"))
               .font(.subheadline.weight(.semibold))
             VStack(alignment: .leading, spacing: 8) {
-              ForEach(additionalButtons, id: \.self) { rawName in
+              ForEach(additionalButtons, id: \.self) { control in
                 InputTestIndicator(
-                  title: InputTestButtonPresentation.localizedTitle(for: rawName),
+                  title: InputTestButtonPresentation.localizedTitle(for: control, labels: labels),
                   active: true
                 )
               }
@@ -74,139 +74,100 @@
     }
 
     private func shoulderRow(
-      snapshot: DeviceInputState,
-      pressedButtons: Set<String>,
+      snapshot: ControllerState,
       symbols: InputTestControllerSymbolSet
     ) -> some View {
       HStack(spacing: 10) {
-        indicator(
-          symbols.leftShoulder,
-          buttons: [.leftBumper, .l1],
-          pressedButtons: pressedButtons
-        )
+        indicator(symbols.leftShoulder, active: snapshot.pressed.contains(.leftShoulder))
         indicator(
           symbols.leftTrigger,
-          active: snapshot.leftTrigger > 0.05 || isPressed([.l2Digital], in: pressedButtons)
+          active: snapshot.leftTrigger.normalized > 0.05
+            || snapshot.pressed.contains(.leftTriggerButton)
         )
         indicator(
           symbols.rightTrigger,
-          active: snapshot.rightTrigger > 0.05 || isPressed([.r2Digital], in: pressedButtons)
+          active: snapshot.rightTrigger.normalized > 0.05
+            || snapshot.pressed.contains(.rightTriggerButton)
         )
-        indicator(
-          symbols.rightShoulder,
-          buttons: [.rightBumper, .r1],
-          pressedButtons: pressedButtons
-        )
+        indicator(symbols.rightShoulder, active: snapshot.pressed.contains(.rightShoulder))
       }
     }
 
-    private func dpadCluster(pressedButtons: Set<String>) -> some View {
-      VStack(spacing: 6) {
+    private func dpadCluster(hat: HatDirection) -> some View {
+      let directions = RuntimePresentation.dpadDirections(hat)
+      return VStack(spacing: 6) {
         indicator(
           OJDLocalized.string("inputTest.dpadUp", fallback: "D-pad up"),
           symbol: "dpad.up.filled",
           fallbackSymbol: "arrowtriangle.up.fill",
-          buttons: [.dpadUp],
-          pressedButtons: pressedButtons
+          active: directions.contains(.up)
         )
         HStack(spacing: 6) {
           indicator(
             OJDLocalized.string("inputTest.dpadLeft", fallback: "D-pad left"),
             symbol: "dpad.left.filled",
             fallbackSymbol: "arrowtriangle.left.fill",
-            buttons: [.dpadLeft],
-            pressedButtons: pressedButtons
+            active: directions.contains(.left)
           )
           indicator(
             OJDLocalized.string("inputTest.dpadRight", fallback: "D-pad right"),
             symbol: "dpad.right.filled",
             fallbackSymbol: "arrowtriangle.right.fill",
-            buttons: [.dpadRight],
-            pressedButtons: pressedButtons
+            active: directions.contains(.right)
           )
         }
         indicator(
           OJDLocalized.string("inputTest.dpadDown", fallback: "D-pad down"),
           symbol: "dpad.down.filled",
           fallbackSymbol: "arrowtriangle.down.fill",
-          buttons: [.dpadDown],
-          pressedButtons: pressedButtons
+          active: directions.contains(.down)
         )
       }
     }
 
     @ViewBuilder
     private func systemCluster(
-      pressedButtons: Set<String>,
-      symbols: InputTestControllerSymbolSet,
-      publishedProfile: VirtualDeviceProfile
+      pressed: Set<ControlID>,
+      labels: ControllerButtonLabels,
+      symbols: InputTestControllerSymbolSet
     ) -> some View {
-      let glyphFamily = publishedProfile.presentation.glyphFamily
-      switch InputTestSystemClusterLayout.resolve(for: publishedProfile) {
-      case .standard:
-        HStack(spacing: 6) {
-          indicator(
-            symbols.view,
-            buttons: InputTestSystemClusterLayout.viewButtons(for: glyphFamily),
-            pressedButtons: pressedButtons
+      HStack(spacing: 6) {
+        indicator(
+          symbols.view,
+          active: !pressed.isDisjoint(
+            with: InputTestSystemClusterLayout.viewControls(labels: labels)
           )
-          indicator(symbols.guide, active: isPressed([.guide, .ps], in: pressedButtons))
-          indicator(symbols.menu, buttons: [.start, .options], pressedButtons: pressedButtons)
-        }
-      case .xboxWithShare:
-        VStack(spacing: 6) {
-          HStack(spacing: 6) {
-            indicator(symbols.view, buttons: [.back], pressedButtons: pressedButtons)
-            indicator(symbols.guide, active: isPressed([.guide], in: pressedButtons))
-            indicator(symbols.menu, buttons: [.start], pressedButtons: pressedButtons)
-          }
-          HStack(spacing: 6) {
-            systemPlaceholder
-            indicator(
-              InputTestSystemClusterLayout.shareControl,
-              buttons: InputTestSystemClusterLayout.shareButtons,
-              pressedButtons: pressedButtons
-            )
-            systemPlaceholder
-          }
-        }
+        )
+        indicator(symbols.guide, active: pressed.contains(.guide))
+        indicator(symbols.menu, active: pressed.contains(.menu))
       }
     }
 
-    private var systemPlaceholder: some View { Color.clear.frame(width: 54, height: 30) }
-
     private func faceButtonCluster(
-      pressedButtons: Set<String>,
+      pressed: Set<ControlID>,
       symbols: InputTestControllerSymbolSet
     ) -> some View {
       VStack(spacing: 6) {
-        indicator(symbols.northFace, buttons: [.y, .triangle], pressedButtons: pressedButtons)
+        indicator(symbols.northFace, active: pressed.contains(.faceNorth))
         HStack(spacing: 6) {
-          indicator(symbols.westFace, buttons: [.x, .square], pressedButtons: pressedButtons)
-          indicator(symbols.eastFace, buttons: [.b, .circle], pressedButtons: pressedButtons)
+          indicator(symbols.westFace, active: pressed.contains(.faceWest))
+          indicator(symbols.eastFace, active: pressed.contains(.faceEast))
         }
-        indicator(symbols.southFace, buttons: [.a, .cross], pressedButtons: pressedButtons)
+        indicator(symbols.southFace, active: pressed.contains(.faceSouth))
       }
     }
-
-    private func indicator(
-      _ presentation: InputTestControllerSymbolSet.Control,
-      buttons: [OpenJoystickDriverKit.Button],
-      pressedButtons: Set<String>
-    ) -> some View { indicator(presentation, active: isPressed(buttons, in: pressedButtons)) }
 
     func indicator(
       _ title: String,
       symbol: String,
       fallbackSymbol: String? = nil,
-      buttons: [OpenJoystickDriverKit.Button],
-      pressedButtons: Set<String>
+      active: Bool
     ) -> some View {
       InputTestIndicator(
         title: title,
         symbol: symbol,
         fallbackSymbol: fallbackSymbol,
-        active: isPressed(buttons, in: pressedButtons)
+        active: active
       )
     }
 
@@ -220,12 +181,6 @@
         active: active
       )
     }
-
-    private func isPressed(
-      _ buttons: [OpenJoystickDriverKit.Button],
-      in pressedButtons: Set<String>
-    ) -> Bool { InputTestButtonPresentation.isPressed(buttons, in: pressedButtons) }
-
   }
 
 #endif

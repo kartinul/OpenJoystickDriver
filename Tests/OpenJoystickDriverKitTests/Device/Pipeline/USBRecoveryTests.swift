@@ -4,8 +4,13 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct USBPipelineRecoveryTests {
-  private let identifier = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010, locationID: 7)
-  private let device = USBTransportDevice(
+  let identifier = DeviceIdentifier(
+    vendorID: 0x3537,
+    productID: 0x1010,
+    locationID: 7,
+    interfaceNumber: 0
+  )
+  let device = USBTransportDevice(
     route: .ioUSBHost,
     serviceID: 1,
     vendorID: 0x3537,
@@ -21,7 +26,7 @@ struct USBPipelineRecoveryTests {
     let pipeline = DevicePipeline(
       identifier: identifier,
       transport: .usb(device: device),
-      parser: RecoveryInputParser(),
+      driver: RecoveryInputParser(),
       dispatcher: RecoveryOutputDispatcher(),
       usbTransportProvider: provider,
       usbRecoveryPolicy: USBPipelineRecoveryPolicy(
@@ -43,158 +48,235 @@ struct USBPipelineRecoveryTests {
   }
 
   @Test
-  func invalidatedSessionRejectsLateRumble() async {
-    let session = RecoveryUSBSession(readError: .timeout)
+  func accessDeniedReadRetriesAfterContentionDelayAndNeutralizesOnce() async {
+    let first = RecoveryUSBSession(
+      readResults: [.success([1]), .failure(.accessDenied)],
+      readError: .timeout
+    )
+    let second = RecoveryUSBSession(readError: .timeout)
+    let provider = RecoveryUSBProvider(sessions: [first, second])
+    let parser = RecoveryInputParser()
+    let dispatcher = RecoveryOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: identifier,
       transport: .usb(device: device),
-      parser: RecoveryRumbleParser(),
-      dispatcher: RecoveryOutputDispatcher()
+      driver: parser,
+      dispatcher: dispatcher,
+      usbTransportProvider: provider,
+      usbRecoveryPolicy: USBPipelineRecoveryPolicy(
+        openRetryDelays: [1],
+        reconnectBaseDelayNanoseconds: 60_000_000_000,
+        reconnectMaximumDelayNanoseconds: 60_000_000_000,
+        accessContentionDelayNanoseconds: 200_000_000
+      )
     )
-    await pipeline.setUSBHandleForTesting(session)
 
-    await pipeline.invalidateUSBHandle(session)
+    let start = Task { await pipeline.start() }
+    #expect(
+      await waitUntil(timeout: .seconds(30)) { await provider.openCount == 2 },
+      "A read access denial must use the shorter access-contention delay, not reconnect backoff."
+    )
+    #expect(await waitUntil { dispatcher.ownershipReports.contains(.accessDenied) })
+    #expect(await first.closeCount == 1)
+    #expect(await provider.openedDevices == [device, device])
+    #expect(await waitUntil { parser.resetCount == 3 })
+    #expect(parser.resetCount == 3)
+    let states = [ControllerState.neutral] + dispatcher.dispatchedStates
+    let releases = zip(states, states.dropFirst()).filter {
+      $0.pressed.contains(.faceSouth) && !$1.pressed.contains(.faceSouth)
+    }
+    #expect(releases.count == 1)
 
-    #expect(!(await pipeline.sendRumble(left: 1, right: 2, lt: 3, rt: 4)))
-    #expect(await session.writeCount == 0)
-    #expect(await session.closeCount == 1)
+    await pipeline.stop()
+    await start.value
+    #expect(await first.closeCount == 1)
+    #expect(await second.closeCount == 1)
   }
 
   @Test
-  func shutdownNeutralizesAllUSBMotorsWithOneCombinedReport() async {
-    let session = RecoveryUSBSession(readError: .timeout)
-    let parser = RecoveryRumbleParser()
+  func stoppingAfterReadAccessDenialPreventsReopen() async {
+    let denied = RecoveryUSBSession(readError: .accessDenied)
+    let provider = RecoveryUSBProvider(sessions: [denied])
+    let dispatcher = RecoveryOutputDispatcher()
     let pipeline = DevicePipeline(
       identifier: identifier,
       transport: .usb(device: device),
-      parser: parser,
-      dispatcher: RecoveryOutputDispatcher()
+      driver: RecoveryInputParser(),
+      dispatcher: dispatcher,
+      usbTransportProvider: provider,
+      usbRecoveryPolicy: USBPipelineRecoveryPolicy(
+        openRetryDelays: [1],
+        reconnectBaseDelayNanoseconds: 1_000_000,
+        reconnectMaximumDelayNanoseconds: 1_000_000,
+        accessContentionDelayNanoseconds: 10_000_000_000
+      )
     )
-    await pipeline.setUSBHandleForTesting(session)
-    let manager = DeviceManager(dispatcher: RecoveryOutputDispatcher())
 
-    await manager.neutralizePhysicalOutputs(for: identifier, pipeline: pipeline)
+    let start = Task { await pipeline.start() }
+    #expect(await waitUntil { dispatcher.ownershipReports.contains(.accessDenied) })
+    let runTask = await pipeline.usbRunTaskForTesting()
+    await pipeline.stop()
+    await start.value
+    await runTask?.value
 
-    #expect(await session.writes == [[0, 0, 0, 0]])
+    #expect(await provider.openCount == 1)
+    #expect(await denied.closeCount == 1)
   }
 
   @Test
-  func physicalRemovalDiscardsOwnershipWithoutWritingToAbsentDevice() async {
-    let session = RecoveryUSBSession(readError: .timeout)
+  func stopWaitsForPendingAccessDeniedReportThenPublishesUnknown() async {
+    let denied = RecoveryUSBSession(readError: .accessDenied)
+    let provider = RecoveryUSBProvider(sessions: [denied])
+    let gate = RecoveryOwnershipGate()
+    let dispatcher = RecoveryGatedOutputDispatcher(gate: gate)
     let pipeline = DevicePipeline(
       identifier: identifier,
       transport: .usb(device: device),
-      parser: RecoveryRumbleParser(),
-      dispatcher: RecoveryOutputDispatcher()
-    )
-    await pipeline.setUSBHandleForTesting(session)
-    let manager = DeviceManager(dispatcher: RecoveryOutputDispatcher())
-    let owner = UUID()
-    _ = await manager.setPhysicalOutputForTesting(
-      .rumble(motor: .leftMain, intensity: 1),
-      owner: owner,
-      identifier: identifier
+      driver: RecoveryInputParser(),
+      dispatcher: dispatcher,
+      usbTransportProvider: provider,
+      usbRecoveryPolicy: USBPipelineRecoveryPolicy(
+        openRetryDelays: [1],
+        reconnectBaseDelayNanoseconds: 1_000_000,
+        reconnectMaximumDelayNanoseconds: 1_000_000,
+        accessContentionDelayNanoseconds: 10_000_000_000
+      )
     )
 
-    await manager.discardPhysicalOutputs(for: identifier)
+    await pipeline.start()
+    let runTask = await pipeline.usbRunTaskForTesting()
+    let reportStarted = await waitUntil { await gate.accessDeniedReportStarted }
+    #expect(reportStarted)
+    guard reportStarted else {
+      await gate.release()
+      await pipeline.stop()
+      await runTask?.value
+      return
+    }
 
-    #expect(await session.writeCount == 0)
-    #expect(await manager.mappingClaimCountForTesting == 0)
+    let stopCompletion = RecoveryStopCompletion()
+    let stopTask = Task {
+      await pipeline.stop()
+      await stopCompletion.markComplete()
+    }
+    let stopCleanupReached = await waitUntil { dispatcher.didStopController }
+    #expect(stopCleanupReached)
+    let stoppedBeforeReportCompleted = await waitUntil(timeout: .milliseconds(20)) {
+      await stopCompletion.isComplete
+    }
+    await gate.release()
+    await stopTask.value
+    await runTask?.value
+
+    #expect(!stoppedBeforeReportCompleted)
+    #expect(await stopCompletion.isComplete)
+    #expect(dispatcher.ownershipReports.suffix(2) == [.accessDenied, .unknown])
+    #expect(await denied.closeCount == 1)
   }
 
-  private func waitUntil(condition: @escaping @Sendable () async -> Bool) async -> Bool {
-    let deadline = ContinuousClock.now.advanced(by: .seconds(1))
+  @Test
+  func systemSleepTearsDownUSBControllersAndWakeReattachesThroughDetection() async {
+    let first = RecoveryUSBSession(readError: .timeout)
+    let second = RecoveryUSBSession(readError: .timeout)
+    let provider = RecoveryUSBProvider(sessions: [first, second], devices: [device])
+    let manager = makeManager(using: provider)
+    await manager.start()
+    #expect(await waitUntil(timeout: .seconds(5)) { await first.writeCount > 0 })
+    #expect(await manager.connectedDeviceIdentifiers() == [identifier])
+
+    await manager.systemWillSleep()
+    #expect(await manager.isSystemSleeping)
+    #expect(await manager.pipelines.isEmpty)
+    #expect(await manager.deviceInfos.isEmpty)
+    #expect(await manager.detectionTasks.isEmpty)
+    #expect(await manager.permissionWatchTask == nil)
+    #expect(await first.closeCount == 1)
+
+    await manager.systemDidWake()
+    #expect(!(await manager.isSystemSleeping))
+    #expect(await waitUntil(timeout: .seconds(5)) { await second.writeCount > 0 })
+    #expect(await manager.connectedDeviceIdentifiers() == [identifier])
+    #expect(await provider.openedDevices == [device, device])
+    await manager.stop()
+    #expect(await second.closeCount == 1)
+  }
+
+  @Test
+  func startRequestedDuringSleepRunsOnlyAfterWake() async {
+    let manager = makeManager(using: RecoveryUSBProvider(sessions: []))
+    await manager.start()
+    await manager.systemWillSleep()
+
+    await manager.start()
+    #expect(await manager.detectionTasks.isEmpty)
+    #expect(await manager.permissionWatchTask == nil)
+
+    await manager.systemDidWake()
+    #expect(!(await manager.detectionTasks.isEmpty))
+    #expect(await manager.permissionWatchTask != nil)
+    await manager.stop()
+  }
+
+  @Test
+  func stopDuringSleepPreventsRestartOnWake() async {
+    let manager = makeManager(using: RecoveryUSBProvider(sessions: []))
+    await manager.start()
+    await manager.systemWillSleep()
+    await manager.stop()
+
+    await manager.systemDidWake()
+    #expect(!(await manager.isSystemSleeping))
+    #expect(await manager.detectionTasks.isEmpty)
+    #expect(await manager.permissionWatchTask == nil)
+
+    await manager.start()
+    #expect(!(await manager.detectionTasks.isEmpty))
+    await manager.stop()
+  }
+
+  @Test
+  func sleepDuringUSBAdmissionLeavesNoControllerAndWakeReadmitsIt() async {
+    let session = RecoveryUSBSession(readError: .timeout)
+    let provider = RecoveryUSBProvider(sessions: [session], devices: [device])
+    await provider.gateNextResolution()
+    let manager = makeManager(using: provider)
+    await manager.start()
+    #expect(await waitUntil(timeout: .seconds(5)) { await provider.resolutionGateReached })
+    let admittingDetection = await manager.detectionTasks.first
+
+    await manager.systemWillSleep()
+    await provider.releaseResolutionGate()
+    await admittingDetection?.value
+    #expect(await manager.pipelines.isEmpty)
+    #expect(await manager.deviceInfos.isEmpty)
+    #expect(await provider.openCount == 0)
+
+    await manager.systemDidWake()
+    #expect(await waitUntil(timeout: .seconds(5)) { await session.writeCount > 0 })
+    #expect(await manager.connectedDeviceIdentifiers() == [identifier])
+    await manager.stop()
+  }
+
+  func waitUntil(
+    timeout: Duration = .seconds(10),
+    condition: @escaping @Sendable () async -> Bool
+  ) async -> Bool {
+    let deadline = ContinuousClock.now.advanced(by: timeout)
     while ContinuousClock.now < deadline {
       if await condition() { return true }
       try? await Task.sleep(for: .milliseconds(1))
     }
     return await condition()
   }
-}
 
-private class RecoveryInputParser: InputParser {
-  func parse(data: Data) throws -> [ControllerEvent] { [] }
-}
-
-private final class RecoveryRumbleParser: RecoveryInputParser, PhysicalRumbleOutput {
-  var physicalRumbleMotors: [PhysicalRumbleMotor] {
-    [.leftMain, .rightMain, .leftTrigger, .rightTrigger]
+  func makeManager(
+    using provider: any USBTransportProvider,
+    dispatcher: RecoveryOutputDispatcher = RecoveryOutputDispatcher()
+  ) -> DeviceManager {
+    DeviceManager(
+      dispatcher: dispatcher,
+      hidManager: HIDManager(backend: RecoveryHIDBackend()),
+      usbTransportProvider: provider
+    )
   }
-
-  func physicalRumblePacket(
-    left: UInt8,
-    right: UInt8,
-    lt: UInt8,
-    rt: UInt8
-  ) -> PhysicalUSBOutputPacket {
-    PhysicalUSBOutputPacket(endpoint: 2, bytes: [left, right, lt, rt], timeoutMilliseconds: 2_000)
-  }
-}
-
-private actor RecoveryUSBProvider: USBTransportProvider {
-  private var sessions: [RecoveryUSBSession]
-  private(set) var openCount = 0
-
-  init(sessions: [RecoveryUSBSession]) { self.sessions = sessions }
-  func devices() -> [USBTransportDevice] { [] }
-
-  func open(
-    _ device: USBTransportDevice,
-    options: USBTransportOpenOptions
-  ) -> any USBTransportSession {
-    openCount += 1
-    return sessions.removeFirst()
-  }
-}
-
-private actor RecoveryUSBSession: USBTransportSession {
-  let readError: USBTransportError
-  private(set) var closeCount = 0
-  private(set) var writes: [[UInt8]] = []
-  var writeCount: Int { writes.count }
-  var inputOwnership: HIDInputOwnership { closeCount == 0 ? .exclusive : .unknown }
-
-  init(readError: USBTransportError) { self.readError = readError }
-
-  func writeInterruptPacket(endpoint: UInt8, data: [UInt8], timeout: UInt32) throws -> Int {
-    guard closeCount == 0 else { throw USBTransportError.disconnected }
-    writes.append(data)
-    return data.count
-  }
-
-  func readInterruptPacket(endpoint: UInt8, length: Int, timeout: UInt32) throws -> [UInt8] {
-    throw readError
-  }
-
-  func close() {
-    guard closeCount == 0 else { return }
-    closeCount = 1
-  }
-}
-
-private final class RecoveryOutputDispatcher: OutputDispatcher, ControllerInputOwnershipListener,
-  @unchecked Sendable
-{
-  var suppressOutput = false
-  func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) {}
-  func controllerInputOwnershipChanged(
-    _ ownership: HIDInputOwnership,
-    for identifier: DeviceIdentifier
-  ) {}
-}
-
-extension DevicePipeline {
-  func setUSBHandleForTesting(_ handle: any USBTransportSession) { usbHandle = handle }
-}
-
-extension DeviceManager {
-  func setPhysicalOutputForTesting(
-    _ output: RemappingPhysicalOutput,
-    owner: UUID,
-    identifier: DeviceIdentifier
-  ) -> PhysicalOutputChannel {
-    physicalOutputOwnership.setMapping(output, active: true, owner: owner, for: identifier)
-  }
-
-  var mappingClaimCountForTesting: Int { physicalOutputOwnership.mappingClaimCount }
 }

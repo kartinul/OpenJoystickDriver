@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Tarkistetaan yhdistettyjä ohjaimia…";
 "status.refreshingProfile" = "Päivitetään profiilin tilaa…";
 "status.loadingProfiles" = "Ladataan profiileja…";
-"status.updatingIdentity" = "Päivitetään ohjaimen identiteettiä…";
 "status.listening" = "Kuunnellaan…";
 "status.readyToListen" = "Valmis kuuntelemaan";
 "status.checkingInput" = "Tarkistetaan";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Ohjaimet";
 "settings.controllerDisconnectedNotifications" = "Ohjain irrotettu";
 "settings.controllerDisconnectedShort" = "Irrotettu";
-"settings.controllerIdentity" = "Ohjaimen identiteetti";
 "settings.controllerNotifications" = "Ohjain yhdistetty";
 "settings.diagnostics" = "Diagnostiikka";
 "settings.service" = "Palvelu";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Purkautuu";
 "controllers.charging" = "Latautuu";
 "controllers.batteryFull" = "Täynnä";
+"controllers.notChargeable" = "Ei ladattava";
 "controllers.batteryAccessibilityDetails" = "Akku: %@. Lataustila: %@. Kaapelin tila: %@.";
 "controllers.activeProfile" = "Aktiivinen profiili";
 "controllers.profileChecking" = "Tarkistetaan…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Aktiivinen profiili ei ole käytettävissä";
 "controllers.profileLoadError" = "Aktiivista profiilia ei voitu ladata";
 "controllers.protocol" = "Protokolla";
-"controllers.parser" = "Jäsentäjä";
 "controllers.serialNumber" = "Sarjanumero";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Syötteen päätepiste";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Virhe aktiivisessa profiilissa: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokolla: %@. Parser: %@. Sarjanumero: %@. USB VID/PID: %@. Syötteen päätepiste: %@. Tulosteen päätepiste: %@.";
 "controllers.publishedAs" = "Julkaistu nimellä";
-"identity.title" = "Ohjaimen identiteetti";
-"identity.needsAttention" = "Vaatii huomiota";
-"identity.error" = "Virhe ohjaimen identiteetissä";
-"identity.updating" = "Päivitetään ohjaimen identiteettiä…";
-"identity.reset" = "Palauta suositeltuun";
-"identity.checking" = "Tarkistetaan";
-"identity.globalScope" = "Koskee kaikkia OpenJoystickDriverin julkaisemia virtuaalisia ohjaimia.";
-"identity.unavailable" = "Ei käytettävissä";
-"identity.notSelected" = "Ei valittu";
+"controllers.nativeGamepadNotPublished" = "macOSin natiivi peliohjain, ei julkaistu";
+"virtualProfile.advanced" = "Lisäasetukset";
+"virtualProfile.title" = "Virtuaalinen HID-profiili";
+"virtualProfile.modelScope" = "Koskee kaikkia tämän mallin liitettyjä ohjaimia.";
+"virtualProfile.sourceOverride" = "Ohitus";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automaattinen, ohitus hylätty";
+"virtualProfile.none" = "Ei virtuaalista HID-profiilia";
+"virtualProfile.unavailable" = "Mikään virtuaalinen HID-profiili ei voi edustaa tätä ohjainta.";
+"virtualProfile.updating" = "Päivitetään virtuaalista HID-profiilia…";
+"virtualProfile.live" = "Aktiivinen profiili";
+"virtualProfile.failure.unknownProfile" = "Tämä virtuaalinen HID-profiili on tuntematon. Mitään ei tallennettu.";
+"virtualProfile.failure.controllerNotFound" = "Ohjain on irrotettu tai sitä ei löydy. Ohitus on ennallaan.";
+"virtualProfile.failure.overrideRejected" = "Ohitus on tallennettu, mutta tämä ohjain ei voi käyttää sitä, joten se valitsee automaattisesti.";
+"virtualProfile.failure.activationFailed" = "Aktivointi epäonnistui, joten edellinen virtuaalinen HID-profiili palautettiin: %@";
+"virtualProfile.failure.outputDisabled" = "Ohitus on tallennettu ja otetaan käyttöön, kun virtuaalinen ulostulo on käytössä.";
+"virtualProfile.failure.serverStopped" = "Palvelu pysähtyi. Ohitus on ennallaan.";
+"virtualProfile.failure.persistenceFailed" = "Ohitusta ei voitu tallentaa. Mitään ei tallennettu.";
+"virtualProfile.storeError" = "Virtuaalisen HID-profiilin ohituksia ei voi lukea (%@). Ohjaimet valitsevat automaattisesti.";
+"virtualProfile.legacyIdentityRejected" = "Käytöstä poistettua ohjaimen identiteettiasetusta %@ ei enää käytetä. Tyhjennä se suorittamalla controller virtual reset --all.";
 "keyboard.noKey" = "Näppäintä ei ole valittu";
 "keyboard.pressKey" = "Paina näppäintä…";
 "keyboard.captureKey" = "Tallenna näppäin";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Nykyinen tila";
 "debug.runtime" = "Ajonaika";
 "debug.controllers" = "Ohjaimet";
-"debug.controllerIdentity" = "Ohjaimen identiteetti";
 "debug.unavailable" = "Ajonaika · ei käytettävissä";
 "debug.needsAttention" = "Ajonaika · vaatii huomiota";
 "debug.diagnostics" = "Diagnostiikka";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Ohjaimen tuloste on poistettu käytöstä.";
 "debug.outputNeedsAttention" = "Ohjaimen tuloste vaatii huomiota.";
 "debug.serviceUnavailable" = "Palvelun diagnostiikka ei ole juuri nyt käytettävissä.";
-"error.selectedOutputUnavailable" = "Valittu ohjaimen tuloste ei ole käytettävissä.";
-"error.selectedOutputEnableFailed" = "Valittua ohjaimen tulostetta ei voitu ottaa käyttöön.";
 "error.profileChanged" = "Tätä profiilia muutettiin muualla. Lataa uudelleen tai jatka muokkausta.";
 "error.duplicateProfile" = "Samanniminen profiili on jo olemassa.";
 "error.profileMissing" = "Tuo profiili ei ole enää käytettävissä.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Ajonaika";
 "common.controllers" = "Ohjaimet";
 "common.profiles" = "Profiilit";
-"common.controllerIdentity" = "Ohjaimen identiteetti";
 "common.protocol" = "Protokolla";
-"common.parser" = "Jäsentäjä";
 "common.serialNumber" = "Sarjanumero";
 "common.inputEndpoint" = "Syötteen päätepiste";
 "common.outputEndpoint" = "Tulosteen päätepiste";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Valitu profilliin ei ole enää saatavilla.";
 "cli.catalog.app_ready.summary" = "Tarkista todennetun sovelluspalvelun valmius";
 "cli.catalog.app_status.summary" = "Näytä sovelluspalvelun tila";
-"cli.catalog.compat.summary" = "Hallitse virtuaaliohjaimen yhteensopivuutta";
 "cli.catalog.controller_list.summary" = "Luettele yhdistetyt ohjaimet";
 "cli.catalog.controller_output.summary" = "Testaa tuettu fyysinen ohjaintuloste";
 "cli.catalog.controller_packets.summary" = "Näytä viimeisimmät ohjainpaketit";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Näytä ajurin ja ajonaikainen tila";
 "cli.catalog.test.summary" = "Testaa virtuaaliohjaimen syötteen toimitus";
 "cli.catalog.update.summary" = "Tarkista GitHubista saatavilla olevat päivitykset";
-"cli.compat.identity" = "yhteensopivuusidentiteetti: %@";
-"cli.compat.identity_unknown" = "yhteensopivuusidentiteetti: tuntematon";
-"cli.compat.set_failed" = "Yhteensopivuusidentiteettiä ei voitu asettaa arvoon %@. Käynnistä asennettu sovellus ja tarkista Syötteen valvonta- ja Käyttöapu-käyttöoikeudet.";
-"cli.compat.usage" = "Käyttö: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "user-space-tila: %@";
 "cli.controller.allAppleEntries" = "Kaikki tarkat Apple-luettelomerkinnät:";
 "cli.controller.appleIDs" = "    Apple-tunnukset: %@";
 "cli.controller.applePairs" = "  Apple-parit  : %d tarkkaa VID/PID-merkintää";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Yksikään yhdistetty ohjain ei vastaa valitsinta --device %@.";
 "cli.controller.selection.multiple" = "Useita ohjaimia vastaa. Valitse yksi valitsimella --device:\n  %@";
 "cli.controller.selection.none" = "Ohjainta ei ole yhdistetty.";
+"cli.controller.virtual.live" = "Virtuaalinen HID-profiili: %@ (%@)";
+"cli.controller.virtual.none" = "Virtuaalinen HID-profiili: ei mitään (%@)";
+"cli.controller.virtual.failed" = "Virtuaalisen HID-profiilin pyyntö epäonnistui: %@";
+"cli.controller.virtual.unknown_profile" = "Tuntematon virtuaalinen HID-profiili ”%@”. Käytä jotakin näistä: %@.";
+"cli.controller.virtual.missing_profile" = "”controller virtual set” vaatii virtuaalisen HID-profiilin. Käytä jotakin näistä: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "Valitsinta ”--all” ei voi yhdistää valitsimiin --vid, --pid tai --device.";
+"cli.controller.virtual.reset_all.success" = "OK: kaikki virtuaalisen HID-profiilin ohitukset tyhjennetty.";
+"cli.controller.virtual.reset_all.failed" = "Asetuksia ei voitu palauttaa. Käynnistä asennettu sovellus ja tarkista sen käyttöoikeudet.";
 "cli.controller.selection.vid_pid_missing" = "Yksikään yhdistetty ohjain ei vastaa paria %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Anna sekä VID että PID, tai jätä molemmat pois.";
 "cli.controller.serviceControllers" = "Ohjaimet (käynnissä olevasta sovelluspalvelusta):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Vinkki: myönnä vaadittu entitlement ja Syötteen valvonta -käyttöoikeus.";
 "cli.controller.usbControllers" = "USB-ohjaimet (luokka 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Anna sekä VID että PID, tai jätä molemmat pois, kun yksi ohjain on yhdistetty.";
-"cli.diagnose.advisory_candidate" = "    Neuvoa-antava protokolla-ehdokas: %@";
 "cli.diagnose.app_missing" = "  Sovellus: puuttuu sijainnista %@";
 "cli.diagnose.app_missing_fix" = "  Korjaus: rakenna + asenna sovellus kansioon /Applications";
 "cli.diagnose.app_present" = "  Sovellus: paikalla";
 "cli.diagnose.binary_path" = "Binääri: %@";
-"cli.diagnose.catalog_conflict" = "      Havainto on ristiriidassa luetteloperheen kanssa; parser ennallaan";
-"cli.diagnose.catalog_parser" = "      Luettelon parser pysyy arvossa %@ (%@)";
 "cli.diagnose.dext_found" = "  Löydetyt .dext-bundleet:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      päämäärä 0x%02X %@ %@ maxPacket=%@ Intervallinen%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Tuntematon vastekäyrä ”%@”.";
 "cli.mapping.double_tap_format" = "--double-tap odottaa muotoa <ms>:<target>, esim. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Käyttö: OpenJoystickDriver --headless map <command>\n\nKomennot:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nLähde: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nKohde: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAkselivalinnat:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo-valinnat (vain näppäimistö- ja hiiren painikkeet):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktivointivalinnat (vain näppäimistö- ja hiiren painikkeet, toisensa poissulkevia turbon kanssa):\n  --long-hold <ms>:<target>     esim. --long-hold 500:key:b\n  --double-tap <ms>:<target>    esim. --double-tap 300:key:c\n\n<profile> hyväksyy UUID:n tai tarkan, kirjainkoosta riippumattoman profiilinimen.\n<id> hyväksyy desimaalin tai 0x-etuliitteisen heksadesimaalin.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Käyttö: OpenJoystickDriver --headless map <command>\n\nKomennot:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nLähde: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nKohde: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAkselivalinnat:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo-valinnat (vain näppäimistö- ja hiiren painikkeet):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktivointivalinnat (vain näppäimistö- ja hiiren painikkeet, toisensa poissulkevia turbon kanssa):\n  --long-hold <ms>:<target>     esim. --long-hold 500:key:b\n  --double-tap <ms>:<target>    esim. --double-tap 300:key:c\n\n<profile> hyväksyy UUID:n tai tarkan, kirjainkoosta riippumattoman profiilinimen.\n<id> hyväksyy desimaalin tai 0x-etuliitteisen heksadesimaalin.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@-arvon on oltava 16-bittinen desimaali- tai 0x-etuliitteinen heksadesimaalitunnus.";
 "cli.mapping.jsonEncodeFailed" = "UTF-8-JSON-arvoa ei voitu koodata.";
 "cli.mapping.layer_action_unknown" = "Tuntematon kerrostoiminto ”%@”. Odotettu: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver-sovelluspalvelu ei ole käynnissä.";
 "cli.runtime.sample_limit" = "Määritys keräisi %d näytettä; kasvata --interval-ms.";
 "cli.runtime.stable_note" = "Vakaa, rajattu soak on näyttö tälle työkuormalle, ei todiste siitä, että kaikki vuodot puuttuvat.";
-"cli.settings.reset.failed" = "Asetuksia ei voitu palauttaa. Käynnistä asennettu sovellus ja tarkista sen käyttöoikeudet.";
-"cli.settings.reset.next" = "Seuraavaksi: suorita compat set <identity> valitaksesi yhteensopivuusidentiteetin.";
-"cli.settings.reset.success" = "OK: sovelluspalvelun asetukset palautettu.";
 "cli.status.access_denied" = "Jos käyttö evätään, suorita --headless permissions request ja hyväksy Syötteen valvonta ja Käyttöapu Järjestelmäasetuksissa.";
 "cli.status.heading" = "OpenJoystickDriver-tila";
 "cli.status.json_error" = "Tila-JSON-arvoa ei voitu koodata: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Tila        : %@";
 "cli.updates.unknown_option" = "Tuntematon updates-valinta: %@";
 "common.unknown" = "Tuntematon";
-"compatibility.appleGameController" = "Oppelin GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox - Se on ensimmäinen.";
 "developer.buttons" = "Painikkeet";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B-painike";
 "inputTest.bCircle" = "B / Kierroksella";
 "inputTest.brightness" = "Helkeys";
-"inputTest.circle" = "Pyörä";
 "inputTest.color" = "Väri";
 "inputTest.controls" = "Live-syöte";
-"inputTest.cross" = "Risti";
 "inputTest.disconnected" = "Valvonta-asemien purkaminen";
 "inputTest.dpadDown" = "D-pad alas";
 "inputTest.dpadLeft" = "D-pad vasemmalle";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Valonvalvontavalvonta ei ole käytettävissä.";
 "inputTest.live" = "Tuloaktiivinen";
 "inputTest.menu" = "Menuu";
-"inputTest.minus" = "Miinus";
 "inputTest.off" = "Pois";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Valinnat";
 "inputTest.outputError" = "Fyysinen tulosvirhe";
 "inputTest.outputRejected" = "Valvontahaltija hylkäsi tämän tulostestin.";
 "inputTest.permissionRequired" = "Sisätietojen seuranta- luvan käyttö";
 "inputTest.playerIndicator" = "Pelaajan indikaattori";
-"inputTest.plus" = "- Ja lisää .";
 "inputTest.pressed" = "Painettu";
-"inputTest.psButton" = "PS-painike";
 "inputTest.released" = "Vapautettu";
 "inputTest.rightBumper" = "Oikea bumper";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Oikea Y";
 "inputTest.rumble" = "- Kärsimys";
 "inputTest.rumbleUnavailable" = "Rumbleia ei tuke tämä ohjain.";
-"inputTest.share" = "Osallistaminen";
-"inputTest.square" = "Ruutu";
 "inputTest.stale" = "Sisätieto keskeytetään";
 "inputTest.start" = "Aloita tuloskokeen";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Live-syöte";
 "inputTest.tabMotion" = "Ehdotus";
 "inputTest.tabOutput" = "Tuotanto";
-"inputTest.steamButton" = "Steam-painike";
 "inputTest.summary" = "Kokeile painikkeita, paikat, käynnistyslaitteita, rumbleja ja valonvalvontaa.";
 "inputTest.testRumble" = "Testi Rumble";
 "inputTest.title" = "Sisäsy-testin";
-"inputTest.triangle" = "Kolmiosa";
 "inputTest.unavailable" = "Sisätieto ei ole käytettävissä";
 "inputTest.view" = "Näytä";
 "inputTest.windowTitle" = "Sisätietojen testaus %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Valitut Joy-Consit eivät voineet yhdistyä.";
 "profiles.joyConExplicitSession" = "Aloitin pari-opintoja .";
 "profiles.joyConSessionState" = "Selkeä pariintaminen";
-"profiles.gyro.virtualMotion" = "Edelleen kalibroitu virtuaaliliikenne";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (Kääräily)%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Valvonta-asemien purkaminen";
 "controllers.resume" = "Yritä uudelleen";
 "controllers.disconnectFromOJD" = "Valvonta-asemien purkaminen";
-"error.compatibilityTransitionDetailed" = "Valittua ohjaimen tulostetta ei voitu ottaa käyttöön. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Valittua ohjaimen tulostetta ei voitu ottaa käyttöön.";
 "cli.catalog.controller_disconnect.summary" = "Valvonta-asemien purkaminen";
 "cli.catalog.controller_resume.summary" = "Yritä uudelleen — Valvonta-asemien purkaminen";
+"cli.catalog.controller_virtual_set.summary" = "Ohita ohjaimen virtuaalinen HID-profiili";
+"cli.catalog.controller_virtual_reset.summary" = "Valitse ohjaimen virtuaalinen HID-profiili automaattisesti, tai tyhjennä kaikki ohitukset komennolla --all";
 "cli.controller.disconnected" = "Valvonta-asemien purkaminen";
 "cli.controller.resumed" = "Tuloaktiivinen";
 

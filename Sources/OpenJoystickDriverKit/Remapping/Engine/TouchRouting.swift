@@ -10,11 +10,8 @@ struct RemappingTouchContactState: Equatable {
   let position: RemappingTouchPoint
 }
 
+/// Contacts are keyed by their slot within the surface's frames.
 struct RemappingTouchSurfaceState {
-  var width: UInt32
-  var height: UInt32
-  var originX: Int32
-  var originY: Int32
   var contacts: [UInt8: RemappingTouchContactState]
   var primaryContactID: UInt8?
 }
@@ -28,48 +25,27 @@ extension RemappingEngineState {
     guard var device = devices[identifier] else { return [] }
     let surface = RemappingTouchSurface(sample.surface)
     let previous = device.touchSurfaces[surface]
-    guard sample.width > 0, sample.height > 0 else {
-      device.touchSurfaces.removeValue(forKey: surface)
-      devices[identifier] = device
-      return clearTouchSurface(surface, for: identifier, at: uptime)
-    }
-
-    let geometryChanged =
-      previous.map {
-        $0.width != sample.width || $0.height != sample.height || $0.originX != sample.originX
-          || $0.originY != sample.originY
-      } ?? false
-    let oldContacts = geometryChanged ? [:] : previous?.contacts ?? [:]
+    let oldContacts = previous?.contacts ?? [:]
     var contacts: [UInt8: RemappingTouchContactState] = [:]
     for contact in sample.contacts where contact.isActive {
-      let point = Self.normalizedPoint(contact, in: sample)
-      contacts[contact.id] = RemappingTouchContactState(
-        start: oldContacts[contact.id]?.start ?? point,
+      let point = Self.normalizedPoint(contact)
+      contacts[contact.slot] = RemappingTouchContactState(
+        start: oldContacts[contact.slot]?.start ?? point,
         position: point
       )
     }
 
-    let oldPrimaryID = geometryChanged ? nil : previous?.primaryContactID
+    let oldPrimaryID = previous?.primaryContactID
     let primaryID = oldPrimaryID.flatMap { contacts[$0] == nil ? nil : $0 } ?? contacts.keys.min()
-    let next = RemappingTouchSurfaceState(
-      width: sample.width,
-      height: sample.height,
-      originX: sample.originX,
-      originY: sample.originY,
-      contacts: contacts,
-      primaryContactID: primaryID
-    )
+    let next = RemappingTouchSurfaceState(contacts: contacts, primaryContactID: primaryID)
     device.touchSurfaces[surface] = next
     devices[identifier] = device
     let endedPrimaryContact = oldPrimaryID.flatMap { id -> RemappingTouchContactState? in
       guard contacts[id] == nil, let old = previous?.contacts[id] else { return nil }
-      guard let final = sample.contacts.first(where: { $0.id == id && !$0.isActive }) else {
+      guard let final = sample.contacts.first(where: { $0.slot == id && !$0.isActive }) else {
         return old
       }
-      return RemappingTouchContactState(
-        start: old.start,
-        position: Self.normalizedPoint(final, in: sample)
-      )
+      return RemappingTouchContactState(start: old.start, position: Self.normalizedPoint(final))
     }
 
     var actions: [RemappingEngineAction] = []
@@ -99,7 +75,7 @@ extension RemappingEngineState {
       actions += setSource(source, isActive: true, for: identifier, at: uptime)
     }
 
-    if let contact = endedPrimaryContact, !geometryChanged,
+    if let contact = endedPrimaryContact,
       let direction = Self.swipeDirection(from: contact.start, to: contact.position)
     {
       for source in possibleSources.sorted(by: Self.touchSourceLessThan) {
@@ -117,7 +93,7 @@ extension RemappingEngineState {
     }
     switch mapping.mode {
     case .pointer:
-      guard !geometryChanged, let primaryID, primaryID == oldPrimaryID,
+      guard let primaryID, primaryID == oldPrimaryID,
         let old = previous?.contacts[primaryID]?.position,
         let current = contacts[primaryID]?.position
       else { return actions }
@@ -145,33 +121,10 @@ extension RemappingEngineState {
     return actions
   }
 
-  private mutating func clearTouchSurface(
-    _ surface: RemappingTouchSurface,
-    for identifier: DeviceIdentifier,
-    at uptime: UInt64
-  ) -> [RemappingEngineAction] {
-    guard let device = devices[identifier] else { return [] }
-    var actions: [RemappingEngineAction] = []
-    for source in device.activeSources.filter({ $0.touchSurface == surface }).sorted(
-      by: Self.touchSourceLessThan
-    ) { actions += setSource(source, isActive: false, for: identifier, at: uptime) }
-    guard let mapping = device.profile.touchMappings.first(where: { $0.surface == surface }),
-      mapping.mode != .pointer, var updated = devices[identifier]
-    else { return actions }
-    if let state = updated.gamepad.release(mapping.id) {
-      actions.append(.gamepad(state, identifier))
-    }
-    devices[identifier] = updated
-    return actions
-  }
-
-  private static func normalizedPoint(
-    _ contact: ControllerTouchContact,
-    in sample: ControllerTouchSample
-  ) -> RemappingTouchPoint {
-    let x = Double(Int64(contact.x) - Int64(sample.originX)) / Double(sample.width)
-    let y = Double(Int64(contact.y) - Int64(sample.originY)) / Double(sample.height)
-    return RemappingTouchPoint(x: min(1, max(0, x)), y: min(1, max(0, y)))
+  /// Each axis is a fraction of its own surface span, so pointer motion and radii are per axis.
+  private static func normalizedPoint(_ contact: ControllerTouchContact) -> RemappingTouchPoint {
+    let span = Double(UInt16.max)
+    return RemappingTouchPoint(x: Double(contact.x) / span, y: Double(contact.y) / span)
   }
 
   private static func gridCell(

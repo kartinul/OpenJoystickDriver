@@ -25,8 +25,8 @@ extension RemappingRequestCoordinatorTests {
     #expect(activationError.code == .invalidArguments)
     let left = remappingRouterDevice(1, vendorID: 0x057E, productID: 0x2006)
     let right = remappingRouterDevice(2, vendorID: 0x057E, productID: 0x2007)
-    try await harness.routerHarness.router.dispatchCausally(events: [], from: left)
-    try await harness.routerHarness.router.dispatchCausally(events: [], from: right)
+    try await harness.routerHarness.router.dispatchCausally(.activation, from: left)
+    try await harness.routerHarness.router.dispatchCausally(.activation, from: right)
 
     var snapshot = try await harness.coordinator.pairJoyCons(
       .init(
@@ -93,7 +93,7 @@ extension RemappingRequestCoordinatorTests {
     _ = try await harness.coordinator.activate(id: original.id).get()
     let device = remappingRouterDevice(1)
     try await harness.routerHarness.router.dispatchCausally(
-      events: [.buttonPressed(.a)],
+      changes: [.press(.faceSouth)],
       from: device
     )
 
@@ -107,7 +107,7 @@ extension RemappingRequestCoordinatorTests {
     )
 
     try await harness.routerHarness.router.dispatchCausally(
-      events: [.buttonPressed(.a)],
+      changes: [.press(.faceSouth)],
       from: device
     )
     _ = try await harness.coordinator.delete(id: updated.id).get()
@@ -117,7 +117,7 @@ extension RemappingRequestCoordinatorTests {
         .system(.keyUp(.b)),
       ]
     )
-    #expect(await harness.routerHarness.router.status(for: device)?.selection == .compatibility)
+    #expect(await harness.routerHarness.router.status(for: device)?.selection == .virtualGamepad)
   }
 
   @Test
@@ -130,7 +130,7 @@ extension RemappingRequestCoordinatorTests {
     _ = try await harness.coordinator.activate(id: original.id).get()
     let device = remappingRouterDevice(1)
     try await harness.routerHarness.router.dispatchCausally(
-      events: [.buttonPressed(.a)],
+      changes: [.press(.faceSouth)],
       from: device
     )
 
@@ -171,7 +171,7 @@ extension RemappingRequestCoordinatorTests {
     let device = remappingRouterDevice(1)
     try await harness.routerHarness.router.dispatchCausally(
 
-      events: [.buttonPressed(.a)],
+      changes: [.press(.faceSouth)],
       from: device
     )
 
@@ -184,7 +184,7 @@ extension RemappingRequestCoordinatorTests {
         .system(.keyDown(.space)), .system(.keyUp(.space)),
       ]
     )
-    #expect(await harness.routerHarness.router.status(for: device)?.selection == .compatibility)
+    #expect(await harness.routerHarness.router.status(for: device)?.selection == .virtualGamepad)
   }
 
   @Test
@@ -196,8 +196,8 @@ extension RemappingRequestCoordinatorTests {
     _ = try await harness.coordinator.activate(id: mapped.id).get()
     let first = remappingRouterDevice(1)
     let second = remappingRouterDevice(2)
-    try await harness.routerHarness.router.dispatchCausally(events: [], from: first)
-    try await harness.routerHarness.router.dispatchCausally(events: [], from: second)
+    try await harness.routerHarness.router.dispatchCausally(.activation, from: first)
+    try await harness.routerHarness.router.dispatchCausally(.activation, from: second)
 
     let snapshot = try await harness.coordinator.snapshot().get()
     #expect(snapshot.routes.count == 2)
@@ -265,8 +265,8 @@ extension RemappingRequestCoordinatorTests {
     let oldDevice = remappingRouterDevice(1)
     let newDevice = remappingRouterDevice(2, vendorID: 1356, productID: 2508)
 
-    try await harness.router.dispatchCausally(events: [], from: newDevice)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: oldDevice)
+    try await harness.router.dispatchCausally(.activation, from: newDevice)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: oldDevice)
     let exactPriorBytes = try Data(contentsOf: harness.fileURL)
     let priorFilePermissions = try permissions(at: harness.fileURL)
     let priorParentPermissions = try permissions(at: harness.fileURL.deletingLastPathComponent())
@@ -285,7 +285,7 @@ extension RemappingRequestCoordinatorTests {
     #expect(try await harness.library.activeProfile(vendorID: 1118, productID: 654) == original)
     #expect(try await harness.library.activeProfile(vendorID: 1356, productID: 2508) == nil)
     #expect(await harness.router.status(for: oldDevice)?.activeProfileID == original.id)
-    #expect(await harness.router.status(for: newDevice)?.selection == .compatibility)
+    #expect(await harness.router.status(for: newDevice)?.selection == .virtualGamepad)
   }
 
   @Test(arguments: [RollbackMutation.delete, .deactivate])
@@ -297,7 +297,7 @@ extension RemappingRequestCoordinatorTests {
     _ = try await harness.coordinator.create(original).get()
     _ = try await harness.coordinator.activate(id: original.id).get()
     let device = remappingRouterDevice(1)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: device)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: device)
     let exactPriorBytes = try Data(contentsOf: harness.fileURL)
     harness.sink.failNextAction()
 

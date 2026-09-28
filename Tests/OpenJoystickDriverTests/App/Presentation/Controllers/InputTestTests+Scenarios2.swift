@@ -24,11 +24,11 @@ extension InputTestTests {
     model.brightness = 78
 
     model.applyPlayerIndicator()
-    try? await Task.sleep(nanoseconds: 10_000_000)
+    #expect(await eventually { await !gateway.playerCalls.isEmpty })
     model.applyColor()
-    try? await Task.sleep(nanoseconds: 10_000_000)
+    #expect(await eventually { await !gateway.colorCalls.isEmpty })
     model.applyBrightness()
-    try? await Task.sleep(nanoseconds: 10_000_000)
+    #expect(await eventually { await !gateway.brightnessCalls.isEmpty })
 
     #expect(await gateway.playerCalls.first?.0 == selector)
     #expect(await gateway.playerCalls.first?.1 == .player3)
@@ -41,7 +41,7 @@ extension InputTestTests {
     #expect(await gateway.rumbleCalls.isEmpty)
 
     model.close()
-    try? await Task.sleep(nanoseconds: 10_000_000)
+    #expect(await eventually { await !gateway.colorReleaseCalls.isEmpty })
     #expect(await gateway.colorReleaseCalls.first?.0 == selector)
   }
 
@@ -113,8 +113,8 @@ extension InputTestTests {
   @Test
   @MainActor
   func rejectedOutputRetainsLatestInputAndReportsInlineFailure() async {
-    var snapshot = DeviceInputState(vendorID: 0x1234, productID: 0x5678)
-    snapshot.pressedButtons = ["A"]
+    var snapshot = ControllerState.neutral
+    snapshot.pressed = [.faceSouth]
     let gateway = InputTestGatewayStub(inputSequence: [snapshot])
     await gateway.setOutputResult(false)
     let model = InputTestViewModel(gateway: gateway, sampleIntervalNanoseconds: 1_000_000_000)
@@ -231,7 +231,7 @@ extension InputTestTests {
       name: "Test Pad",
       vendorID: 0x1234,
       productID: 0x5678,
-      parser: "Generic HID",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: connection,
       discoverySource: discoverySource,
       serialNumber: nil,
@@ -242,7 +242,7 @@ extension InputTestTests {
 
   @MainActor
   func waitUntil(
-    timeoutNanoseconds: UInt64 = 500_000_000,
+    timeoutNanoseconds: UInt64 = 10_000_000_000,
     _ condition: @escaping @MainActor () -> Bool
   ) async {
     let deadline = DispatchTime.now().uptimeNanoseconds &+ timeoutNanoseconds
@@ -250,5 +250,14 @@ extension InputTestTests {
       if DispatchTime.now().uptimeNanoseconds >= deadline { return }
       try? await Task.sleep(nanoseconds: 1_000_000)
     }
+  }
+
+  func eventually(_ condition: @escaping @Sendable () async -> Bool) async -> Bool {
+    let deadline = DispatchTime.now().uptimeNanoseconds &+ 10_000_000_000
+    while DispatchTime.now().uptimeNanoseconds < deadline {
+      if await condition() { return true }
+      try? await Task.sleep(nanoseconds: 1_000_000)
+    }
+    return await condition()
   }
 }

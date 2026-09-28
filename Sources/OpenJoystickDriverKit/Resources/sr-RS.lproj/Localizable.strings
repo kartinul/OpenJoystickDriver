@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Провјера повезаних контролера…";
 "status.refreshingProfile" = "Освежавање стања профила…";
 "status.loadingProfiles" = "Учитавање профила…";
-"status.updatingIdentity" = "Ажурирање идентитета контролера…";
 "status.listening" = "Слушање…";
 "status.readyToListen" = "Спремно за слушање";
 "status.checkingInput" = "Провјера";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Контролери";
 "settings.controllerDisconnectedNotifications" = "Контролер искључен";
 "settings.controllerDisconnectedShort" = "Стваран";
-"settings.controllerIdentity" = "Идентитет контролера";
 "settings.controllerNotifications" = "Контролер повезан";
 "settings.diagnostics" = "Дијагностика";
 "settings.service" = "Услуга";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Пражњење";
 "controllers.charging" = "Пуњење";
 "controllers.batteryFull" = "Пуна";
+"controllers.notChargeable" = "Не може да се пуни";
 "controllers.batteryAccessibilityDetails" = "Батерија: %@. Стање пуњења: %@. Стање кабла: %@.";
 "controllers.activeProfile" = "Активни профил";
 "controllers.profileChecking" = "Провјера…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Активни профил није доступан";
 "controllers.profileLoadError" = "Активни профил није могуће учитати";
 "controllers.protocol" = "Протокол";
-"controllers.parser" = "Парсер";
 "controllers.serialNumber" = "Серијски број";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Улазна крајња тачка";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Грешка активног профила: %@";
 "controllers.accessibilityDetails" = "%@. %@. Протокол: %@. Parser: %@. Серијски број: %@. USB VID/PID: %@. Улазна крајња тачка: %@. Излазна крајња тачка: %@.";
 "controllers.publishedAs" = "Издао је као";
-"identity.title" = "Идентитет контролера";
-"identity.needsAttention" = "Захтева пажњу";
-"identity.error" = "Грешка идентитета контролера";
-"identity.updating" = "Ажурирање идентитета контролера…";
-"identity.reset" = "Врати препоручено";
-"identity.checking" = "Провјера";
-"identity.globalScope" = "Обезбеђује се за све виртуелне контролере објављене од стране OpenJoystickDriver.";
-"identity.unavailable" = "Недоступно";
-"identity.notSelected" = "Није одабрано";
+"controllers.nativeGamepadNotPublished" = "Изворни macOS гејмпед, није објављен";
+"virtualProfile.advanced" = "Напредно";
+"virtualProfile.title" = "Виртуелни HID профил";
+"virtualProfile.modelScope" = "Примењује се на сваки повезани контролер овог модела.";
+"virtualProfile.sourceOverride" = "Замена";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Аутоматски, замена одбијена";
+"virtualProfile.none" = "Нема виртуелног HID профила";
+"virtualProfile.unavailable" = "Ниједан виртуелни HID профил не може да представи овај контролер.";
+"virtualProfile.updating" = "Ажурирање виртуелног HID профила…";
+"virtualProfile.live" = "Активни профил";
+"virtualProfile.failure.unknownProfile" = "Овај виртуелни HID профил није познат. Ништа није сачувано.";
+"virtualProfile.failure.controllerNotFound" = "Контролер је искључен или не може да се пронађе. Замена није промењена.";
+"virtualProfile.failure.overrideRejected" = "Замена је сачувана, али овај контролер не може да је користи, па бира аутоматски.";
+"virtualProfile.failure.activationFailed" = "Активирање није успело, па је враћен претходни виртуелни HID профил: %@";
+"virtualProfile.failure.outputDisabled" = "Замена је сачувана и примениће се када се укључи виртуелни излаз.";
+"virtualProfile.failure.serverStopped" = "Услуга се зауставила. Замена није промењена.";
+"virtualProfile.failure.persistenceFailed" = "Замена није могла да се сачува. Ништа није сачувано.";
+"virtualProfile.storeError" = "Замене виртуелног HID профила не могу да се прочитају (%@). Контролери бирају аутоматски.";
+"virtualProfile.legacyIdentityRejected" = "Повучено подешавање идентитета контролера %@ се више не примењује. Покрените controller virtual reset --all да бисте је обрисали.";
 "keyboard.noKey" = "Није изабран ниједан тастер";
 "keyboard.pressKey" = "Притисните тастер…";
 "keyboard.captureKey" = "Ухвати тастер";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Тренутно стање";
 "debug.runtime" = "Окружење извршавања";
 "debug.controllers" = "Контролери";
-"debug.controllerIdentity" = "Идентитет контролера";
 "debug.unavailable" = "Окружење извршавања · недоступно";
 "debug.needsAttention" = "Окружење извршавања · захтева пажњу";
 "debug.diagnostics" = "Дијагностика";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Излаз контролера је искључен.";
 "debug.outputNeedsAttention" = "Излаз контролера захтева пажњу.";
 "debug.serviceUnavailable" = "Дијагностика услуге тренутно није доступна.";
-"error.selectedOutputUnavailable" = "Одабрани излаз контролера није доступан.";
-"error.selectedOutputEnableFailed" = "Одабрани излаз контролера није могуће омогућити.";
 "error.profileChanged" = "Овај профил је промењен другде. Учитајте поново или наставите уређивање.";
 "error.duplicateProfile" = "Профил с тим називом већ постоји.";
 "error.profileMissing" = "Тај профил више није доступан.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Окружење извршавања";
 "common.controllers" = "Контролери";
 "common.profiles" = "Профили";
-"common.controllerIdentity" = "Идентитет контролера";
 "common.protocol" = "Протокол";
-"common.parser" = "Парсер";
 "common.serialNumber" = "Серијски број";
 "common.inputEndpoint" = "Улазна крајња тачка";
 "common.outputEndpoint" = "Излазна крајња тачка";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Избрана поента профила више није доступна.";
 "cli.catalog.app_ready.summary" = "Провери спремност аутентификоване услуге апликације";
 "cli.catalog.app_status.summary" = "Прикажи стање услуге апликације";
-"cli.catalog.compat.summary" = "Управљај компатибилношћу виртуелног контролера";
 "cli.catalog.controller_list.summary" = "Испиши повезане контролере";
 "cli.catalog.controller_output.summary" = "Тестирај подржани излаз физичког контролера";
 "cli.catalog.controller_packets.summary" = "Прикажи недавне пакете контролера";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Прикажи стање управљачког програма и извршавања";
 "cli.catalog.test.summary" = "Тестирај испоруку улаза виртуелног контролера";
 "cli.catalog.update.summary" = "Провери доступна ажурирања на GitHub-у";
-"cli.compat.identity" = "идентитет компатибилности: %@";
-"cli.compat.identity_unknown" = "идентитет компатибилности: непознат";
-"cli.compat.set_failed" = "Није успело поставити идентитет компатибилности на %@. Покрените инсталирану апликацију и проверите приступ Надзору уноса и Приступачности.";
-"cli.compat.usage" = "Употреба: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "стање корисничког простора: %@";
 "cli.controller.allAppleEntries" = "Сви тачни уноси каталога Apple:";
 "cli.controller.appleIDs" = "    Apple ID-ови: %@";
 "cli.controller.applePairs" = "  Apple парови  : %d тачних уноса VID/PID";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Ниједан повезани контролер не одговара --device %@.";
 "cli.controller.selection.multiple" = "Одговара више контролера. Одаберите један са --device:\n  %@";
 "cli.controller.selection.none" = "Није повезан ниједан контролер.";
+"cli.controller.virtual.live" = "Виртуелни HID профил: %@ (%@)";
+"cli.controller.virtual.none" = "Виртуелни HID профил: нема (%@)";
+"cli.controller.virtual.failed" = "Захтев за виртуелни HID профил није успео: %@";
+"cli.controller.virtual.unknown_profile" = "Непознат виртуелни HID профил „%@“. Користите један од: %@.";
+"cli.controller.virtual.missing_profile" = "„controller virtual set“ захтева виртуелни HID профил. Користите један од: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "„--all“ не може да се комбинује са --vid, --pid или --device.";
+"cli.controller.virtual.reset_all.success" = "OK: сва заобилажења виртуелног HID профила су обрисана.";
+"cli.controller.virtual.reset_all.failed" = "Није успело ресетовати поставке. Покрените инсталирану апликацију и проверите њене дозволе.";
 "cli.controller.selection.vid_pid_missing" = "Ниједан повезани контролер не одговара %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Проследите и VID и PID, или изоставите оба.";
 "cli.controller.serviceControllers" = "Контролери (из покренуте услуге апликације):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Савет: доделите потребно право и приступ Надзору уноса.";
 "cli.controller.usbControllers" = "USB контролери (класа 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Проследите и VID и PID, или изоставите оба када је повезан један контролер.";
-"cli.diagnose.advisory_candidate" = "    Кандидат саветодавног протокола: %@";
 "cli.diagnose.app_missing" = "  Апликација: недостаје на %@";
 "cli.diagnose.app_missing_fix" = "  Исправка: изградите и инсталирајте апликацију у /Applications";
 "cli.diagnose.app_present" = "  Апликација: присутна";
 "cli.diagnose.binary_path" = "Бинарна датотека: %@";
-"cli.diagnose.catalog_conflict" = "      Посматрање је у сукобу са породицом каталога; parser непромењен";
-"cli.diagnose.catalog_parser" = "      Parser каталога остаје %@ (%@)";
 "cli.diagnose.dext_found" = "  Пронађени .dext пакети:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      крајња точка 0x%02X %@ %@ maxPacket=%@ интервал=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Непозната крива одзива „%@“.";
 "cli.mapping.double_tap_format" = "--double-tap очекује <ms>:<target>, нпр. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Употреба: OpenJoystickDriver --headless map <command>\n\nНаредбе:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nИзвор: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nОдредиште: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nОпције оси:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nОпције турба (само тастери тастатуре и миша):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nОпције активације (само тастери тастатуре и миша, међусобно искључиве са турбом):\n  --long-hold <ms>:<target>     нпр. --long-hold 500:key:b\n  --double-tap <ms>:<target>    нпр. --double-tap 300:key:c\n\n<profile> прихвата UUID или тачан назив профила без разликовања великих и малих слова.\n<id> прихвата децималну или хексадецималну вредност са префиксом 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Употреба: OpenJoystickDriver --headless map <command>\n\nНаредбе:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nИзвор: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nОдредиште: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nОпције оси:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nОпције турба (само тастери тастатуре и миша):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nОпције активације (само тастери тастатуре и миша, међусобно искључиве са турбом):\n  --long-hold <ms>:<target>     нпр. --long-hold 500:key:b\n  --double-tap <ms>:<target>    нпр. --double-tap 300:key:c\n\n<profile> прихвата UUID или тачан назив профила без разликовања великих и малих слова.\n<id> прихвата децималну или хексадецималну вредност са префиксом 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ мора бити 16-битни децимални идентификатор или хексадецимални са префиксом 0x.";
 "cli.mapping.jsonEncodeFailed" = "Није могуће кодирати UTF-8 JSON.";
 "cli.mapping.layer_action_unknown" = "Непозната радња слоја „%@“. Очекивано: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "Услуга апликације OpenJoystickDriver није покренута.";
 "cli.runtime.sample_limit" = "Конфигурација би прикупила %d узорака; повећајте --interval-ms.";
 "cli.runtime.stable_note" = "Стабилно ограничено оптерећење доказ је за ово оптерећење, не доказ да нема цурења.";
-"cli.settings.reset.failed" = "Није успело ресетовати поставке. Покрените инсталирану апликацију и проверите њене дозволе.";
-"cli.settings.reset.next" = "Следеће: покрените compat set <identity> за одабир идентитета компатибилности.";
-"cli.settings.reset.success" = "OK: поставке услуге апликације су ресетоване.";
 "cli.status.access_denied" = "Ако је приступ одбијен, покрените --headless permissions request и одобрите Надзор уноса и Приступачност у Подешавањима система.";
 "cli.status.heading" = "Стање OpenJoystickDriver";
 "cli.status.json_error" = "Није могуће кодирати JSON стања: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Стање       : %@";
 "cli.updates.unknown_option" = "Непозната опција updates: %@";
 "common.unknown" = "Непознато";
-"compatibility.appleGameController" = "Јабуло GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (оригинал)";
 "developer.buttons" = "Тастери";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Тастер Б";
 "inputTest.bCircle" = "Б / Круг";
 "inputTest.brightness" = "Светлост";
-"inputTest.circle" = "Круг";
 "inputTest.color" = "Боја";
 "inputTest.controls" = "Улаз уживо";
-"inputTest.cross" = "Крижић";
 "inputTest.disconnected" = "Контролер искључен";
 "inputTest.dpadDown" = "Крижни тастер доље";
 "inputTest.dpadLeft" = "Крижни тастер лево";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "У овом контролеру не постоје контроле за осветљење.";
 "inputTest.live" = "Увођење активно";
 "inputTest.menu" = "Изборник";
-"inputTest.minus" = "Минус";
 "inputTest.off" = "Искључено";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Опције";
 "inputTest.outputError" = "Физичка грешка изласка";
 "inputTest.outputRejected" = "Контролер је одбио овај излазни тест.";
 "inputTest.permissionRequired" = "Улазак Потребно је дозвола за праћење";
 "inputTest.playerIndicator" = "Индикатор играча";
-"inputTest.plus" = "Плус";
 "inputTest.pressed" = "Притиснуто";
-"inputTest.psButton" = "Тастер PS";
 "inputTest.released" = "Пуштено";
 "inputTest.rightBumper" = "Десно раме";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Десни Y";
 "inputTest.rumble" = "Ромбл";
 "inputTest.rumbleUnavailable" = "Рамбл није подржаван од стране овог контролера.";
-"inputTest.share" = "Дели";
-"inputTest.square" = "Квадрат";
 "inputTest.stale" = "Улаз је прекинут";
 "inputTest.start" = "Почнете тест улаза";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Улаз уживо";
 "inputTest.tabMotion" = "Предлог";
 "inputTest.tabOutput" = "Излаз";
-"inputTest.steamButton" = "Тастер Steam";
 "inputTest.summary" = "Тестови копчиња, палице, триггери, буке и осветљење контролера.";
 "inputTest.testRumble" = "Тестова Рамбл";
 "inputTest.title" = "Проба улаза";
-"inputTest.triangle" = "Трокут";
 "inputTest.unavailable" = "Улазак није доступан";
 "inputTest.view" = "Приказ";
 "inputTest.windowTitle" = "Улазни тест %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Избрани Joy-Cons нису могли бити спајрани.";
 "profiles.joyConExplicitSession" = "Почео је са експлицитним сесијом пара";
 "profiles.joyConSessionState" = "Изјавно парљање";
-"profiles.gyro.virtualMotion" = "Виртуелни покрет калибриран напред";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ буке (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Контролер искључен";
 "controllers.resume" = "Покушај поново";
 "controllers.disconnectFromOJD" = "Контролер искључен";
-"error.compatibilityTransitionDetailed" = "Одабрани излаз контролера није могуће омогућити. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Одабрани излаз контролера није могуће омогућити.";
 "cli.catalog.controller_disconnect.summary" = "Контролер искључен";
 "cli.catalog.controller_resume.summary" = "Покушај поново — Контролер искључен";
+"cli.catalog.controller_virtual_set.summary" = "Замени виртуелни HID профил контролера";
+"cli.catalog.controller_virtual_reset.summary" = "Аутоматски изабери виртуелни HID профил контролера, или обриши сва замењивања помоћу --all";
 "cli.controller.disconnected" = "Контролер искључен";
 "cli.controller.resumed" = "Увођење активно";
 

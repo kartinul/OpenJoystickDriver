@@ -16,7 +16,7 @@ public struct PhysicalOutputValidationPlan: Equatable, Sendable {
 
   public let vendorID: UInt16
   public let productID: UInt16
-  public let parser: String
+  public let protocolBinding: ProtocolBindingID
   public let steps: [Step]
   public let notes: [String]
 
@@ -24,7 +24,7 @@ public struct PhysicalOutputValidationPlan: Equatable, Sendable {
     self.init(
       vendorID: device.vendorID,
       productID: device.productID,
-      parser: device.parser,
+      protocolBinding: device.protocolBinding,
       capabilities: device.physicalOutputCapabilities
     )
   }
@@ -32,12 +32,12 @@ public struct PhysicalOutputValidationPlan: Equatable, Sendable {
   public init(
     vendorID: UInt16,
     productID: UInt16,
-    parser: String,
+    protocolBinding: ProtocolBindingID,
     capabilities: PhysicalControllerOutputCapabilities
   ) {
     self.vendorID = vendorID
     self.productID = productID
-    self.parser = parser
+    self.protocolBinding = protocolBinding
     steps = Self.steps(vendorID: vendorID, productID: productID, capabilities: capabilities)
     notes = [
       "Record pass/fail separately; generating this plan does not verify hardware.",

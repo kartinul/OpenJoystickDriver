@@ -1,6 +1,9 @@
 import Foundation
 
 extension DeviceManager {
+  func isCurrentUSBDetection(_ generation: UInt64) -> Bool {
+    !isStopping && lifecycleGeneration == generation && !Task.isCancelled
+  }
 
   func restoreAfterFailedWirelessDisconnect(
     identifier: DeviceIdentifier,
@@ -52,7 +55,6 @@ extension DeviceManager {
     case .reacquired: "reacquired"
     case .unavailable: "the HID claim was unavailable"
     case .failed(.ioReturn(let code)): "IOKit code \(code)"
-    case .failed(.coreHID(let detail)): "CoreHID error \(detail)"
     }
   }
 
@@ -75,6 +77,28 @@ extension DeviceManager {
 
   /// Stop all detection and pipelines.
   public func stop() async {
+    // Sleep is system state; a stopped manager still waits for wake before a new start() runs.
+    isStarted = false
+    suspendedControllerIdentities.removeAll()
+    guard !isStopping else { return }
+    isStopping = true
+    await tearDownControllerSessions()
+    await permissionManager.stopPolling()
+    print("[DeviceManager] Stopped")
+    isStopping = false
+  }
+
+  /// Cancels detection and tears down every controller as if it were unplugged.
+  ///
+  /// Callers set `isStopping` first so in-flight admissions and startup work abandon their
+  /// controllers instead of registering them.
+  func tearDownControllerSessions() async {
+    lifecycleGeneration &+= 1
+
+    let pendingPermissionWatch = permissionWatchTask
+    permissionWatchTask = nil
+    pendingPermissionWatch?.cancel()
+
     for task in hidPeriodicOutputTasks.values { task.cancel() }
     hidPeriodicOutputTasks = [:]
     for task in rumbleStopTasks.values { task.cancel() }
@@ -82,25 +106,54 @@ extension DeviceManager {
     rumbleStopTokens.removeAll()
     for task in detectionTasks { task.cancel() }
     detectionTasks = []
-    hidDetectionTask?.cancel()
-    hidDetectionTask = nil
-    for task in hidInitializationTasks.values { task.cancel() }
+
+    await pendingPermissionWatch?.value
+
+    let pendingHIDInitializations = Array(hidInitializationTasks.values)
+    for initialization in pendingHIDInitializations { initialization.task.cancel() }
     hidInitializationTasks = [:]
+    for initialization in pendingHIDInitializations { await initialization.task.value }
     permissionWatchTask?.cancel()
     permissionWatchTask = nil
-    for (identifier, pipeline) in pipelines {
-      await neutralizePhysicalOutputs(for: identifier, pipeline: pipeline)
-      if let locationID = identifier.locationID {
-        await sendHIDShutdownFeatureReportsIfNeeded(pipeline: pipeline, locationID: locationID)
+    for pipeline in pipelines.values { await pipeline.acceptOnlyTeardownOutput() }
+    // Pending output is dropped before teardown queues each controller's neutralization.
+    for queue in hidOutputQueues.values { queue.cancelAll() }
+    await ControllerTeardownOutput.$isActive.withValue(true) {
+      for (identifier, pipeline) in pipelines {
+        await neutralizePhysicalOutputs(for: identifier, pipeline: pipeline)
+        if let locationID = identifier.locationID {
+          await sendHIDDeactivationWritesIfNeeded(pipeline: pipeline, locationID: locationID)
+        }
+        await pipeline.stop()
       }
-      await pipeline.stop()
     }
+    // HID detection owns the backend session, so it closes only after the reports above.
+    let pendingHIDDetection = hidDetectionTask
+    hidDetectionTask = nil
+    pendingHIDDetection?.cancel()
+    await pendingHIDDetection?.value
     pipelines = [:]
-    hidOutputQueues = [:]
+    for task in rumbleStopTasks.values { task.cancel() }
+    rumbleStopTasks = [:]
+    rumbleStopTokens.removeAll()
+    let hadDeviceInfo =
+      !deviceInfos.isEmpty || !unboundDevices.isEmpty || !passThroughDevices.isEmpty
+    deviceInfos.removeAll()
+    hidRoleConnections.removeAll()
+    unboundDevices.removeAll()
+    unboundHIDClaims.removeAll()
+    passThroughDevices.removeAll()
+    for identifier in Array(hidOutputQueues.keys) { retireOutputQueue(for: identifier) }
     physicalOutputOwnership.removeAll()
     lastPhysicalHIDOutputNanoseconds = [:]
-    await permissionManager.stopPolling()
-    print("[DeviceManager] Stopped")
+    if hadDeviceInfo { notifyControllerInventoryChanged() }
+    // A drained retired queue has nothing left for a new queue to wait behind.
+    for (identifier, queue) in retiredHIDOutputQueues {
+      await queue.drain()
+      if retiredHIDOutputQueues[identifier] === queue {
+        retiredHIDOutputQueues.removeValue(forKey: identifier)
+      }
+    }
   }
 
   /// Enables or suppresses application-facing compatibility output for every active pipeline.

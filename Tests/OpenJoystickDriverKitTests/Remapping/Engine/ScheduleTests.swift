@@ -15,7 +15,7 @@ struct RemappingScheduleTests {
 
     #expect(await deadline(engine, after: start, cadence: 8_000_000) == nil)
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device,
       using: currentProfile,
       at: start
@@ -37,7 +37,7 @@ struct RemappingScheduleTests {
     let start: UInt64 = 2_000_000_000
 
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonPressed(.b)],
+      inputs: [.press(.faceSouth), .press(.faceEast)],
       from: device,
       using: currentProfile,
       at: start
@@ -45,7 +45,7 @@ struct RemappingScheduleTests {
     #expect(await deadline(engine, after: start, cadence: 8_000_000) == start + 5_000_000)
 
     try await engine.process(
-      events: [.leftStickChanged(x: 0.8, y: 0)],
+      inputs: [.leftStick(x: 0.8, y: 0)],
       from: device,
       using: currentProfile,
       at: start
@@ -53,7 +53,7 @@ struct RemappingScheduleTests {
     #expect(await deadline(engine, after: start, cadence: 1_000_000) == start + 1_000_000)
 
     try await engine.process(
-      events: [.buttonReleased(.a), .buttonReleased(.b), .leftStickChanged(x: 0, y: 0)],
+      inputs: [.release(.faceSouth), .release(.faceEast), .leftStick(x: 0, y: 0)],
       from: device,
       using: currentProfile,
       at: start
@@ -91,21 +91,21 @@ struct RemappingScheduleTests {
 
     #expect(await engine.hasScheduledOutput() == false)
     try await engine.process(
-      events: [.buttonPressed(.b), .buttonPressed(.x)],
+      inputs: [.press(.faceEast), .press(.faceWest)],
       from: device,
       using: currentProfile,
       at: 0
     )
     #expect(await engine.hasScheduledOutput() == false)
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device,
       using: currentProfile,
       at: 1
     )
     #expect(await engine.hasScheduledOutput())
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device,
       using: currentProfile,
       at: 2
@@ -121,7 +121,7 @@ struct RemappingScheduleTests {
     #expect(await engine.hasScheduledOutput() == false)
     try await activateContinuous(engine, profile: currentProfile)
     try await engine.process(
-      events: [.leftStickChanged(x: 0, y: 0)],
+      inputs: [.leftStick(x: 0, y: 0)],
       from: device,
       using: currentProfile,
       at: 1
@@ -185,8 +185,9 @@ struct RemappingScheduleTests {
     _ engine: RemappingEventEngine,
     profile: RemappingProfile
   ) async throws {
+    // A fresh deflection: after a release lifecycle the stick must move again to reach output.
     try await engine.process(
-      events: [.leftStickChanged(x: 0.8, y: 0)],
+      inputs: [.leftStick(x: 0, y: 0), .leftStick(x: 0.8, y: 0)],
       from: device,
       using: profile,
       at: 0

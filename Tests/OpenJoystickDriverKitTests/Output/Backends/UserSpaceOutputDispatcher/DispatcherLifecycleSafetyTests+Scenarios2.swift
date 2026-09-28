@@ -51,7 +51,7 @@ extension UserSpaceOutputDispatcherLifecycleTests {
 
     let dispatchTask = Task {
       await dispatcher.dispatch(
-        events: [.buttonPressed(.a)],
+        changes: [.press(.faceSouth)],
         from: DeviceIdentifier(vendorID: 1, productID: 2)
       )
     }
@@ -78,7 +78,7 @@ extension UserSpaceOutputDispatcherLifecycleTests {
     }
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
 
-    let dispatchTask = Task { await dispatcher.dispatch(events: [], from: identifier) }
+    let dispatchTask = Task { await dispatcher.activateOutput(for: identifier) }
     await creationGate.waitUntilWaiting()
 
     let close = dispatcher.beginClose()
@@ -128,7 +128,7 @@ extension UserSpaceOutputDispatcherLifecycleTests {
     )
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
 
-    let dispatchTask = Task { await dispatcher.dispatch(events: [], from: identifier) }
+    let dispatchTask = Task { await dispatcher.activateOutput(for: identifier) }
     await creationGate.waitUntilWaiting()
 
     let stopTask = Task { await dispatcher.controllerDidStop(identifier) }
@@ -149,16 +149,14 @@ extension UserSpaceOutputDispatcherLifecycleTests {
       if pressed { state.buttons |= 1 << bit } else { state.buttons &= ~(1 << bit) }
     case .leftTrigger: state.leftTriggerPressed = pressed
     case .rightTrigger: state.rightTriggerPressed = pressed
-    case .touchpad: state.touchpadPressed = pressed
-    case .mute: state.mutePressed = pressed
     }
   }
 
   func verifyContinuity(
-    pressed: ControllerEvent,
-    heldWith: ControllerEvent,
-    released: ControllerEvent,
-    later: ControllerEvent,
+    pressed: InputChange,
+    heldWith: InputChange,
+    released: InputChange,
+    later: InputChange,
     expectedState: (Int) -> VirtualGamepadState
   ) async {
     let backend = UserSpaceDispatcherTestBackend()
@@ -167,7 +165,7 @@ extension UserSpaceOutputDispatcherLifecycleTests {
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
 
     for (stage, event) in [pressed, heldWith, released, later].enumerated() {
-      await dispatcher.dispatch(events: [event], from: identifier)
+      await dispatcher.dispatch(changes: [event], from: identifier)
       #expect(
         backend.publishedReports().last == format.buildInputReport(from: expectedState(stage))
       )

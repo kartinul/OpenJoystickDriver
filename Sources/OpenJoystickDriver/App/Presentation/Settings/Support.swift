@@ -62,13 +62,12 @@
               value: status.deviceCountLabel
             )
           }
-          StatusMatrixCell(
-            label: OJDLocalized.string(
-              "common.controllerIdentity",
-              fallback: "Controller identity"
-            ),
-            value: status.compatibilityLabel
-          )
+          ForEach(status.virtualHIDProfileOverrideStoreMessages, id: \.self) { message in
+            Text(message).foregroundColor(Color(NSColor.secondaryLabelColor)).fixedSize(
+              horizontal: false,
+              vertical: true
+            )
+          }
         }
       case .unavailable(let message):
         StatusMatrixCell(

@@ -5,17 +5,17 @@ import Testing
 
 struct RemappingExtraButtonTests {
   @Test(arguments: [
-    (Button.leftGrip, RemappingButton.leftGrip), (Button.rightGrip, RemappingButton.rightGrip),
-    (Button.leftPadClick, RemappingButton.leftPadClick),
-    (Button.rightPadClick, RemappingButton.rightPadClick), (Button.leftSL, RemappingButton.leftSL),
-    (Button.leftSR, RemappingButton.leftSR), (Button.rightSL, RemappingButton.rightSL),
-    (Button.rightSR, RemappingButton.rightSR), (Button.leftFunction, RemappingButton.leftFunction),
-    (Button.rightFunction, RemappingButton.rightFunction),
-    (Button.leftPaddle, RemappingButton.leftPaddle),
-    (Button.rightPaddle, RemappingButton.rightPaddle),
+    (ControlID.paddleLeft2, RemappingButton.leftGrip), (ControlID.paddleRight2, .rightGrip),
+    (ControlID.leftTrackpadClick, .leftPadClick), (ControlID.rightTrackpadClick, .rightPadClick),
+    (ControlID.auxiliary3, .leftSL), (ControlID.auxiliary4, .leftSR),
+    (ControlID.auxiliary5, .rightSL), (ControlID.auxiliary6, .rightSR),
+    (ControlID.auxiliary1, .leftFunction), (ControlID.auxiliary2, .rightFunction),
+    (ControlID.paddleLeft1, .leftPaddle), (ControlID.paddleRight1, .rightPaddle),
   ])
-  func extraButtonCanHoldAndReleaseAKeyboardAction(physical: Button, source: RemappingButton) throws
-  {
+  func extraButtonCanHoldAndReleaseAKeyboardAction(
+    physical: ControlID,
+    source: RemappingButton
+  ) throws {
     let profile = profile(source: source)
     try profile.validate()
     let decoded = try JSONDecoder().decode(
@@ -25,12 +25,14 @@ struct RemappingExtraButtonTests {
     var engine = RemappingEngineState()
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
     #expect(
-      engine.process(events: [.buttonPressed(physical)], from: identifier, profile: decoded, at: 0)
-        == [.system(.keyDown(.space))]
+      engine.process(inputs: [.press(physical)], from: identifier, profile: decoded, at: 0) == [
+        .system(.keyDown(.space))
+      ]
     )
     #expect(
-      engine.process(events: [.buttonReleased(physical)], from: identifier, profile: decoded, at: 1)
-        == [.system(.keyUp(.space))]
+      engine.process(inputs: [.release(physical)], from: identifier, profile: decoded, at: 1) == [
+        .system(.keyUp(.space))
+      ]
     )
     #expect(engine.drain().isEmpty)
   }
@@ -67,13 +69,13 @@ struct RemappingExtraButtonTests {
       try profile.validate()
       var engine = RemappingEngineState()
       let press = engine.process(
-        events: [.buttonPressed(.rightPadClick)],
+        inputs: [.press(.rightTrackpadClick)],
         from: identifier,
         profile: profile,
         at: 0
       )
       let release = engine.process(
-        events: [.buttonReleased(.rightPadClick)],
+        inputs: [.release(.rightTrackpadClick)],
         from: identifier,
         profile: profile,
         at: 1

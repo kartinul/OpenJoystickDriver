@@ -247,7 +247,36 @@ class CapabilityResolverTests(unittest.TestCase):
             outcome = resolver.ensure(Capability.FULL_XCODE)
         self.assertEqual(outcome.kind, OutcomeKind.EXTERNALLY_BLOCKED)
         self.assertEqual(
-            commands, [["open", "macappstore://itunes.apple.com/app/id497799835"]]
+            commands,
+            [
+                ["xcode-select", "-p"],
+                ["open", "macappstore://itunes.apple.com/app/id497799835"],
+            ],
+        )
+
+    def test_selected_xcode_wins_over_a_newer_installed_xcode(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            applications = Path(directory)
+            developer_dirs = {}
+            for name in ("Xcode-26.6.0.app", "Xcode-27.0.0.app"):
+                developer = applications / name / "Contents/Developer"
+                (developer / "usr/bin").mkdir(parents=True)
+                (developer / "usr/bin/xcodebuild").touch()
+                developer_dirs[name] = developer
+
+            def run(
+                command: list[str], **_kwargs: object
+            ) -> subprocess.CompletedProcess[str]:
+                selected = f"{developer_dirs['Xcode-26.6.0.app']}\n"
+                return subprocess.CompletedProcess(command, 0, selected, "")
+
+            environ = {"OJD_APPLICATIONS_DIR": directory}
+            resolver = Resolver(applications, environ=environ, run=run)
+            outcome = resolver.ensure(Capability.FULL_XCODE)
+        self.assertEqual(outcome.kind, OutcomeKind.AVAILABLE)
+        self.assertEqual(
+            resolver.environ["DEVELOPER_DIR"],
+            str(developer_dirs["Xcode-26.6.0.app"]),
         )
 
     def test_profile_install_discovers_downloads(self) -> None:

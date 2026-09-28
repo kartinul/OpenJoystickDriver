@@ -22,43 +22,11 @@
 
   }
 
-  enum InputTestSystemClusterLayout: Equatable {
-    case standard
-    case xboxWithShare
-
-    enum Slot: Equatable {
-      case view
-      case guide
-      case menu
-      case share
-      case empty
+  enum InputTestSystemClusterLayout {
+    /// Controls the view slot shows: PlayStation Create publishes as Share, not View.
+    static func viewControls(labels: ControllerButtonLabels) -> Set<ControlID> {
+      labels == .playStation ? [] : [.view]
     }
-
-    var rows: [[Slot]] {
-      switch self {
-      case .standard: return [[.view, .guide, .menu]]
-      case .xboxWithShare: return [[.view, .guide, .menu], [.empty, .share, .empty]]
-      }
-    }
-
-    static var shareControl: InputTestControllerSymbolSet.Control {
-      InputTestControllerSymbolSet.Control(
-        OJDLocalized.string("inputTest.share", fallback: "Share"),
-        symbol: "square.and.arrow.up",
-        fallbackSymbol: "square.and.arrow.up"
-      )
-    }
-
-    static func resolve(for profile: VirtualDeviceProfile) -> Self {
-      if profile.vendorID == 0x045E, profile.productID == 0x0B13 { return .xboxWithShare }
-      return .standard
-    }
-
-    static func viewButtons(
-      for glyphFamily: VirtualIdentityGlyphFamily
-    ) -> [OpenJoystickDriverKit.Button] { glyphFamily == .playstation ? [.share] : [.back] }
-
-    static let shareButtons: [OpenJoystickDriverKit.Button] = [.share]
   }
 
   struct InputTestAxisValuesView: View {
@@ -90,28 +58,28 @@
         VStack(spacing: 8) {
           InputTestAxisRow(
             label: OJDLocalized.string("inputTest.leftX", fallback: "Left X"),
-            value: snapshot.leftStickX,
+            value: snapshot.leftStick.x.normalized,
             signed: true
           )
           InputTestAxisRow(
             label: OJDLocalized.string("inputTest.leftY", fallback: "Left Y"),
-            value: snapshot.leftStickY,
+            value: -snapshot.leftStick.y.normalized,
             signed: true
           )
-          InputTestAxisRow(label: "LT", value: snapshot.leftTrigger, signed: false)
+          InputTestAxisRow(label: "LT", value: snapshot.leftTrigger.normalized, signed: false)
         }
         VStack(spacing: 8) {
           InputTestAxisRow(
             label: OJDLocalized.string("inputTest.rightX", fallback: "Right X"),
-            value: snapshot.rightStickX,
+            value: snapshot.rightStick.x.normalized,
             signed: true
           )
           InputTestAxisRow(
             label: OJDLocalized.string("inputTest.rightY", fallback: "Right Y"),
-            value: snapshot.rightStickY,
+            value: -snapshot.rightStick.y.normalized,
             signed: true
           )
-          InputTestAxisRow(label: "RT", value: snapshot.rightTrigger, signed: false)
+          InputTestAxisRow(label: "RT", value: snapshot.rightTrigger.normalized, signed: false)
         }
       }.padding(4)
     }

@@ -2,21 +2,34 @@ import Foundation
 import OpenJoystickDriverKit
 
 extension RuntimeViewModel {
+  /// The button labels of the connected controller `selector` names; standard when unknown.
+  func buttonLabels(for selector: RuntimeDeviceSelector) -> ControllerButtonLabels {
+    guard case .available(let status) = statusState,
+      let device = status.devices.first(where: { device in
+        device.vendorID == selector.vendorID && device.productID == selector.productID
+          && (selector.runtimeIdentifier == nil
+            || selector.runtimeIdentifier == device.runtimeIdentifier)
+      })
+    else { return .standard }
+    return ControllerButtonLabels(protocolID: device.protocolBinding.protocolID)
+  }
+
   func listenForInput(for selector: RuntimeDeviceSelector) async {
     inputGeneration += 1
     let generation = inputGeneration
     inputCaptureState = .listening(selector)
-    var baselineState: DeviceInputState?
+    var baselineState: ControllerState?
 
     for attempt in 0..<50 {
       guard generation == inputGeneration else { return }
       do {
-        if let state = try await gateway.deviceInputState(for: selector) {
+        if let state = try await gateway.controllerState(for: selector) {
           guard generation == inputGeneration else { return }
           if let baselineState,
             let detectedSource = RuntimePresentation.detectedTransition(
               from: baselineState,
-              to: state
+              to: state,
+              labels: buttonLabels(for: selector)
             )
           {
             inputCaptureState = .detected(selector, state, detectedSource)
@@ -197,82 +210,36 @@ extension RuntimeViewModel {
     }
   }
 
-  func loadCompatibilityIdentity() async {
-    compatibilityGeneration += 1
-    let generation = compatibilityGeneration
-    authoritativeCompatibilityIdentity = nil
-    compatibilityState = .loading
-    compatibilityError = nil
-    updateStatusCompatibilityIdentity(nil)
+  /// Stores `profile` as the virtual HID profile override of `device`'s model, or clears the
+  /// override when `profile` is nil so the controller selects automatically.
+  func setVirtualHIDProfileOverride(
+    _ profile: VirtualHIDProfileID?,
+    for device: ApplicationServiceDeviceDescription
+  ) async {
+    // The service retargets every controller of the model, so the request and its failure
+    // belong to the model rather than to one controller.
+    let model = RuntimeControllerModel(device)
+    guard virtualHIDProfileOverrideStates[model]?.inFlight != true else { return }
+    virtualHIDProfileOverrideStates[model] = RuntimeVirtualHIDProfileOverrideState(
+      request: profile.map { .set($0) } ?? .reset
+    )
+    let selector = RuntimeDeviceSelector(device: device)
+    var failure: String?
     do {
-      let identity = try await gateway.compatibilityIdentity()
-      guard generation == compatibilityGeneration else { return }
-      authoritativeCompatibilityIdentity = identity
-      compatibilityState = .available(identity)
-      updateStatusCompatibilityIdentity(identity)
-
-    } catch {
-      guard generation == compatibilityGeneration else { return }
-      let message = RuntimePresentation.userFacingError(error)
-      compatibilityState =
-        RuntimePresentation.isUnavailable(error) ? .unavailable(message) : .error(message)
-      compatibilityError = message
-      authoritativeCompatibilityIdentity = nil
-      updateStatusCompatibilityIdentity(nil)
-      lastError = message
-    }
-  }
-
-  func setCompatibilityIdentity(_ identity: CompatibilityIdentity) async {
-
-    compatibilityGeneration += 1
-    let generation = compatibilityGeneration
-    authoritativeCompatibilityIdentity = nil
-    compatibilityState = .loading
-    compatibilityError = nil
-    updateStatusCompatibilityIdentity(nil)
-    do {
-      let result = try await gateway.setCompatibilityIdentityDetailed(identity)
-      guard generation == compatibilityGeneration else { return }
-      if result.succeeded {
-        let live = result.liveIdentity ?? identity
-        authoritativeCompatibilityIdentity = live
-        compatibilityState = .available(live)
-        compatibilityError = nil
-        updateStatusCompatibilityIdentity(live)
-        lastError = nil
+      let result: VirtualHIDProfileOverrideResult
+      if let profile {
+        result = try await gateway.setVirtualHIDProfileOverride(profile, for: selector)
       } else {
-        let live = result.liveIdentity ?? result.retainedIdentity
-        authoritativeCompatibilityIdentity = live
-        if let live {
-          compatibilityState = .available(live)
-          updateStatusCompatibilityIdentity(live)
-        }
-        let phase = result.failure?.phase.rawValue ?? "activation"
-        let cause = result.failure?.detail ?? result.failure?.cause.rawValue ?? "unavailable"
-        let message = OJDLocalized.formatted(
-          "error.compatibilityTransitionDetailed",
-          fallback:
-            "Could not switch controller output (%@, %@). The previous output remains active.",
-          phase,
-          cause
-        )
-        compatibilityError = message
-        lastError = message
+        result = try await gateway.resetVirtualHIDProfileOverride(for: selector)
       }
-    } catch {
-      guard generation == compatibilityGeneration else { return }
-      let message = RuntimePresentation.userFacingError(error)
-      compatibilityState =
-        RuntimePresentation.isUnavailable(error) ? .unavailable(message) : .error(message)
-      compatibilityError = message
-      authoritativeCompatibilityIdentity = nil
-      updateStatusCompatibilityIdentity(nil)
-      lastError = message
+      failure = result.failure.map(RuntimePresentation.virtualHIDProfileOverrideFailure)
+    } catch { failure = RuntimePresentation.userFacingError(error) }
+    // Keep the request in flight until the refreshed status carries the model's new profile.
+    await refreshControllerInventory()
+    virtualHIDProfileOverrideStates[model] = failure.map {
+      RuntimeVirtualHIDProfileOverrideState(failure: $0)
     }
   }
-
-  func resetCompatibilityIdentity() async { await setCompatibilityIdentity(.automatic) }
 
   func suspendController(_ device: ApplicationServiceDeviceDescription) async {
     do {

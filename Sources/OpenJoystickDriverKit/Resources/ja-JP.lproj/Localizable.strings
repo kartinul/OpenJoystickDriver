@@ -69,7 +69,6 @@
 "status.checkingControllers" = "接続されたコントローラを確認中…";
 "status.refreshingProfile" = "プロファイルの状態を更新中…";
 "status.loadingProfiles" = "プロファイルを読み込み中…";
-"status.updatingIdentity" = "コントローラ識別を更新中…";
 "status.listening" = "待機中…";
 "status.readyToListen" = "待機の準備完了";
 "status.checkingInput" = "確認中";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "コントローラ";
 "settings.controllerDisconnectedNotifications" = "コントローラ切断";
 "settings.controllerDisconnectedShort" = "切断";
-"settings.controllerIdentity" = "コントローラ識別";
 "settings.controllerNotifications" = "コントローラ接続";
 "settings.diagnostics" = "診断";
 "settings.service" = "サービス";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "放電中";
 "controllers.charging" = "充電中";
 "controllers.batteryFull" = "満充電";
+"controllers.notChargeable" = "充電不可";
 "controllers.batteryAccessibilityDetails" = "バッテリー：%@。充電状態：%@。ケーブルの状態：%@。";
 "controllers.activeProfile" = "アクティブなプロファイル";
 "controllers.profileChecking" = "確認中…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "アクティブなプロファイルは利用できません";
 "controllers.profileLoadError" = "アクティブなプロファイルを読み込めませんでした";
 "controllers.protocol" = "プロトコル";
-"controllers.parser" = "パース";
 "controllers.serialNumber" = "シリアル番号";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "入力エンドポイント";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "アクティブなプロファイルのエラー: %@";
 "controllers.accessibilityDetails" = "%@。%@。プロトコル: %@。Parser: %@。シリアル番号: %@。USB VID/PID: %@。入力エンドポイント: %@。出力エンドポイント: %@。";
 "controllers.publishedAs" = "公開名";
-"identity.title" = "コントローラ識別";
-"identity.needsAttention" = "対応が必要";
-"identity.error" = "コントローラ識別のエラー";
-"identity.updating" = "コントローラ識別を更新中…";
-"identity.reset" = "推奨設定に戻す";
-"identity.checking" = "確認中";
-"identity.globalScope" = "OpenJoystickDriverが公開するすべての仮想コントローラに適用されます。";
-"identity.unavailable" = "利用できません";
-"identity.notSelected" = "未選択";
+"controllers.nativeGamepadNotPublished" = "macOS ネイティブのゲームパッド、公開なし";
+"virtualProfile.advanced" = "詳細";
+"virtualProfile.title" = "仮想HIDプロファイル";
+"virtualProfile.modelScope" = "このモデルの接続中のすべてのコントローラに適用されます。";
+"virtualProfile.sourceOverride" = "上書き";
+"virtualProfile.sourceAutomaticAfterRejecting" = "自動（上書きは拒否）";
+"virtualProfile.none" = "仮想HIDプロファイルなし";
+"virtualProfile.unavailable" = "このコントローラを表現できる仮想HIDプロファイルはありません。";
+"virtualProfile.updating" = "仮想HIDプロファイルを更新中…";
+"virtualProfile.live" = "現在のプロファイル";
+"virtualProfile.failure.unknownProfile" = "この仮想HIDプロファイルは不明です。何も保存されませんでした。";
+"virtualProfile.failure.controllerNotFound" = "コントローラが切断されたか、見つかりません。上書きは変更されていません。";
+"virtualProfile.failure.overrideRejected" = "上書きは保存されましたが、このコントローラでは使用できないため、自動で選択します。";
+"virtualProfile.failure.activationFailed" = "有効化に失敗したため、以前の仮想HIDプロファイルに戻しました：%@";
+"virtualProfile.failure.outputDisabled" = "上書きは保存され、仮想出力が有効になると適用されます。";
+"virtualProfile.failure.serverStopped" = "サービスが停止しました。上書きは変更されていません。";
+"virtualProfile.failure.persistenceFailed" = "上書きを保存できませんでした。何も保存されませんでした。";
+"virtualProfile.storeError" = "仮想HIDプロファイルの上書きを読み取れません（%@）。コントローラは自動で選択します。";
+"virtualProfile.legacyIdentityRejected" = "廃止されたコントローラ識別設定 %@ は適用されなくなりました。消去するには controller virtual reset --all を実行してください。";
 "keyboard.noKey" = "キーが選択されていません";
 "keyboard.pressKey" = "キーを押してください…";
 "keyboard.captureKey" = "キーを取得";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "現在の状態";
 "debug.runtime" = "ランタイム";
 "debug.controllers" = "コントローラ";
-"debug.controllerIdentity" = "コントローラ識別";
 "debug.unavailable" = "ランタイム · 利用できません";
 "debug.needsAttention" = "ランタイム · 対応が必要";
 "debug.diagnostics" = "診断";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "コントローラ出力はオフです。";
 "debug.outputNeedsAttention" = "コントローラ出力に対応が必要です。";
 "debug.serviceUnavailable" = "サービスの診断は現在利用できません。";
-"error.selectedOutputUnavailable" = "選択したコントローラ出力は利用できません。";
-"error.selectedOutputEnableFailed" = "選択したコントローラ出力を有効にできませんでした。";
 "error.profileChanged" = "このプロファイルはほかの場所で変更されました。再読み込みするか、編集を続けてください。";
 "error.duplicateProfile" = "その名前のプロファイルはすでに存在します。";
 "error.profileMissing" = "そのプロファイルは利用できなくなりました。";
@@ -443,9 +448,7 @@
 "common.runtime" = "ランタイム";
 "common.controllers" = "コントローラ";
 "common.profiles" = "プロファイル";
-"common.controllerIdentity" = "コントローラ識別";
 "common.protocol" = "プロトコル";
-"common.parser" = "パース";
 "common.serialNumber" = "シリアル番号";
 "common.inputEndpoint" = "入力エンドポイント";
 "common.outputEndpoint" = "出力エンドポイント";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "選択されたプロフィール項目はもはや利用できません.";
 "cli.catalog.app_ready.summary" = "認証済みアプリケーションサービスの準備状況を確認";
 "cli.catalog.app_status.summary" = "アプリケーションサービスの状態を表示";
-"cli.catalog.compat.summary" = "仮想コントローラの互換性を管理";
 "cli.catalog.controller_list.summary" = "接続中のコントローラを一覧表示";
 "cli.catalog.controller_output.summary" = "対応する物理コントローラ出力をテスト";
 "cli.catalog.controller_packets.summary" = "最近のコントローラパケットを表示";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "ドライバとランタイムの状態を表示";
 "cli.catalog.test.summary" = "仮想コントローラの入力配信をテスト";
 "cli.catalog.update.summary" = "GitHubで利用可能なアップデートを確認";
-"cli.compat.identity" = "互換性識別: %@";
-"cli.compat.identity_unknown" = "互換性識別: 不明";
-"cli.compat.set_failed" = "互換性識別を%@に設定できませんでした。インストール済みアプリを起動し、入力監視とアクセシビリティのアクセスを確認してください。";
-"cli.compat.usage" = "使用法: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "ユーザ空間の状態: %@";
 "cli.controller.allAppleEntries" = "Appleカタログの完全一致エントリすべて:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Appleペア    : VID/PIDの完全一致 %d 件";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "--device %@ に一致する接続コントローラはありません。";
 "cli.controller.selection.multiple" = "複数のコントローラが一致します。--device で1台を選択してください:\n  %@";
 "cli.controller.selection.none" = "コントローラは接続されていません。";
+"cli.controller.virtual.live" = "仮想 HID プロファイル: %@ (%@)";
+"cli.controller.virtual.none" = "仮想 HID プロファイル: なし (%@)";
+"cli.controller.virtual.failed" = "仮想 HID プロファイルの要求に失敗しました: %@";
+"cli.controller.virtual.unknown_profile" = "不明な仮想 HID プロファイル 「%@」。次のいずれかを使用してください: %@。";
+"cli.controller.virtual.missing_profile" = "「controller virtual set」 には仮想 HID プロファイルが必要です。次のいずれかを使用してください: %@。";
+"cli.controller.virtual.reset_all_with_selector" = "「--all」 は --vid、--pid、--device と組み合わせることはできません。";
+"cli.controller.virtual.reset_all.success" = "OK: すべての仮想 HID プロファイルの上書きを消去しました。";
+"cli.controller.virtual.reset_all.failed" = "設定をリセットできませんでした。インストール済みアプリを起動し、アクセス許可を確認してください。";
 "cli.controller.selection.vid_pid_missing" = "%@:%@ に一致する接続コントローラはありません。";
 "cli.controller.selection.vid_pid_pair" = "VID と PID の両方を渡すか、両方を省略してください。";
 "cli.controller.serviceControllers" = "コントローラ (実行中のアプリケーションサービスから):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "ヒント: 必要なエンタイトルメントと入力監視アクセスを許可してください。";
 "cli.controller.usbControllers" = "USBコントローラ (class 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "VID と PID の両方を渡すか、コントローラが1台のときは両方を省略してください。";
-"cli.diagnose.advisory_candidate" = "    参考プロトコル候補: %@";
 "cli.diagnose.app_missing" = "  アプリ: %@ にありません";
 "cli.diagnose.app_missing_fix" = "  修正: アプリをビルドして /Applications にインストール";
 "cli.diagnose.app_present" = "  アプリ: あります";
 "cli.diagnose.binary_path" = "バイナリ: %@";
-"cli.diagnose.catalog_conflict" = "      観測がカタログファミリと衝突しています。パーサは変更しません";
-"cli.diagnose.catalog_parser" = "      カタログパーサは %@ (%@) のままです";
 "cli.diagnose.dext_found" = "  検出した .dext バンドル:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      終了点 0x%02X %@ %@ パーツを%@ インターバル=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "不明な応答カーブ 「%@」。";
 "cli.mapping.double_tap_format" = "--double-tap は <ms>:<target> を期待します。例: --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "使用法: OpenJoystickDriver --headless map <command>\n\nコマンド:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nソース: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nターゲット: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\n軸オプション:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nターボオプション (キーボードとマウスボタンのみ):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\n起動オプション (キーボードとマウスボタンのみ。ターボと同時には使えません):\n  --long-hold <ms>:<target>     例: --long-hold 500:key:b\n  --double-tap <ms>:<target>    例: --double-tap 300:key:c\n\n<profile> には UUID、または正確な（大文字小文字を区別しない）プロファイル名を指定します。\n<id> は十進数または 0x 接頭辞の十六進数です。\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "使用法: OpenJoystickDriver --headless map <command>\n\nコマンド:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nソース: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nターゲット: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\n軸オプション:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nターボオプション (キーボードとマウスボタンのみ):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\n起動オプション (キーボードとマウスボタンのみ。ターボと同時には使えません):\n  --long-hold <ms>:<target>     例: --long-hold 500:key:b\n  --double-tap <ms>:<target>    例: --double-tap 300:key:c\n\n<profile> には UUID、または正確な（大文字小文字を区別しない）プロファイル名を指定します。\n<id> は十進数または 0x 接頭辞の十六進数です。\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ は16ビットの十進数または 0x 接頭辞の十六進識別子である必要があります。";
 "cli.mapping.jsonEncodeFailed" = "UTF-8 JSON をエンコードできませんでした。";
 "cli.mapping.layer_action_unknown" = "不明なレイヤーアクション 「%@」。期待値: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver アプリケーションサービスは実行されていません。";
 "cli.runtime.sample_limit" = "この構成では %d サンプルを収集します。--interval-ms を大きくしてください。";
 "cli.runtime.stable_note" = "安定して有界なソークはこのワークロードの証拠であり、リークがすべて無いことの証明ではありません。";
-"cli.settings.reset.failed" = "設定をリセットできませんでした。インストール済みアプリを起動し、アクセス許可を確認してください。";
-"cli.settings.reset.next" = "次: compat set <identity> を実行して互換性識別を選んでください。";
-"cli.settings.reset.success" = "OK: アプリケーションサービスの設定をリセットしました。";
 "cli.status.access_denied" = "アクセスが拒否された場合は --headless permissions request を実行し、システム設定で入力監視とアクセシビリティを承認してください。";
 "cli.status.heading" = "OpenJoystickDriver 状態";
 "cli.status.json_error" = "状態 JSON をエンコードできませんでした: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  状態         : %@";
 "cli.updates.unknown_option" = "不明な updates オプション: %@";
 "common.unknown" = "不明";
-"compatibility.appleGameController" = "リンゴ GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox オーガニック";
 "developer.buttons" = "ボタン";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Bボタン";
 "inputTest.bCircle" = "B / 円";
 "inputTest.brightness" = "明るさ";
-"inputTest.circle" = "サークル";
 "inputTest.color" = "カラー";
 "inputTest.controls" = "ライブ入力";
-"inputTest.cross" = "クロス";
 "inputTest.disconnected" = "コントローラが切断されました";
 "inputTest.dpadDown" = "Dパッド下";
 "inputTest.dpadLeft" = "Dパッド左";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "このコントローラではライティング操作は利用できません。";
 "inputTest.live" = "入力中";
 "inputTest.menu" = "メニュー";
-"inputTest.minus" = "マイナス";
 "inputTest.off" = "オフ";
 "inputTest.open" = "入力テストを開く…";
-"inputTest.options" = "オプション";
 "inputTest.outputError" = "物理出力エラー";
 "inputTest.outputRejected" = "コントローラがこの出力テストを拒否しました。";
 "inputTest.permissionRequired" = "入力監視の許可が必要です";
 "inputTest.playerIndicator" = "プレイヤーインジケータ";
-"inputTest.plus" = "プラス";
 "inputTest.pressed" = "押下";
-"inputTest.psButton" = "PSボタン";
 "inputTest.released" = "解放";
 "inputTest.rightBumper" = "右バンパー";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "右Y";
 "inputTest.rumble" = "振動";
 "inputTest.rumbleUnavailable" = "このコントローラは振動に対応していません。";
-"inputTest.share" = "シェア";
-"inputTest.square" = "スクエア";
 "inputTest.stale" = "入力が中断されました";
 "inputTest.start" = "入力テストを開始";
 "inputTest.starting" = "開始中…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "ライブ入力";
 "inputTest.tabMotion" = "提案";
 "inputTest.tabOutput" = "出力";
-"inputTest.steamButton" = "Steamボタン";
 "inputTest.summary" = "ボタン、スティック、トリガー、振動、コントローラのライティングをテストします。";
 "inputTest.testRumble" = "振動をテスト";
 "inputTest.title" = "入力テスト";
-"inputTest.triangle" = "トライアングル";
 "inputTest.unavailable" = "入力を利用できません";
 "inputTest.view" = "ビュー";
 "inputTest.windowTitle" = "入力テスト — %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "選択した Joy-Cons は結合できませんでした 接続されたコントローラをリフレッシュして再試してください";
 "profiles.joyConExplicitSession" = "明らかにペアセッションで開始";
 "profiles.joyConSessionState" = "明らかに配合する";
-"profiles.gyro.virtualMotion" = "前向きのカリバー化された仮想動き";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "コントローラが切断されました";
 "controllers.resume" = "再試行";
 "controllers.disconnectFromOJD" = "コントローラが切断されました";
-"error.compatibilityTransitionDetailed" = "選択したコントローラ出力を有効にできませんでした。 (%@, %@)";
 "error.controllerSessionChangeRejected" = "選択したコントローラ出力を有効にできませんでした。";
 "cli.catalog.controller_disconnect.summary" = "コントローラが切断されました";
 "cli.catalog.controller_resume.summary" = "再試行 — コントローラが切断されました";
+"cli.catalog.controller_virtual_set.summary" = "コントローラの仮想 HID プロファイルを上書き";
+"cli.catalog.controller_virtual_reset.summary" = "コントローラの仮想 HID プロファイルを自動選択、または --all で全上書きを消去";
 "cli.controller.disconnected" = "コントローラが切断されました";
 "cli.controller.resumed" = "入力中";
 

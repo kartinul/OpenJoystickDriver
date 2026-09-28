@@ -1,6 +1,11 @@
 import Foundation
 
 extension DevicePipeline {
+  enum USBInputLoopRecovery: Equatable {
+    case reconnect
+    case accessDenied
+  }
+
   enum USBOpenResult {
     case opened(any USBTransportSession)
     case unavailable(USBTransportError)
@@ -8,7 +13,7 @@ extension DevicePipeline {
 
   // MARK: - Private USB pipeline
 
-  func startUSBPipeline(device: USBTransportDevice) async {
+  func startUSBPipeline(device: USBTransportDevice, generation: UInt64) async {
     guard let provider = usbTransportProvider else {
       print("[DevicePipeline] Missing USB transport provider for \(identifier)")
       isActive = false
@@ -16,10 +21,17 @@ extension DevicePipeline {
     }
 
     var openAttempt: Int = 0
-    while isActive {
-      let openResult = await openDeviceWithRetry(provider: provider, device: device)
+    while isCurrentUSBRun(generation) {
+      let openResult = await openDeviceWithRetry(
+        provider: provider,
+        device: device,
+        runGeneration: generation
+      )
+      guard isCurrentUSBRun(generation) else {
+        if case .opened(let handle) = openResult { await handle.close() }
+        return
+      }
       guard case .opened(let handle) = openResult else {
-        guard isActive else { return }
         let ownership: HIDInputOwnership
         if case .unavailable(.accessDenied) = openResult {
           ownership = .accessDenied
@@ -27,7 +39,7 @@ extension DevicePipeline {
           ownership = .acquisitionFailed
         }
         await reportUSBInputOwnership(ownership)
-        guard isActive else { return }
+        guard isCurrentUSBRun(generation) else { return }
         openAttempt += 1
         let delay: UInt64
         if case .unavailable(.accessDenied) = openResult {
@@ -45,15 +57,12 @@ extension DevicePipeline {
         try? await Task.sleep(nanoseconds: delay)
         continue
       }
-      guard isActive else {
-        await handle.close()
-        return
-      }
       usbHandle = handle
       consecutiveUSBIOErrors = 0
-      (parser as? any InputParserSessionLifecycle)?.resetProtocolState()
+      driver.resetProtocolState()
 
-      guard await performUSBHandshake(handle: handle) else {
+      guard await performUSBHandshake(handle: handle, runGeneration: generation) else {
+        guard isCurrentUSBRun(generation) else { return }
         // Try again while active, but slow down to avoid hot loops that launchd may kill
         // as "inefficient".
         openAttempt += 1
@@ -62,43 +71,64 @@ extension DevicePipeline {
         continue
       }
 
-      guard isActive else {
+      guard isCurrentUSBRun(generation) else {
         await handle.close()
-        usbHandle = nil
+        if let current = usbHandle, ObjectIdentifier(current) == ObjectIdentifier(handle) {
+          usbHandle = nil
+        }
         return
       }
 
       let ownership = await handle.inputOwnership
-      guard isActive else { return }
+      guard isCurrentUSBRun(generation) else { return }
       await reportUSBInputOwnership(ownership)
-      guard isActive else { return }
+      guard isCurrentUSBRun(generation) else { return }
       openAttempt = 0
-      if !requiresInputConnectionBeforeOutput() {
-        await dispatcher.dispatch(events: [], from: identifier)
-      }
+      if !requiresInputConnectionBeforeOutput(), sessionState == .active { await activateOutput() }
 
-      await runUSBInputLoop(handle: handle)
+      let recovery = await runUSBInputLoop(handle: handle, generation: generation)
 
-      if !isActive { return }
+      guard isCurrentUSBRun(generation) else { return }
 
       // Prevent immediate reopen loops.
       openAttempt += 1
-      let delay = usbRecoveryPolicy.reconnectDelayNanoseconds(after: openAttempt)
+      let delay: UInt64
+      switch recovery {
+      case .reconnect: delay = usbRecoveryPolicy.reconnectDelayNanoseconds(after: openAttempt)
+      case .accessDenied: delay = usbRecoveryPolicy.accessContentionDelayNanoseconds
+      }
       try? await Task.sleep(nanoseconds: delay)
     }
   }
 
+  func isCurrentUSBRun(_ generation: UInt64) -> Bool {
+    isActive && usbRunGeneration == generation && !Task.isCancelled
+  }
+
+  func isCurrentUSBOperation(_ generation: UInt64?) -> Bool {
+    guard !Task.isCancelled else { return false }
+    if let generation { return isActive && usbRunGeneration == generation }
+    return true
+  }
+
   func reportUSBInputOwnership(_ ownership: HIDInputOwnership) async {
     if let listener = dispatcher as? any ControllerInputOwnershipListener {
+      usbOwnershipReportsInFlight += 1
+      defer { usbOwnershipReportsInFlight -= 1 }
       await listener.controllerInputOwnershipChanged(ownership, for: identifier)
     }
   }
 
-  func performUSBHandshake(handle: any USBTransportSession) async -> Bool {
-    let retryDelays = (parser as? any USBStartupOutputProvider)?.usbStartupRetryDelays ?? []
+  func performUSBHandshake(
+    handle: any USBTransportSession,
+    runGeneration: UInt64? = nil
+  ) async -> Bool {
+    let retryDelays = driver.sessionPlan.usbStartupRetryDelays
     for attempt in 0...retryDelays.count {
+      guard isCurrentUSBOperation(runGeneration) else { return false }
       do {
-        try await sendUSBStartupOutputPackets(handle: handle)
+        try await sendUSBStartupOutputPackets(handle: handle, runGeneration: runGeneration)
+        guard isCurrentUSBOperation(runGeneration) else { return false }
         startupOutputStatus = "succeeded"
         print("[DevicePipeline] Handshake complete:" + " \(identifier)")
         return true
@@ -109,56 +139,73 @@ extension DevicePipeline {
         )
         guard attempt < retryDelays.count else { break }
         do { try await Task.sleep(nanoseconds: retryDelays[attempt]) } catch { break }
+        guard isCurrentUSBOperation(runGeneration) else { return false }
       }
     }
-    usbHandle = nil
+    guard isCurrentUSBOperation(runGeneration) else { return false }
+    if let current = usbHandle, ObjectIdentifier(current) == ObjectIdentifier(handle) {
+      usbHandle = nil
+    }
     await handle.close()
     return false
   }
 
-  func sendUSBStartupOutputPackets(handle: any USBTransportSession) async throws {
-    guard let startupOutput = parser as? USBStartupOutputProvider else { return }
-    let packets = startupOutput.usbStartupOutputPackets()
-    for (index, packet) in packets.enumerated() {
+  func sendUSBStartupOutputPackets(
+    handle: any USBTransportSession,
+    runGeneration: UInt64? = nil
+  ) async throws {
+    let writes = driver.startupWrites()
+    let interval = driver.sessionPlan.usbStartupIntervalNanoseconds
+    for (index, write) in writes.enumerated() {
+      let handleIsCurrent: Bool
+      if let currentHandle = usbHandle {
+        handleIsCurrent = ObjectIdentifier(currentHandle) == ObjectIdentifier(handle)
+      } else {
+        handleIsCurrent = true
+      }
+      guard isCurrentUSBOperation(runGeneration), handleIsCurrent else { throw CancellationError() }
       do {
-        _ = try await handle.writeInterruptPacket(
-          endpoint: transportProfile.outputEndpoint,
-          data: packet,
-          timeout: 2000
-        )
-        appendToPacketLog(bytes: packet, direction: "tx")
+        try await performUSBWrite(write, handle: handle, runGeneration: runGeneration)
+        guard isCurrentUSBOperation(runGeneration) else { throw CancellationError() }
       } catch let error as USBTransportError
-        where isIgnorableUSBStartupOutputError(parser: parser, packet: packet, error: error)
+        where isIgnorableUSBStartupOutputError(write, error: error)
       {
         print(
           "[DevicePipeline] Optional USB startup output rejected for \(identifier):" + " \(error)"
         )
       }
-      if index < packets.count - 1, startupOutput.usbStartupOutputIntervalNanoseconds > 0 {
-        try await Task.sleep(nanoseconds: startupOutput.usbStartupOutputIntervalNanoseconds)
+      if index < writes.count - 1, interval > 0 {
+        try await Task.sleep(nanoseconds: interval)
+        guard isCurrentUSBOperation(runGeneration) else { throw CancellationError() }
       }
     }
   }
 
   func openDeviceWithRetry(
     provider: any USBTransportProvider,
-    device: USBTransportDevice
+    device: USBTransportDevice,
+    runGeneration: UInt64? = nil
   ) async -> USBOpenResult {
     var lastError = USBTransportError.notFound
     for attempt in 0..<usbRecoveryPolicy.openRetryDelays.count {
+      guard isCurrentUSBOperation(runGeneration) else { return .unavailable(.notFound) }
       do {
-        return .opened(
-          try await provider.open(
-            device,
-            options: USBTransportOpenOptions(transportProfile: transportProfile)
-          )
+        let handle = try await provider.open(
+          device,
+          options: USBTransportOpenOptions(transportProfile: transportProfile)
         )
+        guard isCurrentUSBOperation(runGeneration) else {
+          await handle.close()
+          return .unavailable(.notFound)
+        }
+        return .opened(handle)
       } catch let error as USBTransportError {
         lastError = error
         if error == .accessDenied { return .unavailable(error) }
         handleOpenDeviceError(error, attempt: attempt)
         if attempt < usbRecoveryPolicy.openRetryDelays.count - 1 {
           try? await Task.sleep(nanoseconds: usbRecoveryPolicy.openRetryDelays[attempt])
+          guard isCurrentUSBOperation(runGeneration) else { return .unavailable(.notFound) }
         }
       } catch {
         let transportError = USBTransportError.platform(code: 0, message: String(describing: error))
@@ -166,6 +213,7 @@ extension DevicePipeline {
         handleOpenDeviceError(transportError, attempt: attempt)
         if attempt < usbRecoveryPolicy.openRetryDelays.count - 1 {
           try? await Task.sleep(nanoseconds: usbRecoveryPolicy.openRetryDelays[attempt])
+          guard isCurrentUSBOperation(runGeneration) else { return .unavailable(.notFound) }
         }
       }
     }
@@ -174,159 +222,5 @@ extension DevicePipeline {
 
   func handleOpenDeviceError(_ error: Error, attempt: Int) {
     print("[DevicePipeline] Open attempt \(attempt + 1) failed" + " for \(identifier): \(error)")
-  }
-
-  func runUSBInputLoop(handle: any USBTransportSession) async {
-    let inEndpoint = transportProfile.inputEndpoint
-    var lastKeepAliveNs = DispatchTime.now().uptimeNanoseconds
-    print(
-      "[DevicePipeline] Starting USB input loop:" + " \(identifier)"
-        + " inEP=0x\(String(inEndpoint, radix: 16))"
-    )
-
-    if transportProfile.postHandshakeSettleNanoseconds > 0 {
-      try? await Task.sleep(nanoseconds: transportProfile.postHandshakeSettleNanoseconds)
-    }
-
-    while isActive {
-      let loopStartNs = DispatchTime.now().uptimeNanoseconds
-      if shouldSendKeepAlive(lastKeepAliveNs: lastKeepAliveNs, now: loopStartNs) {
-        lastKeepAliveNs = loopStartNs
-        await runKeepAlive(handle: handle)
-      }
-      var shouldBreak = false
-      var shouldThrottleIdle = false
-      do {
-        let bytes = try await readInterrupt(handle: handle, inEndpoint: inEndpoint)
-        consecutiveUSBIOErrors = 0
-        appendToPacketLog(bytes: bytes, direction: "rx")
-        let receivedAt = DispatchTime.now().uptimeNanoseconds
-        let events = try parseEvents(from: bytes, receivedAtNanoseconds: receivedAt)
-        await sendDeferredUSBOutputPackets(handle: handle)
-        _ = await handleInputConnectionStateChangeIfNeeded()
-        if inputConnectionActive { await handleParsedEvents(events, now: receivedAt) }
-      } catch let error as USBTransportError where error.isTimeout {
-        // No data in this interval; throttle below to avoid a hot timeout loop.
-        shouldThrottleIdle = true
-      } catch let error as USBTransportError where error.isDisconnected {
-        print("[DevicePipeline] Device disconnected:" + " \(identifier)")
-        await invalidateUSBHandle(handle)
-        shouldBreak = true
-      } catch let error as USBTransportError where error.isInputOutput {
-        consecutiveUSBIOErrors += 1
-
-        let now = DispatchTime.now().uptimeNanoseconds
-        if now &- lastUSBIOErrorLogNs >= usbIOErrorLogIntervalNs {
-          lastUSBIOErrorLogNs = now
-          print(
-            "[DevicePipeline] USB I/O error (will recover)" + " for \(identifier): \(error)"
-              + " (consecutive=\(consecutiveUSBIOErrors))"
-          )
-        }
-
-        // Back off to avoid a launchd "inefficient" kill.
-        let exp = min(max(0, consecutiveUSBIOErrors - 1), 4)
-        let backoff = min(usbIOErrorBackoffMaxNs, usbIOErrorBackoffBaseNs << exp)
-        try? await Task.sleep(nanoseconds: backoff)
-
-        if consecutiveUSBIOErrors >= usbIOErrorReconnectThreshold {
-          print("[DevicePipeline] Too many USB I/O errors. Reconnecting:" + " \(identifier)")
-          await invalidateUSBHandle(handle)
-          shouldBreak = true
-        }
-      } catch {
-        // Slow down after an unknown failure, then reconnect.
-        print("[DevicePipeline] Read error" + " for \(identifier):" + " \(error). Reconnecting")
-        await invalidateUSBHandle(handle)
-        shouldBreak = true
-      }
-
-      if shouldBreak { break }
-
-      // Throttle idle timeouts only. Successful packets should dispatch at device cadence.
-      let loopElapsedNs = DispatchTime.now().uptimeNanoseconds &- loopStartNs
-      if shouldThrottleIdle && loopElapsedNs < usbIdleLoopCadenceNs {
-        try? await Task.sleep(nanoseconds: usbIdleLoopCadenceNs &- loopElapsedNs)
-      } else {
-        await Task.yield()
-      }
-    }
-
-    await invalidateUSBHandle(handle)
-    await reportUSBInputOwnership(.unknown)
-    await neutralizeOutput()
-    print("[DevicePipeline] Input loop ended:" + " \(identifier)")
-  }
-
-  func shouldSendKeepAlive(lastKeepAliveNs: UInt64, now: UInt64) -> Bool {
-    guard let provider = parser as? any USBKeepAliveOutputProvider else { return false }
-    return now &- lastKeepAliveNs >= provider.usbKeepAliveIntervalNanoseconds
-  }
-
-  func runKeepAlive(handle: any USBTransportSession) async {
-    guard let packet = (parser as? any USBKeepAliveOutputProvider)?.usbKeepAlivePacket() else {
-      return
-    }
-    do {
-      _ = try await handle.writeInterruptPacket(
-        endpoint: packet.endpoint,
-        data: packet.bytes,
-        timeout: packet.timeoutMilliseconds
-      )
-    } catch { print("[DevicePipeline] Keep-alive failed" + " for \(identifier): \(error)") }
-  }
-
-  func readInterrupt(handle: any USBTransportSession, inEndpoint: UInt8) async throws -> [UInt8] {
-    try await handle.readInterruptPacket(
-      endpoint: inEndpoint,
-      length: gipReadPacketLength,
-      timeout: gipReadTimeoutMs
-    )
-  }
-
-  func parseEvents(
-    from bytes: [UInt8],
-    receivedAtNanoseconds: UInt64 = DispatchTime.now().uptimeNanoseconds
-  ) throws -> [ControllerEvent] {
-    let events = try parser.parse(data: Data(bytes), receivedAtNanoseconds: receivedAtNanoseconds)
-    snapshotBatteryTelemetry()
-    return events
-  }
-
-  func sendDeferredUSBOutputPackets(handle: any USBTransportSession) async {
-    guard let output = parser as? any USBDeferredOutputProvider else { return }
-    for packet in output.consumeUSBOutputPackets() {
-      do {
-        _ = try await handle.writeInterruptPacket(
-          endpoint: transportProfile.outputEndpoint,
-          data: packet,
-          timeout: 2_000
-        )
-        appendToPacketLog(bytes: packet, direction: "tx")
-      } catch {
-        print("[DevicePipeline] Deferred USB output failed for \(identifier): \(error)")
-        break
-      }
-    }
-  }
-
-  func startIdleMonitor() {
-    idleMonitorTask?.cancel()
-    idleMonitorTask = Task {
-      while !Task.isCancelled {
-        try? await Task.sleep(nanoseconds: idleMonitorIntervalNanoseconds)
-        await self.evaluateIdleSleep()
-      }
-    }
-  }
-
-  func evaluateIdleSleep() async {
-    guard isActive else { return }
-    if let liveness = parser as? any ControllerInputReportLivenessProvider,
-      let last = lastLiveInputReportNanoseconds ?? inputHealthMonitoringStartedNanoseconds,
-      DispatchTime.now().uptimeNanoseconds - last >= liveness.inputReportLivenessTimeoutNanoseconds
-    {
-      await retireOutputAfterLivenessLoss()
-    }
   }
 }

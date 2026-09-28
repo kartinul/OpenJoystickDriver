@@ -39,8 +39,8 @@ if [[ ! -e "$APP_PATH" ]]; then
 fi
 
 if [[ -x "$OJD_CLI" ]]; then
-  "$OJD_CLI" --headless compat set apple-gamecontroller >/dev/null || {
-    echo "WARN: could not set OJD compatibility identity to apple-gamecontroller" >&2
+  "$OJD_CLI" --headless controller virtual reset --all >/dev/null || {
+    echo "WARN: could not reset OJD virtual HID profile overrides" >&2
   }
 else
   echo "WARN: OJD CLI not found at $OJD_CLI; launching with SDL env only" >&2

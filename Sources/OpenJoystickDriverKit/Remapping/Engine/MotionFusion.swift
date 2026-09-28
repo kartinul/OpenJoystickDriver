@@ -55,7 +55,6 @@ struct RemappingMotionQuaternion: Equatable {
 struct RemappingFusedMotion {
   let orientation: RemappingMotionQuaternion
   let gravityG: ControllerMotionVector
-  let linearAccelerationG: ControllerMotionVector
 }
 
 /// Gyro integration with accelerometer tilt correction; heading remains relative and can drift.
@@ -101,11 +100,9 @@ struct RemappingMotionFusion {
       }
     }
     let gravity = orientation.inverse.rotate(SIMD3(0, -1, 0))
-    let linear = accel + gravity
     return RemappingFusedMotion(
       orientation: orientation,
-      gravityG: ControllerMotionVector(x: gravity.x, y: gravity.y, z: gravity.z),
-      linearAccelerationG: ControllerMotionVector(x: linear.x, y: linear.y, z: linear.z)
+      gravityG: ControllerMotionVector(x: gravity.x, y: gravity.y, z: gravity.z)
     )
   }
 }

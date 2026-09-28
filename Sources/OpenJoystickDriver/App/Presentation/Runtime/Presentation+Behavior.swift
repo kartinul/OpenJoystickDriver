@@ -7,8 +7,8 @@ extension RuntimeStatusPresentation {
     Self(
       permissions: permissions,
       devices: devices,
-      compatibilityIdentity: compatibilityIdentity,
-      compatibilityLabel: compatibilityLabel,
+      virtualHIDProfileOverrideError: virtualHIDProfileOverrideError,
+      legacyCompatibilityIdentityRejected: legacyCompatibilityIdentityRejected,
       outputState: outputState,
       outputDetail: outputDetail,
       postEventAccess: state,
@@ -28,29 +28,8 @@ extension RuntimeStatusPresentation {
     Self(
       permissions: permissions,
       devices: devices,
-      compatibilityIdentity: compatibilityIdentity,
-      compatibilityLabel: compatibilityLabel,
-      outputState: outputState,
-      outputDetail: outputDetail,
-      postEventAccess: postEventAccess,
-      requiresPostEventAccess: requiresPostEventAccess,
-      readiness: Self.readiness(
-        permissions: permissions,
-        outputState: outputState,
-        postEventAccess: postEventAccess,
-        requiresPostEventAccess: requiresPostEventAccess,
-        devices: devices
-      )
-    )
-  }
-
-  func applyingCompatibilityIdentity(_ identity: CompatibilityIdentity?) -> Self {
-    Self(
-      permissions: permissions,
-      devices: devices,
-      compatibilityIdentity: identity,
-      compatibilityLabel: identity.map(RuntimePresentation.compatibilityLabel)
-        ?? OJDLocalized.string("status.checking", fallback: "Checking"),
+      virtualHIDProfileOverrideError: virtualHIDProfileOverrideError,
+      legacyCompatibilityIdentityRejected: legacyCompatibilityIdentityRejected,
       outputState: outputState,
       outputDetail: outputDetail,
       postEventAccess: postEventAccess,
@@ -73,8 +52,8 @@ extension RuntimeStatusPresentation {
     return Self(
       permissions: permissions,
       devices: devices,
-      compatibilityIdentity: compatibilityIdentity,
-      compatibilityLabel: compatibilityLabel,
+      virtualHIDProfileOverrideError: virtualHIDProfileOverrideError,
+      legacyCompatibilityIdentityRejected: legacyCompatibilityIdentityRejected,
       outputState: outputState,
       outputDetail: outputDetail,
       postEventAccess: postEventAccess,
@@ -95,12 +74,39 @@ extension RuntimeStatusPresentation {
 
   var deviceCountLabel: String { RuntimePresentation.deviceCountLabel(devices.count) }
 
+  /// Service-wide problems with stored virtual HID profile overrides, one line each.
+  var virtualHIDProfileOverrideStoreMessages: [String] {
+    var messages: [String] = []
+    if let virtualHIDProfileOverrideError {
+      messages.append(
+        OJDLocalized.formatted(
+          "virtualProfile.storeError",
+          fallback:
+            "Virtual HID profile overrides can't be read (%@). Controllers select automatically.",
+          virtualHIDProfileOverrideError
+        )
+      )
+    }
+    if let legacyCompatibilityIdentityRejected {
+      messages.append(
+        OJDLocalized.formatted(
+          "virtualProfile.legacyIdentityRejected",
+          fallback: "The retired controller identity setting %@ is no longer applied. "
+            + "Run controller virtual reset --all to clear it.",
+          legacyCompatibilityIdentityRejected
+        )
+      )
+    }
+    return messages
+  }
+
   static func == (lhs: Self, rhs: Self) -> Bool {
     lhs.permissions == rhs.permissions
       && lhs.devices.elementsEqual(rhs.devices, by: deviceDescriptionsEqual)
-      && lhs.compatibilityIdentity == rhs.compatibilityIdentity
-      && lhs.compatibilityLabel == rhs.compatibilityLabel && lhs.outputState == rhs.outputState
-      && lhs.outputDetail == rhs.outputDetail && lhs.postEventAccess == rhs.postEventAccess
+      && lhs.virtualHIDProfileOverrideError == rhs.virtualHIDProfileOverrideError
+      && lhs.legacyCompatibilityIdentityRejected == rhs.legacyCompatibilityIdentityRejected
+      && lhs.outputState == rhs.outputState && lhs.outputDetail == rhs.outputDetail
+      && lhs.postEventAccess == rhs.postEventAccess
       && lhs.requiresPostEventAccess == rhs.requiresPostEventAccess
       && lhs.readiness == rhs.readiness
   }
@@ -110,11 +116,11 @@ extension RuntimeStatusPresentation {
     _ rhs: ApplicationServiceDeviceDescription
   ) -> Bool {
     lhs.runtimeIdentifier == rhs.runtimeIdentifier && lhs.name == rhs.name
-      && lhs.vendorID == rhs.vendorID && lhs.productID == rhs.productID && lhs.parser == rhs.parser
+      && lhs.vendorID == rhs.vendorID && lhs.productID == rhs.productID
       && lhs.connection == rhs.connection && lhs.discoverySource == rhs.discoverySource
       && lhs.physicalOwnership == rhs.physicalOwnership
       && lhs.duplicateExposureRisk == rhs.duplicateExposureRisk
-      && lhs.serialNumber == rhs.serialNumber && lhs.protocolVariant == rhs.protocolVariant
+      && lhs.serialNumber == rhs.serialNumber && lhs.protocolBinding == rhs.protocolBinding
       && lhs.quirks == rhs.quirks && lhs.inputEndpoint == rhs.inputEndpoint
       && lhs.outputEndpoint == rhs.outputEndpoint
       && lhs.needsSetConfiguration == rhs.needsSetConfiguration
@@ -126,6 +132,7 @@ extension RuntimeStatusPresentation {
       && lhs.inputHealth.lastReportAgeNanoseconds == rhs.inputHealth.lastReportAgeNanoseconds
       && lhs.inputHealth.failureReason == rhs.inputHealth.failureReason
       && lhs.inputHealth.recoveryCount == rhs.inputHealth.recoveryCount
+      && lhs.virtualHIDProfile == rhs.virtualHIDProfile
   }
 
   static func readiness(

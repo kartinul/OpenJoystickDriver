@@ -10,6 +10,8 @@ final class ApplicationServiceRuntime {
   private let remappingRouter: RemappingOutputRouter
   private let manager: DeviceManager
   private let applicationServiceServer: ApplicationServiceServer
+  private var systemPowerObserver: SystemPowerNotificationObserver?
+  private var systemPowerEventSession: DeviceManagerSystemPowerEventSession?
   private var started = false
   private var shutdownSignalSources: [DispatchSourceSignal] = []
   private var shutdownSignalHandler: (@MainActor @Sendable () -> Void)?
@@ -44,8 +46,7 @@ final class ApplicationServiceRuntime {
       dispatcher: dispatcher,
       remappingProfileLibrary: remappingProfileLibrary,
       remappingRouter: remappingRouter,
-      postEventAccess: postEventAccess,
-      initializeCompatibilityBackend: false
+      postEventAccess: postEventAccess
     )
 
     self.permissionManager = permissionManager
@@ -67,6 +68,14 @@ final class ApplicationServiceRuntime {
       started = false
       throw error
     }
+    let systemPowerEventSession = DeviceManagerSystemPowerEventSession()
+    self.systemPowerEventSession = systemPowerEventSession
+    let manager = manager
+    let systemPowerObserver = SystemPowerNotificationObserver { event in
+      await deliverSystemPowerEvent(event, to: manager, session: systemPowerEventSession)
+    }
+    self.systemPowerObserver = systemPowerObserver
+    systemPowerObserver.start()
     Task { await permissionManager.startPolling() }
     remappingRouter.startTicker()
     Task {
@@ -88,8 +97,20 @@ final class ApplicationServiceRuntime {
     started = false
 
     cancelGracefulShutdown()
-    await applicationServiceServer.stop()
-    await manager.stop()
+    let systemPowerObserver = systemPowerObserver
+    self.systemPowerObserver = nil
+    let systemPowerEventSession = systemPowerEventSession
+    self.systemPowerEventSession = nil
+    systemPowerEventSession?.invalidate()
+    if let systemPowerObserver {
+      async let observerStop: Void = systemPowerObserver.stop()
+      await applicationServiceServer.stop()
+      await manager.stop()
+      await observerStop
+    } else {
+      await applicationServiceServer.stop()
+      await manager.stop()
+    }
     do { try await remappingRouter.shutdown() } catch {
       serviceError("[Service] Remapping shutdown failed: \(error.localizedDescription)")
     }
@@ -127,5 +148,60 @@ final class ApplicationServiceRuntime {
     let sources = shutdownSignalSources
     shutdownSignalSources.removeAll()
     for source in sources { source.cancel() }
+  }
+}
+
+private func deliverSystemPowerEvent(
+  _ event: SystemPowerNotificationObserver.Event,
+  to manager: DeviceManager,
+  session: DeviceManagerSystemPowerEventSession
+) async {
+  let completion = RuntimePowerEventCompletion()
+  await withTaskCancellationHandler {
+    await withCheckedContinuation { continuation in
+      completion.install(continuation)
+      Task {
+        switch event {
+        case .willSleep: await manager.systemWillSleep(session: session)
+        case .didWake: await manager.systemDidWake(session: session)
+        }
+        completion.finish()
+      }
+    }
+  } onCancel: {
+    completion.finish()
+  }
+}
+
+/// Lets observer shutdown join its delivery task while a manager power call is still tearing down
+/// controllers. The revoked runtime session rejects late actor entry; `DeviceManager.stop()`
+/// clears the sleep state of a power operation that entered before invalidation.
+private final class RuntimePowerEventCompletion: @unchecked Sendable {
+  private let lock = NSLock()
+  private var continuation: CheckedContinuation<Void, Never>?
+  private var isFinished = false
+
+  func install(_ continuation: CheckedContinuation<Void, Never>) {
+    lock.lock()
+    guard !isFinished else {
+      lock.unlock()
+      continuation.resume()
+      return
+    }
+    self.continuation = continuation
+    lock.unlock()
+  }
+
+  func finish() {
+    lock.lock()
+    guard !isFinished else {
+      lock.unlock()
+      return
+    }
+    isFinished = true
+    let continuation = continuation
+    self.continuation = nil
+    lock.unlock()
+    continuation?.resume()
   }
 }

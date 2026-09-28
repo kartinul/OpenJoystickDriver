@@ -18,8 +18,8 @@ struct RemappingProfileTransactionIsolationTests {
     let mapped = remappingRouterDevice(1)
     let newlyConnected = remappingRouterDevice(2)
     let compatibility = remappingRouterDevice(3, vendorID: 1356, productID: 2508)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
-    try await harness.router.dispatchCausally(events: [], from: compatibility)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
+    try await harness.router.dispatchCausally(.activation, from: compatibility)
     harness.recorder.removeAll()
     let exactPriorBytes = try Data(contentsOf: harness.fileURL)
     let candidate = transactionProfile(
@@ -32,12 +32,12 @@ struct RemappingProfileTransactionIsolationTests {
     let mutation = Task { await harness.coordinator.update(candidate, expectedCurrent: original) }
     await gate.waitUntilPaused()
     try await harness.router.dispatchCausally(
-      events: [.buttonPressed(.a), .rightStickChanged(x: 0.75, y: 0)],
+      changes: [.press(.faceSouth), .rightStick(x: 0.75, y: 0)],
       from: mapped
     )
     try await harness.router.tick(at: 1_100_000_000)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: newlyConnected)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.b)], from: compatibility)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: newlyConnected)
+    try await harness.router.dispatchCausally(changes: [.press(.faceEast)], from: compatibility)
 
     let gatedTrace = harness.recorder.snapshot()
     #expect(gatedTrace.count == 2)
@@ -45,7 +45,11 @@ struct RemappingProfileTransactionIsolationTests {
     #expect(gatedTrace.filter { $0 == .system(.keyUp(.space)) }.count == 1)
     #expect(!gatedTrace.contains(.system(.keyDown(.b))))
     #expect(!gatedTrace.contains(.system(.mouseMoved(axis: .x, amount: 0.75))))
-    #expect(!gatedTrace.contains(.compatibility([.buttonPressed(.b)], compatibility)))
+    #expect(
+      !gatedTrace.contains(
+        .virtualGamepad(ControllerState.neutral.applying([.press(.faceEast)]), compatibility)
+      )
+    )
     gate.resume()
     let result = await mutation.value
 
@@ -59,12 +63,17 @@ struct RemappingProfileTransactionIsolationTests {
     #expect(await harness.router.status(for: mapped)?.activeProfileID == original.id)
     #expect(await harness.router.status(for: newlyConnected)?.activeProfileID == original.id)
 
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.b)], from: compatibility)
+    // A fresh South press on the mapped pad; the compatibility pad repeats its held East.
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [], from: compatibility)
     let resumedTrace = harness.recorder.snapshot()
     #expect(resumedTrace.count == 4)
     #expect(resumedTrace.contains(.system(.keyDown(.space))))
-    #expect(resumedTrace.contains(.compatibility([.buttonPressed(.b)], compatibility)))
+    #expect(
+      resumedTrace.contains(
+        .virtualGamepad(ControllerState.neutral.applying([.press(.faceEast)]), compatibility)
+      )
+    )
   }
 
   @Test
@@ -77,27 +86,31 @@ struct RemappingProfileTransactionIsolationTests {
     defer { harness.removeFiles() }
     let mapped = remappingRouterDevice(1)
     let compatibility = remappingRouterDevice(2, vendorID: 1356, productID: 2508)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
-    try await harness.router.dispatchCausally(events: [], from: compatibility)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
+    try await harness.router.dispatchCausally(.activation, from: compatibility)
     let candidate = transactionProfile(id: original.id, name: original.name, key: .b)
 
     let mutation = Task { await harness.coordinator.update(candidate, expectedCurrent: original) }
     await gate.waitUntilPaused()
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.b)], from: compatibility)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [.press(.faceEast)], from: compatibility)
     #expect(!harness.recorder.snapshot().contains(.system(.keyDown(.b))))
     #expect(
-      !harness.recorder.snapshot().contains(.compatibility([.buttonPressed(.b)], compatibility))
+      !harness.recorder.snapshot().contains(
+        .virtualGamepad(ControllerState.neutral.applying([.press(.faceEast)]), compatibility)
+      )
     )
 
     gate.resume()
     let snapshot = try await mutation.value.get()
     #expect(snapshot.profiles == [candidate])
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.b)], from: compatibility)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [.press(.faceEast)], from: compatibility)
     #expect(harness.recorder.snapshot().contains(.system(.keyDown(.b))))
     #expect(
-      harness.recorder.snapshot().contains(.compatibility([.buttonPressed(.b)], compatibility))
+      harness.recorder.snapshot().contains(
+        .virtualGamepad(ControllerState.neutral.applying([.press(.faceEast)]), compatibility)
+      )
     )
   }
 
@@ -107,7 +120,7 @@ struct RemappingProfileTransactionIsolationTests {
     let harness = try await TransactionIsolationHarness.make(initialProfile: original)
     defer { harness.removeFiles() }
     let mapped = remappingRouterDevice(1)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
     let exactPriorBytes = try Data(contentsOf: harness.fileURL)
 
     let result = await harness.coordinator.create(original)
@@ -119,7 +132,7 @@ struct RemappingProfileTransactionIsolationTests {
     #expect(error.code == .profileAlreadyExists)
     #expect(try Data(contentsOf: harness.fileURL) == exactPriorBytes)
     #expect(harness.recorder.snapshot() == [.system(.keyDown(.space)), .system(.keyUp(.space))])
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
     #expect(harness.recorder.snapshot().last == .system(.keyDown(.space)))
   }
 
@@ -133,7 +146,7 @@ struct RemappingProfileTransactionIsolationTests {
     ) { _ in await gate.pause() }
     defer { harness.removeFiles() }
     let mapped = remappingRouterDevice(1)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
     let checkpoint = try await harness.library.checkpoint()
     let candidate = transactionProfile(id: original.id, name: original.name, key: .b)
 
@@ -157,13 +170,13 @@ struct RemappingProfileTransactionIsolationTests {
       Issue.record("Expected typed unreconciled route status.")
       return
     }
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
     #expect(!harness.recorder.snapshot().contains(.system(.keyDown(.b))))
 
     try FileManager.default.removeItem(at: parent)
     try await harness.library.restore(checkpoint)
     try await harness.router.recoverProfileTransaction()
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
     #expect(harness.recorder.snapshot().last == .system(.keyDown(.space)))
   }
 
@@ -176,7 +189,7 @@ struct RemappingProfileTransactionIsolationTests {
     )
     defer { harness.removeFiles() }
     let mapped = remappingRouterDevice(1)
-    try await harness.router.dispatchCausally(events: [], from: mapped)
+    try await harness.router.dispatchCausally(.activation, from: mapped)
     probe.setPreflight([true, false])
 
     let snapshot = try await harness.coordinator.snapshot().get()
@@ -216,7 +229,7 @@ struct RemappingProfileTransactionIsolationTests {
     #expect(finalSnapshot.profiles == [finalCandidate])
     #expect(try await harness.library.profile(id: original.id) == finalCandidate)
     let mapped = remappingRouterDevice(1)
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: mapped)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: mapped)
     #expect(harness.recorder.snapshot().last == .system(.keyDown(.c)))
   }
 }

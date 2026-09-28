@@ -69,7 +69,7 @@ extension InputCommand {
     service: ControllerInputDiagnosticService
   ) async throws {
     guard
-      let state = try await service.deviceInputState(
+      let state = try await service.controllerState(
         vendorID: device.vendorID,
         productID: device.productID,
         runtimeIdentifier: device.runtimeIdentifier
@@ -151,7 +151,7 @@ extension InputCommand {
     let deadline =
       DispatchTime.now().uptimeNanoseconds + UInt64(seconds) * Self.nanosecondsPerSecond
     let interval = UInt64(intervalMilliseconds) * Self.nanosecondsPerMillisecond
-    var previous: DeviceInputState?
+    var previous: ControllerState?
     var observedState = false
 
     if !jsonLines {
@@ -167,7 +167,7 @@ extension InputCommand {
     }
 
     while DispatchTime.now().uptimeNanoseconds < deadline {
-      let state = try await service.deviceInputState(
+      let state = try await service.controllerState(
         vendorID: device.vendorID,
         productID: device.productID,
         runtimeIdentifier: device.runtimeIdentifier
@@ -239,19 +239,15 @@ extension InputCommand {
     }
   }
 
-  private func formatted(_ state: DeviceInputState) -> String {
-    let buttons =
-      state.pressedButtons.isEmpty ? "none" : state.pressedButtons.sorted().joined(separator: ",")
-    return String(
-      format: "buttons=[%@] LS=(%.3f,%.3f) RS=(%.3f,%.3f) LT=%.3f RT=%.3f",
-      buttons,
-      state.leftStickX,
-      state.leftStickY,
-      state.rightStickX,
-      state.rightStickY,
-      state.leftTrigger,
-      state.rightTrigger
-    )
+  /// Pressed controls in `ControlID` order, the hat, and the raw canonical stick and trigger
+  /// values; stick Y points up.
+  private func formatted(_ state: ControllerState) -> String {
+    let pressed = ControlID.allCases.filter(state.pressed.contains).map(\.rawValue)
+    let buttons = pressed.isEmpty ? "none" : pressed.joined(separator: ",")
+    return "buttons=[\(buttons)] hat=\(state.hat.rawValue)"
+      + " LS=(\(state.leftStick.x.rawValue),\(state.leftStick.y.rawValue))"
+      + " RS=(\(state.rightStick.x.rawValue),\(state.rightStick.y.rawValue))"
+      + " LT=\(state.leftTrigger.rawValue) RT=\(state.rightTrigger.rawValue)"
   }
 
   private func printJSON<T: Encodable>(_ value: T, pretty: Bool) throws {

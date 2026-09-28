@@ -67,36 +67,18 @@ extension PhysicalOutputCommand {
       productID: productID,
       runtimeIdentifier: parsed.runtimeIdentifier
     )
-    guard device.physicalOutputCapabilities.lightingFeatures.contains(.programmableColor) else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.noRGB",
-          "The selected controller has no source-backed RGB implementation."
-        )
+    sendOutput(
+      .setRGB(red: components[0], green: components[1], blue: components[2]),
+      to: device,
+      unsupported: Message(
+        key: "cli.controller.noRGB",
+        english: "The selected controller has no source-backed RGB implementation."
+      ),
+      failed: Message(
+        key: "cli.controller.rgbFailed",
+        english: "The application service could not set physical RGB color."
       )
-    }
-
-    let client = ApplicationServiceClient()
-    client.connect()
-    defer { client.disconnect() }
-    let sent: Bool? = runSyncOptionalResult(timeout: applicationServiceCallTimeoutSeconds) {
-      try? await client.setPhysicalColor(
-        vendorID: vendorID,
-        productID: productID,
-        runtimeIdentifier: device.runtimeIdentifier,
-        red: components[0],
-        green: components[1],
-        blue: components[2]
-      )
-    }
-    guard sent == true else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.rgbFailed",
-          "The application service could not set physical RGB color."
-        )
-      )
-    }
+    )
     print(
       CLILocalized.format(
         "cli.controller.rgbSet",
@@ -126,34 +108,18 @@ extension PhysicalOutputCommand {
       productID: productID,
       runtimeIdentifier: parsed.runtimeIdentifier
     )
-    guard device.physicalOutputCapabilities.supportsProgrammableBrightness else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.noBrightness",
-          "The selected controller has no source-backed brightness implementation."
-        )
+    sendOutput(
+      .setLightBrightness(UnipolarValue(byte: UInt8(rawBrightness))),
+      to: device,
+      unsupported: Message(
+        key: "cli.controller.noBrightness",
+        english: "The selected controller has no source-backed brightness implementation."
+      ),
+      failed: Message(
+        key: "cli.controller.brightnessFailed",
+        english: "The application service could not set physical LED brightness."
       )
-    }
-
-    let client = ApplicationServiceClient()
-    client.connect()
-    defer { client.disconnect() }
-    let sent: Bool? = runSyncOptionalResult(timeout: applicationServiceCallTimeoutSeconds) {
-      try? await client.setPhysicalBrightness(
-        vendorID: vendorID,
-        productID: productID,
-        runtimeIdentifier: device.runtimeIdentifier,
-        brightness: UInt8(rawBrightness)
-      )
-    }
-    guard sent == true else {
-      fail(
-        CLILocalized.text(
-          "cli.controller.brightnessFailed",
-          "The application service could not set physical LED brightness."
-        )
-      )
-    }
+    )
     print(
       CLILocalized.format(
         "cli.controller.brightnessSet",

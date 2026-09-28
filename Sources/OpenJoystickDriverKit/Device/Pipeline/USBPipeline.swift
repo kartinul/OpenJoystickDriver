@@ -1,16 +1,13 @@
 import Foundation
 
-/// Checks whether USB startup can continue after an Xbox 360 ring LED rejection.
+/// Checks whether USB startup can continue after the device rejects one startup write.
 public func isIgnorableUSBStartupOutputError(
-  parser: any InputParser,
-  packet: [UInt8],
+  _ write: PhysicalOutputWrite,
   error: USBTransportError
 ) -> Bool {
-  guard parser is Xbox360Parser, packet == [0x01, 0x03, 0x06] else { return false }
+  guard case .usb(_, toleratesRejection: true) = write else { return false }
   switch error {
-  case .inputOutput, .notFound, .notSupported: return true
+  case .inputOutput, .notFound, .notSupported, .timeout: return true
   default: return false
   }
 }
-
-extension DevicePipeline {}

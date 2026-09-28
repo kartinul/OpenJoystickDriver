@@ -8,9 +8,6 @@ actor AutomaticDispatcherCoordinator {
   var closed = false
   var closeFinished = false
   var closeWaiters: [CheckedContinuation<Void, Never>] = []
-  var foreground: UInt64 = 0
-  var consumerRevision: UInt64 = 0
-  var consumer: CompatibilityConsumerFamily = .unknown
   var remappingSuppressed = false
   var suppressed = false
   var suppressionRevision: UInt64 = 0

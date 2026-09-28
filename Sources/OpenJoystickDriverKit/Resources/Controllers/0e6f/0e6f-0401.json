@@ -2,10 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 3695,
   "productID": 1025,
-  "transport": "usb",
   "protocol": {
-    "driver": "XUSB",
-    "variant": "xbox360"
+    "family": "xbox.xusb",
+    "variant": "wired"
   },
   "usb": {
     "configuration": "set1-before-claim",

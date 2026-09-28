@@ -18,7 +18,6 @@ struct MotionFusionTests {
     #expect(abs(result.gravityG.x + accel.x) < 1e-9)
     #expect(abs(result.gravityG.y + accel.y) < 1e-9)
     #expect(abs(result.gravityG.z + accel.z) < 1e-9)
-    #expect(abs(result.linearAccelerationG.x) < 1e-9)
   }
 
   @Test
@@ -63,7 +62,7 @@ struct MotionFusionTests {
   }
 
   @Test
-  func pitchTraceSeparatesGravityFromLinearAcceleration() throws {
+  func pitchTraceTracksGravityAndIgnoresAccelerationPulses() throws {
     var fusion = RemappingMotionFusion()
     _ = fusion.update(gyro: zero, acceleration: up, deltaTime: 0)
     var last: RemappingFusedMotion?
@@ -77,8 +76,7 @@ struct MotionFusionTests {
     }
     let result = try #require(last)
     #expect(abs(result.gravityG.z - 1) < 1e-9)
-    #expect(abs(result.linearAccelerationG.z) < 1e-9)
-    #expect(abs(result.linearAccelerationG.y) < 1e-9)
+    #expect(abs(result.gravityG.y) < 1e-9)
     // A 2 g pulse is not a valid tilt reference and must not rotate the orientation.
     let pulse = fusion.update(
       gyro: zero,
@@ -86,6 +84,6 @@ struct MotionFusionTests {
       deltaTime: 0.01
     )
     #expect(pulse?.orientation == result.orientation)
-    #expect(pulse?.linearAccelerationG.x == 2)
+    #expect(pulse?.gravityG == result.gravityG)
   }
 }

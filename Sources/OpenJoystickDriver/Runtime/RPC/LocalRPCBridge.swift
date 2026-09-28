@@ -142,9 +142,9 @@ extension ApplicationServiceServer {
       case "requestAccess":
         let value = try decode(LocalServiceRPCPermissionArguments.self)
         requestAccess(value.requirement, reply: send)
-      case "getDeviceInputState":
+      case "getControllerState":
         let value = try decode(LocalServiceRPCDeviceArguments.self)
-        getDeviceInputState(
+        getControllerState(
           vendorID: value.vendorID,
           productID: value.productID,
           runtimeIdentifier: value.runtimeIdentifier,
@@ -158,37 +158,13 @@ extension ApplicationServiceServer {
           runtimeIdentifier: value.runtimeIdentifier,
           reply: send
         )
-      case "sendPhysicalRumble":
-        let value = try decode(LocalServiceRPCRumbleArguments.self)
-        sendPhysicalRumble(
+      case "sendControllerOutput":
+        let value = try decode(LocalServiceRPCControllerOutputArguments.self)
+        sendControllerOutput(
+          value.command,
           vendorID: value.vendorID,
           productID: value.productID,
           runtimeIdentifier: value.runtimeIdentifier,
-          left: value.left,
-          right: value.right,
-          lt: value.leftTrigger,
-          rt: value.rightTrigger,
-          durationMs: value.durationMilliseconds,
-          reply: send
-        )
-      case "setPhysicalPlayerIndicator":
-        let value = try decode(LocalServiceRPCPlayerIndicatorArguments.self)
-        setPhysicalPlayerIndicator(
-          vendorID: value.vendorID,
-          productID: value.productID,
-          runtimeIdentifier: value.runtimeIdentifier,
-          playerIndex: value.playerIndex,
-          reply: send
-        )
-      case "setPhysicalColor":
-        let value = try decode(LocalServiceRPCColorArguments.self)
-        setPhysicalColor(
-          vendorID: value.vendorID,
-          productID: value.productID,
-          runtimeIdentifier: value.runtimeIdentifier,
-          red: value.red,
-          green: value.green,
-          blue: value.blue,
           reply: send
         )
       case "previewPhysicalColor":
@@ -212,26 +188,26 @@ extension ApplicationServiceServer {
           token: value.token,
           reply: send
         )
-      case "setPhysicalBrightness":
-        let value = try decode(LocalServiceRPCBrightnessArguments.self)
-        setPhysicalBrightness(
-          vendorID: value.vendorID,
-          productID: value.productID,
-          runtimeIdentifier: value.runtimeIdentifier,
-          brightness: value.brightness,
-          reply: send
-        )
       case "setSuppressOutput":
         setSuppressOutput(try decode(LocalServiceRPCBoolArguments.self).value, reply: send)
       case "getVirtualDeviceDiagnostics": getVirtualDeviceDiagnostics(reply: send)
-      case "setCompatibilityIdentity":
-        setCompatibilityIdentity(try decode(LocalServiceRPCStringArguments.self).value, reply: send)
-      case "setCompatibilityIdentityDetailed":
-        setCompatibilityIdentityDetailed(
-          try decode(LocalServiceRPCStringArguments.self).value,
+      case "setVirtualHIDProfileOverride":
+        let value = try decode(LocalServiceRPCVirtualHIDProfileOverrideArguments.self)
+        setVirtualHIDProfileOverride(
+          value.profile,
+          vendorID: value.vendorID,
+          productID: value.productID,
+          runtimeIdentifier: value.runtimeIdentifier,
           reply: send
         )
-      case "getCompatibilityIdentity": getCompatibilityIdentity(reply: send)
+      case "resetVirtualHIDProfileOverride":
+        let value = try decode(LocalServiceRPCDeviceArguments.self)
+        resetVirtualHIDProfileOverride(
+          vendorID: value.vendorID,
+          productID: value.productID,
+          runtimeIdentifier: value.runtimeIdentifier,
+          reply: send
+        )
       case "suspendController":
         let value = try decode(LocalServiceRPCDeviceArguments.self)
         suspendController(

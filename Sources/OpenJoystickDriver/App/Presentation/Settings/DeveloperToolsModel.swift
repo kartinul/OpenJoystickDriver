@@ -37,12 +37,18 @@
     private(set) var devices: [ApplicationServiceDeviceDescription] = []
     @Published
     private(set) var selectedDevice: ApplicationServiceDeviceDescription?
+
+    /// Family labels of the selected controller, which name its controls.
+    var selectedButtonLabels: ControllerButtonLabels {
+      selectedDevice.map { ControllerButtonLabels(protocolID: $0.protocolBinding.protocolID) }
+        ?? .standard
+    }
     @Published
-    private(set) var latestInput: DeviceInputState?
+    private(set) var latestInput: ControllerState?
     @Published
     private(set) var packets: [PacketLogEntry] = []
     @Published
-    private(set) var observedExtraInputs: [String] = []
+    private(set) var observedExtraInputs: [ControlID] = []
     @Published
     var packetFilter = PacketFilter.activity
 
@@ -58,9 +64,9 @@
 
     var diagnosticRecipeAvailable: Bool {
       guard let device = selectedDevice else { return false }
-      return ParserRegistry().runtimeProfile(
+      return ProtocolDriverRegistry().record(
         for: DeviceIdentifier(vendorID: device.vendorID, productID: device.productID)
-      ).gipStartupPackets.contains(where: \.isDiagnosticRecipe)
+      )?.gipStartupPackets.contains(where: \.isDiagnosticRecipe) == true
     }
 
     private let gateway: any ApplicationServiceGateway
@@ -188,7 +194,7 @@
     ) async {
       let selector = RuntimeDeviceSelector(device: device)
       do {
-        async let input = gateway.deviceInputState(for: selector)
+        async let input = gateway.controllerState(for: selector)
         async let packetLog = gateway.packetLog(for: selector)
         let (nextInput, nextPackets) = try await (input, packetLog)
         guard operationIsCurrent(generation, device: device) else { return }
@@ -211,7 +217,7 @@
         captureState = .capturing
 
         while operationIsCurrent(generation, device: device) {
-          async let input = gateway.deviceInputState(for: selector)
+          async let input = gateway.controllerState(for: selector)
           async let packetLog = gateway.packetLog(for: selector)
           let (nextInput, snapshot) = try await (input, packetLog)
           guard operationIsCurrent(generation, device: device) else { return }
@@ -254,13 +260,13 @@
       return selectedDevice?.runtimeIdentifier == device.runtimeIdentifier
     }
 
-    private func updateObservedExtraInputs(from state: DeviceInputState?) {
+    private func updateObservedExtraInputs(from state: ControllerState?) {
       guard let state else { return }
       // Core face/shoulder/stick/dpad set only. Share, Mute, touchpad, and future paddles
       // must surface here so packet-mapped extras are visible in Developer Tools.
-      let coreNames = Set(InputTestButtonPresentation.coreDiagnosticButtons.map(\.rawValue))
-      let observed = state.pressedButtons.filter { !coreNames.contains($0) }
-      observedExtraInputs = Array(Set(observedExtraInputs).union(observed)).sorted()
+      let observed = state.pressed.subtracting(InputTestButtonPresentation.coreDiagnosticControls)
+      let extras = Set(observedExtraInputs).union(observed)
+      observedExtraInputs = ControlID.allCases.filter(extras.contains)
     }
   }
 

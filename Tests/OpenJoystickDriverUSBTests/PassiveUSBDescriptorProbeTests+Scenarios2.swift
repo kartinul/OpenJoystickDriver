@@ -77,6 +77,7 @@ extension PassiveUSBDescriptorProbeTests {
       )
     }
   }
+
   @Test
   func superSpeedPacketBurstMatrixIsTransferSpecific() throws {
     func blob(transfer: UInt8, packet: UInt16, burst: UInt8) -> [UInt8] {
@@ -126,6 +127,7 @@ extension PassiveUSBDescriptorProbeTests {
       )
     }
   }
+
   @Test
   func superSpeedControlAndBulkPacketAndStreamBoundariesAreStrict() throws {
     func blob(
@@ -190,6 +192,7 @@ extension PassiveUSBDescriptorProbeTests {
       )
     }
   }
+
   @Test
   func superSpeedInterruptAndIsoPacketAndByteBoundariesAreStrict() throws {
     func blob(
@@ -238,6 +241,7 @@ extension PassiveUSBDescriptorProbeTests {
       )
     }
   }
+
   @Test
   func sspBoundaryContextAndOrderingCasesAreTyped() throws {
     func fixture(dw: UInt32 = 50_000, marker: UInt8 = 0x80, sspBytes: UInt16 = 1) -> [UInt8] {

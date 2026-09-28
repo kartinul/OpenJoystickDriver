@@ -28,23 +28,15 @@
         Text(statusLabel).font(.subheadline.weight(.semibold))
         if let device = model.device {
           Text(
-            "\(reported(device.connection)) · \(device.protocolVariant.displayLabel) · "
-              + "\(reported(device.parser)) · \(usbIdentifier(device)) · "
-              + publishedProfile.publishedUSBIdentityLabel
+            "\(reported(device.connection)) · \(device.protocolBinding.displayLabel) · "
+              + "\(reported(device.protocolBinding.rawValue)) · \(usbIdentifier(device)) · "
+              + device.publishedIdentityLabel
           ).font(.caption).foregroundColor(Color(NSColor.secondaryLabelColor))
         }
         Spacer()
       }.accessibilityElement(children: .combine).ojdAccessibilityLabel(
         OJDLocalized.string("inputTest.status", fallback: "Input test status")
       ).ojdAccessibilityValue(statusLabel)
-    }
-
-    private var publishedProfile: VirtualDeviceProfile {
-      guard let device = model.device else { return .openJoystickDriverGenericHID }
-      return PublishedVirtualIdentity.profile(
-        for: device,
-        requested: runtimeViewModel.requestedCompatibilityIdentity
-      )
     }
 
     @ViewBuilder
@@ -95,6 +87,10 @@
       } label: {
         Text(OJDLocalized.string("motion.calibration.title", fallback: "Motion calibration"))
       }.frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
+    private var publishedProfile: VirtualDeviceProfile {
+      model.device?.publishedVirtualProfile ?? .openJoystickDriverGenericHID
     }
 
     var liveInput: some View {

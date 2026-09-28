@@ -29,17 +29,20 @@ actor MockMappingClient: MappingServiceClient {
   }
 
   func snapshot() -> ApplicationServiceRemappingSnapshotPayload { snapshotValue }
+
   func profile(id: UUID) throws -> RemappingProfile {
     guard let profile = snapshotValue.profiles.first(where: { $0.id == id }) else {
       throw MappingCommandError.profileNotFound(id.uuidString)
     }
     return profile
   }
+
   func create(_ profile: RemappingProfile) -> ApplicationServiceRemappingSnapshotPayload {
     submittedProfile = profile
     mutationCount += 1
     return snapshotValue
   }
+
   func update(
     _ profile: RemappingProfile,
     expectedCurrent: RemappingProfile
@@ -52,28 +55,35 @@ actor MockMappingClient: MappingServiceClient {
     if let updateError { throw updateError }
     return snapshotValue
   }
+
   func importProfile(_ profile: RemappingProfile) -> ApplicationServiceRemappingSnapshotPayload {
     mutationCount += 1
     return snapshotValue
   }
+
   func delete(id: UUID) -> ApplicationServiceRemappingSnapshotPayload {
     mutationCount += 1
     return snapshotValue
   }
+
   func activate(id: UUID) -> ApplicationServiceRemappingSnapshotPayload {
     mutationCount += 1
     return snapshotValue
   }
+
   func deactivate(vendorID: UInt16, productID: UInt16) -> ApplicationServiceRemappingSnapshotPayload
   {
     mutationCount += 1
     return snapshotValue
   }
+
   func deactivate(profileID: UUID) -> ApplicationServiceRemappingSnapshotPayload {
     mutationCount += 1
     return snapshotValue
   }
+
   func access(request: Bool) -> RemappingPostEventAccessState { .granted }
+
   func motionCalibration(
     runtimeIdentifier: String,
     command: RemappingMotionCalibrationCommand?

@@ -208,10 +208,9 @@
 				"name",
 				"vendorID",
 				"productID",
-				"parser",
+				"protocolBinding",
 				"connection",
 				"serialNumberPresent",
-				"protocolVariant",
 				"quirks",
 				"inputEndpoint",
 				"outputEndpoint",
@@ -237,17 +236,15 @@
 					"minimum": 0,
 					"maximum": 65535
 				},
-				"parser": {
-					"type": "string"
+				"protocolBinding": {
+					"type": "string",
+					"pattern": "^[a-z0-9]+\\.[a-z0-9-]+(:[a-z0-9-]+)?$"
 				},
 				"connection": {
 					"type": "string"
 				},
 				"serialNumberPresent": {
 					"type": "boolean"
-				},
-				"protocolVariant": {
-					"type": "string"
 				},
 				"quirks": {
 					"type": "array",
@@ -290,8 +287,8 @@
 				"inputHealth": {
 					"$ref": "#/$defs/controllerInputHealth"
 				},
-				"battery": {
-					"$ref": "#/$defs/controllerBattery"
+				"connectionState": {
+					"$ref": "#/$defs/controllerConnectionState"
 				}
 			}
 		},
@@ -319,44 +316,66 @@
 				}
 			}
 		},
-		"controllerBattery": {
+		"controllerConnectionState": {
 			"type": "object",
-			"required": ["chargingState", "cableState"],
+			"required": ["backend", "isConnected", "power"],
 			"additionalProperties": false,
 			"properties": {
-				"percentage": {
-					"type": "integer",
-					"minimum": 0,
-					"maximum": 100
+				"transport": {
+					"enum": ["usb", "bluetooth-classic", "bluetooth-le", "proprietary-radio-receiver"]
 				},
-				"percentageRange": {
-					"type": "array",
-					"prefixItems": [
-						{
-							"type": "integer",
-							"minimum": 0,
-							"maximum": 100
+				"backend": {
+					"enum": ["iohid", "iousbhost", "usb-driverkit"]
+				},
+				"isConnected": {
+					"type": "boolean"
+				},
+				"power": {
+					"type": "object",
+					"required": ["charging", "battery"],
+					"additionalProperties": false,
+					"properties": {
+						"charging": {
+							"enum": ["unknown", "discharging", "charging", "full", "not-chargeable"]
 						},
-						{
-							"type": "integer",
-							"minimum": 0,
-							"maximum": 100
+						"battery": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"percentage": {
+									"type": "array",
+									"prefixItems": [
+										{
+											"type": "integer",
+											"minimum": 0,
+											"maximum": 100
+										},
+										{
+											"type": "integer",
+											"minimum": 0,
+											"maximum": 100
+										}
+									],
+									"items": false,
+									"minItems": 2
+								}
+							}
+						},
+						"wiredPower": {
+							"type": "boolean"
 						}
-					],
-					"items": false,
-					"minItems": 2
-				},
-				"chargingState": {
-					"enum": ["discharging", "charging", "full", "unknown"]
-				},
-				"cableState": {
-					"enum": ["connected", "disconnected", "unknown"]
+					}
 				}
 			}
 		},
 		"physicalOutputCapabilities": {
 			"type": "object",
-			"required": ["rumbleMotors", "lightingFeatures", "binaryRumbleMotors"],
+			"required": [
+				"rumbleMotors",
+				"lightingFeatures",
+				"binaryRumbleMotors",
+				"adaptiveTriggers"
+			],
 			"additionalProperties": false,
 			"properties": {
 				"rumbleMotors": {
@@ -379,6 +398,12 @@
 					"type": "array",
 					"items": {
 						"$ref": "#/$defs/rumbleMotor"
+					}
+				},
+				"adaptiveTriggers": {
+					"type": "array",
+					"items": {
+						"enum": ["left", "right"]
 					}
 				}
 			}

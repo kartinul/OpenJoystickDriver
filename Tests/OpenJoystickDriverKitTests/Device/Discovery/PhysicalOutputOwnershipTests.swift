@@ -123,4 +123,46 @@ struct PhysicalOutputOwnershipTests {
         == .color(red: 1, green: 2, blue: 3)
     )
   }
+
+  @Test
+  func rollingBackOneChannelKeepsOtherChannelsAndControllers() {
+    var ownership = PhysicalOutputOwnership()
+    let first = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 3)
+    let second = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 4)
+    let rumble = PhysicalOutputChannel.rumble(.leftMain)
+    let colorBefore = ownership.state(of: [.color], for: first)
+
+    ownership.setTemporaryColor(.color(red: 1, green: 2, blue: 3), token: UUID(), for: first)
+    _ = ownership.setManual(.rumble(motor: .leftMain, intensity: 1), for: first)
+    _ = ownership.setManual(.rumble(motor: .leftMain, intensity: 0.5), for: second)
+    ownership.restore(colorBefore)
+
+    #expect(ownership.effectiveOutput(for: .color, device: first) == nil)
+    #expect(
+      ownership.effectiveOutput(for: rumble, device: first)
+        == .rumble(motor: .leftMain, intensity: 1)
+    )
+    #expect(
+      ownership.effectiveOutput(for: rumble, device: second)
+        == .rumble(motor: .leftMain, intensity: 0.5)
+    )
+  }
+
+  /// A rollback captured before the controller's claims were cleared must not bring them back.
+  @Test
+  func rollbackCapturedBeforeClearingRestoresNothing() {
+    var ownership = PhysicalOutputOwnership()
+    let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 3)
+    ownership.setMapping(.playerIndicator(.player1), active: true, owner: UUID(), for: identifier)
+    let beforeDevice = ownership.state(of: [.playerIndicator], for: identifier)
+    ownership.removeDevice(identifier)
+    ownership.restore(beforeDevice)
+    #expect(ownership.effectiveOutput(for: .playerIndicator, device: identifier) == nil)
+
+    ownership.setMapping(.playerIndicator(.player2), active: true, owner: UUID(), for: identifier)
+    let beforeAll = ownership.state(of: [.playerIndicator], for: identifier)
+    ownership.removeAll()
+    ownership.restore(beforeAll)
+    #expect(ownership.effectiveOutput(for: .playerIndicator, device: identifier) == nil)
+  }
 }

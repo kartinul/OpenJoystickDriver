@@ -14,22 +14,23 @@ extension RemappingEngineState {
     return actions
   }
 
+  /// Applies the changes of one snapshot in order, as one transition of `identifier`.
   mutating func process(
-    events: [ControllerEvent],
+    changes: [RemappingInputChange],
     from identifier: DeviceIdentifier,
     profile: RemappingProfile,
     at uptimeNanoseconds: UInt64
   ) -> [RemappingEngineAction] {
     var actions = setProfile(profile, for: identifier)
     let monotonicUptime = max(uptimeNanoseconds, devices[identifier]?.lastUptime ?? 0)
-    for event in events {
+    for change in changes {
       if var device = devices[identifier] {
         device.lastUptime = monotonicUptime
         actions += processChords(for: &device)
         actions += replayPendingChordPresses(device: &device, at: monotonicUptime)
         devices[identifier] = device
       }
-      actions += process(event: event, from: identifier, at: monotonicUptime)
+      actions += process(change: change, from: identifier, at: monotonicUptime)
       if var device = devices[identifier] {
         actions += device.updatePassthrough()
         devices[identifier] = device
@@ -39,24 +40,19 @@ extension RemappingEngineState {
   }
 
   mutating func process(
-    event: ControllerEvent,
+    change: RemappingInputChange,
     from identifier: DeviceIdentifier,
     at uptimeNanoseconds: UInt64
   ) -> [RemappingEngineAction] {
-    switch event {
-    case .buttonPressed(let button):
-      guard let source = inputSource(for: button, identifier: identifier) else { return [] }
-      return setSource(source, isActive: true, for: identifier, at: uptimeNanoseconds)
-    case .buttonReleased(let button):
-      guard let source = inputSource(for: button, identifier: identifier) else { return [] }
-      return setSource(source, isActive: false, for: identifier, at: uptimeNanoseconds)
-    case .dpadChanged(let direction):
-      return setDpad(direction, for: identifier, at: uptimeNanoseconds)
-    case .leftStickChanged(let x, let y):
+    switch change {
+    case .button(let button, let isPressed):
+      return setSource(.button(button), isActive: isPressed, for: identifier, at: uptimeNanoseconds)
+    case .dpad(let direction): return setDpad(direction, for: identifier, at: uptimeNanoseconds)
+    case .leftStick(let x, let y):
       let actions = processAdvancedStick(.left, x: x, y: y, for: identifier, at: uptimeNanoseconds)
       return actions
         + processAxes([(.leftStickX, x), (.leftStickY, y)], for: identifier, at: uptimeNanoseconds)
-    case .rightStickChanged(let x, let y):
+    case .rightStick(let x, let y):
       let actions = processAdvancedStick(.right, x: x, y: y, for: identifier, at: uptimeNanoseconds)
       return actions
         + processAxes(
@@ -64,20 +60,19 @@ extension RemappingEngineState {
           for: identifier,
           at: uptimeNanoseconds
         )
-    case .leftTriggerChanged(let value):
+    case .leftTrigger(let value):
       return processAdvancedTrigger(.left, value: value, for: identifier, at: uptimeNanoseconds)
         + processAxes([(.leftTrigger, value)], for: identifier, at: uptimeNanoseconds)
-    case .rightTriggerChanged(let value):
+    case .rightTrigger(let value):
       return processAdvancedTrigger(.right, value: value, for: identifier, at: uptimeNanoseconds)
         + processAxes([(.rightTrigger, value)], for: identifier, at: uptimeNanoseconds)
-    case .motionSample(let sample): return processMotion(sample, for: identifier)
-    case .touchSample(let sample):
-      return processTouch(sample, for: identifier, at: uptimeNanoseconds)
+    case .motion(let sample): return processMotion(sample, for: identifier)
+    case .touch(let sample): return processTouch(sample, for: identifier, at: uptimeNanoseconds)
     }
   }
 
   mutating func setDpad(
-    _ direction: DpadDirection,
+    _ direction: HatDirection,
     for identifier: DeviceIdentifier,
     at uptimeNanoseconds: UInt64
   ) -> [RemappingEngineAction] {
@@ -250,51 +245,8 @@ extension RemappingEngineState {
     return actions
   }
 
-  private func inputSource(for button: Button, identifier _: DeviceIdentifier) -> RemappingSource? {
-    return Self.source(for: button)
-  }
-
-  static func source(for button: Button) -> RemappingSource? {
-    switch button {
-    case .a, .cross: .button(.south)
-    case .b, .circle: .button(.east)
-    case .x, .square: .button(.west)
-    case .y, .triangle: .button(.north)
-    case .leftBumper, .l1: .button(.leftShoulder)
-    case .rightBumper, .r1: .button(.rightShoulder)
-    case .leftStick: .button(.leftStick)
-    case .rightStick: .button(.rightStick)
-    case .start: .button(.start)
-    case .back: .button(.back)
-    case .guide, .ps: .button(.guide)
-    case .share: .button(.share)
-    case .options: .button(.options)
-    case .touchpad: .button(.touchpad)
-    case .l2Digital: .button(.leftTriggerClick)
-    case .r2Digital: .button(.rightTriggerClick)
-    case .mute: .button(.mute)
-    case .leftGrip: .button(.leftGrip)
-    case .rightGrip: .button(.rightGrip)
-    case .leftPadClick: .button(.leftPadClick)
-    case .rightPadClick: .button(.rightPadClick)
-    case .leftSL: .button(.leftSL)
-    case .leftSR: .button(.leftSR)
-    case .rightSL: .button(.rightSL)
-    case .rightSR: .button(.rightSR)
-    case .leftFunction: .button(.leftFunction)
-    case .rightFunction: .button(.rightFunction)
-    case .leftPaddle: .button(.leftPaddle)
-    case .rightPaddle: .button(.rightPaddle)
-    case .dpadUp: .dpad(.up)
-    case .dpadDown: .dpad(.down)
-    case .dpadLeft: .dpad(.left)
-    case .dpadRight: .dpad(.right)
-    }
-  }
-
-  private static func cardinalDirections(
-    for direction: DpadDirection
-  ) -> Set<RemappingDpadDirection> {
+  private static func cardinalDirections(for direction: HatDirection) -> Set<RemappingDpadDirection>
+  {
     switch direction {
     case .neutral: []
     case .north: [.up]

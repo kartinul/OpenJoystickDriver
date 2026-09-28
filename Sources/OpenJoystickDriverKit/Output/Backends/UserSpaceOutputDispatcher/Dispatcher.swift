@@ -1,4 +1,3 @@
-import CoreHID
 import Darwin
 import Foundation
 import IOKit
@@ -7,9 +6,8 @@ import Security
 
 /// Publishes one virtual gamepad for each connected physical controller.
 ///
-/// macOS 15 and later use CoreHID. macOS 10.15 through 14 use the earlier
-/// IOKit user-space HID API because CoreHID is unavailable there. Neither path
-/// runs in the USB DriverKit extension.
+/// Every supported macOS publishes through IOKit `IOHIDUserDevice`. This path
+/// does not run in the USB DriverKit extension.
 public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispatching,
   CompatibilityUserSpaceOutputControllerActivating, RemappingGamepadSink,
   RemappingGamepadOutputControlling, @unchecked Sendable
@@ -17,10 +15,9 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
 
   internal let profile: VirtualDeviceProfile
   internal let format: any VirtualGamepadReportFormat
-  internal let primaryUsage: Int
   let emitsXboxGuideReport: Bool
   internal let productNameOverride: String?
-  internal let onRumbleCommand: RumbleCommandHandler?
+  internal let onOutputCommand: OutputCommandHandler?
   internal let onControllerDidStop: (@Sendable (DeviceIdentifier) async -> Void)?
   internal let lifecycle = LifecycleState()
   internal let testBackendFactory:
@@ -43,15 +40,14 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
     format: any VirtualGamepadReportFormat = OJDGenericGamepadFormat(),
     emitsXboxGuideReport: Bool = false,
     productNameOverride: String? = nil,
-    onRumbleCommand: RumbleCommandHandler? = nil,
+    onOutputCommand: OutputCommandHandler? = nil,
     onControllerDidStop: (@Sendable (DeviceIdentifier) async -> Void)? = nil
   ) throws {
     self.profile = profile
     self.format = format
-    self.primaryUsage = Self.defaultPrimaryUsage(for: format)
     self.emitsXboxGuideReport = emitsXboxGuideReport
     self.productNameOverride = productNameOverride
-    self.onRumbleCommand = onRumbleCommand
+    self.onOutputCommand = onOutputCommand
     self.onControllerDidStop = onControllerDidStop
     self.testBackendFactory = nil
 
@@ -68,10 +64,9 @@ public final class UserSpaceOutputDispatcher: CompatibilityUserSpaceOutputDispat
   ) {
     profile = .default
     self.format = format
-    primaryUsage = Self.defaultPrimaryUsage(for: format)
     emitsXboxGuideReport = false
     productNameOverride = nil
-    onRumbleCommand = nil
+    onOutputCommand = nil
     self.onControllerDidStop = onControllerDidStop
     self.testBackendFactory = testBackendFactory
   }

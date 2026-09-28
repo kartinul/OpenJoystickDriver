@@ -9,16 +9,42 @@ func require(_ condition: @autoclosure () -> Bool, _ message: String) {
   }
 }
 
-func hasEvent(_ events: [ControllerEvent], _ expected: ControllerEvent) -> Bool {
-  events.contains(expected)
+/// The state one report leaves, or nil for a frame without input.
+func parse(_ parser: any PhysicalProtocolDriver, _ report: Data) throws -> ControllerState? {
+  try parser.parse(report: report, receivedAt: MonotonicTimestamp(nanoseconds: 0))?.state
+}
+
+/// A stick position from normalized axes whose Y points down, the report frame.
+func stick(_ x: Float, _ yDown: Float) -> StickPosition {
+  StickPosition(x: BipolarValue(normalized: x), y: BipolarValue(normalized: -yDown))
+}
+
+func trigger(_ value: Float) -> UnipolarValue { UnipolarValue(normalized: value) }
+
+/// The HID reports driver writes carry, in order.
+func hidReports(_ writes: [PhysicalOutputWrite]) -> [PhysicalHIDOutputReport] {
+  writes.compactMap { write in
+    switch write {
+    case .usb: nil
+    case .hidOutput(let report), .hidFeature(let report): report
+    }
+  }
+}
+
+func catalogRecord(_ identifier: DeviceIdentifier) -> DeviceRuntimeProfile {
+  guard let record = ProtocolDriverRegistry().record(for: identifier) else {
+    fputs("FAIL: \(identifier) should have a catalog record\n", stderr)
+    exit(1)
+  }
+  return record
 }
 
 func runProfileMetadataChecks() {
-  let registry = ParserRegistry()
-  let ds3 = DeviceIdentifier(vendorID: 1356, productID: 616)
-  let ds3Profile = registry.runtimeProfile(for: ds3)
-  require(registry.parserName(for: ds3) == "DS3", "DS3 profile should select DS3 parser")
-  require(ds3Profile.protocolVariant == .dualShock3, "DS3 profile should use dualShock3 variant")
+  let ds3Profile = catalogRecord(DeviceIdentifier(vendorID: 1356, productID: 616))
+  require(
+    ds3Profile.physicalProtocolID == .sonySixaxis && ds3Profile.physicalProtocolVariant == nil,
+    "DS3 profile should bind Sixaxis"
+  )
   require(
     ds3Profile.quirks.isEmpty,
     "DS3 profile should not advertise unimplemented sensors or battery status"
@@ -28,61 +54,51 @@ func runProfileMetadataChecks() {
     DeviceIdentifier(vendorID: 1356, productID: 3302),
     DeviceIdentifier(vendorID: 1356, productID: 3570),
   ] {
-    let profile = registry.runtimeProfile(for: id)
-    require(registry.parserName(for: id) == "DualSense", "DualSense profile should select parser")
-    require(profile.protocolVariant == .dualSense, "DualSense profile should use dualSense variant")
+    let profile = catalogRecord(id)
     require(
-      profile.quirks == ["touchpad", "microphoneMute"]
-        + (id.productID == 3570 ? ["edgeButtons"] : []),
-      "DualSense profile should expose operational input flags"
+      profile.physicalProtocolID == .sonyDualSense && profile.physicalProtocolVariant == nil,
+      "DualSense profile should bind"
+    )
+    require(profile.quirks.isEmpty, "DualSense profile should declare no quirks")
+    require(
+      profile.capabilityDelta.presentControls
+        == (id.controllerIdentity.productID == 3570
+          ? [.paddleLeft1, .paddleRight1, .auxiliary1, .auxiliary2] : []),
+      "Only the DualSense Edge profile should declare its function buttons and paddles"
     )
   }
 
-  let steamWired = DeviceIdentifier(vendorID: 10462, productID: 4354)
-  let steamWiredProfile = registry.runtimeProfile(for: steamWired)
+  let steamWiredProfile = catalogRecord(DeviceIdentifier(vendorID: 10462, productID: 4354))
   require(
-    registry.parserName(for: steamWired) == "SteamController",
-    "Steam wired should select parser"
+    steamWiredProfile.physicalProtocolID == .valveSteamController
+      && steamWiredProfile.physicalProtocolVariant == .wired,
+    "Steam wired should bind the wired variant"
   )
-  require(steamWiredProfile.protocolVariant == .steamController, "Steam wired should use variant")
-  require(
-    steamWiredProfile.quirks == ["lizardMode", "trackpads"],
-    "Steam wired profile should expose operational flags"
-  )
+  require(steamWiredProfile.quirks.isEmpty, "Steam wired profile should declare no quirks")
 
-  let steamWireless = DeviceIdentifier(vendorID: 10462, productID: 4418)
-  let steamWirelessProfile = registry.runtimeProfile(for: steamWireless)
+  let steamWirelessProfile = catalogRecord(DeviceIdentifier(vendorID: 10462, productID: 4418))
   require(
-    registry.parserName(for: steamWireless) == "SteamController",
-    "Steam wireless receiver should select parser"
+    steamWirelessProfile.physicalProtocolID == .valveSteamController
+      && steamWirelessProfile.physicalProtocolVariant == .dongle,
+    "Steam wireless receiver should bind the dongle variant"
   )
-  require(
-    steamWirelessProfile.protocolVariant == .steamController,
-    "Steam wireless receiver should use variant"
-  )
-  require(
-    steamWirelessProfile.quirks == ["lizardMode", "trackpads", "wirelessReceiver"],
-    "Steam wireless receiver profile must retain wirelessReceiver lifecycle flag"
-  )
+  require(steamWirelessProfile.quirks.isEmpty, "Steam dongle profile should declare no quirks")
 
-  let switchPro = DeviceIdentifier(vendorID: 1406, productID: 8201)
-  let switchProfile = registry.runtimeProfile(for: switchPro)
+  let switchProfile = catalogRecord(DeviceIdentifier(vendorID: 1406, productID: 8201))
   require(
-    registry.parserName(for: switchPro) == "SwitchPro",
-    "Switch Pro profile should select parser"
+    switchProfile.physicalProtocolID == .nintendoSwitch1
+      && switchProfile.physicalProtocolVariant == nil,
+    "Switch Pro profile should bind Switch 1"
   )
-  require(switchProfile.protocolVariant == .switchPro, "Switch Pro profile should use variant")
-  require(
-    switchProfile.quirks == ["usbHandshake"],
-    "Switch Pro profile should not advertise unimplemented calibration, rumble, or IMU"
-  )
+  require(switchProfile.quirks.isEmpty, "Switch Pro profile should select the Pro layout")
 }
 
 func runSteamInputAndFeatureChecks() throws {
-  let parser = ParserRegistry().parser(for: DeviceIdentifier(vendorID: 10462, productID: 4354))
-  _ = try parser.parse(data: ProtocolPacketFixtures.Steam.inputReport())
-  let events = try parser.parse(
-    data: ProtocolPacketFixtures.Steam.inputReport(
+  let parser = SteamControllerDriver()
+  _ = try parse(parser, ProtocolPacketFixtures.Steam.inputReport())
+  let events = try parse(
+    parser,
+    ProtocolPacketFixtures.Steam.inputReport(
       buttons: (0xFC, 0x70, 0x44),
       triggers: (255, 128),
       left: (32767, -32767),
@@ -90,63 +106,54 @@ func runSteamInputAndFeatureChecks() throws {
     )
   )
   for expected in [
-    Button.a, .b, .x, .y, .leftBumper, .rightBumper, .back, .guide, .start, .leftStick,
-    .rightPadClick,
+    ControlID.faceSouth, .faceEast, .faceWest, .faceNorth, .leftShoulder, .rightShoulder, .view,
+    .guide, .menu, .leftStickClick, .rightTrackpadClick,
   ] {
     require(
-      hasEvent(events, .buttonPressed(expected)),
+      events?.pressed.contains(expected) == true,
       "Steam primary input should press \(expected)"
     )
   }
-  require(hasEvent(events, .leftTriggerChanged(1.0)), "Steam should parse left trigger")
-  require(hasEvent(events, .rightTriggerChanged(128.0 / 255.0)), "Steam should parse right trigger")
-  require(hasEvent(events, .leftStickChanged(x: 1.0, y: 1.0)), "Steam should parse left stick")
-  require(
-    hasEvent(events, .rightStickChanged(x: -1.0, y: -1.0)),
-    "Steam should parse right pad as right stick"
-  )
+  require(events?.leftTrigger == trigger(1.0), "Steam should parse left trigger")
+  require(events?.rightTrigger == trigger(128.0 / 255.0), "Steam should parse right trigger")
+  require(events?.leftStick == stick(1.0, 1.0), "Steam should parse left stick")
+  require(events?.rightStick == stick(-1.0, -1.0), "Steam should parse right pad as right stick")
 
-  let leftPadOnly = SteamControllerParser()
-  _ = try leftPadOnly.parse(data: ProtocolPacketFixtures.Steam.inputReport())
-  let leftPadOnlyEvents = try leftPadOnly.parse(
-    data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0, 0x08), left: (32767, -32767))
+  let leftPadOnly = SteamControllerDriver()
+  _ = try parse(leftPadOnly, ProtocolPacketFixtures.Steam.inputReport())
+  let leftPadOnlyEvents = try parse(
+    leftPadOnly,
+    ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0, 0x08), left: (32767, -32767))
   )
   require(
-    !hasEvent(leftPadOnlyEvents, .leftStickChanged(x: 1.0, y: 1.0)),
+    leftPadOnlyEvents?.leftStick != stick(1.0, 1.0),
     "Steam left-pad-only coordinates should not create left-stick motion"
   )
 
-  let leftPadAndJoy = SteamControllerParser()
-  _ = try leftPadAndJoy.parse(data: ProtocolPacketFixtures.Steam.inputReport())
-  let leftPadAndJoyEvents = try leftPadAndJoy.parse(
-    data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0, 0x88), left: (32767, -32767))
+  let leftPadAndJoy = SteamControllerDriver()
+  _ = try parse(leftPadAndJoy, ProtocolPacketFixtures.Steam.inputReport())
+  let leftPadAndJoyEvents = try parse(
+    leftPadAndJoy,
+    ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0, 0x88), left: (32767, -32767))
   )
   require(
-    !hasEvent(leftPadAndJoyEvents, .leftStickChanged(x: 1.0, y: 1.0)),
+    leftPadAndJoyEvents?.leftStick != stick(1.0, 1.0),
     "Steam interleaved pad coordinates must not overwrite the left stick"
   )
 
-  let dpad = SteamControllerParser()
-  _ = try dpad.parse(data: ProtocolPacketFixtures.Steam.inputReport())
-  let upEvents = try dpad.parse(
-    data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x01, 0))
-  )
-  let rightEvents = try dpad.parse(
-    data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x02, 0))
-  )
-  let downEvents = try dpad.parse(
-    data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x08, 0))
-  )
-  let leftEvents = try dpad.parse(
-    data: ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x04, 0))
-  )
-  require(hasEvent(upEvents, .dpadChanged(.north)), "Steam should parse d-pad north")
-  require(hasEvent(rightEvents, .dpadChanged(.east)), "Steam should parse d-pad east")
-  require(hasEvent(downEvents, .dpadChanged(.south)), "Steam should parse d-pad south")
-  require(hasEvent(leftEvents, .dpadChanged(.west)), "Steam should parse d-pad west")
+  let dpad = SteamControllerDriver()
+  _ = try parse(dpad, ProtocolPacketFixtures.Steam.inputReport())
+  let upEvents = try parse(dpad, ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x01, 0)))
+  let rightEvents = try parse(dpad, ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x02, 0)))
+  let downEvents = try parse(dpad, ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x08, 0)))
+  let leftEvents = try parse(dpad, ProtocolPacketFixtures.Steam.inputReport(buttons: (0, 0x04, 0)))
+  require(upEvents?.hat == .north, "Steam should parse d-pad north")
+  require(rightEvents?.hat == .east, "Steam should parse d-pad east")
+  require(downEvents?.hat == .south, "Steam should parse d-pad south")
+  require(leftEvents?.hat == .west, "Steam should parse d-pad west")
 
-  let featureParser = SteamControllerParser()
-  let startup = featureParser.hidStartupFeatureReports()
+  let featureParser = SteamControllerDriver()
+  let startup = hidReports(featureParser.activationWrites())
   require(startup.map(\.reportID) == [0, 0], "Steam lizard startup reports should use report ID 0")
   require(
     startup.map { $0.bytes.count } == [64, 64],
@@ -157,7 +164,7 @@ func runSteamInputAndFeatureChecks() throws {
     Array(startup[1].bytes.prefix(11)) == ProtocolPacketFixtures.Steam.startupSettingsPrefix,
     "Steam startup should disable trackpad mouse modes and request raw IMU data"
   )
-  let shutdown = featureParser.hidShutdownFeatureReports()
+  let shutdown = hidReports(featureParser.deactivationWrites())
   require(shutdown.map(\.reportID) == [0, 0], "Steam shutdown reports should use report ID 0")
   require(shutdown[0].bytes[0] == 0x85, "Steam shutdown should restore digital mappings")
   require(shutdown[1].bytes[0] == 0x8E, "Steam shutdown should load default settings")

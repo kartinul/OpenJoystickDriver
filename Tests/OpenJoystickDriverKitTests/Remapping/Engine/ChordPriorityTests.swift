@@ -12,14 +12,14 @@ struct RemappingChordPriorityTests {
     ])
     #expect(
       state.process(
-        events: [.buttonPressed(.a), .buttonPressed(.b)],
+        inputs: [.press(.faceSouth), .press(.faceEast)],
         from: identifier,
         profile: profile,
         at: 0
       ) == [.system(.keyDown(.a))]
     )
     #expect(
-      state.process(events: [.buttonPressed(.y)], from: identifier, profile: profile, at: 1) == [
+      state.process(inputs: [.press(.faceNorth)], from: identifier, profile: profile, at: 1) == [
         .system(.keyUp(.a)), .system(.keyDown(.b)),
       ]
     )
@@ -34,7 +34,7 @@ struct RemappingChordPriorityTests {
     ])
     #expect(
       state.process(
-        events: [.buttonPressed(.a), .buttonPressed(.y), .buttonPressed(.b)],
+        inputs: [.press(.faceSouth), .press(.faceNorth), .press(.faceEast)],
         from: identifier,
         profile: profile,
         at: 0
@@ -50,7 +50,7 @@ struct RemappingChordPriorityTests {
     ])
     #expect(
       state.process(
-        events: [.buttonPressed(.a), .buttonPressed(.b), .buttonPressed(.x), .buttonPressed(.y)],
+        inputs: [.press(.faceSouth), .press(.faceEast), .press(.faceWest), .press(.faceNorth)],
         from: identifier,
         profile: profile,
         at: 0
@@ -74,7 +74,7 @@ struct RemappingChordPriorityTests {
     )
     #expect(
       state.process(
-        events: [.buttonPressed(.leftBumper), .buttonPressed(.a), .buttonPressed(.b)],
+        inputs: [.press(.leftShoulder), .press(.faceSouth), .press(.faceEast)],
         from: identifier,
         profile: profile,
         at: 0

@@ -49,20 +49,18 @@ public final class CompatibilityOutputDispatcher: OutputDispatcher, RemappingGam
     try await sink.send(state, for: identifier)
   }
 
-  public func send(
-    _ motion: RemappingVirtualMotionState?,
-    for identifier: DeviceIdentifier
-  ) async throws {
-    let target = lock.withLock { remappingOutputSuppressed && motion != nil ? nil : backend }
-    guard let sink = target as? any RemappingGamepadSink else {
-      throw RemappingEventEngineError.sinkUnavailable
-    }
-    try await sink.send(motion, for: identifier)
+  public func dispatch(
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
+    from identifier: DeviceIdentifier
+  ) async {
+    let target = lock.withLock { _suppressOutput ? nil : backend }
+    await target?.dispatch(event, labels: labels, from: identifier)
   }
 
-  public func dispatch(events: [ControllerEvent], from identifier: DeviceIdentifier) async {
+  public func activateOutput(for identifier: DeviceIdentifier) async {
     let target = lock.withLock { _suppressOutput ? nil : backend }
-    await target?.dispatch(events: events, from: identifier)
+    await target?.activateOutput(for: identifier)
   }
 }
 

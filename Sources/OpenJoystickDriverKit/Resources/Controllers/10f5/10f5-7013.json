@@ -1,0 +1,8 @@
+{
+  "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
+  "vendorID": 4341,
+  "productID": 28691,
+  "protocol": {
+    "family": "xbox.gip"
+  }
+}

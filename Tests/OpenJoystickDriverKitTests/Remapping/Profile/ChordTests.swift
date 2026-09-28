@@ -21,7 +21,7 @@ struct RemappingChordTests {
     )
 
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 0
@@ -29,7 +29,7 @@ struct RemappingChordTests {
     #expect(sink.actions().isEmpty)
 
     try await engine.process(
-      events: [.buttonPressed(.b)],
+      inputs: [.press(.faceEast)],
       from: device(1),
       using: currentProfile,
       at: 1
@@ -37,7 +37,7 @@ struct RemappingChordTests {
     #expect(sink.actions() == [.keyDown(.c)])
 
     try await engine.process(
-      events: [.buttonReleased(.b)],
+      inputs: [.release(.faceEast)],
       from: device(1),
       using: currentProfile,
       at: 2
@@ -45,7 +45,7 @@ struct RemappingChordTests {
     #expect(sink.actions() == [.keyDown(.c), .keyUp(.c)])
 
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 3

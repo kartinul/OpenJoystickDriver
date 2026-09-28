@@ -1,15 +1,14 @@
-import CoreHID
 import Foundation
 import IOKit.hid
 
-/// Shared request contract for CoreHID and IOKit's synchronous report callbacks.
+/// Request contract for `IOHIDUserDevice`'s synchronous report callbacks.
 final class UserSpaceHostReportHandler: @unchecked Sendable {
   private let lock = NSLock()
   private let identifier: DeviceIdentifier
   private let input: UserSpaceInputReportState
   private let sender: UserSpaceReportSender
   private let isOpen: @Sendable () -> Bool
-  private let onRumble: UserSpaceOutputDispatcher.RumbleCommandHandler?
+  private let onOutput: UserSpaceOutputDispatcher.OutputCommandHandler?
   private let onRumbleStatus: @Sendable (String) -> Void
 
   init(
@@ -17,63 +16,55 @@ final class UserSpaceHostReportHandler: @unchecked Sendable {
     input: UserSpaceInputReportState,
     sender: UserSpaceReportSender,
     isOpen: @escaping @Sendable () -> Bool,
-    onRumble: UserSpaceOutputDispatcher.RumbleCommandHandler?,
+    onOutput: UserSpaceOutputDispatcher.OutputCommandHandler?,
     onRumbleStatus: @escaping @Sendable (String) -> Void
   ) {
     self.identifier = identifier
     self.input = input
     self.sender = sender
     self.isOpen = isOpen
-    self.onRumble = onRumble
+    self.onOutput = onOutput
     self.onRumbleStatus = onRumbleStatus
   }
 
   /// Native callbacks follow the IOKit/HIDAPI convention: numbered buffers include byte-zero ID.
-  /// Returning a task lets CoreHID await publication; IOKit acknowledges validated enqueueing.
+  /// The callback acknowledges validated enqueueing, not publication.
   func setReport(
     type: VirtualHostReportType,
     reportID: UInt32,
     bytes: [UInt8]
   ) throws -> UserSpaceReportSender.SubmissionReceipt {
     try lock.withLock {
-      guard isOpen() else { throw VirtualHostReportError.closed }
-      let request = try VirtualHostReportRequest(
-        type: type,
-        reportID: reportID,
-        bytes: bytes,
-        framing: .completeReport
-      )
-      let response = try input.hostSession.setReport(request)
+      guard isOpen(), !input.isClosed else { throw VirtualHostReportError.closed }
+      let request = try VirtualHostReportRequest(type: type, reportID: reportID, bytes: bytes)
+      let command = try input.consumerOutput(request)
       return sender.submit { [self] in
         guard isOpen() else { throw VirtualHostReportError.closed }
-        if let command = response.rumble {
+        if let rumble = Self.rumbleIntensities(command) {
           let status =
-            "app report id=\(reportID) L=\(command.left) R=\(command.right) "
-            + "LT=\(command.leftTrigger) RT=\(command.rightTrigger)"
+            "app report id=\(reportID) L=\(rumble.leftMain.byte) R=\(rumble.rightMain.byte) "
+            + "LT=\(rumble.leftTrigger.byte) RT=\(rumble.rightTrigger.byte)"
           onRumbleStatus(status)
           print("[UserSpaceOutputDispatcher] App rumble report: \(identifier) \(status)")
-          onRumble?(identifier, command)
         }
-        return response.reports(currentInput: input.currentReport())
+        onOutput?(identifier, command)
+        return []
       }
     }
   }
 
   func getReport(type: VirtualHostReportType, reportID: UInt32, maxSize: Int) throws -> [UInt8] {
     guard isOpen() else { throw VirtualHostReportError.closed }
-    return try input.hostSession.getReport(
-      type: type,
-      reportID: reportID,
-      maxSize: maxSize,
-      currentInput: input.currentReport()
-    )
+    return try input.hostReport(type: type, reportID: reportID, maxSize: maxSize)
   }
 
-  func reportAsynchronousFailure(_ error: any Error, reportID: UInt32) {
-    guard !(error is CancellationError) else { return }
-    let status = "error: app report id=\(reportID): \(error.localizedDescription)"
-    onRumbleStatus(status)
-    print("[UserSpaceOutputDispatcher] \(identifier) \(status)")
+  /// The requested rumble intensities of a rumble command; stop-rumble requests them all off.
+  private static func rumbleIntensities(_ command: ControllerOutputCommand) -> RumbleIntensities? {
+    switch command {
+    case .setRumble(let intensities, _): intensities
+    case .stopRumble: .off
+    default: nil
+    }
   }
 
   static func reportType(_ type: IOHIDReportType) throws -> VirtualHostReportType {
@@ -93,19 +84,6 @@ final class UserSpaceHostReportHandler: @unchecked Sendable {
     case VirtualHostReportError.closed: kIOReturnNotOpen
     case is CancellationError: kIOReturnAborted
     default: kIOReturnError
-    }
-  }
-
-  @available(macOS 15, *)
-  static func coreHIDError(_ error: any Error) -> HIDDeviceError {
-    switch error {
-    case let error as HIDDeviceError: error
-    case VirtualHostReportError.unsupported: .unsupported
-    case VirtualHostReportError.malformed: .badArgument
-    case VirtualHostReportError.tooLarge: .messageTooLarge
-    case VirtualHostReportError.closed: .notReady
-    case is CancellationError: .aborted
-    default: .ioError
     }
   }
 }

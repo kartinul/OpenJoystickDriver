@@ -6,10 +6,6 @@ enum CompatibilityTransitionError: Error, Sendable {
   case feedbackTimedOut
   case candidateCloseTimedOut
   case activationTimedOut
-  case rollbackStageTimedOut
-  case rollbackTimedOut
-  case zeroDeviceIntervalTimedOut
-  case serverStopped
 }
 
 func withCompatibilityTimeout<Value: Sendable>(
@@ -61,21 +57,32 @@ final class CompatibilityTransitionCancellation: @unchecked Sendable {
 }
 
 actor CompatibilityTransitionCoordinator {
-  private var tail: Task<Bool, Never>?
+  private var tail: Task<Void, Never>?
   private let cancellation = CompatibilityTransitionCancellation()
-  private var submittedCount = 0
 
   func enqueue(_ operation: @escaping @Sendable () async -> Bool) async -> Bool {
-    guard !cancellation.isStopped else { return false }
-    submittedCount += 1
+    await enqueueResult(operation) ?? false
+  }
+
+  /// Runs `operation` after every earlier operation; nil when the coordinator stops first.
+  func enqueueResult<Value: Sendable>(
+    _ operation: @escaping @Sendable () async -> Value
+  ) async -> Value? {
+    guard !cancellation.isStopped else { return nil }
     let previous = tail
     let cancellation = self.cancellation
-    let next = Task {
-      _ = await previous?.value
-      guard !Task.isCancelled, !cancellation.isStopped else { return false }
+    let next = Task<Value?, Never> {
+      await previous?.value
+      guard !Task.isCancelled, !cancellation.isStopped else { return nil }
       return await operation()
     }
-    tail = next
+    tail = Task {
+      await withTaskCancellationHandler {
+        _ = await next.value
+      } onCancel: {
+        next.cancel()
+      }
+    }
     return await next.value
   }
 
@@ -84,12 +91,10 @@ actor CompatibilityTransitionCoordinator {
     tail?.cancel()
     tail = nil
   }
-
-  func submissionCount() -> Int { submittedCount }
 }
 
 final class CompatibilityFeedbackGate: @unchecked Sendable {
-  typealias SendFeedback = @Sendable (DeviceIdentifier, VirtualRumbleCommand) async -> Void
+  typealias SendFeedback = @Sendable (DeviceIdentifier, ControllerOutputCommand) async -> Void
 
   private let sendFeedback: SendFeedback
   let lock = NSLock()
@@ -99,20 +104,26 @@ final class CompatibilityFeedbackGate: @unchecked Sendable {
 
   init(deviceManager: DeviceManager) {
     sendFeedback = { identifier, command in
-      _ = await deviceManager.sendRumble(
-        for: identifier,
-        left: command.left,
-        right: command.right,
-        lt: command.leftTrigger,
-        rt: command.rightTrigger,
-        durationMs: command.durationMs
-      )
+      guard let command = Self.physicalFeedback(for: command) else { return }
+      _ = await deviceManager.sendControllerOutput(command, for: identifier)
     }
   }
 
   init(sendFeedback: @escaping SendFeedback) { self.sendFeedback = sendFeedback }
 
-  func submit(identifier: DeviceIdentifier, command: VirtualRumbleCommand) {
+  /// The physical command for consumer feedback: a bounded set-rumble, with its main motors
+  /// mirrored onto the Steam trackpad haptics, or stop-rumble. Other consumer commands, such as a
+  /// DualSense lightbar, and held rumble do not reach the physical controller.
+  static func physicalFeedback(for command: ControllerOutputCommand) -> ControllerOutputCommand? {
+    switch command {
+    case .setRumble(let intensities, .milliseconds(let durationMs)):
+      .setRumble(intensities.mirroringMainOntoHaptics(), duration: .milliseconds(durationMs))
+    case .stopRumble: .stopRumble
+    default: nil
+    }
+  }
+
+  func submit(identifier: DeviceIdentifier, command: ControllerOutputCommand) {
     let token = UUID()
     let currentGeneration = lock.withLock { () -> UInt64? in
       guard accepting else { return nil }
@@ -158,18 +169,7 @@ final class CompatibilityFeedbackGate: @unchecked Sendable {
       try await withCompatibilityTimeout(timeout, clock: clock, error: .feedbackTimedOut) {
         await withTaskGroup(of: Void.self) { group in
           for identifier in identifiers {
-            group.addTask {
-              await self.sendFeedback(
-                identifier,
-                VirtualRumbleCommand(
-                  left: 0,
-                  right: 0,
-                  leftTrigger: 0,
-                  rightTrigger: 0,
-                  durationMs: 0
-                )
-              )
-            }
+            group.addTask { await self.sendFeedback(identifier, .stopRumble) }
           }
           await group.waitForAll()
         }
@@ -198,44 +198,6 @@ final class CompatibilityFeedbackGate: @unchecked Sendable {
   }
 }
 
-struct CompatibilityTransitionSnapshot: Sendable {
-  let requestedIdentity: CompatibilityIdentity
-  let persistedIdentity: CompatibilityIdentity
-  let liveIdentity: CompatibilityIdentity?
-  let enabled: Bool
-  let dispatcher: (any CompatibilityUserSpaceOutputDispatching)?
-  let closeSlot: CompatibilityBackendCloseSlot?
-}
-
-struct CompatibilityRetrySnapshot: Codable, Equatable, Sendable {
-  let requestedIdentity: CompatibilityIdentity
-  let priorProfileIdentity: CompatibilityIdentity
-  let phase: CompatibilityTransitionPhase
-  let detail: String?
-
-  init(
-    requestedIdentity: CompatibilityIdentity,
-    priorProfileIdentity: CompatibilityIdentity,
-    phase: CompatibilityTransitionPhase,
-    detail: String? = nil
-  ) {
-    self.requestedIdentity = requestedIdentity
-    self.priorProfileIdentity = priorProfileIdentity
-    self.phase = phase
-    self.detail = detail
-  }
-}
-
-enum CompatibilityTransitionPhase: String, Codable, Equatable, Sendable {
-  case stage
-  case feedbackQuiescence
-  case candidateClose
-  case activation
-  case rollbackStage
-  case rollbackActivation
-  case zeroDeviceInterval
-}
-
 final class CompatibilityBackendCloseSlot: @unchecked Sendable {
   let backend: any CompatibilityUserSpaceOutputDispatching
   let lock = NSLock()
@@ -243,11 +205,7 @@ final class CompatibilityBackendCloseSlot: @unchecked Sendable {
 
   init(_ backend: any CompatibilityUserSpaceOutputDispatching) { self.backend = backend }
 
-  func close(
-    timeout: UInt64,
-    clock: CompatibilityTransitionClock,
-    error: CompatibilityTransitionError = .candidateCloseTimedOut
-  ) async -> Bool {
+  func close(timeout: UInt64, clock: CompatibilityTransitionClock) async -> Bool {
     let task = lock.withLock { () -> Task<Void, Never> in
       if let closeTask { return closeTask }
       let backend = self.backend
@@ -256,10 +214,10 @@ final class CompatibilityBackendCloseSlot: @unchecked Sendable {
       return task
     }
     do {
-      try await withCompatibilityTimeout(timeout, clock: clock, error: error) { await task.value }
+      try await withCompatibilityTimeout(timeout, clock: clock, error: .candidateCloseTimedOut) {
+        await task.value
+      }
       return true
     } catch { return false }
   }
 }
-
-extension ApplicationServiceServer {}

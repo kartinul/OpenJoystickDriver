@@ -43,7 +43,7 @@ extension RemappingProfile {
     do { try gyroOutput.validate() } catch let error as RemappingGyroOutputError {
       throw RemappingValidationError.invalidGyroOutput(error)
     }
-    if gyroOutput.mode == .leftStick || gyroOutput.mode == .rightStick || gyroOutput.virtualMotion,
+    if gyroOutput.mode == .leftStick || gyroOutput.mode == .rightStick,
       outputPolicy.virtualGamepad == .disabled
     {
       throw RemappingValidationError.virtualOutputRequired

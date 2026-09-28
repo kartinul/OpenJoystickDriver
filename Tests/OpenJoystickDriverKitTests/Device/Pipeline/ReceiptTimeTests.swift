@@ -12,7 +12,7 @@ struct ReceiptTimeTests {
     let pipeline = DevicePipeline(
       identifier: DeviceIdentifier(vendorID: 1, productID: 2),
       transport: .hid(locationID: 77),
-      parser: parser,
+      driver: parser,
       dispatcher: LoggingOutputDispatcher()
     )
     await pipeline.start()
@@ -24,25 +24,26 @@ struct ReceiptTimeTests {
       return
     }
     #expect((before...after).contains(observed))
-    _ = try await pipeline.parseEvents(from: [2], receivedAtNanoseconds: 123)
+    _ = try await pipeline.parseReport(Data([2]), receivedAt: 123)
     #expect(await iterator.next() == .timed(123))
     await pipeline.stop()
   }
 }
 
-private final class ReceiptTimeParser: InputParser {
-  enum Call: Equatable, Sendable { case timed(UInt64), untimed }
+private final class ReceiptTimeParser: PhysicalProtocolDriver {
+  let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
+  let sessionPlan = DriverSessionPlan()
+  let outputCapabilities = PhysicalControllerOutputCapabilities.none
+  let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
+  func consumeInputConnectionStateChange() -> ControllerInputConnectionState? { nil }
+  enum Call: Equatable, Sendable { case timed(UInt64) }
 
   private let continuation: AsyncStream<Call>.Continuation
 
   init(continuation: AsyncStream<Call>.Continuation) { self.continuation = continuation }
 
-  func parse(data: Data) throws -> [ControllerEvent] {
-    continuation.yield(.untimed)
-    return []
-  }
-  func parse(data: Data, receivedAtNanoseconds: UInt64) throws -> [ControllerEvent] {
-    continuation.yield(.timed(receivedAtNanoseconds))
-    return []
+  func parse(report _: Data, receivedAt: MonotonicTimestamp) throws -> ControllerEvent? {
+    continuation.yield(.timed(receivedAt.nanoseconds))
+    return nil
   }
 }

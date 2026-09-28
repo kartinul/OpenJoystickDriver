@@ -12,52 +12,29 @@ extension CompatibilityTests {
   func description(_ id: DeviceIdentifier) -> ApplicationServiceDeviceDescription {
     ApplicationServiceDeviceDescription(
       name: "probe",
-      vendorID: id.vendorID,
-      productID: id.productID,
-      parser: "GIP",
+      vendorID: id.controllerIdentity.vendorID,
+      productID: id.controllerIdentity.productID,
+      protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
       serialNumber: nil,
-      protocolVariant: .xboxOne,
       runtimeIdentifier: id.runtimeIdentifier
     )
   }
 
-  @Test
-  func automaticConsumerChangesWithSameEffectiveIdentityDoNotRebuild() async {
-    let identifier = DeviceIdentifier(vendorID: 0x057E, productID: 0x2009)
-    let probe = ConcurrentFactoryProbe()
-    let box = AutomaticConsumerBox()
-    let description = ApplicationServiceDeviceDescription(
-      name: "Switch",
-      vendorID: identifier.vendorID,
-      productID: identifier.productID,
-      parser: "SwitchPro",
+  func description(
+    _ id: DeviceIdentifier,
+    binding: ProtocolBindingID
+  ) -> ApplicationServiceDeviceDescription {
+    ApplicationServiceDeviceDescription(
+      name: "probe",
+      vendorID: id.controllerIdentity.vendorID,
+      productID: id.controllerIdentity.productID,
+      protocolBinding: binding,
       connection: "USB",
       serialNumber: nil,
-      protocolVariant: .switchPro,
-      runtimeIdentifier: identifier.runtimeIdentifier
+      capabilities: ControllerCapabilities(controls: ControlID.xboxLayout),
+      runtimeIdentifier: id.runtimeIdentifier
     )
-    let descriptionsProvider: @Sendable () -> [ApplicationServiceDeviceDescription] = {
-      [description]
-    }
-
-    let dispatcher = AutomaticUserSpaceOutputDispatcher(
-      deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
-      ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { box.value },
-      builder: { _ in probe.make() },
-      observeConsumerChanges: false,
-      descriptionsProvider: descriptionsProvider
-
-    )
-
-    await dispatcher.dispatch(events: [], from: identifier)
-    box.value = .appleGameController
-    await dispatcher.refreshForCurrentConsumer()
-
-    #expect(probe.snapshot().0 == 1)
-    #expect(probe.snapshot().2.first?.counts().1 == 0)
-    await dispatcher.close()
   }
 
   @Test
@@ -67,7 +44,7 @@ extension CompatibilityTests {
     let identifiers = [
       DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
     ]
-    let created = AutomaticConsumerBox()
+    let created = AutomaticBackendBox()
     let descriptions = identifiers.map { description($0) }
     let descriptionsProvider: @Sendable () -> [ApplicationServiceDeviceDescription] = {
       descriptions
@@ -75,21 +52,19 @@ extension CompatibilityTests {
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { .sdlHIDAPI },
       builder: { _ in
         let backend = AutomaticBackendProbe()
 
         created.created.append(backend)
         return backend
       },
-      observeConsumerChanges: false,
       descriptionsProvider: descriptionsProvider
     )
 
     try await dispatcher.activate(for: identifiers)
     #expect(created.created.count == identifiers.count)
     #expect(created.created.map(\.activations) == identifiers.map { [[$0]] })
-    await dispatcher.dispatch(events: [], from: identifiers[0])
+    await dispatcher.activateOutput(for: identifiers[0])
     await dispatcher.close()
     #expect(created.created.allSatisfy { $0.closed })
   }
@@ -99,7 +74,7 @@ extension CompatibilityTests {
     let identifiers = [
       DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
     ]
-    let created = AutomaticConsumerBox()
+    let created = AutomaticBackendBox()
     let descriptions = identifiers.map { description($0) }
     let descriptionsProvider: @Sendable () -> [ApplicationServiceDeviceDescription] = {
       descriptions
@@ -107,13 +82,11 @@ extension CompatibilityTests {
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { .sdlHIDAPI },
       builder: { _ in
         let backend = AutomaticBackendProbe(failsActivation: created.created.count == 1)
         created.created.append(backend)
         return backend
       },
-      observeConsumerChanges: false,
       descriptionsProvider: descriptionsProvider
     )
 
@@ -129,77 +102,6 @@ extension CompatibilityTests {
   @Test
 
 
-  func automaticEffectiveIdentityChangeReplacesChildren() async throws {
-    let identifiers = [
-      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
-    ]
-    let created = AutomaticConsumerBox()
-    let box = AutomaticConsumerBox()
-    let descriptions = identifiers.map { description($0) }
-    let dispatcher = AutomaticUserSpaceOutputDispatcher(
-      deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
-      ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { box.value },
-      builder: { _ in
-        let backend = AutomaticBackendProbe()
-        created.created.append(backend)
-        return backend
-      },
-      observeConsumerChanges: false,
-      descriptionsProvider: { descriptions },
-      identityProvider: { _, consumer in consumer == .sdlHIDAPI ? .genericHID : .appleGameController
-      }
-    )
-
-    try await dispatcher.activate(for: identifiers)
-
-    box.value = .appleGameController
-    await dispatcher.refreshForCurrentConsumer()
-
-    #expect(created.created.count == 4)
-    #expect(created.created.prefix(2).allSatisfy { $0.closed })
-    #expect(created.created.suffix(2).allSatisfy { !$0.closed })
-    await dispatcher.close()
-  }
-
-  @Test
-  func repeatedConsumerRefreshKeepsCurrentChildren() async throws {
-    let identifiers = [
-      DeviceIdentifier(vendorID: 1, productID: 2), DeviceIdentifier(vendorID: 3, productID: 4),
-    ]
-    let created = AutomaticConsumerBox()
-    let box = AutomaticConsumerBox()
-    let descriptions = identifiers.map { description($0) }
-    let dispatcher = AutomaticUserSpaceOutputDispatcher(
-      deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
-      ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { box.value },
-      builder: { _ in
-        let backend = AutomaticBackendProbe()
-        created.created.append(backend)
-        return backend
-      },
-      observeConsumerChanges: false,
-      descriptionsProvider: { descriptions },
-      identityProvider: { _, consumer in consumer == .sdlHIDAPI ? .genericHID : .appleGameController
-      }
-    )
-
-    try await dispatcher.activate(for: identifiers)
-    let original = created.created
-    box.value = .appleGameController
-    await dispatcher.refreshForCurrentConsumer()
-    await dispatcher.refreshForCurrentConsumer()
-
-    #expect(created.created.count == 4)
-    #expect(original.allSatisfy { $0.closed })
-    #expect(created.created.suffix(2).allSatisfy { !$0.closed })
-    await dispatcher.close()
-  }
-
-  @Test
-
-
   func concurrentFirstDispatchCoalescesAndKeepsBothEvents() async {
     let id = DeviceIdentifier(vendorID: 0x3537, productID: 0x1010)
     let probe = ConcurrentFactoryProbe()
@@ -207,14 +109,12 @@ extension CompatibilityTests {
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { .sdlHIDAPI },
       builder: { _ in probe.make() },
-      observeConsumerChanges: false,
       descriptionsProvider: provider([description(id)])
     )
-    let first = Task { await dispatcher.dispatch(events: [], from: id) }
+    let first = Task { await dispatcher.activateOutput(for: id) }
     await probe.waitForEntered()
-    let second = Task { await dispatcher.dispatch(events: [], from: id) }
+    let second = Task { await dispatcher.activateOutput(for: id) }
 
     #expect(probe.snapshot().0 == 0)
     probe.gate?.signal()
@@ -237,14 +137,12 @@ extension CompatibilityTests {
 
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { .sdlHIDAPI },
       builder: { _ in probe.make() },
-      observeConsumerChanges: false,
       descriptionsProvider: provider([description(first), description(second)])
     )
-    let firstTask = Task { await dispatcher.dispatch(events: [], from: first) }
+    let firstTask = Task { await dispatcher.activateOutput(for: first) }
 
-    let secondTask = Task { await dispatcher.dispatch(events: [], from: second) }
+    let secondTask = Task { await dispatcher.activateOutput(for: second) }
     await probe.waitForEntered()
     await probe.waitForEntered()
     #expect(probe.snapshot().1 == 2)
@@ -266,12 +164,10 @@ extension CompatibilityTests {
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { .sdlHIDAPI },
       builder: { _ in probe.make() },
-      observeConsumerChanges: false,
       descriptionsProvider: provider([description(id)])
     )
-    let task = Task { await dispatcher.dispatch(events: [], from: id) }
+    let task = Task { await dispatcher.activateOutput(for: id) }
     await probe.waitForEntered()
     let stop = Task { await dispatcher.controllerDidStop(id) }
 
@@ -293,12 +189,10 @@ extension CompatibilityTests {
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { .sdlHIDAPI },
       builder: { _ in probe.make() },
-      observeConsumerChanges: false,
       descriptionsProvider: provider([description(id)])
     )
-    let task = Task { await dispatcher.dispatch(events: [], from: id) }
+    let task = Task { await dispatcher.activateOutput(for: id) }
     await probe.waitForEntered()
     let close = Task { await dispatcher.close() }
     #expect(probe.snapshot().2.isEmpty)
@@ -329,24 +223,22 @@ extension CompatibilityTests {
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in .exclusiveRawUSB },
-      consumerProvider: { .sdlHIDAPI },
       builder: { _ in probe.make() },
-      observeConsumerChanges: false,
       descriptionsProvider: provider([description(id)])
     )
-    await dispatcher.dispatch(events: [], from: id)
+    await dispatcher.activateOutput(for: id)
     #expect(probe.snapshot().0 == 1)
     #expect(probe.snapshot().2.first?.counts().0 == 1)
 
     await dispatcher.setOutputSuppressed(true)
     #expect(probe.snapshot().2.first?.counts().1 == 1)
-    await dispatcher.dispatch(events: [], from: id)
+    await dispatcher.activateOutput(for: id)
     #expect(probe.snapshot().0 == 1)
 
     await dispatcher.setOutputSuppressed(false)
     #expect(probe.snapshot().0 == 2)
     #expect(probe.snapshot().2[1].counts().0 == 0)
-    await dispatcher.dispatch(events: [], from: id)
+    await dispatcher.activateOutput(for: id)
     #expect(probe.snapshot().2[1].counts().0 == 1)
 
     await dispatcher.close()

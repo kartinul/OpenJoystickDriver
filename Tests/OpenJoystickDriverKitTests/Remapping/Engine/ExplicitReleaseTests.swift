@@ -12,7 +12,7 @@ struct RemappingExplicitReleaseTests {
     let device = identifier(1)
     #expect(
       state.process(
-        events: [.buttonPressed(.a), .buttonReleased(.a)],
+        inputs: [.press(.faceSouth), .release(.faceSouth)],
         from: device,
         profile: profile,
         at: 0
@@ -21,7 +21,7 @@ struct RemappingExplicitReleaseTests {
     #expect(!state.hasScheduledOutput)
     #expect(
       state.process(
-        events: [.buttonPressed(.b), .buttonReleased(.b)],
+        inputs: [.press(.faceEast), .release(.faceEast)],
         from: device,
         profile: profile,
         at: 1
@@ -36,14 +36,14 @@ struct RemappingExplicitReleaseTests {
     let profile = profile()
     for location: UInt32 in [1, 2] {
       _ = state.process(
-        events: [.buttonPressed(.a)],
+        inputs: [.press(.faceSouth)],
         from: identifier(location),
         profile: profile,
         at: 0
       )
     }
     #expect(
-      state.process(events: [.buttonPressed(.b)], from: identifier(1), profile: profile, at: 1)
+      state.process(inputs: [.press(.faceEast)], from: identifier(1), profile: profile, at: 1)
         .isEmpty
     )
     #expect(state.releaseController(identifier(2)) == [.system(.keyUp(.a))])
@@ -53,10 +53,10 @@ struct RemappingExplicitReleaseTests {
   func explicitReleaseCancelsPulseDeadline() {
     var state = RemappingEngineState()
     let profile = profile(behavior: .pulse)
-    _ = state.process(events: [.buttonPressed(.a)], from: identifier(1), profile: profile, at: 0)
+    _ = state.process(inputs: [.press(.faceSouth)], from: identifier(1), profile: profile, at: 0)
     #expect(state.hasScheduledOutput)
     #expect(
-      state.process(events: [.buttonPressed(.b)], from: identifier(1), profile: profile, at: 1) == [
+      state.process(inputs: [.press(.faceEast)], from: identifier(1), profile: profile, at: 1) == [
         .system(.keyUp(.a))
       ]
     )

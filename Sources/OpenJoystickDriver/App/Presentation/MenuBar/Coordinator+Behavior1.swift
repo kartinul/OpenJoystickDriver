@@ -24,7 +24,7 @@
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-      UNUserNotificationCenter.current().delegate = notificationPresenter
+      bundledNotificationCenter?.delegate = notificationPresenter
       refreshStatus()
       controllerInventoryObserver = NotificationCenter.default.addObserver(
         forName: .ojdControllerInventoryDidChange,
@@ -288,12 +288,7 @@
       if !menuBarViewModel.devices.isEmpty {
         for device in menuBarViewModel.devices {
           let item = NSMenuItem(title: device.name, action: nil, keyEquivalent: "")
-          item.image = controllerMenuImage(
-            for: PublishedVirtualIdentity.presentation(
-              for: device,
-              requested: viewModel.requestedCompatibilityIdentity
-            )
-          )
+          item.image = controllerMenuImage(for: device.publishedIdentityPresentation)
           item.submenu = makeControllerMenu(for: device)
           menu.addItem(item)
         }

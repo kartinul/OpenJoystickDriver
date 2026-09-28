@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Холбогдсон удирдлагуудыг шалгаж байна…";
 "status.refreshingProfile" = "Профайлын төлөвийг сэргээж байна…";
 "status.loadingProfiles" = "Профайл ачаалж байна…";
-"status.updatingIdentity" = "Удирдлагын өвөрмөц байдлыг шинэчилж байна…";
 "status.listening" = "Сонсож байна…";
 "status.readyToListen" = "Сонсоход бэлэн";
 "status.checkingInput" = "Шалгаж байна";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Удирдлагууд";
 "settings.controllerDisconnectedNotifications" = "Хяналтын систем нь буулжээ";
 "settings.controllerDisconnectedShort" = "Хажуулалтад";
-"settings.controllerIdentity" = "Удирдлагын өвөрмөц байдал";
 "settings.controllerNotifications" = "Хяналтын систем холбогдсон";
 "settings.diagnostics" = "Оношлогоо";
 "settings.service" = "Үйлчилгээ";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Цэнэг дуусаж байна";
 "controllers.charging" = "Цэнэглэж байна";
 "controllers.batteryFull" = "Дүүрэн";
+"controllers.notChargeable" = "Цэнэглэх боломжгүй";
 "controllers.batteryAccessibilityDetails" = "Батарей: %@. Цэнэглэх төлөв: %@. Кабелийн төлөв: %@.";
 "controllers.activeProfile" = "Идэвхтэй профайл";
 "controllers.profileChecking" = "Шалгаж байна…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Идэвхтэй профайл боломжгүй";
 "controllers.profileLoadError" = "Идэвхтэй профайлыг ачаалж чадсангүй";
 "controllers.protocol" = "Протокол";
-"controllers.parser" = "Хэвлэл";
 "controllers.serialNumber" = "Серийн дугаар";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Оролтын төгсгөлийн цэг";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Идэвхтэй профайлын алдаа: %@";
 "controllers.accessibilityDetails" = "%@. %@. Протокол: %@. Parser: %@. Серийн дугаар: %@. USB VID/PID: %@. Оролтын төгсгөлийн цэг: %@. Гаралтын төгсгөлийн цэг: %@.";
 "controllers.publishedAs" = "\"";
-"identity.title" = "Удирдлагын өвөрмөц байдал";
-"identity.needsAttention" = "Анхаарал шаардлагатай";
-"identity.error" = "Удирдлагын өвөрмөц байдлын алдаа";
-"identity.updating" = "Удирдлагын өвөрмөц байдлыг шинэчилж байна…";
-"identity.reset" = "Санал болгосон руу буцаах";
-"identity.checking" = "Шалгаж байна";
-"identity.globalScope" = "Энэ нь: OpenJoystickDriver.";
-"identity.unavailable" = "Боломжгүй";
-"identity.notSelected" = "Сонгоогүй";
+"controllers.nativeGamepadNotPublished" = "macOS-ийн үндсэн тоглоомын удирдлага, нийтлээгүй";
+"virtualProfile.advanced" = "Нарийвчилсан";
+"virtualProfile.title" = "Виртуал HID профайл";
+"virtualProfile.modelScope" = "Энэ загварын холбогдсон бүх удирдлагад хамаарна.";
+"virtualProfile.sourceOverride" = "Дарж тохируулах";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Автомат, дарж тохируулахыг татгалзсан";
+"virtualProfile.none" = "Виртуал HID профайл алга";
+"virtualProfile.unavailable" = "Энэ удирдлагыг ямар ч виртуал HID профайл илэрхийлж чадахгүй.";
+"virtualProfile.updating" = "Виртуал HID профайлыг шинэчилж байна…";
+"virtualProfile.live" = "Идэвхтэй профайл";
+"virtualProfile.failure.unknownProfile" = "Энэ виртуал HID профайл тодорхойгүй байна. Юу ч хадгалагдсангүй.";
+"virtualProfile.failure.controllerNotFound" = "Удирдлага салгагдсан эсвэл олдсонгүй. Дарж тохируулга өөрчлөгдөөгүй.";
+"virtualProfile.failure.overrideRejected" = "Дарж тохируулга хадгалагдсан ч энэ удирдлага үүнийг ашиглаж чадахгүй тул автоматаар сонгоно.";
+"virtualProfile.failure.activationFailed" = "Идэвхжүүлэлт амжилтгүй болсон тул өмнөх виртуал HID профайлыг сэргээлээ: %@";
+"virtualProfile.failure.outputDisabled" = "Дарж тохируулга хадгалагдсан бөгөөд виртуал гаралтыг идэвхжүүлэхэд хэрэгжинэ.";
+"virtualProfile.failure.serverStopped" = "Үйлчилгээ зогсов. Дарж тохируулга өөрчлөгдөөгүй.";
+"virtualProfile.failure.persistenceFailed" = "Дарж тохируулгыг хадгалж чадсангүй. Юу ч хадгалагдсангүй.";
+"virtualProfile.storeError" = "Виртуал HID профайлын дарж тохируулгыг унших боломжгүй (%@). Удирдлагууд автоматаар сонгоно.";
+"virtualProfile.legacyIdentityRejected" = "Хуучирсан удирдлагын өвөрмөц байдлын %@ тохиргоог цаашид хэрэглэхгүй. Үүнийг арилгахын тулд controller virtual reset --all-г ажиллуулна уу.";
 "keyboard.noKey" = "Товчлуур сонгоогүй";
 "keyboard.pressKey" = "Товчлуур дарна уу…";
 "keyboard.captureKey" = "Товчлуур барих";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Одоогийн төлөв";
 "debug.runtime" = "Ажиллах орчин";
 "debug.controllers" = "Удирдлагууд";
-"debug.controllerIdentity" = "Удирдлагын өвөрмөц байдал";
 "debug.unavailable" = "Ажиллах орчин · боломжгүй";
 "debug.needsAttention" = "Ажиллах орчин · анхаарал шаардлагатай";
 "debug.diagnostics" = "Оношлогоо";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Удирдлагын гаралт унтарсан.";
 "debug.outputNeedsAttention" = "Удирдлагын гаралт анхаарал шаардлагатай.";
 "debug.serviceUnavailable" = "Үйлчилгээний оношлогоо одоогоор боломжгүй.";
-"error.selectedOutputUnavailable" = "Сонгосон удирдлагын гаралт боломжгүй.";
-"error.selectedOutputEnableFailed" = "Сонгосон удирдлагын гаралтыг идэвхжүүлж чадсангүй.";
 "error.profileChanged" = "Энэ профайлыг өөр газар өөрчилсөн. Дахин ачаалах эсвэл засаад байгаарай.";
 "error.duplicateProfile" = "Тийм нэртэй профайл аль хэдийн байна.";
 "error.profileMissing" = "Тэр профайл одоо боломжгүй.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Ажиллах орчин";
 "common.controllers" = "Удирдлагууд";
 "common.profiles" = "Профайлууд";
-"common.controllerIdentity" = "Удирдлагын өвөрмөц байдал";
 "common.protocol" = "Протокол";
-"common.parser" = "Хэвлэл";
 "common.serialNumber" = "Серийн дугаар";
 "common.inputEndpoint" = "Оролтын төгсгөлийн цэг";
 "common.outputEndpoint" = "Гаралтын төгсгөлийн цэг";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Сонгон шалгагдсан профилийн элемент нь одоо байхгүй.";
 "cli.catalog.app_ready.summary" = "Баталгаажсан аппын үйлчилгээний бэлэн байдлыг шалгах";
 "cli.catalog.app_status.summary" = "Аппын үйлчилгээний төлөвийг харуулах";
-"cli.catalog.compat.summary" = "Виртуал удирдлагын нийцлийг удирдах";
 "cli.catalog.controller_list.summary" = "Холбогдсон удирдлагуудыг жагсаах";
 "cli.catalog.controller_output.summary" = "Дэмжигдсэн физик удирдлагын гаралтыг шалгах";
 "cli.catalog.controller_packets.summary" = "Сүүлийн удирдлагын пакетуудыг харуулах";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Драйвер болон ажиллах орчны төлөвийг харуулах";
 "cli.catalog.test.summary" = "Виртуал удирдлагын оролт хүргэлтийг шалгах";
 "cli.catalog.update.summary" = "GitHub дээрх шинэчлэлтийг шалгах";
-"cli.compat.identity" = "нийцлийн өвөрмөц байдал: %@";
-"cli.compat.identity_unknown" = "нийцлийн өвөрмөц байдал: үл мэдэгдэх";
-"cli.compat.set_failed" = "Нийцлийн өвөрмөц байдлыг %@ болгож тохируулж чадсангүй. Суулгасан аппыг ажиллуулаад Оролтыг хянах болон Хүртээмжийн хандалтыг шалгана уу.";
-"cli.compat.usage" = "Хэрэглээ: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "хэрэглэгчийн орон зайн төлөв: %@";
 "cli.controller.allAppleEntries" = "Apple каталогийн бүх яг тохирох бичлэгүүд:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Apple хосууд : %d яг тохирох VID/PID бичлэг";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Холбогдсон удирдлага --device %@-тай тохирохгүй.";
 "cli.controller.selection.multiple" = "Олон удирдлага тохирч байна. --device-аар нэгийг сонгоно уу:\n  %@";
 "cli.controller.selection.none" = "Удирдлага холбогдоогүй.";
+"cli.controller.virtual.live" = "Виртуал HID профайл: %@ (%@)";
+"cli.controller.virtual.none" = "Виртуал HID профайл: байхгүй (%@)";
+"cli.controller.virtual.failed" = "Виртуал HID профайлын хүсэлт амжилтгүй: %@";
+"cli.controller.virtual.unknown_profile" = "Үл мэдэгдэх виртуал HID профайл «%@». Эдгээрийн нэгийг ашиглана уу: %@.";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» нь виртуал HID профайл шаардана. Эдгээрийн нэгийг ашиглана уу: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "«--all»-г --vid, --pid эсвэл --device-тэй хамт ашиглах боломжгүй.";
+"cli.controller.virtual.reset_all.success" = "OK: виртуал HID профайлын бүх дарж тохируулгыг арилгалаа.";
+"cli.controller.virtual.reset_all.failed" = "Тохиргоог дахин тохируулж чадсангүй. Суулгасан аппыг ажиллуулаад зөвшөөрлийг нь шалгана уу.";
 "cli.controller.selection.vid_pid_missing" = "Холбогдсон удирдлага %@:%@-тай тохирохгүй.";
 "cli.controller.selection.vid_pid_pair" = "VID болон PID хоёуланг дамжуул эсвэл хоёуланг орхи.";
 "cli.controller.serviceControllers" = "Удирдлагууд (ажиллаж буй аппын үйлчилгээнээс):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Зөвлөгөө: шаардлагатай эрх болон Оролтыг хянах хандалтыг өгнө үү.";
 "cli.controller.usbControllers" = "USB удирдлагууд (анги 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "VID болон PID хоёуланг дамжуул, эсвэл нэг удирдлага холбогдсон үед хоёуланг орхи.";
-"cli.diagnose.advisory_candidate" = "    Зөвлөх протоколын нэр дэвшигч: %@";
 "cli.diagnose.app_missing" = "  Апп: %@ дээр байхгүй";
 "cli.diagnose.app_missing_fix" = "  Засвар: аппыг бүтээж /Applications-д суулгана уу";
 "cli.diagnose.app_present" = "  Апп: байна";
 "cli.diagnose.binary_path" = "Бинар: %@";
-"cli.diagnose.catalog_conflict" = "      Ажиглалт каталогийн бүлэгтэй зөрчилдөнө; задлагч өөрчлөгдөөгүй";
-"cli.diagnose.catalog_parser" = "      Каталогийн задлагч %@ хэвээр (%@)";
 "cli.diagnose.dext_found" = "  Олдсон .dext багцууд:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      0x төгсгөл%02X %@ %@ maxPacket=%@ интервал=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Үл мэдэгдэх хариу муруй «%@».";
 "cli.mapping.double_tap_format" = "--double-tap <ms>:<target> хүлээнэ, ж.ш. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Хэрэглээ: OpenJoystickDriver --headless map <command>\n\nКомандууд:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nЭх үүсвэр: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nЗорилт: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nТэнхлэгийн сонголтууд:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nТурбо сонголтууд (зөвхөн гар болон хулганы товч):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nИдэвхжүүлэх сонголтууд (зөвхөн гар болон хулганы товч, турботой харилцан үл нийцэх):\n  --long-hold <ms>:<target>     ж.ш. --long-hold 500:key:b\n  --double-tap <ms>:<target>    ж.ш. --double-tap 300:key:c\n\n<profile> UUID эсвэл яг тохирох, том жижиг үсэг ялгахгүй профайлын нэр авна.\n<id> аравтын эсвэл 0x угтвартай арван зургаатын утга авна.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Хэрэглээ: OpenJoystickDriver --headless map <command>\n\nКомандууд:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nЭх үүсвэр: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nЗорилт: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nТэнхлэгийн сонголтууд:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nТурбо сонголтууд (зөвхөн гар болон хулганы товч):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nИдэвхжүүлэх сонголтууд (зөвхөн гар болон хулганы товч, турботой харилцан үл нийцэх):\n  --long-hold <ms>:<target>     ж.ш. --long-hold 500:key:b\n  --double-tap <ms>:<target>    ж.ш. --double-tap 300:key:c\n\n<profile> UUID эсвэл яг тохирох, том жижиг үсэг ялгахгүй профайлын нэр авна.\n<id> аравтын эсвэл 0x угтвартай арван зургаатын утга авна.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ 16 битийн аравтын эсвэл 0x угтвартай арван зургаатын танигч байх ёстой.";
 "cli.mapping.jsonEncodeFailed" = "UTF-8 JSON кодлож чадсангүй.";
 "cli.mapping.layer_action_unknown" = "Үл мэдэгдэх давхаргын үйлдэл «%@». Хүлээгдэх: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver аппын үйлчилгээ ажиллахгүй байна.";
 "cli.runtime.sample_limit" = "Тохиргоо %d түүвэр цуглуулна; --interval-ms-ийг нэмэгдүүлнэ үү.";
 "cli.runtime.stable_note" = "Тогтвортой хязгаарлагдмал нэвчилт энэ ачааллын нотолгоо болохоос бүх алдагдал байхгүй гэсэн баталгаа биш.";
-"cli.settings.reset.failed" = "Тохиргоог дахин тохируулж чадсангүй. Суулгасан аппыг ажиллуулаад зөвшөөрлийг нь шалгана уу.";
-"cli.settings.reset.next" = "Дараагийн: нийцлийн өвөрмөц байдлыг сонгохын тулд compat set <identity> ажиллуулна уу.";
-"cli.settings.reset.success" = "OK: аппын үйлчилгээний тохиргоог дахин тохирууллаа.";
 "cli.status.access_denied" = "Хандалт татгалзвал --headless permissions request ажиллуулаад Системийн тохиргоонд Оролтыг хянах болон Хүртээмжийг зөвшөөрнө үү.";
 "cli.status.heading" = "OpenJoystickDriver төлөв";
 "cli.status.json_error" = "Төлөвийн JSON кодлож чадсангүй: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Төлөв       : %@";
 "cli.updates.unknown_option" = "Үл мэдэгдэх шинэчлэлтийн сонголт: %@";
 "common.unknown" = "Үл мэдэгдэх";
-"compatibility.appleGameController" = "Алма GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (Оригинал)";
 "developer.buttons" = "Товчнууд";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B товч";
 "inputTest.bCircle" = "Б / Төмөр";
 "inputTest.brightness" = "Өргөдлийн";
-"inputTest.circle" = "Тойрог";
 "inputTest.color" = "Цэнц";
 "inputTest.controls" = "Шууд оролт";
-"inputTest.cross" = "Загалмай";
 "inputTest.disconnected" = "Хяналтын систем нь буулжээ";
 "inputTest.dpadDown" = "Чиглэлийн товч доош";
 "inputTest.dpadLeft" = "Чиглэлийн товч зүүн";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Энэ удирдлагын гэрэл хөдөлгөөнөөрөө тоног төхөөрөмж байхгүй.";
 "inputTest.live" = "Дахин орж ирэх";
 "inputTest.menu" = "Цэс";
-"inputTest.minus" = "Хасах";
 "inputTest.off" = "Унтраасан";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Сонголт";
 "inputTest.outputError" = "Физикийн гарааны алдаа";
 "inputTest.outputRejected" = "Хөдөлмөрийн удирдлага энэ үр дүнгийн шинжилгээг үгүйсгэсэн.";
 "inputTest.permissionRequired" = "Дотооддоо хяналтын зөвшөөрөл шаарддаг";
 "inputTest.playerIndicator" = "Тоглогчдын үзүүлэлт";
-"inputTest.plus" = "Нэмэх";
 "inputTest.pressed" = "Дарагдсан";
-"inputTest.psButton" = "PS товч";
 "inputTest.released" = "Сулласан";
 "inputTest.rightBumper" = "Баруун бампер";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Баруун Y";
 "inputTest.rumble" = "Хурд";
 "inputTest.rumbleUnavailable" = "Rumble-ийг энэ захирал дэмжихгүй.";
-"inputTest.share" = "Хуваалцах";
-"inputTest.square" = "Дөрвөлжин";
 "inputTest.stale" = "Дахин орж ирсэн";
 "inputTest.start" = "Дахин орж ирэх шалгалтыг эхлүүлнэ";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Шууд оролт";
 "inputTest.tabMotion" = "Хөдөлмөрийн";
 "inputTest.tabOutput" = "Гадаад хэрэглээ";
-"inputTest.steamButton" = "Steam товч";
 "inputTest.summary" = "Тэс төмөр, дугуй, триггер, дуулган, хяналтын тоног төхөөрөмж гэрэл.";
 "inputTest.testRumble" = "Тэсний Rumble";
 "inputTest.title" = "Тэмцэлтийн туршилтын";
-"inputTest.triangle" = "Гурвалжин";
 "inputTest.unavailable" = "Дахин орж ирэхгүй";
 "inputTest.view" = "Харах";
 "inputTest.windowTitle" = "Тэмцэлтийн туршилтын %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Сонгон сонгогдсон Joy-Cons-ийг хамарж чадахгүй.";
 "profiles.joyConExplicitSession" = "Тодруулсан дуудлагатай эхэллээ";
 "profiles.joyConSessionState" = "Урьдчилсан хажууд";
-"profiles.gyro.virtualMotion" = "Алгаараа калибрлагдсан цахим хөдөлгөөн";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ дуул (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Хяналтын систем нь буулжээ";
 "controllers.resume" = "Дахин оролдох";
 "controllers.disconnectFromOJD" = "Хяналтын систем нь буулжээ";
-"error.compatibilityTransitionDetailed" = "Сонгосон удирдлагын гаралтыг идэвхжүүлж чадсангүй. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Сонгосон удирдлагын гаралтыг идэвхжүүлж чадсангүй.";
 "cli.catalog.controller_disconnect.summary" = "Хяналтын систем нь буулжээ";
 "cli.catalog.controller_resume.summary" = "Дахин оролдох — Хяналтын систем нь буулжээ";
+"cli.catalog.controller_virtual_set.summary" = "Хянагчийн виртуал HID профайлыг дарж тохируулах";
+"cli.catalog.controller_virtual_reset.summary" = "Хянагчийн виртуал HID профайлыг автоматаар сонгох, эсвэл --all ашиглан бүх дарааллыг цэвэрлэх";
 "cli.controller.disconnected" = "Хяналтын систем нь буулжээ";
 "cli.controller.resumed" = "Дахин орж ирэх";
 

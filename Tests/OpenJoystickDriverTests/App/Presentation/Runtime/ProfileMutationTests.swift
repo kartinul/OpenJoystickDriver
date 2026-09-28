@@ -190,7 +190,7 @@ struct ProfileMutationTests {
     let ignored = makeProfile(id: original.id, name: "Ignored")
     let gateway = GatewayStub(
       snapshotPayload: snapshot(profiles: [original]),
-      updateDelayNanoseconds: 100_000_000
+      updateDelayNanoseconds: 500_000_000
     )
     let viewModel = await MainActor.run { RuntimeViewModel(gateway: gateway) }
     let firstRequest = RuntimeMutationRequest(operation: .update(profileID: original.id))
@@ -203,7 +203,10 @@ struct ProfileMutationTests {
         request: firstRequest
       )
     }
-    try? await Task.sleep(nanoseconds: 10_000_000)
+    let deadline = ContinuousClock.now.advanced(by: .seconds(5))
+    while await MainActor.run(body: { viewModel.activeMutationID }) == nil,
+      ContinuousClock.now < deadline
+    { try? await Task.sleep(nanoseconds: 2_000_000) }
     let firstMutationID = await MainActor.run { viewModel.activeMutationID }
     #expect(
       await MainActor.run { viewModel.activeMutationOperation == .update(profileID: original.id) }

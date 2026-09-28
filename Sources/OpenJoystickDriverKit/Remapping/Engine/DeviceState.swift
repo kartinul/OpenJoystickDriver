@@ -6,9 +6,7 @@ struct RemappingDeviceState {
   let gyroBindingID = UUID()
   let motionSteeringBindingID = UUID()
   var gyroDeadline: UInt64?
-  var virtualMotionDeadline: UInt64?
   var motionStickDeadline: UInt64?
-  var hasVirtualMotionOutput = false
   var gyroToggleActive = false
   var gyroAwaitingBaseline = true
   var gyroTrackball = RemappingMotionTrackball()

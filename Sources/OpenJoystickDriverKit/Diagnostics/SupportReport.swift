@@ -58,10 +58,9 @@ public struct SupportReport: Codable, Sendable {
     public let name: String
     public let vendorID: UInt16
     public let productID: UInt16
-    public let parser: String
+    public let protocolBinding: String
     public let connection: String
     public let serialNumberPresent: Bool
-    public let protocolVariant: String
     public let quirks: [String]
     public let inputEndpoint: UInt8
     public let outputEndpoint: UInt8
@@ -69,7 +68,7 @@ public struct SupportReport: Codable, Sendable {
     public let postHandshakeSettleMs: Int
     public let preferredBackends: [String]
     public let physicalOutputCapabilities: PhysicalControllerOutputCapabilities
-    public let battery: ControllerBatteryTelemetry?
+    public let connectionState: ControllerConnectionState?
     public let sessionState: ControllerSessionState
     public let startupCommandStatus: String?
     public let inputHealth: ControllerInputHealth
@@ -163,10 +162,9 @@ public struct SupportReport: Codable, Sendable {
         name: $0.name,
         vendorID: $0.vendorID,
         productID: $0.productID,
-        parser: $0.parser,
+        protocolBinding: $0.protocolBinding.rawValue,
         connection: $0.connection,
         serialNumberPresent: $0.serialNumber?.isEmpty == false,
-        protocolVariant: $0.protocolVariant.rawValue,
         quirks: $0.quirks.sorted(),
         inputEndpoint: $0.inputEndpoint,
         outputEndpoint: $0.outputEndpoint,
@@ -174,7 +172,7 @@ public struct SupportReport: Codable, Sendable {
         postHandshakeSettleMs: $0.postHandshakeSettleMs,
         preferredBackends: $0.preferredBackends.sorted(),
         physicalOutputCapabilities: $0.physicalOutputCapabilities,
-        battery: $0.battery,
+        connectionState: $0.connectionState,
         sessionState: $0.sessionState,
         startupCommandStatus: $0.startupCommandStatus,
         inputHealth: $0.inputHealth

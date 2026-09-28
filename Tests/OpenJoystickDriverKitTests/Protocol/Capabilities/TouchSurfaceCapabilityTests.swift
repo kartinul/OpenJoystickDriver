@@ -8,7 +8,7 @@ struct TouchSurfaceCapabilityTests {
   func advertisedSurfacesMatchDecodedFrames(_ productID: UInt16) throws {
     let steam = productID == 0x1102
     let identifier = DeviceIdentifier(vendorID: steam ? 0x28DE : 0x054C, productID: productID)
-    let parser = ParserRegistry().parser(for: identifier)
+    let parser = try catalogParser(identifier)
     var report = [UInt8](repeating: 0, count: 64)
     report[0] = 1
     if steam {
@@ -18,29 +18,21 @@ struct TouchSurfaceCapabilityTests {
     } else if productID == 0x05C4 {
       report[33] = 1
     }
-    let events = try parser.parse(data: Data(report))
-    let frames = events.compactMap { event -> ControllerTouchSample? in
-      if case .touchSample(let frame) = event { return frame }
-      return nil
-    }
+    let events = try parser.parseReport(Data(report))
+    let frames = events?.touchFrames ?? []
     let expected: [ControllerTouchSurface] = steam ? [.left, .right] : [.primary]
     #expect(frames.map(\.surface) == expected)
-    #expect(parser.physicalInputCapabilities.touchSurfaces == expected)
+    #expect(parser.capabilities.touchSurfaces == expected)
+    #expect(frames.allSatisfy { $0.contacts.count == Int(parser.capabilities.touchContactCount) })
+    let data = try JSONEncoder().encode(parser.capabilities)
     #expect(
-      frames.allSatisfy {
-        $0.contacts.count == Int(parser.physicalInputCapabilities.touchContactsPerFrame)
-      }
-    )
-    let data = try JSONEncoder().encode(parser.physicalInputCapabilities)
-    #expect(
-      try JSONDecoder().decode(PhysicalControllerInputCapabilities.self, from: data)
-        == parser.physicalInputCapabilities
+      try JSONDecoder().decode(ControllerCapabilities.self, from: data) == parser.capabilities
     )
   }
 
   @Test
   func unavailableTouchHasNoInventedSurface() {
-    #expect(SwitchProParser().physicalInputCapabilities.touchSurfaces.isEmpty)
-    #expect(PhysicalControllerInputCapabilities.none.touchSurfaces.isEmpty)
+    #expect(Switch1Driver().capabilities.touchSurfaces.isEmpty)
+    #expect(ControllerCapabilities(controls: [.leftTrackpadTouch]).touchSurfaces.isEmpty)
   }
 }

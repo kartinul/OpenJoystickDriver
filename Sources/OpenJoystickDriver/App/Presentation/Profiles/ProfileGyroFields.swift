@@ -14,10 +14,6 @@
           Text(label("leftStick", "Left stick")).tag(RemappingGyroOutputMode.leftStick)
           Text(label("rightStick", "Right stick")).tag(RemappingGyroOutputMode.rightStick)
         }
-        Toggle(
-          label("virtualMotion", "Forward calibrated virtual motion"),
-          isOn: $draft.virtualMotion
-        )
         if draft.mode != .disabled {
           ProfileTrackballFields(draft: $draft.trackball)
           if draft.mode == .mouse {

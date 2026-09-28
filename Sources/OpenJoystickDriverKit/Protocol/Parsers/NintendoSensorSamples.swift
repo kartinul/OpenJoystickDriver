@@ -1,5 +1,7 @@
 /// Nintendo reports contain three IMU samples but no reliable device sample timestamp.
 /// Estimates their spacing from bounded host receipt intervals, retaining gaps after packet loss.
+/// Sample time is the first report's receipt time plus the estimated elapsed time, so the newest
+/// sample of each report lands up to 10 ms after that report's receipt.
 struct NintendoSensorSamples {
   private var firstReceipt: UInt64?
   private var previousReceipt: UInt64 = 0
@@ -7,12 +9,19 @@ struct NintendoSensorSamples {
   private var averageInterval: UInt64 = 15_000_000
   private var sequence: UInt64 = 0
 
+  /// Starts a new time session at the next report; the sequence index keeps counting.
+  mutating func reset() {
+    let next = sequence
+    self = Self()
+    sequence = next
+  }
+
   mutating func decode(
     _ bytes: [UInt8],
     receivedAt: UInt64,
     layout: NintendoControllerLayout = .pro,
     calibration: NintendoMotionCalibration = .nominal
-  ) -> [ControllerEvent] {
+  ) -> [ControllerMotionSample] {
     guard bytes.count >= 49 else { return [] }
     let end: UInt64
     let spacing: UInt64
@@ -33,10 +42,11 @@ struct NintendoSensorSamples {
       spacing = 5_000_000
     }
     previousEnd = end
-    return (0..<3).map { index in
+    let anchor = firstReceipt ?? receivedAt
+    return (0..<3).compactMap { index in
       let timestamp = ControllerSampleTimestamp(
         rawCounter: UInt32(bytes[1]),
-        elapsedNanoseconds: end - UInt64(2 - index) * spacing,
+        monotonic: MonotonicTimestamp(nanoseconds: anchor + end - UInt64(2 - index) * spacing),
         tickNanosecondsNumerator: nil,
         tickNanosecondsDenominator: nil,
         sequenceIndex: sequence,
@@ -44,15 +54,11 @@ struct NintendoSensorSamples {
       )
       sequence += 1
       let offset = 13 + index * 12
-      let gyro = Self.vector(bytes, at: offset + 6)
-      let accel = Self.vector(bytes, at: offset)
-      return .motionSample(
-        ControllerMotionSample(
-          timestamp: timestamp,
-          rawGyroscope: gyro,
-          rawAccelerometer: accel,
-          physicalReading: calibration.reading(gyro: gyro, accel: accel, layout: layout)
-        )
+      return calibration.sample(
+        timestamp: timestamp,
+        gyro: Self.vector(bytes, at: offset + 6),
+        accel: Self.vector(bytes, at: offset),
+        layout: layout
       )
     }
   }

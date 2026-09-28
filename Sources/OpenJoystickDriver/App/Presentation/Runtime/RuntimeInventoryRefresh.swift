@@ -139,6 +139,11 @@ extension RuntimeViewModel {
   }
 
   func publishControllerInventory(_ devices: [ApplicationServiceDeviceDescription]) {
+    let connectedModels = Set(devices.map(RuntimeControllerModel.init))
+    let staleModels = virtualHIDProfileOverrideStates.filter { model, state in
+      !state.inFlight && !connectedModels.contains(model)
+    }.keys
+    for model in staleModels { virtualHIDProfileOverrideStates[model] = nil }
     let identifiers = devices.map(\.runtimeIdentifier)
     guard identifiers != controllerRuntimeIdentifiers else { return }
     controllerRuntimeIdentifiers = identifiers

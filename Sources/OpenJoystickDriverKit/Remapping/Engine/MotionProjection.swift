@@ -7,22 +7,6 @@ struct RemappingGyroProjection: Equatable {
   let yawDegreesPerSecond: Double
 }
 
-extension RemappingProcessedMotion {
-  func projected(
-    in space: RemappingMotionSpace,
-    yawRelaxation: Double = 1.41,
-    sideReductionThreshold: Double = 0.125
-  ) -> RemappingGyroProjection? {
-    RemappingMotionProjection.project(
-      calibratedGyro,
-      gravity: fused.gravityG,
-      space: space,
-      yawRelaxation: yawRelaxation,
-      sideReductionThreshold: sideReductionThreshold
-    )
-  }
-}
-
 enum RemappingMotionProjection {
   static func project(
     _ gyro: ControllerMotionVector,

@@ -89,16 +89,10 @@ extension RuntimePresentation {
         "error.timeout",
         fallback: "OpenJoystickDriver is taking too long to respond."
       )
-    case ApplicationServiceClientError.invalidResponse,
-      ApplicationServiceGatewayError.invalidCompatibilityIdentity:
+    case ApplicationServiceClientError.invalidResponse:
       return OJDLocalized.string(
         "error.unexpected",
         fallback: "OpenJoystickDriver returned an unexpected result."
-      )
-    case ApplicationServiceGatewayError.compatibilityIdentityChangeRejected:
-      return OJDLocalized.string(
-        "error.selectedOutputEnableFailed",
-        fallback: "The selected controller output could not be enabled."
       )
     default:
       return OJDLocalized.string(
@@ -258,11 +252,5 @@ extension RuntimePresentation {
       let value = String(part)
       return value.isEmpty ? value : value.prefix(1).uppercased() + value.dropFirst()
     }.joined(separator: " ")
-  }
-
-  static func normalizedInputName(_ value: String) -> String {
-    value.lowercased().unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) }.map(
-      String.init
-    ).joined()
   }
 }

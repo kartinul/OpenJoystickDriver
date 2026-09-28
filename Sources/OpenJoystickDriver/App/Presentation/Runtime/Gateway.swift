@@ -9,11 +9,11 @@ protocol RuntimeStatusGateway: Sendable {
   func requestPermission(
     _ requirement: PermissionManager.Requirement
   ) async throws -> PermissionManager.Snapshot
-  func deviceInputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState?
+  func controllerState(for selector: RuntimeDeviceSelector) async throws -> ControllerState?
 }
 
 protocol ControllerDiagnosticsGateway: Sendable {
-  func deviceInputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState?
+  func controllerState(for selector: RuntimeDeviceSelector) async throws -> ControllerState?
   func packetLog(for selector: RuntimeDeviceSelector) async throws -> [PacketLogEntry]
 }
 
@@ -58,11 +58,13 @@ protocol RemappingGateway: Sendable {
 }
 
 protocol CompatibilityGateway: Sendable {
-  func compatibilityIdentity() async throws -> CompatibilityIdentity
-  func setCompatibilityIdentity(_ identity: CompatibilityIdentity) async throws -> Bool
-  func setCompatibilityIdentityDetailed(
-    _ identity: CompatibilityIdentity
-  ) async throws -> CompatibilityIdentityTransitionResult
+  func setVirtualHIDProfileOverride(
+    _ profile: VirtualHIDProfileID,
+    for selector: RuntimeDeviceSelector
+  ) async throws -> VirtualHIDProfileOverrideResult
+  func resetVirtualHIDProfileOverride(
+    for selector: RuntimeDeviceSelector
+  ) async throws -> VirtualHIDProfileOverrideResult
   func suspendController(_ selector: RuntimeDeviceSelector) async throws -> ControllerSuspendResult
   func resumeController(_ selector: RuntimeDeviceSelector) async throws -> ControllerResumeResult
   func disconnectWirelessController(
@@ -71,36 +73,18 @@ protocol CompatibilityGateway: Sendable {
 }
 
 extension CompatibilityGateway {
-  func setCompatibilityIdentityDetailed(
-    _ identity: CompatibilityIdentity
-  ) async throws -> CompatibilityIdentityTransitionResult {
-    let succeeded = try await setCompatibilityIdentity(identity)
-    let live = succeeded ? identity : try? await compatibilityIdentity()
-    return CompatibilityIdentityTransitionResult(
-      requestedIdentity: identity,
-      liveIdentity: live,
-      retainedIdentity: succeeded ? nil : live,
-      failure: succeeded
-        ? nil : CompatibilityIdentityTransitionFailure(phase: .activation, cause: .unavailable)
-    )
+  func suspendController(_ selector: RuntimeDeviceSelector) throws -> ControllerSuspendResult {
+    ControllerSuspendResult(state: .active, failure: .notFound)
   }
 
-  func suspendController(_ selector: RuntimeDeviceSelector) async throws -> ControllerSuspendResult
-  {
-    _ = try? await compatibilityIdentity()
-    return ControllerSuspendResult(state: .active, failure: .notFound)
-  }
-
-  func resumeController(_ selector: RuntimeDeviceSelector) async throws -> ControllerResumeResult {
-    _ = try? await compatibilityIdentity()
-    return ControllerResumeResult(state: .suspended, failure: .notFound)
+  func resumeController(_ selector: RuntimeDeviceSelector) throws -> ControllerResumeResult {
+    ControllerResumeResult(state: .suspended, failure: .notFound)
   }
 
   func disconnectWirelessController(
     _ selector: RuntimeDeviceSelector
-  ) async throws -> WirelessControllerDisconnectResult {
-    _ = try? await compatibilityIdentity()
-    return WirelessControllerDisconnectResult(state: .active, failure: .notFound)
+  ) throws -> WirelessControllerDisconnectResult {
+    WirelessControllerDisconnectResult(state: .active, failure: .notFound)
   }
 }
 
@@ -109,23 +93,11 @@ protocol ApplicationServiceGateway: RuntimeStatusGateway, ControllerDiagnosticsG
 {}
 
 enum ApplicationServiceGatewayError: Error, LocalizedError, Sendable, Equatable {
-  case invalidCompatibilityIdentity(String)
-  case compatibilityIdentityChangeRejected(CompatibilityIdentity)
   case profileRecoveryUnavailable
   case controllerSessionChangeRejected
 
   var errorDescription: String? {
     switch self {
-    case .invalidCompatibilityIdentity:
-      return OJDLocalized.string(
-        "error.selectedOutputUnavailable",
-        fallback: "The selected controller output is unavailable."
-      )
-    case .compatibilityIdentityChangeRejected:
-      return OJDLocalized.string(
-        "error.selectedOutputEnableFailed",
-        fallback: "The selected controller output could not be enabled."
-      )
     case .profileRecoveryUnavailable:
       return OJDLocalized.string("profiles.unavailable", fallback: "Profiles unavailable")
     case .controllerSessionChangeRejected:
@@ -161,41 +133,16 @@ extension RemappingGateway {
 }
 
 extension ApplicationServiceClientGateway: InputTestDeviceGateway {
-  func inputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState? {
-    try await deviceInputState(for: selector)
-  }
-
-  func sendRumble(
-    for selector: RuntimeDeviceSelector,
-    left: UInt8,
-    right: UInt8,
-    leftTrigger: UInt8,
-    rightTrigger: UInt8,
-    durationMilliseconds: Int
-  ) async throws -> Bool {
+  func sendControllerOutput(
+    _ command: ControllerOutputCommand,
+    for selector: RuntimeDeviceSelector
+  ) async throws -> ControllerOutputResult {
     await ensureConnection()
-    return try await client.sendPhysicalRumble(
+    return try await client.sendControllerOutput(
+      command,
       vendorID: selector.vendorID,
       productID: selector.productID,
-      runtimeIdentifier: selector.runtimeIdentifier,
-      left: left,
-      right: right,
-      lt: leftTrigger,
-      rt: rightTrigger,
-      durationMs: durationMilliseconds
-    )
-  }
-
-  func setPlayerIndicator(
-    for selector: RuntimeDeviceSelector,
-    indicator: PhysicalPlayerIndicator
-  ) async throws -> Bool {
-    await ensureConnection()
-    return try await client.setPhysicalPlayerIndicator(
-      vendorID: selector.vendorID,
-      productID: selector.productID,
-      runtimeIdentifier: selector.runtimeIdentifier,
-      indicator: indicator
+      runtimeIdentifier: selector.runtimeIdentifier
     )
   }
 
@@ -225,16 +172,6 @@ extension ApplicationServiceClientGateway: InputTestDeviceGateway {
       productID: selector.productID,
       runtimeIdentifier: selector.runtimeIdentifier,
       token: token
-    )
-  }
-
-  func setBrightness(for selector: RuntimeDeviceSelector, brightness: UInt8) async throws -> Bool {
-    await ensureConnection()
-    return try await client.setPhysicalBrightness(
-      vendorID: selector.vendorID,
-      productID: selector.productID,
-      runtimeIdentifier: selector.runtimeIdentifier,
-      brightness: brightness
     )
   }
 

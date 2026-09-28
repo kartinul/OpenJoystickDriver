@@ -4,20 +4,35 @@ import Foundation
 private enum RuntimeDeviceIdentity {
   /// Ephemeral by construction: this key is generated once per process and is never persisted.
   private static let key = SymmetricKey(size: .bits256)
+  private static let tokenLock = NSLock()
+  // Guarded by `tokenLock`. Output routing asks for tokens per input report, and each is an HMAC.
+  nonisolated(unsafe) private static var tokens: [DeviceIdentifier: String?] = [:]
 
   static func token(for identifier: DeviceIdentifier) -> String? {
-    let model = String(format: "%04X:%04X:", identifier.vendorID, identifier.productID)
+    if let cached = tokenLock.withLock({ tokens[identifier] }) { return cached }
+    let token = computeToken(for: identifier)
+    tokenLock.withLock { tokens[identifier] = token }
+    return token
+  }
+
+  private static func computeToken(for identifier: DeviceIdentifier) -> String? {
+    let identity = identifier.controllerIdentity
+    let model = String(format: "%04X:%04X:", identity.vendorID, identity.productID)
     var components: [String] = []
     if let locationID = identifier.locationID {
       components.append(String(format: "L:%08X", locationID))
     }
-    if let serialNumber = identifier.serialNumber, !serialNumber.isEmpty {
-      components.append("S:" + serialNumber)
+    if let serialNumber = identity.serialNumber {
+      // Length-prefixed so a serial containing `:` cannot mimic a later component.
+      components.append("S:\(serialNumber.utf8.count):" + serialNumber)
     }
     guard !components.isEmpty else { return nil }
-    let identity = Data((model + components.joined(separator: ":")).utf8)
+    if let interfaceNumber = identifier.interfaceNumber {
+      components.append(String(format: "I:%02X", interfaceNumber))
+    }
+    let preimage = Data((model + components.joined(separator: ":")).utf8)
 
-    let digest = Data(HMAC<SHA256>.authenticationCode(for: identity, using: key))
+    let digest = Data(HMAC<SHA256>.authenticationCode(for: preimage, using: key))
     return "E-"
       + digest.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(
         of: "/",
@@ -26,54 +41,75 @@ private enum RuntimeDeviceIdentity {
   }
 }
 
-/// Identifies a game controller for profile matching and multi-controller support.
+/// The product and physical identity of a controller: vendor ID, product ID and serial number.
 ///
-/// Three levels of matching, from most specific to least:
-/// 1. **Exact** - vendor ID + product ID + serial number. Matches one physical device.
-/// 2. **Model** - vendor ID + product ID only. All controllers of the same model share a profile.
-/// 3. **Location** - vendor ID + product ID + location ID. A fallback for controllers that
-///    do not report a serial number. Location IDs can change when you unplug and replug.
-public struct DeviceIdentifier: Hashable, Sendable {
+/// Two identities with the same non-nil serial number name the same physical device, whichever
+/// location or interface it is reached through. Without a serial number an identity names only
+/// the model, which all controllers of that model share.
+public struct ControllerIdentity: Hashable, Sendable {
   /// Vendor ID (VID) - identifies who made the controller (e.g. 0x3537 = Gamesir).
   public let vendorID: UInt16
   /// Product ID (PID) - identifies which model of controller (e.g. 0x1010 = G7 SE).
   public let productID: UInt16
   /// USB serial number reported by the controller.
   ///
-  /// Nil if the controller does not provide one.
+  /// Nil if the controller does not provide one; an empty serial is stored as nil.
   public let serialNumber: String?
-  /// USB location encoded as `(bus << 16 | address)`.
+
+  /// Creates a new ControllerIdentity.
+  public init(vendorID: UInt16, productID: UInt16, serialNumber: String? = nil) {
+    self.vendorID = vendorID
+    self.productID = productID
+    self.serialNumber = serialNumber?.isEmpty == false ? serialNumber : nil
+  }
+
+  /// Whether this identity names one physical device rather than every unit of its model.
+  public var identifiesPhysicalDevice: Bool { serialNumber != nil }
+}
+
+/// Identifies one logical controller for profile matching and multi-controller support.
+///
+/// The key is the controller's `ControllerIdentity` plus the location and interface it is
+/// reached through, so each interface of one physical device keys its own logical controller.
+/// The location tells apart controllers whose identity has no serial number; it can change when
+/// you unplug and replug.
+public struct DeviceIdentifier: Hashable, Sendable {
+  /// The product and physical identity this logical controller belongs to.
+  public let controllerIdentity: ControllerIdentity
+  /// IOKit location ID: the bus number in the high byte, then one port-number nibble per hub
+  /// tier (`0x00130000` is bus 0, hub port 1, port 3). HID connections carry their routing
+  /// location.
   ///
   /// Stable within a single session but may change after reboot or replug.
   /// Used as a fallback when serial is unavailable.
   public let locationID: UInt32?
+  /// USB interface number of the claimed interface, or nil when the key names no interface
+  /// (HID and Bluetooth connections).
+  public let interfaceNumber: UInt8?
 
-  /// Creates a new DeviceIdentifier.
+  /// Creates a new DeviceIdentifier from the parts of its `ControllerIdentity`.
   public init(
     vendorID: UInt16,
     productID: UInt16,
     serialNumber: String? = nil,
-    locationID: UInt32? = nil
+    locationID: UInt32? = nil,
+    interfaceNumber: UInt8? = nil
   ) {
-    self.vendorID = vendorID
-    self.productID = productID
-    self.serialNumber = serialNumber
+    self.controllerIdentity = ControllerIdentity(
+      vendorID: vendorID,
+      productID: productID,
+      serialNumber: serialNumber
+    )
     self.locationID = locationID
-  }
-
-  /// Returns true when both identifiers point to the same physical device.
-  ///
-  /// Requires matching vendor ID, product ID, and a non-nil serial number.
-  public func exactlyMatches(_ other: Self) -> Bool {
-    vendorID == other.vendorID && productID == other.productID && serialNumber != nil
-      && serialNumber == other.serialNumber
+    self.interfaceNumber = interfaceNumber
   }
 
   /// Returns true when both identifiers have the same vendor and product ID.
   ///
   /// Regardless of serial number or location. Used for model-level profile matching.
   public func modelMatches(_ other: Self) -> Bool {
-    vendorID == other.vendorID && productID == other.productID
+    controllerIdentity.vendorID == other.controllerIdentity.vendorID
+      && controllerIdentity.productID == other.controllerIdentity.productID
   }
 
   /// Opaque, session-stable selector used by the local application-service API.
@@ -82,17 +118,19 @@ public struct DeviceIdentifier: Hashable, Sendable {
   /// making private hardware identity non-reversible and unlinkable across launches.
   /// The model fallback is explicit because it cannot select one of multiple devices.
   public var runtimeIdentifier: String {
-    RuntimeDeviceIdentity.token(for: self) ?? String(format: "M-%04X-%04X", vendorID, productID)
+    RuntimeDeviceIdentity.token(for: self)
+      ?? String(format: "M-%04X-%04X", controllerIdentity.vendorID, controllerIdentity.productID)
   }
 }
 
 extension DeviceIdentifier: CustomStringConvertible {
   /// Returns a human-readable representation of the device identifier.
   public var description: String {
-    let vid = String(format: "0x%04X", vendorID)
-    let pid = String(format: "0x%04X", productID)
-    let serial = serialNumber.map { " serial=\($0)" } ?? ""
+    let vid = String(format: "0x%04X", controllerIdentity.vendorID)
+    let pid = String(format: "0x%04X", controllerIdentity.productID)
+    let serial = controllerIdentity.serialNumber.map { " serial=\($0)" } ?? ""
     let loc = locationID.map { " loc=\($0)" } ?? ""
-    return "DeviceIdentifier(VID:\(vid) PID:\(pid)\(serial)\(loc))"
+    let interface = interfaceNumber.map { " if=\($0)" } ?? ""
+    return "DeviceIdentifier(VID:\(vid) PID:\(pid)\(serial)\(loc)\(interface))"
   }
 }

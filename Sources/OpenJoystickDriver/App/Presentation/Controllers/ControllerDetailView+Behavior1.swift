@@ -21,8 +21,13 @@
             )
             Divider()
             inputTestAction
-            Divider()
-            ControllerIdentityView(viewModel: viewModel)
+            if device.physicalOwnership != .nativeGamepad {
+              Divider()
+              // A per-controller identity collapses Advanced again on a new selection.
+              VirtualHIDProfileOverrideView(viewModel: viewModel, device: device).id(
+                device.runtimeIdentifier
+              )
+            }
           }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
         }
       }.ojdAccessibilityLabel(device.name).ojdAccessibilityValue(accessibilityValue).alert(
@@ -141,10 +146,7 @@
 
     private var controllerHeader: some View {
       HStack(alignment: .center, spacing: 10) {
-        let presentation = PublishedVirtualIdentity.presentation(
-          for: device,
-          requested: viewModel.requestedCompatibilityIdentity
-        )
+        let presentation = device.publishedIdentityPresentation
         OJDSystemSymbol(
           name: presentation.controllerSymbolName,
           fallback: OJDLocalized.string("common.controller", fallback: "Controller"),
@@ -153,9 +155,8 @@
           .ojdAccessibilityHidden(true)
         VStack(alignment: .leading, spacing: 3) {
           Text(device.name).font(.headline.weight(.semibold)).lineLimit(1)
-          Text(
-            "\(reportedValue(device.connection)) · \(publishedProfile.publishedUSBIdentityLabel)"
-          ).foregroundColor(Color(NSColor.secondaryLabelColor))
+          Text("\(reportedValue(device.connection)) · " + device.publishedIdentityLabel)
+            .foregroundColor(Color(NSColor.secondaryLabelColor))
         }
         Spacer(minLength: 0)
       }
@@ -218,13 +219,6 @@
       }
     }
 
-    private var publishedProfile: VirtualDeviceProfile {
-      PublishedVirtualIdentity.profile(
-        for: device,
-        requested: viewModel.requestedCompatibilityIdentity
-      )
-    }
-
     @ViewBuilder
     private func controllerDetails(compact: Bool) -> some View {
       if compact {
@@ -235,18 +229,16 @@
         }.frame(maxWidth: .infinity, alignment: .leading)
       } else {
         VStack(alignment: .leading, spacing: 8) {
-          ForEach(0..<5, id: \.self) { row in
+          let facts = controllerFacts
+          ForEach(Array(stride(from: 0, to: facts.count, by: 2)), id: \.self) { index in
             HStack(alignment: .top, spacing: 24) {
-              let first = controllerFacts[row * 2]
-              let second = controllerFacts[row * 2 + 1]
-              ControllerFactView(label: first.label, value: first.value).frame(
-                maxWidth: .infinity,
-                alignment: .leading
-              )
-              ControllerFactView(label: second.label, value: second.value).frame(
-                maxWidth: .infinity,
-                alignment: .leading
-              )
+              ForEach(index..<min(index + 2, facts.count), id: \.self) { column in
+                ControllerFactView(label: facts[column].label, value: facts[column].value).frame(
+                  maxWidth: .infinity,
+                  alignment: .leading
+                )
+              }
+              if index + 1 == facts.count { Spacer().frame(maxWidth: .infinity) }
             }
           }
         }
@@ -257,12 +249,12 @@
       [
         (
           OJDLocalized.string("controllers.publishedAs", fallback: "Published as"),
-          publishedProfile.publishedUSBIdentityLabel
+          device.publishedIdentityLabel
         ),
         (
           OJDLocalized.string("common.protocol", fallback: "Protocol"),
-          device.protocolVariant.displayLabel
-        ), (OJDLocalized.string("common.parser", fallback: "Parser"), reportedValue(device.parser)),
+          device.protocolBinding.displayLabel
+        ),
         (OJDLocalized.string("common.serialNumber", fallback: "Serial number"), serialNumberLabel),
         (OJDLocalized.string("controllers.battery", fallback: "Battery"), batteryPercentageLabel),
         (
@@ -297,29 +289,31 @@
     }
 
     var batteryPercentageLabel: String {
-      guard let percentage = device.battery?.percentageDescription else {
+      guard let percentage = device.connectionState?.power.battery.percentageText else {
         return OJDLocalized.string("common.unknown", fallback: "Unknown")
       }
       return percentage
     }
 
     var chargingStateLabel: String {
-      switch device.battery?.chargingState ?? .unknown {
+      switch device.connectionState?.power.charging ?? .unknown {
       case .discharging:
         return OJDLocalized.string("controllers.discharging", fallback: "Discharging")
       case .charging: return OJDLocalized.string("controllers.charging", fallback: "Charging")
       case .full: return OJDLocalized.string("controllers.batteryFull", fallback: "Full")
+      case .notChargeable:
+        return OJDLocalized.string("controllers.notChargeable", fallback: "Not chargeable")
       case .unknown: return OJDLocalized.string("common.unknown", fallback: "Unknown")
       }
     }
 
     var cableStateLabel: String {
-      switch device.battery?.cableState ?? .unknown {
-      case .connected:
+      switch device.connectionState?.power.wiredPower {
+      case true?:
         return OJDLocalized.string("settings.controllerConnectedShort", fallback: "Connected")
-      case .disconnected:
+      case false?:
         return OJDLocalized.string("settings.controllerDisconnectedShort", fallback: "Disconnected")
-      case .unknown: return OJDLocalized.string("common.unknown", fallback: "Unknown")
+      case nil: return OJDLocalized.string("common.unknown", fallback: "Unknown")
       }
     }
 

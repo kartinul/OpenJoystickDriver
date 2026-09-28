@@ -40,7 +40,7 @@
               profile: selectedProfile,
               connectedDevices: connectedDevices,
               registry: screen.capabilityRegistry
-            ) ?? .unsupported,
+            ) ?? .unknown,
             editor: screen.editor(
               for: selectedProfile,
               discardGeneration: navigation.discardGeneration

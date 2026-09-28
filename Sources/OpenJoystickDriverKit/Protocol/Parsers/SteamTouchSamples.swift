@@ -1,4 +1,5 @@
 /// The left axis pair alternates between stick and pad when both are active.
+/// The pads have no touch clock: frames carry the report's receipt-anchored motion time.
 struct SteamTouchSamples {
   private enum Report {
     static let buttonByte = 10
@@ -11,14 +12,20 @@ struct SteamTouchSamples {
     static let rightYOffset = 22
   }
 
-  private static let touchCoordinateExtent: UInt32 = 65_536
-  private static let touchCoordinateOrigin: Int32 = -32_768
+  /// Signed 16-bit pad coordinates; raw Y grows upward, as the stick Y that shares the right-pad
+  /// fields (`SteamControllerDriver.decodeControllerState` negates it to Y-down).
+  static let trackpad = ControllerTouchGeometry(
+    originX: -32_768,
+    originY: -32_768,
+    width: 65_536,
+    height: 65_536,
+    rawYIncreasesUpward: true
+  )
 
   private var leftX: Int32 = 0
   private var leftY: Int32 = 0
 
-  mutating func decode(_ bytes: [UInt8], timestamp: ControllerSampleTimestamp) -> [ControllerEvent]
-  {
+  mutating func decode(_ bytes: [UInt8], timestamp: MonotonicTimestamp) -> [ControllerTouchSample] {
     let padPacket = bytes[Report.buttonByte] & Report.leftPadMask != 0
     let interleaved = bytes[Report.buttonByte] & Report.interleavedLeftMask != 0
     if padPacket {
@@ -45,20 +52,12 @@ struct SteamTouchSamples {
     active: Bool,
     x: Int32,
     y: Int32,
-    timestamp: ControllerSampleTimestamp
-  ) -> ControllerEvent {
-    .touchSample(
-      ControllerTouchSample(
-        reportTimestamp: timestamp,
-        rawTouchCounter: nil,
-        historyIndex: 0,
-        width: Self.touchCoordinateExtent,
-        height: Self.touchCoordinateExtent,
-        contacts: [ControllerTouchContact(id: 0, isActive: active, x: x, y: y)],
-        surface: surface,
-        originX: Self.touchCoordinateOrigin,
-        originY: Self.touchCoordinateOrigin
-      )
+    timestamp: MonotonicTimestamp
+  ) -> ControllerTouchSample {
+    ControllerTouchSample(
+      surface: surface,
+      timestamp: timestamp,
+      contacts: [Self.trackpad.contact(slot: 0, isActive: active, rawX: x, rawY: y)]
     )
   }
 

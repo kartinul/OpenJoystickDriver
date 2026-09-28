@@ -12,8 +12,6 @@ public actor RemappingEventEngine {
   let physicalOutputSink: (any RemappingPhysicalOutputSink)?
   var heldGamepadDevices: Set<DeviceIdentifier> = []
   var uncertainGamepadDevices: Set<DeviceIdentifier> = []
-  var heldMotionDevices: Set<DeviceIdentifier> = []
-  var uncertainMotionDevices: Set<DeviceIdentifier> = []
   var heldPhysicalOwners: [DeviceIdentifier: Set<UUID>] = [:]
   var uncertainPhysicalDevices: Set<DeviceIdentifier> = []
   nonisolated public let emissionBarrier: RemappingEmissionBarrier

@@ -8,11 +8,10 @@ struct ControllerExposureDecisionTests {
     for ownership in [ControllerOwnershipObservation.exclusiveRawUSB, .driverKitOwnedUSB] {
       let decision = ControllerExposureDecision.decide(
         ownership: ownership,
-        intent: .automatic(resolvedIdentity: .genericHID)
+        intent: .profile(.generic)
       )
 
       #expect(decision.eligibility == .eligible)
-      #expect(decision.effectiveIdentity == .genericHID)
       #expect(decision.duplicateRisk == .none)
     }
   }
@@ -21,11 +20,10 @@ struct ControllerExposureDecisionTests {
   func automaticNativeHIDUsesPassThroughAndReportsDuplicateRisk() {
     let decision = ControllerExposureDecision.decide(
       ownership: .nativeHIDVisible,
-      intent: .automatic(resolvedIdentity: .genericHID)
+      intent: .profile(.generic)
     )
 
     #expect(decision.eligibility == .suppressedNativeHIDPassThrough)
-    #expect(decision.effectiveIdentity == nil)
     #expect(decision.duplicateRisk == .nativeHIDVisible)
   }
 
@@ -33,21 +31,19 @@ struct ControllerExposureDecisionTests {
   func automaticExclusiveHIDUsesPassThrough() {
     let decision = ControllerExposureDecision.decide(
       ownership: .exclusiveHID,
-      intent: .automatic(resolvedIdentity: .genericHID)
+      intent: .profile(.generic)
     )
     #expect(decision.eligibility == .suppressedNativeHIDPassThrough)
-    #expect(decision.effectiveIdentity == nil)
   }
 
   @Test
   func unknownOwnershipPreservesOutputAndReportsUnknownRisk() {
     let decision = ControllerExposureDecision.decide(
       ownership: .unknown,
-      intent: .automatic(resolvedIdentity: .genericHID)
+      intent: .profile(.generic)
     )
 
     #expect(decision.eligibility == .eligible)
-    #expect(decision.effectiveIdentity == .genericHID)
     #expect(decision.duplicateRisk == .unknownOwnership)
   }
 
@@ -55,69 +51,41 @@ struct ControllerExposureDecisionTests {
   func upstreamVirtualSourceIsNotRepublished() {
     let decision = ControllerExposureDecision.decide(
       ownership: .upstreamVirtualDevice,
-      intent: .automatic(resolvedIdentity: .genericHID)
+      intent: .profile(.generic)
     )
 
     #expect(decision.eligibility == .suppressedUpstreamVirtualDevice)
-    #expect(decision.effectiveIdentity == nil)
     #expect(decision.duplicateRisk == .upstreamVirtualDevice)
   }
 
-  @Test(arguments: [CompatibilityIdentityIntent.passThrough, .outputDisabled])
-  func disabledIntentsSuppressEveryOwnership(_ intent: CompatibilityIdentityIntent) {
-    let decision = ControllerExposureDecision.decide(ownership: .nativeHIDVisible, intent: intent)
+  @Test
+  func disabledOutputSuppressesPublication() {
+    let decision = ControllerExposureDecision.decide(
+      ownership: .nativeHIDVisible,
+      intent: .outputDisabled
+    )
 
     #expect(decision.eligibility == .suppressedOutputDisabled)
-    #expect(decision.effectiveIdentity == nil)
   }
 
   @Test
-  func explicitIdentityRemainsAtomicAndAutomaticKeepsGenericSemantics() {
-    let explicit = ControllerExposureDecision.decide(
-      ownership: .exclusiveRawUSB,
-      intent: .explicit(.xbox360HID)
-    )
-    let invalidAutomaticIdentity = ControllerExposureDecision.decide(
-      ownership: .exclusiveRawUSB,
-      intent: .explicit(.automatic)
-    )
-
-    #expect(explicit.eligibility == .eligible)
-    #expect(explicit.effectiveIdentity == .xbox360HID)
-    #expect(invalidAutomaticIdentity.eligibility == .rejectedInvalidIntent)
-    #expect(invalidAutomaticIdentity.effectiveIdentity == nil)
-  }
-
-  @Test
-  func automaticUsesResolverOutputWithoutGenericFallback() {
+  func automaticCarriesTheSelectedProfileInsteadOfAnIdentity() {
     let decision = ControllerExposureDecision.decide(
       ownership: .exclusiveRawUSB,
-      intent: .automatic(resolvedIdentity: .xbox360HID)
+      intent: .profile(.xboxOneSBluetooth)
     )
 
     #expect(decision.eligibility == .eligible)
-    #expect(decision.effectiveIdentity == .xbox360HID)
-  }
-
-  @Test
-  func unavailableProfileSuppressesPublication() {
-    let decision = ControllerExposureDecision.decide(
-      ownership: .exclusiveRawUSB,
-      intent: .explicit(.genericHID),
-      profileAvailable: false
-    )
-
-    #expect(decision.eligibility == .suppressedUnsupportedIdentity)
-    #expect(decision.effectiveIdentity == nil)
+    #expect(decision.intent == .profile(.xboxOneSBluetooth))
   }
 
   @Test
   func decisionIsDeterministicAndNeverSelectsMoreThanOneIdentity() {
-    let intent = CompatibilityIdentityIntent.automatic(resolvedIdentity: .genericHID)
+    let intent = VirtualOutputIntent.profile(.generic)
     let first = ControllerExposureDecision.decide(ownership: .driverKitOwnedUSB, intent: intent)
     let second = ControllerExposureDecision.decide(ownership: .driverKitOwnedUSB, intent: intent)
 
     #expect(first == second)
-    #expect(first.effectiveIdentity == .genericHID)
+    #expect(first.eligibility == .eligible)
   }
 }

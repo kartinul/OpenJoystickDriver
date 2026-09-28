@@ -30,19 +30,19 @@ struct LayerMotionRoutingTests {
     )
     let identifier = DeviceIdentifier(vendorID: 1, productID: 2)
     var engine = RemappingEngineState()
-    func send(_ event: ControllerEvent) {
-      _ = engine.process(events: [event], from: identifier, profile: profile, at: 0)
+    func send(_ event: InputChange) {
+      _ = engine.process(inputs: [event], from: identifier, profile: profile, at: 0)
     }
-    send(.buttonPressed(.a))
+    send(.press(.faceSouth))
     #expect(engine.devices[identifier]?.effectiveMotionTuning == first)
-    send(.buttonPressed(.b))
+    send(.press(.faceEast))
     #expect(engine.devices[identifier]?.effectiveMotionTuning == second)
-    send(.buttonPressed(.x))
+    send(.press(.faceWest))
     #expect(engine.devices[identifier]?.effectiveMotionTuning == second)
-    send(.buttonReleased(.b))
-    send(.buttonPressed(.b))
+    send(.release(.faceEast))
+    send(.press(.faceEast))
     #expect(engine.devices[identifier]?.effectiveMotionTuning == first)
-    send(.buttonReleased(.a))
+    send(.release(.faceSouth))
     #expect(engine.devices[identifier]?.effectiveMotionTuning == base)
     #expect(engine.devices[identifier]?.gyroAwaitingBaseline == true)
   }

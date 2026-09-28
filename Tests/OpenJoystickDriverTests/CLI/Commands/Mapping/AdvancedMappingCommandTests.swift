@@ -43,6 +43,32 @@ struct AdvancedMappingCommandTests {
     #expect(rendered.contains("prefer_full_combined"))
   }
 
+  @Test
+  func snapshotRenderingPrintsTheVirtualGamepadRoute() throws {
+    let route = ApplicationServiceRemappingRoutePayload(
+      vendorID: 1,
+      productID: 2,
+      runtimeIdentifier: "runtime",
+      selection: .virtualGamepad,
+      eligibility: .virtualOutputSuppressed,
+      activeProfileID: nil,
+      activeProfileName: nil,
+      applicationScope: nil,
+      frontmostBundleIdentifier: nil,
+      postEventAccess: .granted,
+      failure: nil
+    )
+    let rendered = MappingRenderer.snapshot(
+      ApplicationServiceRemappingSnapshotPayload(
+        profiles: [],
+        activeProfiles: [],
+        routes: [route],
+        postEventAccess: .granted
+      )
+    )
+    #expect(rendered.contains("1:2 runtime virtual-gamepad/virtual_output_suppressed"))
+  }
+
   private func snapshot(
     _ profiles: [RemappingProfile]
   ) -> ApplicationServiceRemappingSnapshotPayload {

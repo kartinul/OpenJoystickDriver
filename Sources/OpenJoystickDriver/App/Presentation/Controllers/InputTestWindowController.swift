@@ -69,10 +69,7 @@
       window?.title = OJDLocalized.formatted(
         "inputTest.windowTitle",
         fallback: "Input Test — %@",
-        PublishedVirtualIdentity.profile(
-          for: device,
-          requested: runtimeViewModel.requestedCompatibilityIdentity
-        ).productName
+        device.publishedVirtualProfile?.productName ?? device.name
       )
       model.open()
       visibilityChanged(true)

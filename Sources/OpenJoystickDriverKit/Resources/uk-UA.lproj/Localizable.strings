@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Перевірка підключених контролерів…";
 "status.refreshingProfile" = "Оновлення состояния профілю…";
 "status.loadingProfiles" = "Завантаження профілів…";
-"status.updatingIdentity" = "Оновлення ідентифікатора контролера…";
 "status.listening" = "Очікування…";
 "status.readyToListen" = "Готово до очікування";
 "status.checkingInput" = "Перевірка";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Контролери";
 "settings.controllerDisconnectedNotifications" = "Контролер відключено";
 "settings.controllerDisconnectedShort" = "Відключено";
-"settings.controllerIdentity" = "Ідентифікатор контролера";
 "settings.controllerNotifications" = "Контролер підключено";
 "settings.diagnostics" = "Діагностика";
 "settings.service" = "Служба";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Розряджається";
 "controllers.charging" = "Заряджається";
 "controllers.batteryFull" = "Повний заряд";
+"controllers.notChargeable" = "Не заряджається";
 "controllers.batteryAccessibilityDetails" = "Акумулятор: %@. Стан заряджання: %@. Стан кабелю: %@.";
 "controllers.activeProfile" = "Активний профіль";
 "controllers.profileChecking" = "Перевірка…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Активний профіль недоступний";
 "controllers.profileLoadError" = "Не вдалося загрузить активний профіль";
 "controllers.protocol" = "Протокол";
-"controllers.parser" = "Парсер";
 "controllers.serialNumber" = "Серійний номер";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Вхідна кінцева точка";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Помилка активного профілю: %@";
 "controllers.accessibilityDetails" = "%@. %@. Протокол: %@. Parser: %@. Серійний номер: %@. USB VID/PID: %@. Вхідна кінцева точка: %@. Вихідна кінцева точка: %@.";
 "controllers.publishedAs" = "Опубліковано як";
-"identity.title" = "Ідентифікатор контролера";
-"identity.needsAttention" = "Потребує уваги";
-"identity.error" = "Помилка ідентифікатора контролера";
-"identity.updating" = "Оновлення ідентифікатора контролера…";
-"identity.reset" = "Відновити рекомендовані";
-"identity.checking" = "Перевірка";
-"identity.globalScope" = "Застосовується до всіх віртуальних контролерів, які публікує OpenJoystickDriver.";
-"identity.unavailable" = "Недоступно";
-"identity.notSelected" = "Не вибрано";
+"controllers.nativeGamepadNotPublished" = "Вбудований геймпад macOS, не опубліковано";
+"virtualProfile.advanced" = "Додатково";
+"virtualProfile.title" = "Віртуальний профіль HID";
+"virtualProfile.modelScope" = "Застосовується до кожного підключеного контролера цієї моделі.";
+"virtualProfile.sourceOverride" = "Перевизначення";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Автоматично, перевизначення відхилено";
+"virtualProfile.none" = "Немає віртуального профілю HID";
+"virtualProfile.unavailable" = "Жоден віртуальний профіль HID не може представити цей контролер.";
+"virtualProfile.updating" = "Оновлення віртуального профілю HID…";
+"virtualProfile.live" = "Поточний профіль";
+"virtualProfile.failure.unknownProfile" = "Цей віртуальний профіль HID невідомий. Нічого не збережено.";
+"virtualProfile.failure.controllerNotFound" = "Контролер від’єднано або не знайдено. Перевизначення не змінилося.";
+"virtualProfile.failure.overrideRejected" = "Перевизначення збережено, але цей контролер не може його використати, тому вибирає автоматично.";
+"virtualProfile.failure.activationFailed" = "Не вдалося активувати, тому відновлено попередній віртуальний профіль HID: %@";
+"virtualProfile.failure.outputDisabled" = "Перевизначення збережено, воно набуде чинності після ввімкнення віртуального виводу.";
+"virtualProfile.failure.serverStopped" = "Служба зупинилася. Перевизначення не змінилося.";
+"virtualProfile.failure.persistenceFailed" = "Не вдалося зберегти перевизначення. Нічого не збережено.";
+"virtualProfile.storeError" = "Не вдається прочитати перевизначення віртуального профілю HID (%@). Контролери вибирають автоматично.";
+"virtualProfile.legacyIdentityRejected" = "Застаріле налаштування ідентифікатора контролера %@ більше не застосовується. Виконайте controller virtual reset --all, щоб очистити його.";
 "keyboard.noKey" = "Клавіша не вибрано";
 "keyboard.pressKey" = "Натисніть клавішу…";
 "keyboard.captureKey" = "Захопити клавішу";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Поточний стан";
 "debug.runtime" = "Середовище виконання";
 "debug.controllers" = "Контролери";
-"debug.controllerIdentity" = "Ідентифікатор контролера";
 "debug.unavailable" = "Середовище виконання · недоступна";
 "debug.needsAttention" = "Середовище виконання · потребує уваги";
 "debug.diagnostics" = "Діагностика";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Вивід контролера вимкнено.";
 "debug.outputNeedsAttention" = "Вивід контролера потребує уваги.";
 "debug.serviceUnavailable" = "Діагностика служби зараз недоступна.";
-"error.selectedOutputUnavailable" = "Вибраний вивід контролера недоступний.";
-"error.selectedOutputEnableFailed" = "Не вдалося увімкнути вибраний вивід контролера.";
 "error.profileChanged" = "Цей профіль змінено в іншому місці. Перезавантажте або продовжте редагування.";
 "error.duplicateProfile" = "Профіль с таким именем вже існує.";
 "error.profileMissing" = "Цей профіль больше недоступний.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Середовище виконання";
 "common.controllers" = "Контролери";
 "common.profiles" = "Профілі";
-"common.controllerIdentity" = "Ідентифікатор контролера";
 "common.protocol" = "Протокол";
-"common.parser" = "Парсер";
 "common.serialNumber" = "Серійний номер";
 "common.inputEndpoint" = "Вхідна кінцева точка";
 "common.outputEndpoint" = "Вихідна кінцева точка";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Вибраний профільний пункт більше не доступний.";
 "cli.catalog.app_ready.summary" = "Перевірити готовність автентифікованої служби застосунку";
 "cli.catalog.app_status.summary" = "Показати стан служби застосунку";
-"cli.catalog.compat.summary" = "Керувати сумісністю віртуального контролера";
 "cli.catalog.controller_list.summary" = "Перелічити підключені контролери";
 "cli.catalog.controller_output.summary" = "Перевірити підтримуваний вихід фізичного контролера";
 "cli.catalog.controller_packets.summary" = "Показати останні пакети контролера";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Показати стан драйвера та середовища виконання";
 "cli.catalog.test.summary" = "Перевірити доставлення входу віртуального контролера";
 "cli.catalog.update.summary" = "Перевірити наявні оновлення на GitHub";
-"cli.compat.identity" = "ідентичність сумісності: %@";
-"cli.compat.identity_unknown" = "ідентичність сумісності: невідома";
-"cli.compat.set_failed" = "Не вдалося встановити ідентичність сумісності на %@. Запустіть установлений застосунок і перевірте доступ до Моніторингу введення та Універсального доступу.";
-"cli.compat.usage" = "Використання: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "стан простору користувача: %@";
 "cli.controller.allAppleEntries" = "Усі точні записи каталогу Apple:";
 "cli.controller.appleIDs" = "    Ідентифікатори Apple: %@";
 "cli.controller.applePairs" = "  Пари Apple  : %d точних записів VID/PID";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Жоден підключений контролер не відповідає --device %@.";
 "cli.controller.selection.multiple" = "Відповідає кілька контролерів. Виберіть один за допомогою --device:\n  %@";
 "cli.controller.selection.none" = "Контролер не підключено.";
+"cli.controller.virtual.live" = "Віртуальний HID-профіль: %@ (%@)";
+"cli.controller.virtual.none" = "Віртуальний HID-профіль: немає (%@)";
+"cli.controller.virtual.failed" = "Запит віртуального HID-профілю не виконано: %@";
+"cli.controller.virtual.unknown_profile" = "Невідомий віртуальний HID-профіль «%@». Використайте один із: %@.";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» потребує віртуальний HID-профіль. Використайте один із: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "«--all» не можна поєднувати з --vid, --pid або --device.";
+"cli.controller.virtual.reset_all.success" = "OK: усі перевизначення віртуального HID-профілю очищено.";
+"cli.controller.virtual.reset_all.failed" = "Не вдалося скинути параметри. Запустіть установлений застосунок і перевірте його дозволи.";
 "cli.controller.selection.vid_pid_missing" = "Жоден підключений контролер не відповідає %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Передайте і VID, і PID, або пропустіть обидва.";
 "cli.controller.serviceControllers" = "Контролери (з запущеної служби застосунку):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Порада: надайте потрібне право та доступ до Моніторингу введення.";
 "cli.controller.usbControllers" = "Контролери USB (клас 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Передайте і VID, і PID, або пропустіть обидва, коли підключено один контролер.";
-"cli.diagnose.advisory_candidate" = "    Кандидат дорадчого протоколу: %@";
 "cli.diagnose.app_missing" = "  Застосунок: відсутній у %@";
 "cli.diagnose.app_missing_fix" = "  Виправлення: зберіть і встановіть застосунок у /Applications";
 "cli.diagnose.app_present" = "  Застосунок: наявний";
 "cli.diagnose.binary_path" = "Двійковий файл: %@";
-"cli.diagnose.catalog_conflict" = "      Спостереження суперечить родині каталогу; parser без змін";
-"cli.diagnose.catalog_parser" = "      Parser каталогу залишається %@ (%@)";
 "cli.diagnose.dext_found" = "  Знайдені пакети .dext:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      кінцевий пункт 0x%02X %@ %@ maxPacket=%@ інтервал=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Невідома крива відповіді «%@».";
 "cli.mapping.double_tap_format" = "--double-tap очікує <ms>:<target>, напр. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Використання: OpenJoystickDriver --headless map <command>\n\nКоманди:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nДжерело: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nЦіль: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nПараметри осі:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nПараметри турбо (лише кнопки клавіатури та миші):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nПараметри активації (лише кнопки клавіатури та миші, взаємовиключні з турбо):\n  --long-hold <ms>:<target>     напр. --long-hold 500:key:b\n  --double-tap <ms>:<target>    напр. --double-tap 300:key:c\n\n<profile> приймає UUID або точну назву профілю без урахування регістру.\n<id> приймає десяткове або шістнадцяткове значення з префіксом 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Використання: OpenJoystickDriver --headless map <command>\n\nКоманди:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nДжерело: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nЦіль: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nПараметри осі:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nПараметри турбо (лише кнопки клавіатури та миші):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nПараметри активації (лише кнопки клавіатури та миші, взаємовиключні з турбо):\n  --long-hold <ms>:<target>     напр. --long-hold 500:key:b\n  --double-tap <ms>:<target>    напр. --double-tap 300:key:c\n\n<profile> приймає UUID або точну назву профілю без урахування регістру.\n<id> приймає десяткове або шістнадцяткове значення з префіксом 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ має бути 16-бітним десятковим ідентифікатором або шістнадцятковим із префіксом 0x.";
 "cli.mapping.jsonEncodeFailed" = "Не вдалося закодувати JSON у UTF-8.";
 "cli.mapping.layer_action_unknown" = "Невідома дія шару «%@». Очікувано: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "Служба застосунку OpenJoystickDriver не запущена.";
 "cli.runtime.sample_limit" = "Конфігурація зібрала б %d зразків; збільште --interval-ms.";
 "cli.runtime.stable_note" = "Стабільний обмежений прогін є доказом для цього навантаження, а не доказом відсутності всіх витоків.";
-"cli.settings.reset.failed" = "Не вдалося скинути параметри. Запустіть установлений застосунок і перевірте його дозволи.";
-"cli.settings.reset.next" = "Далі: запустіть compat set <identity>, щоб вибрати ідентичність сумісності.";
-"cli.settings.reset.success" = "OK: параметри служби застосунку скинуто.";
 "cli.status.access_denied" = "Якщо доступ відхилено, запустіть --headless permissions request і схваліть Моніторинг введення та Універсальний доступ у Системних параметрах.";
 "cli.status.heading" = "Стан OpenJoystickDriver";
 "cli.status.json_error" = "Не вдалося закодувати JSON стану: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Стан        : %@";
 "cli.updates.unknown_option" = "Невідомий параметр updates: %@";
 "common.unknown" = "Невідомо";
-"compatibility.appleGameController" = "Яблука GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (оригінальний)";
 "developer.buttons" = "Кнопки";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Кнопка B";
 "inputTest.bCircle" = "Б / Круг";
 "inputTest.brightness" = "Яскравість";
-"inputTest.circle" = "Коло";
 "inputTest.color" = "Колер";
 "inputTest.controls" = "Ввод у реальному часі";
-"inputTest.cross" = "Хрест";
 "inputTest.disconnected" = "Контролер роз'єднаний";
 "inputTest.dpadDown" = "Хрестовина вниз";
 "inputTest.dpadLeft" = "Хрестовина ліворуч";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Контролі освітлення для цього контролера не доступні.";
 "inputTest.live" = "Вхід активний";
 "inputTest.menu" = "Меню";
-"inputTest.minus" = "Мінус";
 "inputTest.off" = "Вимк.";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Параметри";
 "inputTest.outputError" = "Фізична помилка виходу";
 "inputTest.outputRejected" = "Контролер відкинув цей випускний тест.";
 "inputTest.permissionRequired" = "Вхід Моніторинг";
 "inputTest.playerIndicator" = "Показник гравців";
-"inputTest.plus" = "Плюс";
 "inputTest.pressed" = "Натиснуто";
-"inputTest.psButton" = "Кнопка PS";
 "inputTest.released" = "Відпущено";
 "inputTest.rightBumper" = "Правий бампер";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Правий Y";
 "inputTest.rumble" = "Рембль";
 "inputTest.rumbleUnavailable" = "Rumble не підтримується цим контролером.";
-"inputTest.share" = "Поділитися";
-"inputTest.square" = "Квадрат";
 "inputTest.stale" = "Вхід перерваний";
 "inputTest.start" = "Почнете тест вводу";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Ввод у реальному часі";
 "inputTest.tabMotion" = "Заголошення";
 "inputTest.tabOutput" = "Вихід";
-"inputTest.steamButton" = "Кнопка Steam";
 "inputTest.summary" = "Кнопки випробування, палички, триггері, гумо і освітлення контролера.";
 "inputTest.testRumble" = "Тест Рэмбль";
 "inputTest.title" = "Тест вводу";
-"inputTest.triangle" = "Трикутник";
 "inputTest.unavailable" = "Вхід недоступний";
 "inputTest.view" = "Перегляд";
 "inputTest.windowTitle" = "Тест вводу %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Вибрані Joy-Cons не могли бути здвоєні.";
 "profiles.joyConExplicitSession" = "Почалося з експлицитного пара";
 "profiles.joyConSessionState" = "Виявне паравання";
-"profiles.gyro.virtualMotion" = "Вимірюване випередження віртуального руху";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ губіння (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Контролер роз'єднаний";
 "controllers.resume" = "Повторити спробу";
 "controllers.disconnectFromOJD" = "Контролер роз'єднаний";
-"error.compatibilityTransitionDetailed" = "Не вдалося увімкнути вибраний вивід контролера. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Не вдалося увімкнути вибраний вивід контролера.";
 "cli.catalog.controller_disconnect.summary" = "Контролер роз'єднаний";
 "cli.catalog.controller_resume.summary" = "Повторити спробу — Контролер роз'єднаний";
+"cli.catalog.controller_virtual_set.summary" = "Перевизначити віртуальний HID-профіль контролера";
+"cli.catalog.controller_virtual_reset.summary" = "Вибирати віртуальний HID-профіль контролера автоматично, або очистити усі перевизначення за допомогою --all";
 "cli.controller.disconnected" = "Контролер роз'єднаний";
 "cli.controller.resumed" = "Вхід активний";
 

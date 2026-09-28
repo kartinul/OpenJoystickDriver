@@ -15,10 +15,10 @@ struct RemappingIntegrationStressTests {
       let identifier = DeviceIdentifier(vendorID: 1, productID: 2, locationID: UInt32(location))
       actionCount +=
         state.process(
-          events: [
-            .buttonPressed(.a), .buttonPressed(.b), .buttonPressed(.x), .buttonPressed(.y),
-            .buttonPressed(.l1), .buttonPressed(.r1), .buttonPressed(.back), .buttonPressed(.start),
-            .buttonPressed(.share), .buttonPressed(.options),
+          inputs: [
+            .press(.faceSouth), .press(.faceEast), .press(.faceWest), .press(.faceNorth),
+            .press(.leftShoulder), .press(.rightShoulder), .press(.view), .press(.menu),
+            .press(.share), .press(.menu),
           ],
           from: identifier,
           profile: profile,
@@ -44,7 +44,7 @@ struct RemappingIntegrationStressTests {
 
     for time in 0..<10_000 {
       _ = state.process(
-        events: [.buttonPressed(.back), .buttonReleased(.back)],
+        inputs: [.press(.view), .release(.view)],
         from: identifier,
         profile: profile,
         at: UInt64(time) * 1_000_000

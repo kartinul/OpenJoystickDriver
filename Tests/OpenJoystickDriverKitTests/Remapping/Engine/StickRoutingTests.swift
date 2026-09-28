@@ -8,19 +8,23 @@ struct StickRoutingTests {
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = profile(mode: .aim)
     let initial = engine.process(
-      events: [.leftStickChanged(x: 1, y: 0), .rightStickChanged(x: 0.5, y: 0)],
+      inputs: [.leftStick(x: 1, y: 0), .rightStick(x: 0.5, y: 0)],
       from: device,
       profile: profile,
       at: 0
     )
-    #expect(initial == [.gamepad(RemappingGamepadState(axes: [.rightStickX: 0.5]), device)])
+    #expect(
+      initial == [
+        .gamepad(RemappingGamepadState(axes: [.rightStickX: quantizedStick(0.5)]), device)
+      ]
+    )
     #expect(
       engine.nextScheduledTick(after: 0, continuousIntervalNanoseconds: 8_000_000) == 8_000_000
     )
     let movement = engine.tick(at: 10_000_000)
     #expect(movement == [.system(.pointerDelta(x: 1, y: 0))])
     let release = engine.process(
-      events: [.leftStickChanged(x: 0, y: 0)],
+      inputs: [.leftStick(x: 0, y: 0)],
       from: device,
       profile: profile,
       at: 20_000_000
@@ -37,14 +41,14 @@ struct StickRoutingTests {
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = profile(mode: .flick)
     let initial = engine.process(
-      events: [.leftStickChanged(x: 1, y: 0)],
+      inputs: [.leftStick(x: 1, y: 0)],
       from: device,
       profile: profile,
       at: 0
     )
     #expect(initial.isEmpty)
     let centered = engine.process(
-      events: [.leftStickChanged(x: 0, y: 0)],
+      inputs: [.leftStick(x: 0, y: 0)],
       from: device,
       profile: profile,
       at: 50_000_000
@@ -67,7 +71,7 @@ struct StickRoutingTests {
     let device = DeviceIdentifier(vendorID: 1, productID: 2)
     let profile = profile(mode: .flickOnly)
     _ = engine.process(
-      events: [.leftStickChanged(x: 1, y: 0), .leftStickChanged(x: 0, y: 0)],
+      inputs: [.leftStick(x: 1, y: 0), .leftStick(x: 0, y: 0)],
       from: device,
       profile: profile,
       at: 0
@@ -101,19 +105,11 @@ struct StickRoutingTests {
       ],
       bindings: []
     )
-    _ = engine.process(
-      events: [.leftStickChanged(x: 1, y: 0)],
-      from: device,
-      profile: steering,
-      at: 0
-    )
+    _ = engine.process(inputs: [.leftStick(x: 1, y: 0)], from: device, profile: steering, at: 0)
     #expect(
-      engine.process(
-        events: [.leftStickChanged(x: 0, y: 1)],
-        from: device,
-        profile: steering,
-        at: 1
-      ) == [.gamepad(RemappingGamepadState(axes: [.rightStickX: 0.5]), device)]
+      engine.process(inputs: [.leftStick(x: 0, y: 1)], from: device, profile: steering, at: 1) == [
+        .gamepad(RemappingGamepadState(axes: [.rightStickX: 0.5]), device)
+      ]
     )
     #expect(engine.setProfile(profile(mode: .aim), for: device) == [.gamepad(.neutral, device)])
   }

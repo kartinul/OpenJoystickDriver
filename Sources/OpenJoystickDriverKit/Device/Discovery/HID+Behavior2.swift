@@ -4,23 +4,28 @@ extension DeviceManager {
 
   func sendHIDStartupFeatureReadRequestsIfNeeded(
     pipeline: DevicePipeline,
-    locationID: UInt32,
-    transport: String?
+    connection: HIDDeviceConnection
   ) async {
-    let plan = await pipeline.hidStartupFeatureReadPlan(transport: transport)
-    for request in plan.requests {
-      let outcome = await HIDFeatureReadRetry.run(maximumAttempts: plan.validatesReplies ? 3 : 1) {
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
+    let requests = await pipeline.hidStartupFeatureReads()
+    let validatesReplies = await pipeline.sessionPlan().validatesFeatureReplies
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
+    for request in requests {
+      let outcome = await HIDFeatureReadRetry.run(maximumAttempts: validatesReplies ? 3 : 1) {
         await self.attemptHIDStartupFeatureRead(
           pipeline: pipeline,
           request: request,
-          locationID: locationID,
-          transport: transport
+          connection: connection,
+          validatesReply: validatesReplies
         )
       }
+      guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
       switch outcome {
       case .accepted: break
       case .stopped: return
-      case .retry: print("[DeviceManager] HID startup feature read exhausted for loc=\(locationID)")
+      case .retry:
+        let locationID = connection.routingLocationID
+        print("[DeviceManager] HID startup feature read exhausted for loc=\(locationID)")
       }
     }
   }
@@ -28,12 +33,27 @@ extension DeviceManager {
   private func attemptHIDStartupFeatureRead(
     pipeline: DevicePipeline,
     request: PhysicalHIDFeatureReadRequest,
-    locationID: UInt32,
-    transport: String?
+    connection: HIDDeviceConnection,
+    validatesReply: Bool
   ) async -> HIDFeatureReadAttempt {
-    guard await isCurrentHIDStartupPipeline(pipeline) else { return .stopped }
-    let result = await hidManager.getFeatureReport(locationID: locationID, request: request)
-    guard await isCurrentHIDStartupPipeline(pipeline) else { return .stopped }
+    let locationID = connection.routingLocationID
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else {
+      return .stopped
+    }
+    // The read is an operation on the interface's output queue, so it never interleaves with a
+    // write's operation. A protocol role reads from its own connection, like its writes, never a
+    // sibling's.
+    let outcome = await physicalOutputQueue(for: pipeline.identifier).perform {
+      [weak self] _ -> PhysicalHIDReportResult<Data>? in
+      guard let self, await self.isCurrentHIDStartupConnection(pipeline, connection: connection)
+      else { return nil }
+      return pipeline.identifier.interfaceNumber != nil
+        ? await self.hidManager.getFeatureReport(connection: connection, request: request)
+        : await self.hidManager.getFeatureReport(locationID: locationID, request: request)
+    }
+    guard case .completed(let result?) = outcome,
+      await isCurrentHIDStartupPipeline(pipeline, connection: connection)
+    else { return .stopped }
     guard let data = result.value else {
       print(
         "[DeviceManager] HID startup feature read failed for controller=\(pipeline.identifier) "
@@ -41,165 +61,131 @@ extension DeviceManager {
       )
       return .retry
     }
-    guard await pipeline.acceptsHIDFeatureReportReplies() else { return .accepted }
-    let accepted = await pipeline.consumeHIDFeatureReport(
-      data,
-      request: request,
-      transport: transport
-    )
+    guard validatesReply else { return .accepted }
+    let accepted = await pipeline.consumeFeatureReply(data, request: request)
     return accepted ? .accepted : .retry
   }
 
-  func sendHIDStartupFeatureReportsIfNeeded(
+  func sendHIDActivationWritesIfNeeded(
     pipeline: DevicePipeline,
-    locationID: UInt32,
-    transport: String?
+    connection: HIDDeviceConnection
   ) async {
-    for report in await pipeline.hidStartupFeatureReports(transport: transport) {
-      let result = await hidManager.setFeatureReport(locationID: locationID, report: report)
-      if !result.succeeded {
-        print(
-          "[DeviceManager] HID startup feature report failed for controller=\(pipeline.identifier) "
-            + "loc=\(locationID) report=\(report.reportID): \(result.failureDescription)"
-        )
-      }
-    }
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
+    let writes = await pipeline.hidActivationWrites()
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
+    _ = await sendHIDWrites(
+      writes,
+      locationID: connection.routingLocationID,
+      identifier: pipeline.identifier,
+      pipeline: pipeline,
+      startupConnection: connection
+    )
   }
 
   func sendHIDStartupOutputReportsIfNeeded(
     pipeline: DevicePipeline,
-    locationID: UInt32,
-    transport: String?
+    connection: HIDDeviceConnection
   ) async -> Bool {
-    guard await isCurrentHIDStartupPipeline(pipeline) else { return false }
-    let (reports, interval) = await pipeline.hidStartupOutputPlan(transport: transport)
-    var succeeded = true
-    if interval == 0 {
-      for report in reports {
-        guard await isCurrentHIDStartupPipeline(pipeline) else { return false }
-        let result = await hidManager.setOutputReport(locationID: locationID, report: report)
-        succeeded = succeeded && result.succeeded
-        if !result.succeeded {
-          let controller = pipeline.identifier
-          print(
-            "[DeviceManager] HID startup output report failed for controller=\(controller) "
-              + "loc=\(locationID) report=\(report.reportID): \(result.failureDescription)"
-          )
-        }
-      }
-      await runHIDStartupRecovery(pipeline: pipeline, locationID: locationID, interval: interval)
-      return succeeded
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return false }
+    let writes = await pipeline.hidStartupWrites()
+    let plan = await pipeline.sessionPlan()
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return false }
+    let succeeded = await sendHIDWrites(
+      writes,
+      intervalNanoseconds: plan.hidStartupIntervalNanoseconds,
+      locationID: connection.routingLocationID,
+      identifier: pipeline.identifier,
+      pipeline: pipeline,
+      startupConnection: connection
+    )
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return false }
+    if plan.hasStartupRecovery {
+      await runHIDStartupRecovery(
+        pipeline: pipeline,
+        connection: connection,
+        interval: plan.hidStartupIntervalNanoseconds
+      )
     }
-    for (index, report) in reports.enumerated() {
-      if index > 0 { do { try await Task.sleep(nanoseconds: interval) } catch { return false } }
-      guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline) else { return false }
-      let result = await hidManager.setOutputReport(locationID: locationID, report: report)
-      succeeded = succeeded && result.succeeded
-      if !result.succeeded {
-        print(
-          "[DeviceManager] HID startup output report failed for controller=\(pipeline.identifier) "
-            + "loc=\(locationID) report=\(report.reportID): \(result.failureDescription)"
-        )
-      }
-    }
-    await runHIDStartupRecovery(pipeline: pipeline, locationID: locationID, interval: interval)
     return succeeded
   }
 
   private func runHIDStartupRecovery(
     pipeline: DevicePipeline,
-    locationID: UInt32,
+    connection: HIDDeviceConnection,
     interval: UInt64
   ) async {
-    guard await pipeline.supportsHIDStartupRecovery() else { return }
+    let locationID = connection.routingLocationID
     for round in 0..<3 {
       do { try await Task.sleep(nanoseconds: 200_000_000) } catch { return }
-      guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline) else { return }
+      guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline, connection: connection)
+      else { return }
       if round == 2 {
-        await pipeline.expireHIDStartupRequests()
+        await pipeline.expireHIDStartupRecovery()
         return
       }
-      let reports = await pipeline.pendingHIDStartupReports()
-      for (index, report) in reports.enumerated() {
+      let writes = await pipeline.hidStartupRecoveryWrites()
+      guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
+      for (index, write) in writes.enumerated() {
         if index > 0 { do { try await Task.sleep(nanoseconds: interval) } catch { return } }
-        guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline) else { return }
-        _ = await hidManager.setOutputReport(locationID: locationID, report: report)
-      }
-    }
-  }
-
-  func isCurrentHIDStartupPipeline(_ pipeline: DevicePipeline) async -> Bool {
-    guard await pipeline.isActive else { return false }
-    // Recheck identity after the actor hop: a reconnect may reuse the same location and IDs.
-    return pipelines[pipeline.identifier] === pipeline
-      && deviceInfos[pipeline.identifier]?.hidInputOwnership != .ownedByAnotherClient
-  }
-
-  func requestHIDInputConnectionStatusIfNeeded(pipeline: DevicePipeline, locationID: UInt32) async {
-    guard let report = await pipeline.hidInputConnectionStatusRequestReport() else { return }
-    let result = await hidManager.setFeatureReport(locationID: locationID, report: report)
-    if !result.succeeded {
-      let controller = pipeline.identifier
-      print(
-        "[DeviceManager] HID connection-status request failed for controller=\(controller) "
-          + "loc=\(locationID) report=\(report.reportID): \(result.failureDescription)"
-      )
-    }
-  }
-
-  func handleHIDDeviceDisconnected(vendorID: UInt16, productID: UInt16, locationID: UInt32) async {
-    hidInitializationTasks.removeValue(forKey: locationID)?.cancel()
-    if let key = pipelines.keys.first(where: { $0.locationID == locationID }) {
-      let pipeline = pipelines.removeValue(forKey: key)
-      hidPeriodicOutputTasks.removeValue(forKey: key)?.cancel()
-      hidOutputQueues.removeValue(forKey: key)
-      if let pipeline { await neutralizePhysicalOutputs(for: key, pipeline: pipeline) }
-      deviceInfos.removeValue(forKey: key)
-      notifyControllerInventoryChanged()
-      lastPhysicalHIDOutputNanoseconds.removeValue(forKey: key)
-      await sendHIDShutdownFeatureReportsIfNeeded(pipeline: pipeline, locationID: locationID)
-      await pipeline?.stop()
-      print(
-        "[DeviceManager] HID device disconnected:" + " VID=\(vendorID) PID=\(productID)"
-          + " loc=\(locationID)"
-      )
-    }
-  }
-
-  func sendHIDShutdownFeatureReportsIfNeeded(pipeline: DevicePipeline?, locationID: UInt32) async {
-    guard let pipeline else { return }
-    for report in await pipeline.hidShutdownFeatureReports() {
-      let result = await hidManager.setFeatureReport(locationID: locationID, report: report)
-      if !result.succeeded {
-        let controller = pipeline.identifier
-        print(
-          "[DeviceManager] HID shutdown feature report failed for controller=\(controller) "
-            + "loc=\(locationID) report=\(report.reportID): \(result.failureDescription)"
+        guard !Task.isCancelled, await isCurrentHIDStartupPipeline(pipeline, connection: connection)
+        else { return }
+        // A failed recovery write is not retried within the round; expiry still follows.
+        _ = await sendHIDWrites(
+          [write],
+          locationID: locationID,
+          identifier: pipeline.identifier,
+          pipeline: pipeline,
+          startupConnection: connection
         )
+        guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
       }
     }
   }
 
-  func routeHIDElementValue(locationID: UInt32, value: HIDElementValue) async {
-    guard let key = pipelines.keys.first(where: { $0.locationID == locationID }),
-      let pipeline = pipelines[key]
-    else { return }
-    await pipeline.feedHIDElementValue(value)
+  func isCurrentHIDStartupPipeline(
+    _ pipeline: DevicePipeline,
+    connection: HIDDeviceConnection
+  ) async -> Bool {
+    guard await pipeline.isActive else { return false }
+    return isCurrentHIDStartupConnection(pipeline, connection: connection)
   }
 
-  func routeHIDInputReport(locationID: UInt32, data: Data) async {
-    if let key = pipelines.keys.first(where: { $0.locationID == locationID }),
-      let featureReports = await pipelines[key]?.feedHIDData(data)
-    {
-      for report in featureReports {
-        let result = await hidManager.setFeatureReport(locationID: locationID, report: report)
-        if !result.succeeded {
-          print(
-            "[DeviceManager] HID lifecycle feature report failed for controller=\(key) "
-              + "loc=\(locationID) report=\(report.reportID): \(result.failureDescription)"
-          )
-        }
-      }
+  func isCurrentHIDStartupConnection(
+    _ pipeline: DevicePipeline,
+    connection: HIDDeviceConnection
+  ) -> Bool {
+    let identifier = pipeline.identifier
+    guard !Task.isCancelled, !isStopping, isCurrentHIDInitialization(connection),
+      pipelines[identifier] === pipeline, identifier.locationID == connection.routingLocationID,
+      let info = deviceInfos[identifier], case .hid = info.discoverySource,
+      info.hidConnectionID == connection.connectionID,
+      info.physicalDevice == connection.physicalDevice,
+      info.hidInputOwnership != .ownedByAnotherClient
+    else { return false }
+    return true
+  }
+
+  func requestHIDInputConnectionStatusIfNeeded(
+    pipeline: DevicePipeline,
+    connection: HIDDeviceConnection
+  ) async {
+    let locationID = connection.routingLocationID
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
+    guard let write = await pipeline.hidPresenceRequestWrite() else { return }
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
+    let result = await sendHIDWrites(
+      [write],
+      locationID: locationID,
+      identifier: pipeline.identifier,
+      pipeline: pipeline,
+      startupConnection: connection
+    )
+    guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
+    if !result {
+      print(
+        "[DeviceManager] HID connection-status request failed for"
+          + " controller=\(pipeline.identifier) loc=\(locationID)"
+      )
     }
   }
 }

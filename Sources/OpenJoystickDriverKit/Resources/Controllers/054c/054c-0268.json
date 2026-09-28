@@ -2,9 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 1356,
   "productID": 616,
-  "transport": "hid",
   "protocol": {
-    "driver": "DS3",
-    "variant": "dualShock3"
+    "family": "sony.sixaxis"
   }
 }

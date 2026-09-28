@@ -7,14 +7,14 @@ extension ApplicationServiceDeviceDescription {
     case runtimeIdentifier
     case vendorID
     case productID
-    case parser
+    case protocolBinding
     case connection
+    case interfaceNumber
     case discoverySource
     case physicalOwnership
     case hidInputOwnership
     case duplicateExposureRisk
     case serialNumber
-    case protocolVariant
     case quirks
     case inputEndpoint
     case outputEndpoint
@@ -22,10 +22,11 @@ extension ApplicationServiceDeviceDescription {
     case postHandshakeSettleMs
     case preferredBackends
     case physicalOutputCapabilities
-    case physicalInputCapabilities
-    case battery
+    case capabilities
+    case connectionState
     case sessionState
     case startupCommandStatus
     case inputHealth
+    case virtualHIDProfile
   }
 }

@@ -58,11 +58,15 @@ struct GyroOutputTests {
       let encoded = try JSONEncoder().encode(settings)
       #expect(try JSONDecoder().decode(RemappingGyroOutput.self, from: encoded) == settings)
     }
-    let virtualMotion = RemappingGyroOutput(virtualMotion: true)
-    #expect(
-      try JSONDecoder().decode(RemappingGyroOutput.self, from: JSONEncoder().encode(virtualMotion))
-        == virtualMotion
-    )
+  }
+
+  @Test
+  func unknownFieldsAreIgnoredAndNotReencoded() throws {
+    let stored = Data(#"{"mode":"mouse","virtualMotion":true}"#.utf8)
+    let decoded = try JSONDecoder().decode(RemappingGyroOutput.self, from: stored)
+    #expect(decoded == RemappingGyroOutput(mode: .mouse))
+    let encoded = try #require(String(data: JSONEncoder().encode(decoded), encoding: .utf8))
+    #expect(!encoded.contains("virtualMotion"))
   }
 
   @Test

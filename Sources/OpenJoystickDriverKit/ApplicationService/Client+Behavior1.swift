@@ -47,13 +47,13 @@ extension ApplicationServiceClient {
     try await call("requestAccess", LocalServiceRPCPermissionArguments(requirement: requirement))
   }
 
-  public func deviceInputState(
+  public func controllerState(
     vendorID: UInt16,
     productID: UInt16,
     runtimeIdentifier: String? = nil
-  ) async throws -> DeviceInputState? {
+  ) async throws -> ControllerState? {
     let data: Data? = try await call(
-      "getDeviceInputState",
+      "getControllerState",
       LocalServiceRPCDeviceArguments(
         vendorID: Int(vendorID),
         productID: Int(productID),
@@ -61,7 +61,7 @@ extension ApplicationServiceClient {
       )
     )
     guard let data else { return nil }
-    return try? JSONDecoder().decode(DeviceInputState.self, from: data)
+    return try? JSONDecoder().decode(ControllerState.self, from: data)
   }
 
   public func packetLog(
@@ -83,65 +83,20 @@ extension ApplicationServiceClient {
     return entries
   }
 
-  public func sendPhysicalRumble(
+  /// Sends one output command to the selected controller through the running app.
+  public func sendControllerOutput(
+    _ command: ControllerOutputCommand,
     vendorID: UInt16,
     productID: UInt16,
-    runtimeIdentifier: String? = nil,
-    left: UInt8,
-    right: UInt8,
-    lt: UInt8,
-    rt: UInt8,
-    durationMs: Int
-  ) async throws -> Bool {
+    runtimeIdentifier: String? = nil
+  ) async throws -> ControllerOutputResult {
     try await call(
-      "sendPhysicalRumble",
-      LocalServiceRPCRumbleArguments(
-        vendorID: Int(vendorID),
-        productID: Int(productID),
+      "sendControllerOutput",
+      LocalServiceRPCControllerOutputArguments(
+        vendorID: vendorID,
+        productID: productID,
         runtimeIdentifier: runtimeIdentifier,
-        left: Int(left),
-        right: Int(right),
-        leftTrigger: Int(lt),
-        rightTrigger: Int(rt),
-        durationMilliseconds: durationMs
-      )
-    )
-  }
-
-  public func setPhysicalPlayerIndicator(
-    vendorID: UInt16,
-    productID: UInt16,
-    runtimeIdentifier: String? = nil,
-    indicator: PhysicalPlayerIndicator
-  ) async throws -> Bool {
-    try await call(
-      "setPhysicalPlayerIndicator",
-      LocalServiceRPCPlayerIndicatorArguments(
-        vendorID: Int(vendorID),
-        productID: Int(productID),
-        runtimeIdentifier: runtimeIdentifier,
-        playerIndex: indicator.rawValue
-      )
-    )
-  }
-
-  public func setPhysicalColor(
-    vendorID: UInt16,
-    productID: UInt16,
-    runtimeIdentifier: String? = nil,
-    red: UInt8,
-    green: UInt8,
-    blue: UInt8
-  ) async throws -> Bool {
-    try await call(
-      "setPhysicalColor",
-      LocalServiceRPCColorArguments(
-        vendorID: Int(vendorID),
-        productID: Int(productID),
-        runtimeIdentifier: runtimeIdentifier,
-        red: Int(red),
-        green: Int(green),
-        blue: Int(blue)
+        command: command
       )
     )
   }
@@ -186,23 +141,6 @@ extension ApplicationServiceClient {
     )
   }
 
-  public func setPhysicalBrightness(
-    vendorID: UInt16,
-    productID: UInt16,
-    runtimeIdentifier: String? = nil,
-    brightness: UInt8
-  ) async throws -> Bool {
-    try await call(
-      "setPhysicalBrightness",
-      LocalServiceRPCBrightnessArguments(
-        vendorID: Int(vendorID),
-        productID: Int(productID),
-        runtimeIdentifier: runtimeIdentifier,
-        brightness: Int(brightness)
-      )
-    )
-  }
-
   public func setSuppressOutput(_ suppress: Bool) async throws {
     let _: Bool = try await call("setSuppressOutput", LocalServiceRPCBoolArguments(value: suppress))
   }
@@ -220,21 +158,39 @@ extension ApplicationServiceClient {
     return payload
   }
 
-  public func setCompatibilityIdentity(_ raw: String) async throws -> Bool {
-    try await call("setCompatibilityIdentity", LocalServiceRPCStringArguments(value: raw))
+  /// Stores `profile` as the virtual HID profile override for the selected controller's model
+  /// and applies it to the connected controller.
+  public func setVirtualHIDProfileOverride(
+    _ profile: String,
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String? = nil
+  ) async throws -> VirtualHIDProfileOverrideResult {
+    try await call(
+      "setVirtualHIDProfileOverride",
+      LocalServiceRPCVirtualHIDProfileOverrideArguments(
+        vendorID: Int(vendorID),
+        productID: Int(productID),
+        runtimeIdentifier: runtimeIdentifier,
+        profile: profile
+      )
+    )
   }
 
-  public func setCompatibilityIdentityDetailed(
-    _ raw: String
-  ) async throws -> CompatibilityIdentityTransitionResult {
-    let data: Data = try await call(
-      "setCompatibilityIdentityDetailed",
-      LocalServiceRPCStringArguments(value: raw)
+  /// Returns the selected controller's model to automatic virtual HID profile selection.
+  public func resetVirtualHIDProfileOverride(
+    vendorID: UInt16,
+    productID: UInt16,
+    runtimeIdentifier: String? = nil
+  ) async throws -> VirtualHIDProfileOverrideResult {
+    try await call(
+      "resetVirtualHIDProfileOverride",
+      LocalServiceRPCDeviceArguments(
+        vendorID: Int(vendorID),
+        productID: Int(productID),
+        runtimeIdentifier: runtimeIdentifier
+      )
     )
-    guard
-      let result = try? JSONDecoder().decode(CompatibilityIdentityTransitionResult.self, from: data)
-    else { throw ApplicationServiceClientError.invalidResponse }
-    return result
   }
 
   public func suspendController(
@@ -293,10 +249,6 @@ extension ApplicationServiceClient {
       let result = try? JSONDecoder().decode(WirelessControllerDisconnectResult.self, from: data)
     else { throw ApplicationServiceClientError.invalidResponse }
     return result
-  }
-
-  public func getCompatibilityIdentity() async throws -> String {
-    try await call("getCompatibilityIdentity", LocalServiceRPCEmptyArguments())
   }
 
   public func runVirtualDeviceSelfTest(

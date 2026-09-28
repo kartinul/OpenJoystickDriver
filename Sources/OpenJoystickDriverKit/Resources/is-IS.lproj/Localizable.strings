@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Athugar tengdar stýringar…";
 "status.refreshingProfile" = "Uppfærir sniðstöðu…";
 "status.loadingProfiles" = "Hleður sniðum…";
-"status.updatingIdentity" = "Uppfærir auðkenni stýringar…";
 "status.listening" = "Hlustar…";
 "status.readyToListen" = "Tilbúið að hlusta";
 "status.checkingInput" = "Athugar";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Stýringar";
 "settings.controllerDisconnectedNotifications" = "Stjórnanda aftengdur";
 "settings.controllerDisconnectedShort" = "Aftengd";
-"settings.controllerIdentity" = "Auðkenni stýringar";
 "settings.controllerNotifications" = "Stjórnanda tengdur";
 "settings.diagnostics" = "Greining";
 "settings.service" = "Þjónusta";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Afhleðst";
 "controllers.charging" = "Hleðst";
 "controllers.batteryFull" = "Fullhlaðin";
+"controllers.notChargeable" = "Ekki hlaðanleg";
 "controllers.batteryAccessibilityDetails" = "Rafhlaða: %@. Hleðsluástand: %@. Kapalástand: %@.";
 "controllers.activeProfile" = "Virkt snið";
 "controllers.profileChecking" = "Athugar…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Virkt snið ótiltækt";
 "controllers.profileLoadError" = "Ekki tókst að hlaða virku sniði";
 "controllers.protocol" = "Samskiptaregla";
-"controllers.parser" = "Skilur";
 "controllers.serialNumber" = "Raðnúmer";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Inntaksendapunktur";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Villa í virku sniði: %@";
 "controllers.accessibilityDetails" = "%@. %@. Samskiptaregla: %@. Parser: %@. Raðnúmer: %@. USB VID/PID: %@. Inntaksendapunktur: %@. Úttaksendapunktur: %@.";
 "controllers.publishedAs" = "Útgefið sem";
-"identity.title" = "Auðkenni stýringar";
-"identity.needsAttention" = "Þarfnast athygli";
-"identity.error" = "Villa í auðkenni stýringar";
-"identity.updating" = "Uppfærir auðkenni stýringar…";
-"identity.reset" = "Endurstilla á ráðlagt";
-"identity.checking" = "Athugar";
-"identity.globalScope" = "Gildir um alla virtulega stjórnarmenn sem birt eru af OpenJoystickDriver.";
-"identity.unavailable" = "Ótiltækt";
-"identity.notSelected" = "Ekki valið";
+"controllers.nativeGamepadNotPublished" = "Innbyggð macOS-leikjafjarstýring, ekki birt";
+"virtualProfile.advanced" = "Ítarlegt";
+"virtualProfile.title" = "Sýndar-HID-snið";
+"virtualProfile.modelScope" = "Gildir um allar tengdar stýringar af þessari gerð.";
+"virtualProfile.sourceOverride" = "Hnekking";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Sjálfvirkt, hnekkingu hafnað";
+"virtualProfile.none" = "Ekkert sýndar-HID-snið";
+"virtualProfile.unavailable" = "Ekkert sýndar-HID-snið getur táknað þessa stýringu.";
+"virtualProfile.updating" = "Uppfærir sýndar-HID-snið…";
+"virtualProfile.live" = "Virkt snið";
+"virtualProfile.failure.unknownProfile" = "Þetta sýndar-HID-snið er óþekkt. Ekkert var vistað.";
+"virtualProfile.failure.controllerNotFound" = "Stýringin var aftengd eða finnst ekki. Hnekkingin er óbreytt.";
+"virtualProfile.failure.overrideRejected" = "Hnekkingin er vistuð, en þessi stýring getur ekki notað hana og velur því sjálfvirkt.";
+"virtualProfile.failure.activationFailed" = "Virkjun mistókst og því var fyrra sýndar-HID-sniðið endurheimt: %@";
+"virtualProfile.failure.outputDisabled" = "Hnekkingin er vistuð og tekur gildi þegar sýndarúttak er virkjað.";
+"virtualProfile.failure.serverStopped" = "Þjónustan stöðvaðist. Hnekkingin er óbreytt.";
+"virtualProfile.failure.persistenceFailed" = "Ekki tókst að vista hnekkinguna. Ekkert var vistað.";
+"virtualProfile.storeError" = "Ekki er hægt að lesa hnekkingar sýndar-HID-sniðs (%@). Stýringar velja sjálfvirkt.";
+"virtualProfile.legacyIdentityRejected" = "Úrelta auðkennisstilling stýringar %@ er ekki lengur notuð. Keyrðu controller virtual reset --all til að hreinsa hana.";
 "keyboard.noKey" = "Enginn lykill valinn";
 "keyboard.pressKey" = "Ýttu á lykil…";
 "keyboard.captureKey" = "Fanga lykil";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Núverandi staða";
 "debug.runtime" = "Keyrsla";
 "debug.controllers" = "Stýringar";
-"debug.controllerIdentity" = "Auðkenni stýringar";
 "debug.unavailable" = "Keyrsla · ótiltæk";
 "debug.needsAttention" = "Keyrsla · þarfnast athygli";
 "debug.diagnostics" = "Greining";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Úttak stýringar er slökkt.";
 "debug.outputNeedsAttention" = "Úttak stýringar þarfnast athygli.";
 "debug.serviceUnavailable" = "Greining þjónustu er ótiltæk núna.";
-"error.selectedOutputUnavailable" = "Valið úttak stýringar er ótiltækt.";
-"error.selectedOutputEnableFailed" = "Ekki tókst að kveikja á völdu úttaki stýringar.";
 "error.profileChanged" = "Þessu sniði var breytt annars staðar. Hladdu aftur eða haltu áfram að breyta.";
 "error.duplicateProfile" = "Snið með því heiti er þegar til.";
 "error.profileMissing" = "Það snið er ekki lengur tiltækt.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Keyrsla";
 "common.controllers" = "Stýringar";
 "common.profiles" = "Snið";
-"common.controllerIdentity" = "Auðkenni stýringar";
 "common.protocol" = "Samskiptaregla";
-"common.parser" = "Skilur";
 "common.serialNumber" = "Raðnúmer";
 "common.inputEndpoint" = "Inntaksendapunktur";
 "common.outputEndpoint" = "Úttaksendapunktur";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Valinn prófíllinn er ekki lengur til staðar.";
 "cli.catalog.app_ready.summary" = "Athuga auðkennda tilbúinleika forritsþjónustunnar";
 "cli.catalog.app_status.summary" = "Sýna stöðu forritsþjónustunnar";
-"cli.catalog.compat.summary" = "Stjórna samhæfni sýndarstýringar";
 "cli.catalog.controller_list.summary" = "Telja upp tengdar stýringar";
 "cli.catalog.controller_output.summary" = "Prófa studda líkamlega stýriúttak";
 "cli.catalog.controller_packets.summary" = "Sýna nýleg stýripakka";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Sýna stöðu rekils og keyrslu";
 "cli.catalog.test.summary" = "Prófa afhendingu inntaks sýndarstýringar";
 "cli.catalog.update.summary" = "Athuga GitHub eftir tiltækum uppfærslum";
-"cli.compat.identity" = "samhæfni auðkenni: %@";
-"cli.compat.identity_unknown" = "samhæfni auðkenni: óþekkt";
-"cli.compat.set_failed" = "Tókst ekki að setja samhæfni auðkenni á %@. Ræstu uppsetta forritið og staðfestu aðgang að Inntaksköktun og Aðgengi.";
-"cli.compat.usage" = "Notkun: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "user-space-staða: %@";
 "cli.controller.allAppleEntries" = "Allar nákvæmar Apple-skrárfærslur:";
 "cli.controller.appleIDs" = "    Apple-auðkenni: %@";
 "cli.controller.applePairs" = "  Apple-pör    : %d nákvæmar VID/PID-færslur";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Engin tengd stýring passar við --device %@.";
 "cli.controller.selection.multiple" = "Margar stýringar passa. Veldu eina með --device:\n  %@";
 "cli.controller.selection.none" = "Engin stýring er tengd.";
+"cli.controller.virtual.live" = "Sýndar-HID-snið: %@ (%@)";
+"cli.controller.virtual.none" = "Sýndar-HID-snið: ekkert (%@)";
+"cli.controller.virtual.failed" = "Beiðni um sýndar-HID-snið mistókst: %@";
+"cli.controller.virtual.unknown_profile" = "Óþekkt sýndar-HID-snið „%@“. Notaðu eitt af: %@.";
+"cli.controller.virtual.missing_profile" = "„controller virtual set“ krefst sýndar-HID-sniðs. Notaðu eitt af: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "Ekki er hægt að sameina „--all“ við --vid, --pid eða --device.";
+"cli.controller.virtual.reset_all.success" = "OK: hreinsaði allar hnekkingar sýndar-HID-sniðs.";
+"cli.controller.virtual.reset_all.failed" = "Tókst ekki að endurstilla stillingar. Ræsið uppsetta forritið og staðfestið heimildir þess.";
 "cli.controller.selection.vid_pid_missing" = "Engin tengd stýring passar við %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Sendið bæði VID og PID, eða sleppið báðum.";
 "cli.controller.serviceControllers" = "Stýringar (frá keyrandi forritsþjónustu):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Ábending: veitið nauðsynlega entitlement og aðgang að Inntaksköktun.";
 "cli.controller.usbControllers" = "USB-stýringar (flokkur 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Sendið bæði VID og PID, eða sleppið báðum þegar ein stýring er tengd.";
-"cli.diagnose.advisory_candidate" = "    Ráðgefandi samskiptamátskandídat: %@";
 "cli.diagnose.app_missing" = "  Forrit: vantar á %@";
 "cli.diagnose.app_missing_fix" = "  Lagfæring: byggja + setja forritið upp í /Applications";
 "cli.diagnose.app_present" = "  Forrit: til staðar";
 "cli.diagnose.binary_path" = "Tvíundarskrá: %@";
-"cli.diagnose.catalog_conflict" = "      Athugun stangast á við skrárfjölskylduna; parser óbreyttur";
-"cli.diagnose.catalog_parser" = "      Skráar-parser helst %@ (%@)";
 "cli.diagnose.dext_found" = "  Fundin .dext-búnt:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      endapunktur 0x%02X %@ %@ MaxPacket=%@ á milli%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Óþekkt svörunarferill „%@“.";
 "cli.mapping.double_tap_format" = "--double-tap væntir <ms>:<target>, t.d. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Notkun: OpenJoystickDriver --headless map <command>\n\nSkipanir:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nUppspretta: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nMark: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nÁsvalkostir:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo-valkostir (aðeins lyklaborðs- og músarhnappar):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nVirkjunarvalkostir (aðeins lyklaborðs- og músarhnappar, útiloka turbo):\n  --long-hold <ms>:<target>     t.d. --long-hold 500:key:b\n  --double-tap <ms>:<target>    t.d. --double-tap 300:key:c\n\n<profile> tekur við UUID eða nákvæmu, há- og lágstafshlutlausu sniðnafni.\n<id> tekur við tugagildi eða sextándakerfi með 0x-forskeyti.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Notkun: OpenJoystickDriver --headless map <command>\n\nSkipanir:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nUppspretta: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nMark: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nÁsvalkostir:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo-valkostir (aðeins lyklaborðs- og músarhnappar):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nVirkjunarvalkostir (aðeins lyklaborðs- og músarhnappar, útiloka turbo):\n  --long-hold <ms>:<target>     t.d. --long-hold 500:key:b\n  --double-tap <ms>:<target>    t.d. --double-tap 300:key:c\n\n<profile> tekur við UUID eða nákvæmu, há- og lágstafshlutlausu sniðnafni.\n<id> tekur við tugagildi eða sextándakerfi með 0x-forskeyti.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ verður að vera 16-bita tugagildi eða 0x-forskeytt sextándakerfisauðkenni.";
 "cli.mapping.jsonEncodeFailed" = "Gat ekki kóðað UTF-8-JSON.";
 "cli.mapping.layer_action_unknown" = "Óþekkt lagaaðgerð „%@“. Væntanlegt: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver-forritsþjónusta er ekki í gangi.";
 "cli.runtime.sample_limit" = "Stilling myndi safna %d sýnum; aukið --interval-ms.";
 "cli.runtime.stable_note" = "Stöðugt, takmarkað soak er sönnunargagn fyrir þetta álag, ekki sönnun um að allir lekar vanti.";
-"cli.settings.reset.failed" = "Tókst ekki að endurstilla stillingar. Ræsið uppsetta forritið og staðfestið heimildir þess.";
-"cli.settings.reset.next" = "Næst: keyra compat set <identity> til að velja samhæfni auðkenni.";
-"cli.settings.reset.success" = "OK: endurstillti stillingar forritsþjónustu.";
 "cli.status.access_denied" = "Ef aðgangi er hafnað, keyrið --headless permissions request og samþykkið Inntaksköktun og Aðgengi í Kerfisstillingum.";
 "cli.status.heading" = "OpenJoystickDriver-staða";
 "cli.status.json_error" = "Gat ekki kóðað stöðu-JSON: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Staða       : %@";
 "cli.updates.unknown_option" = "Óþekktur updates-valkostur: %@";
 "common.unknown" = "Óþekkt";
-"compatibility.appleGameController" = "Eplur GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (Originill)";
 "developer.buttons" = "Hnappar";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B-hnappur";
 "inputTest.bCircle" = "B / hringur";
 "inputTest.brightness" = "Hjartanleiki";
-"inputTest.circle" = "Hringur";
 "inputTest.color" = "Litur";
 "inputTest.controls" = "Rauntímainntak";
-"inputTest.cross" = "Þvermál";
 "inputTest.disconnected" = "Stjórnanda aftengdur";
 "inputTest.dpadDown" = "D-pad niður";
 "inputTest.dpadLeft" = "D-pad vinstri";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Ljósstjórn eru ekki til staðar fyrir þennan stjórnandi.";
 "inputTest.live" = "Innleiðslustarf";
 "inputTest.menu" = "Matseðill";
-"inputTest.minus" = "Mínus";
 "inputTest.off" = "Slökkt";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Valkostir";
 "inputTest.outputError" = "Fíkilslegur útgáfubrot";
 "inputTest.outputRejected" = "Stjórnanda hafnaði þessari útrásprófu.";
 "inputTest.permissionRequired" = "Innleiðslur Eftirlit þarf leyfi";
 "inputTest.playerIndicator" = "Leikmannsvísara";
-"inputTest.plus" = "Plús";
 "inputTest.pressed" = "Ýtt";
-"inputTest.psButton" = "PS-hnappur";
 "inputTest.released" = "Sleppt";
 "inputTest.rightBumper" = "Hægri bumper";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Hægri Y";
 "inputTest.rumble" = "Hringur";
 "inputTest.rumbleUnavailable" = "Rumble er ekki styðdur af þessum stjórnandi.";
-"inputTest.share" = "Deildu";
-"inputTest.square" = "Fjarlægur";
 "inputTest.stale" = "Útgangur truflaður";
 "inputTest.start" = "Byrjaðu innleiðslustöð";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Rauntímainntak";
 "inputTest.tabMotion" = "Framkvæmdastjórn";
 "inputTest.tabOutput" = "Útgangur";
-"inputTest.steamButton" = "Steam-hnappur";
 "inputTest.summary" = "Prófa hnappur, stöngur, afrekar, hræra og ljósastöð.";
 "inputTest.testRumble" = "Prófshráls";
 "inputTest.title" = "Innleiðingarpróf";
-"inputTest.triangle" = "Þríhyrningur";
 "inputTest.unavailable" = "Útgangur er ekki til staðar";
 "inputTest.view" = "Útsýni";
 "inputTest.windowTitle" = "Innleiðingarpróf %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Ekki var hægt að setja Joy-Cons í par.";
 "profiles.joyConExplicitSession" = "Byrjað með augljósri par sessjón";
 "profiles.joyConSessionState" = "Ágreinlegt paring";
-"profiles.gyro.virtualMotion" = "Framsnúið útfærð vélbraytt hreyfing";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ hræða (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Stjórnanda aftengdur";
 "controllers.resume" = "Reyna aftur";
 "controllers.disconnectFromOJD" = "Stjórnanda aftengdur";
-"error.compatibilityTransitionDetailed" = "Ekki tókst að kveikja á völdu úttaki stýringar. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Ekki tókst að kveikja á völdu úttaki stýringar.";
 "cli.catalog.controller_disconnect.summary" = "Stjórnanda aftengdur";
 "cli.catalog.controller_resume.summary" = "Reyna aftur — Stjórnanda aftengdur";
+"cli.catalog.controller_virtual_set.summary" = "Hnekkja sýndar-HID-sniði stýripinna";
+"cli.catalog.controller_virtual_reset.summary" = "Velja sýndar-HID-snið stýripinna sjálfkrafa, eða hreinsa allar hnekkingar með --all";
 "cli.controller.disconnected" = "Stjórnanda aftengdur";
 "cli.controller.resumed" = "Innleiðslustarf";
 

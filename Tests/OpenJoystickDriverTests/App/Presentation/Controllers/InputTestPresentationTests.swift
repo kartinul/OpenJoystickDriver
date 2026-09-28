@@ -24,25 +24,23 @@ struct InputTestPresentationTests {
   }
 
   @Test
-  func canonicalButtonsDriveTheStandardInputMap() {
-    var state = DeviceInputState(vendorID: 1, productID: 2)
-    state.pressedButtons = [
-      Button.leftBumper.rawValue, Button.dpadUp.rawValue, Button.leftStick.rawValue,
-      Button.l2Digital.rawValue, Button.leftFunction.rawValue, Button.rightFunction.rawValue,
-      Button.leftPaddle.rawValue, Button.rightPaddle.rawValue, Button.leftSL.rawValue,
-      Button.leftSR.rawValue, Button.rightSL.rawValue, Button.rightSR.rawValue,
-      Button.mute.rawValue,
+  func controlsOutsideTheDrawnClustersAreListedAsAdditional() {
+    var state = ControllerState.neutral
+    state.hat = .north
+    state.pressed = [
+      .leftShoulder, .leftStickClick, .leftTriggerButton, .auxiliary1, .auxiliary2, .paddleLeft1,
+      .paddleRight1, .auxiliary3, .auxiliary4, .auxiliary5, .auxiliary6, .microphone,
     ]
 
-    #expect(InputTestButtonPresentation.isPressed([.leftBumper, .l1], in: state))
-    #expect(InputTestButtonPresentation.isPressed([.dpadUp], in: state))
-    #expect(InputTestButtonPresentation.isPressed([.leftStick], in: state))
-    #expect(InputTestButtonPresentation.isPressed([.l2Digital], in: state))
     #expect(
-      InputTestButtonPresentation.additionalButtons(in: state) == [
-        "leftFunction", "leftPaddle", "leftSL", "leftSR", "mute", "rightFunction", "rightPaddle",
-        "rightSL", "rightSR",
+      InputTestButtonPresentation.additionalControls(in: state, labels: .standard) == [
+        .microphone, .paddleLeft1, .paddleRight1, .auxiliary1, .auxiliary2, .auxiliary3,
+        .auxiliary4, .auxiliary5, .auxiliary6,
       ]
+    )
+    #expect(
+      InputTestButtonPresentation.localizedTitle(for: .auxiliary1, labels: .playStation)
+        == RuntimePresentation.sourceLabel(.button(.leftFunction))
     )
   }
 
@@ -54,17 +52,6 @@ struct InputTestPresentationTests {
     #expect(xbox.guide.symbol == "xbox.logo")
     #expect(xbox.leftStickClick.symbol == "lsb.button.angledbottom.horizontal.left")
 
-    let playStation = InputTestControllerSymbolSet.resolve(for: .playstation)
-    #expect(playStation.leftShoulder.symbol == "l1.button.roundedbottom.horizontal")
-    #expect(playStation.leftTrigger.symbol == "l2.button.roundedtop.horizontal")
-    #expect(playStation.guide.symbol == "playstation.logo")
-    #expect(playStation.southFace.symbol == "xmark.circle")
-
-    let switchController = InputTestControllerSymbolSet.resolve(for: .nintendo)
-    #expect(switchController.leftTrigger.symbol == "zl.button.roundedtop.horizontal")
-    #expect(switchController.view.symbol == "minus.circle")
-    #expect(switchController.menu.symbol == "plus.circle")
-
     let generic = InputTestControllerSymbolSet.resolve(for: .generic)
     #expect(generic.leftShoulder.symbol == nil)
     #expect(generic.leftShoulder.fallbackText == "LB / L1")
@@ -72,16 +59,26 @@ struct InputTestPresentationTests {
   }
 
   @Test
-  func systemControlLayoutFollowsControllerFamily() {
-    let xbox = InputTestSystemClusterLayout.resolve(for: .xboxSeries)
-    #expect(xbox == .xboxWithShare)
-    #expect(xbox.rows == [[.view, .guide, .menu], [.empty, .share, .empty]])
-    #expect(InputTestSystemClusterLayout.viewButtons(for: .xbox) == [.back])
-    #expect(InputTestSystemClusterLayout.shareButtons == [.share])
+  func viewSlotShowsViewUnlessPlayStationCreatePublishesAsShare() {
+    #expect(InputTestSystemClusterLayout.viewControls(labels: .standard) == [.view])
+    #expect(InputTestSystemClusterLayout.viewControls(labels: .nintendo) == [.view])
+    #expect(InputTestSystemClusterLayout.viewControls(labels: .playStation).isEmpty)
+  }
 
-    let playStation = InputTestSystemClusterLayout.resolve(for: .dualSenseUSB)
-    #expect(playStation == .standard)
-    #expect(playStation.rows == [[.view, .guide, .menu]])
-    #expect(InputTestSystemClusterLayout.viewButtons(for: .playstation) == [.share])
+  @Test
+  func shareAndCaptureAreListedAsAdditional() {
+    var state = ControllerState.neutral
+    state.pressed = [.view, .guide, .share, .capture]
+
+    #expect(
+      InputTestButtonPresentation.additionalControls(in: state, labels: .standard) == [
+        .share, .capture,
+      ]
+    )
+    #expect(
+      InputTestButtonPresentation.additionalControls(in: state, labels: .playStation) == [
+        .view, .share, .capture,
+      ]
+    )
   }
 }

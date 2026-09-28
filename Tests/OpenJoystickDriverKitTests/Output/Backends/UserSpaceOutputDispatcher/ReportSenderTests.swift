@@ -1,5 +1,4 @@
 import Foundation
-import CoreHID
 import Testing
 
 @testable import OpenJoystickDriverKit
@@ -120,76 +119,60 @@ private final class NonCooperativeReportBackend: UserSpaceOutputDispatcher.Virtu
   func closeCount() -> Int { lock.withLock { closes } }
 }
 
-private actor KeepaliveClock {
-  private var ticks = 0
-  private var cancelled = false
-  private var sleepers: [CheckedContinuation<Void, Never>] = []
-  private var observers: [(Int, CheckedContinuation<Void, Never>)] = []
-
-  func sleep() async {
-    ticks += 1
-    let ready = observers.filter { $0.0 <= ticks }
-    observers.removeAll { $0.0 <= ticks }
-    ready.forEach { $0.1.resume() }
-    await withTaskCancellationHandler {
-      if !cancelled { await withCheckedContinuation { sleepers.append($0) } }
-    } onCancel: {
-      Task { await self.cancel() }
-    }
-  }
-
-  func waitForTick(_ count: Int) async {
-    if ticks < count { await withCheckedContinuation { observers.append((count, $0)) } }
-  }
-
-  func advance() {
-    let values = sleepers
-    sleepers.removeAll()
-    values.forEach { $0.resume() }
-  }
-
-  private func cancel() {
-    cancelled = true
-    advance()
-  }
-}
-
-private final class KeepaliveActivity: @unchecked Sendable {
+private final class ActivityFlag: @unchecked Sendable {
   private let lock = NSLock()
   private var active = true
   func set(_ value: Bool) { lock.withLock { active = value } }
   func get() -> Bool { lock.withLock { active } }
 }
 
+/// Records the output commands a host report handler delivers.
+private final class OutputRecorder: @unchecked Sendable {
+  private let lock = NSLock()
+  private var commands: [ControllerOutputCommand] = []
+  private var sent: [Int] = []
+  func append(_ command: ControllerOutputCommand, sent count: Int = 0) {
+    lock.withLock {
+      commands.append(command)
+      sent.append(count)
+    }
+  }
+  func snapshot() -> [ControllerOutputCommand] { lock.withLock { commands } }
+  func sentCounts() -> [Int] { lock.withLock { sent } }
+}
+
 struct ReportSenderTests {
-  @available(macOS 15, *)
   @Test(.timeLimit(.minutes(1)))
-  func coreHIDNintendoSetReportReturnsAfterOrderedEnqueue() async throws {
+  func hostSetReportReturnsAfterOrderedEnqueue() async throws {
     let gate = ReportSendGate()
     let backend = OrderedReportBackend(gate: gate)
-    let input = UserSpaceInputReportState(format: SwitchProUSBHIDReportFormat())
+    let input = UserSpaceInputReportState(format: OJDGenericGamepadFormat())
     let entry = UserSpaceOutputDispatcher.Entry(backend: backend, inputReportState: input)
+    let outputs = OutputRecorder()
     let isOpen: @Sendable () -> Bool = { true }
     let handler = UserSpaceHostReportHandler(
       identifier: DeviceIdentifier(vendorID: 1, productID: 2),
       input: input,
       sender: entry.sender,
       isOpen: isOpen,
-      onRumble: nil
-    ) { _ in }
-    let delegate = UserSpaceOutputDispatcher.CoreHIDDelegate(handler: handler)
-    let first = [1, 0] + [UInt8](repeating: 0, count: 8) + [2]
-    let second = [1, 0] + [UInt8](repeating: 0, count: 8) + [3, 0x30]
-
-    try delegate.enqueueSetReport(type: .output, id: HIDReportID(rawValue: 1), data: Data(first))
-    try delegate.enqueueSetReport(type: .output, id: HIDReportID(rawValue: 1), data: Data(second))
+      onOutput: { _, command in outputs.append(command) },
+      onRumbleStatus: { _ in }
+    )
+    let blocking = entry.sender.submit { [[1]] }
     await gate.waitForEntry()
+
+    _ = try handler.setReport(type: .output, reportID: 0, bytes: [0x4F, 10, 20, 0, 0])
+    _ = try handler.setReport(type: .output, reportID: 0, bytes: [0x4F, 30, 40, 0, 0])
+    #expect(outputs.snapshot().isEmpty)
     await gate.open()
+    try await blocking.value()
     try await entry.sender.submit { [] }.value()
 
-    let reports = backend.snapshot().reports
-    #expect(reports.count == 2)
-    #expect(reports.map { $0[14] } == [2, 3])
+    #expect(
+      outputs.snapshot() == [
+        .consumerRumble(left: 10, right: 20), .consumerRumble(left: 30, right: 40),
+      ]
+    )
     await entry.close()
   }
 
@@ -198,7 +181,7 @@ struct ReportSenderTests {
     let gate = ReportSendGate()
     let backend = OrderedReportBackend(gate: gate)
     let sender = UserSpaceReportSender()
-    let activity = KeepaliveActivity()
+    let activity = ActivityFlag()
     sender.attach(backend)
     let isActive: @Sendable () -> Bool = { activity.get() }
     let reports = sender.submit(whileActive: isActive) { [[1], [2]] }
@@ -216,41 +199,41 @@ struct ReportSenderTests {
   }
 
   @Test(.timeLimit(.minutes(1)))
-  func eventsKeepalivesAndHostRepliesShareOneOrder() async throws {
+  func eventsRepublishedStateAndHostOutputShareOneOrder() async throws {
     let gate = ReportSendGate()
     let backend = OrderedReportBackend(gate: gate)
-    let input = UserSpaceInputReportState(format: SwitchProUSBHIDReportFormat())
+    let format = OJDGenericGamepadFormat()
+    let input = UserSpaceInputReportState(format: format)
     let entry = UserSpaceOutputDispatcher.Entry(backend: backend, inputReportState: input)
     let first = entry.sender.submit { [input] in [input.update { $0.buttons = 1 }] }
     await gate.waitForEntry()
     let second = entry.sender.submit { [input] in [input.update { $0.buttons = 2 }] }
-    let keepalive = entry.sender.submit { [input] in [input.currentReport()] }
+    let republished = entry.sender.submit { [input] in [input.currentReport()] }
+    let sentBeforeOutput = OutputRecorder()
     let isOpen: @Sendable () -> Bool = { true }
     let handler = UserSpaceHostReportHandler(
       identifier: DeviceIdentifier(vendorID: 1, productID: 2),
       input: input,
       sender: entry.sender,
       isOpen: isOpen,
-      onRumble: nil
-    ) { _ in }
-    let reply = try handler.setReport(
-      type: .output,
-      reportID: 1,
-      bytes: [1, 0] + [UInt8](repeating: 0, count: 8) + [2]
+      onOutput: { _, command in
+        sentBeforeOutput.append(command, sent: backend.snapshot().reports.count)
+      },
+      onRumbleStatus: { _ in }
     )
+    let output = try handler.setReport(type: .output, reportID: 0, bytes: [0x4F, 10, 20, 0, 0])
     await gate.open()
     try await first.value()
     try await second.value()
-    try await keepalive.value()
-    try await reply.value()
+    try await republished.value()
+    try await output.value()
     let snapshot = backend.snapshot()
     #expect(snapshot.maxActive == 1)
-    try #require(snapshot.reports.count == 4)
-    #expect(snapshot.reports[0][3] == 4)
-    #expect(snapshot.reports[1][3] == 8)
+    try #require(snapshot.reports.count == 3)
+    #expect(snapshot.reports[0] == format.buildInputReport(from: VirtualGamepadState(buttons: 1)))
+    #expect(snapshot.reports[1] == format.buildInputReport(from: VirtualGamepadState(buttons: 2)))
     #expect(snapshot.reports[2] == snapshot.reports[1])
-    #expect(snapshot.reports[3][0] == 0x21)
-    #expect(snapshot.reports[3][3] == 8)
+    #expect(sentBeforeOutput.sentCounts() == [3])
     await entry.close()
   }
 
@@ -319,32 +302,5 @@ struct ReportSenderTests {
     try await blocked.value()
     await stalled.beginClose().value
     await ready.beginClose().value
-  }
-
-  @Test(.timeLimit(.minutes(1)))
-  func keepaliveResumesAfterSuppressionWithoutAnInputEvent() async {
-    let backend = OrderedReportBackend()
-    let input = UserSpaceInputReportState(format: OJDGenericGamepadFormat())
-    let entry = UserSpaceOutputDispatcher.Entry(backend: backend, inputReportState: input)
-    let clock = KeepaliveClock()
-    let activity = KeepaliveActivity()
-    entry.startInputReportKeepalive(
-      isActive: { activity.get() },
-      sleep: { _ in await clock.sleep() }
-    )
-    await clock.waitForTick(1)
-    await clock.advance()
-    await clock.waitForTick(2)
-    #expect(backend.snapshot().reports.count == 1)
-    activity.set(false)
-    await clock.advance()
-    await clock.waitForTick(3)
-    #expect(backend.snapshot().reports.count == 1)
-    activity.set(true)
-    await clock.advance()
-    await clock.waitForTick(4)
-    #expect(backend.snapshot().reports.count == 2)
-    await entry.close()
-    #expect(backend.snapshot().closes == 1)
   }
 }

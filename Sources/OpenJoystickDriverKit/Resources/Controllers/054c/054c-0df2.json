@@ -2,14 +2,15 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 1356,
   "productID": 3570,
-  "transport": "hid",
   "protocol": {
-    "driver": "DualSense",
-    "variant": "dualSense",
-    "quirks": [
-      "touchpad",
-      "microphoneMute",
-      "edgeButtons"
+    "family": "sony.dualsense"
+  },
+  "capabilities": {
+    "present": [
+      "paddle-left-1",
+      "paddle-right-1",
+      "auxiliary-1",
+      "auxiliary-2"
     ]
   }
 }

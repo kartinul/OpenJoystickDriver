@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
+  "vendorID": 3695,
+  "productID": 293,
+  "protocol": {
+    "family": "xbox.xusb",
+    "variant": "wired"
+  }
+}

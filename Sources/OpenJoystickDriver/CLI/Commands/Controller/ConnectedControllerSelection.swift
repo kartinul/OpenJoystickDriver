@@ -85,3 +85,57 @@ enum ConnectedControllerSelection {
 
   private static func hex(_ value: UInt16) -> String { String(format: "0x%04X", value) }
 }
+
+/// The `--vid`, `--pid`, and `--device` options that select one connected controller.
+struct ControllerSelector: Equatable {
+  var vendorID: UInt16?
+  var productID: UInt16?
+  var runtimeIdentifier: String?
+
+  init(vendorID: UInt16? = nil, productID: UInt16? = nil, runtimeIdentifier: String? = nil) {
+    self.vendorID = vendorID
+    self.productID = productID
+    self.runtimeIdentifier = runtimeIdentifier
+  }
+
+  init(arguments: [String]) throws {
+    self.init()
+    var index = 0
+    while index < arguments.count {
+      guard index + 1 < arguments.count else { throw InvalidArguments() }
+      let value = arguments[index + 1]
+      switch arguments[index] {
+      case "--vid":
+        guard let parsed = Self.parseInteger(value) else { throw InvalidArguments() }
+        vendorID = parsed
+      case "--pid":
+        guard let parsed = Self.parseInteger(value) else { throw InvalidArguments() }
+        productID = parsed
+      case "--device": runtimeIdentifier = value
+      default: throw InvalidArguments()
+      }
+      index += 2
+    }
+  }
+
+  func resolve(
+    devices: [ApplicationServiceDeviceDescription]
+  ) throws -> ApplicationServiceDeviceDescription {
+    try ConnectedControllerSelection.resolve(
+      devices: devices,
+      vendorID: vendorID,
+      productID: productID,
+      runtimeIdentifier: runtimeIdentifier
+    )
+  }
+
+  private static func parseInteger(_ value: String) -> UInt16? {
+    value.hasPrefix("0x") ? UInt16(value.dropFirst(2), radix: 16) : UInt16(value, radix: 10)
+  }
+
+  struct InvalidArguments: LocalizedError, Equatable {
+    var errorDescription: String? {
+      "Use --vid <value> --pid <value> and/or --device <runtime identifier>."
+    }
+  }
+}

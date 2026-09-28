@@ -23,7 +23,6 @@ public struct RemappingGyroOutput: Codable, Equatable, Sendable {
   public let activationSource: RemappingSource?
   public let consumesActivationSource: Bool
   public let trackball: RemappingGyroTrackball?
-  public let virtualMotion: Bool
 
   public static let `default` = Self()
 
@@ -34,8 +33,7 @@ public struct RemappingGyroOutput: Codable, Equatable, Sendable {
     activationMode: RemappingGyroActivationMode = .always,
     activationSource: RemappingSource? = nil,
     consumesActivationSource: Bool = true,
-    trackball: RemappingGyroTrackball? = nil,
-    virtualMotion: Bool = false
+    trackball: RemappingGyroTrackball? = nil
   ) {
     self.mode = mode
     self.pointerPointsPerDegree = pointerPointsPerDegree
@@ -44,7 +42,6 @@ public struct RemappingGyroOutput: Codable, Equatable, Sendable {
     self.activationSource = activationSource
     self.consumesActivationSource = consumesActivationSource
     self.trackball = trackball
-    self.virtualMotion = virtualMotion
   }
 
   public func validate() throws {
@@ -65,7 +62,6 @@ public struct RemappingGyroOutput: Codable, Equatable, Sendable {
 
   private enum CodingKeys: String, CodingKey {
     case mode, trackball
-    case virtualMotion
     case pointerPointsPerDegree
     case fullStickDegreesPerSecond
     case activationMode
@@ -94,8 +90,7 @@ public struct RemappingGyroOutput: Codable, Equatable, Sendable {
         Bool.self,
         forKey: .consumesActivationSource
       ) ?? true,
-      trackball: try values.decodeIfPresent(RemappingGyroTrackball.self, forKey: .trackball),
-      virtualMotion: try values.decodeIfPresent(Bool.self, forKey: .virtualMotion) ?? false
+      trackball: try values.decodeIfPresent(RemappingGyroTrackball.self, forKey: .trackball)
     )
     try validate()
   }

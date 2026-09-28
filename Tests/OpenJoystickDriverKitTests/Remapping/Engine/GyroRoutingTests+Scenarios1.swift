@@ -32,7 +32,7 @@ extension GyroRoutingTests {
       ]
     )
     let initial = engine.process(
-      events: [.motionSample(sample(0, time: 0)), .motionSample(sample(1, time: 10_000_000))],
+      inputs: [.motion(sample(0, time: 0)), .motion(sample(1, time: 10_000_000))],
       from: device,
       profile: profile,
       at: 10_000_000
@@ -43,7 +43,7 @@ extension GyroRoutingTests {
       ]
     )
     let changed = engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device,
       profile: profile,
       at: 11_000_000
@@ -51,14 +51,14 @@ extension GyroRoutingTests {
     #expect(changed == [.gamepad(.neutral, device)])
     #expect(!engine.hasScheduledOutput)
     let baseline = engine.process(
-      events: [.motionSample(sample(2, time: 20_000_000))],
+      inputs: [.motion(sample(2, time: 20_000_000))],
       from: device,
       profile: profile,
       at: 20_000_000
     )
     #expect(baseline.isEmpty)
     let resumed = engine.process(
-      events: [.motionSample(sample(3, time: 30_000_000))],
+      inputs: [.motion(sample(3, time: 30_000_000))],
       from: device,
       profile: profile,
       at: 30_000_000
@@ -69,7 +69,7 @@ extension GyroRoutingTests {
       ]
     )
     let released = engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device,
       profile: profile,
       at: 31_000_000
@@ -95,28 +95,28 @@ extension GyroRoutingTests {
       bindings: []
     )
     _ = engine.process(
-      events: [.motionSample(sample(0, time: 0)), .motionSample(sample(1, time: 10_000_000))],
+      inputs: [.motion(sample(0, time: 0)), .motion(sample(1, time: 10_000_000))],
       from: device,
       profile: profile,
       at: 10_000_000
     )
     let held = engine.process(
 
-      events: [.buttonPressed(.a), .motionSample(sample(2, time: 20_000_000))],
+      inputs: [.press(.faceSouth), .motion(sample(2, time: 20_000_000))],
       from: device,
       profile: profile,
       at: 20_000_000
     )
     #expect(held == [.system(.pointerDelta(x: -1, y: -0.5))])
     let gap = engine.process(
-      events: [.motionSample(sample(3, time: 500_000_000))],
+      inputs: [.motion(sample(3, time: 500_000_000))],
       from: device,
       profile: profile,
       at: 500_000_000
     )
     #expect(gap.isEmpty)
     let after = engine.process(
-      events: [.motionSample(sample(4, time: 510_000_000))],
+      inputs: [.motion(sample(4, time: 510_000_000))],
       from: device,
       profile: profile,
       at: 510_000_000
@@ -145,7 +145,7 @@ extension GyroRoutingTests {
       bindings: []
     )
     let pressed = engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device,
       profile: profile,
       at: 0
@@ -155,7 +155,7 @@ extension GyroRoutingTests {
       suppresses ? [] : [.gamepad(RemappingGamepadState(buttons: [.south]), device)]
     #expect(pressed == expected)
     let released = engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device,
       profile: profile,
       at: 1
@@ -184,33 +184,33 @@ extension GyroRoutingTests {
       ),
       bindings: []
     )
-    let initial: [ControllerEvent] = mode == .whileReleased ? [.buttonPressed(.a)] : []
+    let initial: [InputChange] = mode == .whileReleased ? [.press(.faceSouth)] : []
     _ = engine.process(
-      events: initial + [.motionSample(sample(0, time: 0))],
+      inputs: initial + [.motion(sample(0, time: 0))],
       from: device,
       profile: profile,
       at: 0
     )
-    let enable: ControllerEvent = mode == .whileReleased ? .buttonReleased(.a) : .buttonPressed(.a)
+    let enable: InputChange = mode == .whileReleased ? .release(.faceSouth) : .press(.faceSouth)
     let baseline = engine.process(
-      events: [enable, .motionSample(sample(1, time: 10_000_000))],
+      inputs: [enable, .motion(sample(1, time: 10_000_000))],
       from: device,
       profile: profile,
       at: 10_000_000
     )
     #expect(baseline.isEmpty)
     let movement = engine.process(
-      events: [.motionSample(sample(2, time: 20_000_000))],
+      inputs: [.motion(sample(2, time: 20_000_000))],
       from: device,
       profile: profile,
       at: 20_000_000
     )
     #expect(!movement.isEmpty)
-    let disable: [ControllerEvent] =
+    let disable: [InputChange] =
       mode == .toggle
-      ? [.buttonReleased(.a), .buttonPressed(.a)]
-      : [mode == .whileHeld ? .buttonReleased(.a) : .buttonPressed(.a)]
-    let stopped = engine.process(events: disable, from: device, profile: profile, at: 21_000_000)
+      ? [.release(.faceSouth), .press(.faceSouth)]
+      : [mode == .whileHeld ? .release(.faceSouth) : .press(.faceSouth)]
+    let stopped = engine.process(inputs: disable, from: device, profile: profile, at: 21_000_000)
     #expect(stopped == [.gamepad(.neutral, device)])
     #expect(!engine.hasScheduledOutput)
   }
@@ -235,24 +235,31 @@ extension GyroRoutingTests {
       ]
     )
     _ = engine.process(
-      events: [.leftStickChanged(x: 0.25, y: 0), .motionSample(sample(0, time: 0))],
+      inputs: [.leftStick(x: 0.25, y: 0), .motion(sample(0, time: 0))],
       from: device,
       profile: profile,
       at: 0
     )
     let combined = engine.process(
-      events: [.motionSample(sample(1, time: 10_000_000))],
+      inputs: [.motion(sample(1, time: 10_000_000))],
       from: device,
       profile: profile,
       at: 10_000_000
     )
     #expect(
       combined == [
-        .gamepad(RemappingGamepadState(axes: [.rightStickX: -0.75, .rightStickY: 0.5]), device)
+        .gamepad(
+          RemappingGamepadState(axes: [.rightStickX: -1 + quantizedStick(0.25), .rightStickY: 0.5]),
+          device
+        )
       ]
     )
     let expired = engine.tick(at: 110_000_000)
-    #expect(expired == [.gamepad(RemappingGamepadState(axes: [.rightStickX: 0.25]), device)])
+    #expect(
+      expired == [
+        .gamepad(RemappingGamepadState(axes: [.rightStickX: quantizedStick(0.25)]), device)
+      ]
+    )
     let released = engine.releaseController(device)
     #expect(released == [.gamepad(.neutral, device)])
   }
@@ -272,7 +279,7 @@ extension GyroRoutingTests {
       bindings: []
     )
     try await engine.process(
-      events: [.motionSample(sample(0, time: 0)), .motionSample(sample(1, time: 10_000_000))],
+      inputs: [.motion(sample(0, time: 0)), .motion(sample(1, time: 10_000_000))],
       from: device,
       using: profile,
       at: 10_000_000

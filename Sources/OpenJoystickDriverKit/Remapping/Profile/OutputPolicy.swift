@@ -49,7 +49,7 @@ extension RemappingProfile {
   /// Whether mapped-only output leaves every controller control without a virtual destination.
   public var suppressesAllControllerInput: Bool {
     guard outputPolicy.virtualGamepad == .mapped else { return false }
-    if gyroOutput.mode == .leftStick || gyroOutput.mode == .rightStick || gyroOutput.virtualMotion
+    if gyroOutput.mode == .leftStick || gyroOutput.mode == .rightStick
       || motionTuning.steering != nil
       || layers.contains(where: { $0.motionTuning?.steering != nil })
       || stickMappings.contains(where: { $0.mode == .steering || $0.passthrough })

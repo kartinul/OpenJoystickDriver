@@ -21,9 +21,7 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
   ) async throws -> any USBTransportSession {
     guard device.route == .ioUSBHost else { throw USBTransportError.notSupported }
 
-    if let configurationValue = options.configurationValue {
-      try Self.configureDevice(device, value: configurationValue)
-    }
+    try Self.configureDevice(device, options: options)
 
     let service = try await Self.waitForInterfaceService(
       device: device,
@@ -55,6 +53,7 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
         vendorID: device.vendorID,
         productID: device.productID,
         locationID: device.locationID,
+        observedPhysicalLocationIdentifier: device.locationID,
         productName: device.productName,
         serialNumber: device.serialNumber
       )
@@ -65,9 +64,30 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
     }
   }
 
-  private static func configureDevice(_ device: USBTransportDevice, value: UInt8) throws {
+  /// Sends SET_CONFIGURATION only when the device does not already run the requested
+  /// configuration, since it terminates every open interface of the device.
+  ///
+  /// The current value is the device service's own `kUSBCurrentConfiguration` registry property
+  /// (`kUSBHostDevicePropertyCurrentConfiguration`), which the host family publishes for the live
+  /// device state, including configurations another client or enumeration selected. It is read
+  /// without a parent search, which would find a hub's value for an unconfigured device.
+  /// `IOUSBHostDevice.configurationDescriptor` is documented only for the configuration selected
+  /// "after a successful setConfiguration call", and needs a device client to read.
+  private static func configureDevice(
+    _ device: USBTransportDevice,
+    options: USBTransportOpenOptions
+  ) throws {
+    guard let value = options.configurationValue else { return }
     let service = try deviceService(for: device)
     defer { IOObjectRelease(service) }
+    let current =
+      IORegistryEntryCreateCFProperty(
+        service,
+        "kUSBCurrentConfiguration" as CFString,
+        kCFAllocatorDefault,
+        0
+      )?.takeRetainedValue() as? UInt64
+    guard options.setsConfiguration(current: current.flatMap(UInt8.init(exactly:))) else { return }
     do {
       let hostDevice = try IOUSBHostDevice(
         __ioService: service,
@@ -120,11 +140,13 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
         && uint16Property(service, key: "idProduct") == device.productID
         && uint32Property(service, key: "locationID") == device.locationID
         && uint8Property(service, key: "bInterfaceNumber") == interfaceNumber
-        && uint8Property(service, key: "bInterfaceClass") == 0xFF
+        // Vendor class (XUSB, GIP, vendor protocols) or the original Xbox XID class, as in
+        // `USBDescriptorTransportResolver.discover`.
+        && [0xFF, 0x58].contains(uint8Property(service, key: "bInterfaceClass"))
     }
   }
 
-  private static func deviceService(for device: USBTransportDevice) throws -> io_service_t {
+  static func deviceService(for device: USBTransportDevice) throws -> io_service_t {
     guard
       let service = try firstMatchingService(
         className: "IOUSBHostDevice",
@@ -219,6 +241,25 @@ public actor IOUSBHostTransportProvider: USBTransportProvider {
     return IORegistryEntryGetRegistryEntryID(service, &value) == kIOReturnSuccess ? value : nil
   }
 
+  static func deviceRequest(for request: USBControlTransferRequest) -> IOUSBDeviceRequest {
+    IOUSBDeviceRequest(
+      bmRequestType: request.requestType,
+      bRequest: request.request,
+      wValue: request.value,
+      wIndex: request.index,
+      wLength: request.length
+    )
+  }
+
+  /// IOUSBHost timeouts are seconds, where zero means no timeout.
+  static func completionTimeout(milliseconds: UInt32) -> TimeInterval {
+    TimeInterval(milliseconds) / 1_000
+  }
+
+  /// IOUSBHost requires a zero completion timeout for interrupt pipes; bulk pipes honor it.
+  static func pipeCompletionTimeout(endpointAttributes: UInt8, milliseconds: UInt32) -> TimeInterval
+  { endpointAttributes & 0x03 == 0x02 ? completionTimeout(milliseconds: milliseconds) : 0 }
+
   static func transportError(_ error: Error) -> USBTransportError {
     let nsError = error as NSError
     return transportError(IOReturn(truncatingIfNeeded: nsError.code))
@@ -262,25 +303,55 @@ private actor IOUSBHostTransportSession: USBTransportSession {
 
   init(interface: IOUSBHostInterface) { self.interface = interface }
 
-  func writeInterruptPacket(endpoint: UInt8, data: [UInt8], timeout: UInt32) async throws -> Int {
+  func write(endpoint: UInt8, data: [UInt8], timeout: UInt32) async throws -> Int {
     guard !isClosed else { throw USBTransportError.disconnected }
+    guard USBEndpointDirection(endpointAddress: endpoint) == .out, !data.isEmpty else {
+      throw USBTransportError.notSupported
+    }
     do {
       let buffer = try interface.ioData(withCapacity: data.count)
-      data.withUnsafeBytes { source in
-        guard let baseAddress = source.baseAddress else { return }
-        buffer.mutableBytes.copyMemory(from: baseAddress, byteCount: source.count)
-      }
-      let (_, count) = try await transfer(endpoint: endpoint, buffer: buffer)
-      return count
+      Self.copy(data, into: buffer)
+      return try await transfer(endpoint: endpoint, buffer: buffer, timeout: timeout)
     } catch { throw closeIfDisconnected(error) }
   }
 
-  func readInterruptPacket(endpoint: UInt8, length: Int, timeout: UInt32) async throws -> [UInt8] {
+  func read(endpoint: UInt8, length: Int, timeout: UInt32) async throws -> [UInt8] {
     guard !isClosed else { throw USBTransportError.disconnected }
-    guard length > 0 else { throw USBTransportError.notSupported }
+    guard USBEndpointDirection(endpointAddress: endpoint) == .in, length > 0 else {
+      throw USBTransportError.notSupported
+    }
     do {
       let buffer = try interface.ioData(withCapacity: length)
-      let (_, count) = try await transfer(endpoint: endpoint, buffer: buffer)
+      let count = try await transfer(endpoint: endpoint, buffer: buffer, timeout: timeout)
+      return Array(Data(bytes: buffer.bytes, count: min(count, buffer.length)))
+    } catch { throw closeIfDisconnected(error) }
+  }
+
+  @discardableResult
+  func controlTransfer(
+    _ request: USBControlTransferRequest,
+    timeout: UInt32
+  ) async throws -> [UInt8] {
+    guard !isClosed else { throw USBTransportError.disconnected }
+    do {
+      let buffer: NSMutableData?
+      switch request.dataStage {
+      case .none: buffer = nil
+      case .output(let data):
+        let output = try interface.ioData(withCapacity: data.count)
+        Self.copy(data, into: output)
+        buffer = output
+      case .input(let length): buffer = try interface.ioData(withCapacity: Int(length))
+      }
+      let (status, count) = try await interface.__enqueue(
+        IOUSBHostTransportProvider.deviceRequest(for: request),
+        data: buffer,
+        completionTimeout: IOUSBHostTransportProvider.completionTimeout(milliseconds: timeout)
+      )
+      guard status == kIOReturnSuccess else {
+        throw IOUSBHostTransportProvider.transportError(status)
+      }
+      guard request.direction == .in, let buffer else { return [] }
       return Array(Data(bytes: buffer.bytes, count: min(count, buffer.length)))
     } catch { throw closeIfDisconnected(error) }
   }
@@ -293,17 +364,30 @@ private actor IOUSBHostTransportSession: USBTransportSession {
     interface.destroy()
   }
 
-  private func transfer(endpoint: UInt8, buffer: NSMutableData) async throws -> (IOReturn, Int) {
+  private func transfer(endpoint: UInt8, buffer: NSMutableData, timeout: UInt32) async throws -> Int
+  {
     let pipe = try pipe(for: endpoint)
     do {
-      // IOUSBHost requires a zero completion timeout for interrupt pipes.
-      let result = try await pipe.pipe.enqueueIORequest(with: buffer, completionTimeout: 0)
+      let result = try await pipe.pipe.enqueueIORequest(
+        with: buffer,
+        completionTimeout: IOUSBHostTransportProvider.pipeCompletionTimeout(
+          endpointAttributes: pipe.pipe.descriptors.pointee.descriptor.bmAttributes,
+          milliseconds: timeout
+        )
+      )
       guard result.0 == kIOReturnSuccess else {
         throw IOUSBHostTransportProvider.transportError(result.0)
       }
-      return result
+      return result.1
     } catch let error as USBTransportError { throw error } catch {
       throw IOUSBHostTransportProvider.transportError(error)
+    }
+  }
+
+  private static func copy(_ data: [UInt8], into buffer: NSMutableData) {
+    data.withUnsafeBytes { source in
+      guard let baseAddress = source.baseAddress else { return }
+      buffer.mutableBytes.copyMemory(from: baseAddress, byteCount: source.count)
     }
   }
 

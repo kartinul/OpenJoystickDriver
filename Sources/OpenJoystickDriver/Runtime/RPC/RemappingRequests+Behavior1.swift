@@ -293,7 +293,7 @@ extension RemappingRequestCoordinator {
   ) -> ApplicationServiceRemappingRoutePayload {
     let selection: ApplicationServiceRemappingRouteSelection
     switch status.selection {
-    case .compatibility: selection = .compatibility
+    case .virtualGamepad: selection = .virtualGamepad
     case .remapping: selection = .remapping
     case .unavailable: selection = .unavailable
     }
@@ -302,8 +302,8 @@ extension RemappingRequestCoordinator {
       return ApplicationServiceRemappingFailurePayload(code: error.code, message: error.message)
     }
     return ApplicationServiceRemappingRoutePayload(
-      vendorID: status.identifier.vendorID,
-      productID: status.identifier.productID,
+      vendorID: status.identifier.controllerIdentity.vendorID,
+      productID: status.identifier.controllerIdentity.productID,
       runtimeIdentifier: status.identifier.runtimeIdentifier,
       selection: selection,
       eligibility: routeEligibility(status.eligibility),
@@ -320,13 +320,13 @@ extension RemappingRequestCoordinator {
     _ eligibility: RemappingRouteEligibility
   ) -> ApplicationServiceRemappingRouteEligibility {
     switch eligibility {
-    case .compatibilityOutputSuppressed: .compatibilityOutputSuppressed
     case .eligible: .eligible
     case .outputSuppressed: .outputSuppressed
     case .postEventAccessNotAuthorized: .postEventAccessNotAuthorized
     case .targetApplicationNotFrontmost: .targetApplicationNotFrontmost
     case .physicalInputNotExclusive: .physicalInputNotExclusive
     case .unavailable: .unavailable
+    case .virtualOutputSuppressed: .virtualOutputSuppressed
     }
   }
 }

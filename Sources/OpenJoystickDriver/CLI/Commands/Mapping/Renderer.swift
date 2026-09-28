@@ -63,11 +63,8 @@ enum MappingRenderer {
     if let settings = profile.joyConPair {
       lines.append("  joy-con-pair gyro:\(settings.gyroSelection.rawValue)")
     }
-    if profile.gyroOutput.mode != .disabled || profile.gyroOutput.virtualMotion {
-      lines.append(
-        "  gyro-output mode:\(profile.gyroOutput.mode.rawValue) "
-          + "virtual-motion:\(profile.gyroOutput.virtualMotion)"
-      )
+    if profile.gyroOutput.mode != .disabled {
+      lines.append("  gyro-output mode:\(profile.gyroOutput.mode.rawValue)")
     }
     if let lean = profile.motionTuning.lean {
       lines.append(

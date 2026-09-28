@@ -6,18 +6,20 @@ import Testing
 struct HIDProfileDiscoveryTests {
   @Test
   func hidAndRawUSBCatalogPartitionsAreDisjoint() {
-    let registry = ParserRegistry()
-    let hid = Set(registry.hidProfileIdentifiers().map { "\($0.vendorID):\($0.productID)" })
-    let rawUSB = Set(registry.rawUSBProfileIdentifiers().map { "\($0.vendorID):\($0.productID)" })
+    let registry = ProtocolDriverRegistry()
+    let hid = Set(
+      registry.hidIdentifiers.map {
+        "\($0.controllerIdentity.vendorID):\($0.controllerIdentity.productID)"
+      }
+    )
+    let rawUSB = Set(
+      registry.rawUSBIdentifiers.map {
+        "\($0.controllerIdentity.vendorID):\($0.controllerIdentity.productID)"
+      }
+    )
 
     #expect(!hid.isEmpty)
     #expect(!rawUSB.isEmpty)
     #expect(hid.isDisjoint(with: rawUSB))
-  }
-
-  @Test
-  func unknownIdentityUsesGenericHIDParser() {
-    let parser = ParserRegistry().parser(for: DeviceIdentifier(vendorID: 65_534, productID: 1))
-    #expect(parser is GenericHIDParser)
   }
 }

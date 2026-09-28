@@ -6,10 +6,40 @@ protocol RemappingForegroundApplicationProviding: Sendable {
   func frontmostBundleIdentifier() -> String?
 }
 
-/// Reads the current foreground application on demand without owning a polling loop.
-struct WorkspaceRemappingForegroundApplication: RemappingForegroundApplicationProviding {
-  func frontmostBundleIdentifier() -> String? {
-    NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+/// Tracks the foreground application from workspace activation notifications.
+///
+/// Remapping routing reads the frontmost application for every dispatched input batch;
+/// querying `NSWorkspace` there was a measurable share of runtime CPU.
+final class WorkspaceRemappingForegroundApplication: RemappingForegroundApplicationProviding,
+  @unchecked Sendable
+{
+  private let notificationCenter: NotificationCenter
+  private let lock = NSLock()
+  private var bundleIdentifier: String?
+  private var observerToken: NSObjectProtocol?
+
+  init(notificationCenter: NotificationCenter = NSWorkspace.shared.notificationCenter) {
+    self.notificationCenter = notificationCenter
+    // Observe before the first read so an activation between the two is not lost.
+    observerToken = notificationCenter.addObserver(
+      forName: NSWorkspace.didActivateApplicationNotification,
+      object: nil,
+      queue: nil
+    ) { [weak self] notification in
+      let application =
+        notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+      self?.update(application?.bundleIdentifier)
+    }
+    let initial = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+    lock.withLock { if bundleIdentifier == nil { bundleIdentifier = initial } }
+  }
+
+  deinit { observerToken.map(notificationCenter.removeObserver) }
+
+  func frontmostBundleIdentifier() -> String? { lock.withLock { bundleIdentifier } }
+
+  private func update(_ bundleIdentifier: String?) {
+    lock.withLock { self.bundleIdentifier = bundleIdentifier }
   }
 }
 

@@ -68,6 +68,7 @@ public enum PassiveUSBRegistryFactParser {
     let observed = PassiveUSBObservedUSBFacts(
       tuple: tuple,
       name: string(root, "USB Product Name") ?? string(root, "Product Name"),
+      deviceRelease: uint16(root, "bcdDevice"),
       deviceClass: deviceClass,
       deviceSubclass: deviceSubclass,
       deviceProtocol: deviceProtocol,
@@ -139,7 +140,7 @@ public enum PassiveUSBRegistryFactParser {
     let node: PassiveUSBRegistryNode
   }
 
-  private static let descriptorKeys = [
+  static let descriptorKeys = [
     "Configuration Descriptor", "kUSBConfigurationDescriptor", "USB Configuration Descriptor",
     "DescriptorBytes", "descriptorBytes",
   ]

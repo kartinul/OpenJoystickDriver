@@ -1,10 +1,7 @@
 import Foundation
 import IOKit
 
-public enum PhysicalHIDFailure: Sendable, Equatable {
-  case ioReturn(IOReturn)
-  case coreHID(String)
-}
+public enum PhysicalHIDFailure: Sendable, Equatable { case ioReturn(IOReturn) }
 
 public enum PhysicalHIDReportResult<Value: Sendable>: Sendable {
   case success(Value)
@@ -28,7 +25,6 @@ extension PhysicalHIDReportResult {
     case .success: "success"
     case .unavailable: "HID interface unavailable"
     case .failed(.ioReturn(let code)): "IOKit code \(code)"
-    case .failed(.coreHID(let detail)): "CoreHID error \(detail)"
     }
   }
 }
@@ -40,38 +36,89 @@ public enum PhysicalHIDClaimResult: Sendable, Equatable {
   case failed(PhysicalHIDFailure)
 }
 
+/// A connection token and ownership observed by the active physical HID backend.
+public struct HIDDeviceConnectionSnapshot: Equatable, Sendable {
+  public let connection: HIDDeviceConnection
+  public let ownership: HIDInputOwnership
+
+  public init(connection: HIDDeviceConnection, ownership: HIDInputOwnership) {
+    self.connection = connection
+    self.ownership = ownership
+  }
+
+  static func reconcile(
+    trackedConnections: [UInt64: HIDDeviceConnection],
+    presentDeviceIDs: Set<UInt64>,
+    ownershipByLocation: [UInt32: HIDInputOwnership]
+  ) -> [Self] {
+    trackedConnections.compactMap { deviceID, connection in
+      guard presentDeviceIDs.contains(deviceID) else { return nil }
+      return Self(
+        connection: connection,
+        ownership: ownershipByLocation[connection.routingLocationID] ?? .unknown
+      )
+    }.sorted {
+      let leftLocation = $0.connection.routingLocationID
+      let rightLocation = $1.connection.routingLocationID
+      if leftLocation != rightLocation { return leftLocation < rightLocation }
+      return $0.connection.connectionID.uuidString < $1.connection.connectionID.uuidString
+    }
+  }
+}
+
 protocol HIDAccessBackend: Sendable {
   func deviceEvents() async -> AsyncStream<HIDDeviceEvent>
+  func currentConnectionSnapshots() async -> [HIDDeviceConnectionSnapshot]?
   func setOutputReport(
     locationID: UInt32,
+    report: PhysicalHIDOutputReport
+  ) async -> PhysicalHIDReportResult<Void>
+  func setOutputReport(
+    connection: HIDDeviceConnection,
     report: PhysicalHIDOutputReport
   ) async -> PhysicalHIDReportResult<Void>
   func setFeatureReport(
     locationID: UInt32,
     report: PhysicalHIDOutputReport
   ) async -> PhysicalHIDReportResult<Void>
+  func setFeatureReport(
+    connection: HIDDeviceConnection,
+    report: PhysicalHIDOutputReport
+  ) async -> PhysicalHIDReportResult<Void>
   func getFeatureReport(
     locationID: UInt32,
     request: PhysicalHIDFeatureReadRequest
   ) async -> PhysicalHIDReportResult<Data>
+  func getFeatureReport(
+    connection: HIDDeviceConnection,
+    request: PhysicalHIDFeatureReadRequest
+  ) async -> PhysicalHIDReportResult<Data>
   func releaseInputClaim(locationID: UInt32) async -> PhysicalHIDClaimResult
   func reacquireInputClaim(locationID: UInt32) async -> PhysicalHIDClaimResult
+  func routeElementValues(connection: HIDDeviceConnection) async
 }
 
-@available(macOS, introduced: 10.15, obsoleted: 15.0)
 private final class IOHIDAccessBackend: HIDAccessBackend, Sendable {
   private let stream: HIDDeviceStream
 
-  init(virtualProfile: VirtualDeviceProfile, additionalProfileIdentifiers: [DeviceIdentifier]) {
+  init(
+    virtualProfile: VirtualDeviceProfile,
+    additionalProfileIdentifiers: [DeviceIdentifier],
+    roleProfileIdentifiers: [DeviceIdentifier]
+  ) {
     stream = HIDDeviceStream(
       virtualProfile: virtualProfile,
-      additionalProfileIdentifiers: additionalProfileIdentifiers
+      additionalProfileIdentifiers: additionalProfileIdentifiers,
+      roleProfileIdentifiers: roleProfileIdentifiers
     )
   }
 
   func deviceEvents() async -> AsyncStream<HIDDeviceEvent> {
-    await Task.yield()
-    return stream.deviceEvents()
+    await MainActor.run { stream.deviceEvents() }
+  }
+
+  func currentConnectionSnapshots() async -> [HIDDeviceConnectionSnapshot]? {
+    await stream.currentConnectionSnapshots()
   }
 
   func setOutputReport(
@@ -81,11 +128,25 @@ private final class IOHIDAccessBackend: HIDAccessBackend, Sendable {
     stream.setOutputReport(locationID: locationID, report: report)
   }
 
+  func setOutputReport(
+    connection: HIDDeviceConnection,
+    report: PhysicalHIDOutputReport
+  ) async -> PhysicalHIDReportResult<Void> {
+    await stream.setOutputReport(connection: connection, report: report)
+  }
+
   func setFeatureReport(
     locationID: UInt32,
     report: PhysicalHIDOutputReport
   ) -> PhysicalHIDReportResult<Void> {
     stream.setFeatureReport(locationID: locationID, report: report)
+  }
+
+  func setFeatureReport(
+    connection: HIDDeviceConnection,
+    report: PhysicalHIDOutputReport
+  ) async -> PhysicalHIDReportResult<Void> {
+    await stream.setFeatureReport(connection: connection, report: report)
   }
 
   func getFeatureReport(
@@ -95,6 +156,13 @@ private final class IOHIDAccessBackend: HIDAccessBackend, Sendable {
     stream.getFeatureReport(locationID: locationID, request: request)
   }
 
+  func getFeatureReport(
+    connection: HIDDeviceConnection,
+    request: PhysicalHIDFeatureReadRequest
+  ) async -> PhysicalHIDReportResult<Data> {
+    await stream.getFeatureReport(connection: connection, request: request)
+  }
+
   func releaseInputClaim(locationID: UInt32) -> PhysicalHIDClaimResult {
     stream.releaseInputClaim(locationID: locationID)
   }
@@ -102,39 +170,55 @@ private final class IOHIDAccessBackend: HIDAccessBackend, Sendable {
   func reacquireInputClaim(locationID: UInt32) -> PhysicalHIDClaimResult {
     stream.reacquireInputClaim(locationID: locationID)
   }
+
+  func routeElementValues(connection: HIDDeviceConnection) async {
+    await stream.routeElementValues(connection: connection)
+  }
 }
 
-/// Availability-selecting app HID access wrapper.
+/// App HID access wrapper over IOHIDManager on every supported macOS release.
 ///
-/// IOHIDManager owns macOS 10.15–14. CoreHID owns macOS 15 and later. Callers
-/// depend only on this wrapper and never repeat availability checks.
+/// Tests inject fake backends through `init(backend:)`.
 public final class HIDManager: Sendable {
   private let backend: any HIDAccessBackend
 
+  init(backend: any HIDAccessBackend) { self.backend = backend }
+
+  /// `roleProfileIdentifiers` are the models whose family declares HID protocol roles.
   public init(
     virtualProfile: VirtualDeviceProfile = .default,
-    additionalProfileIdentifiers: [DeviceIdentifier] = []
+    additionalProfileIdentifiers: [DeviceIdentifier] = [],
+    roleProfileIdentifiers: [DeviceIdentifier] = []
   ) {
-    if #available(macOS 15, *) {
-      backend = CoreHIDAccessBackend(
-        virtualProfile: virtualProfile,
-        additionalProfileIdentifiers: additionalProfileIdentifiers
-      )
-    } else {
-      backend = IOHIDAccessBackend(
-        virtualProfile: virtualProfile,
-        additionalProfileIdentifiers: additionalProfileIdentifiers
-      )
-    }
+    backend = IOHIDAccessBackend(
+      virtualProfile: virtualProfile,
+      additionalProfileIdentifiers: additionalProfileIdentifiers,
+      roleProfileIdentifiers: roleProfileIdentifiers
+    )
   }
 
   public func deviceEvents() async -> AsyncStream<HIDDeviceEvent> { await backend.deviceEvents() }
+
+  /// Returns exact current connections, or `nil` if the backend cannot confirm presence.
+  /// An empty array is a confirmed observation with no tracked current connections.
+  public func currentConnectionSnapshots() async -> [HIDDeviceConnectionSnapshot]? {
+    await backend.currentConnectionSnapshots()
+  }
 
   public func setOutputReport(
     locationID: UInt32,
     report: PhysicalHIDOutputReport
   ) async -> PhysicalHIDReportResult<Void> {
     await backend.setOutputReport(locationID: locationID, report: report)
+  }
+
+  /// Sends a report only to the exact connection lifetime previously observed by the backend.
+  /// Unlike route-based output, this never falls back to another device at the same location.
+  public func setOutputReport(
+    connection: HIDDeviceConnection,
+    report: PhysicalHIDOutputReport
+  ) async -> PhysicalHIDReportResult<Void> {
+    await backend.setOutputReport(connection: connection, report: report)
   }
 
   public func setFeatureReport(
@@ -144,11 +228,29 @@ public final class HIDManager: Sendable {
     await backend.setFeatureReport(locationID: locationID, report: report)
   }
 
+  /// Sends a feature report only to the exact connection lifetime previously observed by the
+  /// backend.
+  public func setFeatureReport(
+    connection: HIDDeviceConnection,
+    report: PhysicalHIDOutputReport
+  ) async -> PhysicalHIDReportResult<Void> {
+    await backend.setFeatureReport(connection: connection, report: report)
+  }
+
   public func getFeatureReport(
     locationID: UInt32,
     request: PhysicalHIDFeatureReadRequest
   ) async -> PhysicalHIDReportResult<Data> {
     await backend.getFeatureReport(locationID: locationID, request: request)
+  }
+
+  /// Reads a feature report only from the exact connection lifetime previously observed by the
+  /// backend, never from a sibling interface at its location.
+  public func getFeatureReport(
+    connection: HIDDeviceConnection,
+    request: PhysicalHIDFeatureReadRequest
+  ) async -> PhysicalHIDReportResult<Data> {
+    await backend.getFeatureReport(connection: connection, request: request)
   }
 
   public func releaseInputClaim(locationID: UInt32) async -> PhysicalHIDClaimResult {
@@ -157,5 +259,10 @@ public final class HIDManager: Sendable {
 
   public func reacquireInputClaim(locationID: UInt32) async -> PhysicalHIDClaimResult {
     await backend.reacquireInputClaim(locationID: locationID)
+  }
+
+  /// Delivers a connection's decoded element values, for a driver that parses them.
+  public func routeElementValues(connection: HIDDeviceConnection) async {
+    await backend.routeElementValues(connection: connection)
   }
 }

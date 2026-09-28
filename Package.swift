@@ -31,10 +31,7 @@ let package = Package(
       dependencies: [],
       path: "Sources/OpenJoystickDriverKit",
       resources: [.process("Resources/")],
-      linkerSettings: [
-        .linkedFramework("ServiceManagement"),
-        .unsafeFlags(["-Xlinker", "-weak_framework", "-Xlinker", "CoreHID"]),
-      ]
+      linkerSettings: [.linkedFramework("GameController"), .linkedFramework("ServiceManagement")]
     ),
 
     .target(

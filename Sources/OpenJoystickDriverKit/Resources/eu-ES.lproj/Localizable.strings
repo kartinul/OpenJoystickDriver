@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Konektatutako aginteak egiaztatzen…";
 "status.refreshingProfile" = "Profilaren egoera freskatzen…";
 "status.loadingProfiles" = "Profilak kargatzen…";
-"status.updatingIdentity" = "Agintearen identitatea eguneratzen…";
 "status.listening" = "Entzuten…";
 "status.readyToListen" = "Entzuteko prest";
 "status.checkingInput" = "Egiaztatzen";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Aginteak";
 "settings.controllerDisconnectedNotifications" = "Kontrolgailua deskonektatuta";
 "settings.controllerDisconnectedShort" = "Moztuta";
-"settings.controllerIdentity" = "Agintearen identitatea";
 "settings.controllerNotifications" = "Kontrolgailua konektatuta";
 "settings.diagnostics" = "Diagnostikoak";
 "settings.service" = "Zerbitzua";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Deskargatzen";
 "controllers.charging" = "Kargatzen";
 "controllers.batteryFull" = "Beteta";
+"controllers.notChargeable" = "Ezin da kargatu";
 "controllers.batteryAccessibilityDetails" = "Bateria: %@. Kargatze-egoera: %@. Kablearen egoera: %@.";
 "controllers.activeProfile" = "Profil aktiboa";
 "controllers.profileChecking" = "Egiaztatzen…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Profil aktiboa ez dago erabilgarri";
 "controllers.profileLoadError" = "Ezin izan da profil aktiboa kargatu";
 "controllers.protocol" = "Protokoloa";
-"controllers.parser" = "Parser bat";
 "controllers.serialNumber" = "Serie-zenbakia";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Sarrerako amaiera-puntua";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Profil aktiboaren errorea: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokoloa: %@. Parser: %@. Serie-zenbakia: %@. USB VID/PID: %@. Sarrerako amaiera-puntua: %@. Irteerako amaiera-puntua: %@.";
 "controllers.publishedAs" = "Argitaratua:";
-"identity.title" = "Agintearen identitatea";
-"identity.needsAttention" = "Arreta behar du";
-"identity.error" = "Agintearen identitate-errorea";
-"identity.updating" = "Agintearen identitatea eguneratzen…";
-"identity.reset" = "Berrezarri gomendatutakora";
-"identity.checking" = "Egiaztatzen";
-"identity.globalScope" = "Kontrolgune birtualak OpenJoystickDriver.";
-"identity.unavailable" = "Ez dago erabilgarri";
-"identity.notSelected" = "Hautatu gabe";
+"controllers.nativeGamepadNotPublished" = "macOS-en berezko kontrolagailua, argitaratu gabe";
+"virtualProfile.advanced" = "Aurreratua";
+"virtualProfile.title" = "HID profil birtuala";
+"virtualProfile.modelScope" = "Modelo honetako konektatutako aginte guztiei aplikatzen zaie.";
+"virtualProfile.sourceOverride" = "Gainidazketa";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automatikoa, gainidazketa baztertuta";
+"virtualProfile.none" = "Ez dago HID profil birtualik";
+"virtualProfile.unavailable" = "Ez dago aginte hau irudika dezakeen HID profil birtualik.";
+"virtualProfile.updating" = "HID profil birtuala eguneratzen…";
+"virtualProfile.live" = "Profil aktiboa";
+"virtualProfile.failure.unknownProfile" = "HID profil birtual hau ezezaguna da. Ez da ezer gorde.";
+"virtualProfile.failure.controllerNotFound" = "Agintea deskonektatu da edo ezin da aurkitu. Gainidazketa ez da aldatu.";
+"virtualProfile.failure.overrideRejected" = "Gainidazketa gorde da, baina agintea ezin da hura erabili, beraz automatikoki hautatzen du.";
+"virtualProfile.failure.activationFailed" = "Aktibazioak huts egin du, beraz aurreko HID profil birtuala leheneratu da: %@";
+"virtualProfile.failure.outputDisabled" = "Gainidazketa gorde da eta irteera birtuala gaitzen denean aplikatuko da.";
+"virtualProfile.failure.serverStopped" = "Zerbitzua gelditu da. Gainidazketa ez da aldatu.";
+"virtualProfile.failure.persistenceFailed" = "Ezin izan da gainidazketa gorde. Ez da ezer gorde.";
+"virtualProfile.storeError" = "Ezin dira HID profil birtualaren gainidazketak irakurri (%@). Aginteek automatikoki hautatzen dute.";
+"virtualProfile.legacyIdentityRejected" = "Agintearen identitatearen %@ ezarpen erretiratua ez da gehiago aplikatzen. Exekutatu controller virtual reset --all hura garbitzeko.";
 "keyboard.noKey" = "Ez da teklarik hautatu";
 "keyboard.pressKey" = "Sakatu tekla bat…";
 "keyboard.captureKey" = "Atzeman tekla";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Uneko egoera";
 "debug.runtime" = "Exekuzio-ingurunea";
 "debug.controllers" = "Aginteak";
-"debug.controllerIdentity" = "Agintearen identitatea";
 "debug.unavailable" = "Exekuzio-ingurunea · ez dago erabilgarri";
 "debug.needsAttention" = "Exekuzio-ingurunea · arreta behar du";
 "debug.diagnostics" = "Diagnostikoak";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Agintearen irteera desaktibatuta dago.";
 "debug.outputNeedsAttention" = "Agintearen irteerak arreta behar du.";
 "debug.serviceUnavailable" = "Zerbitzuaren diagnostikoak ez daude erabilgarri orain.";
-"error.selectedOutputUnavailable" = "Hautatutako aginte-irteera ez dago erabilgarri.";
-"error.selectedOutputEnableFailed" = "Ezin izan da hautatutako aginte-irteera gaitu.";
 "error.profileChanged" = "Profil hau beste nonbait aldatu da. Kargatu berriro edo jarraitu editatzen.";
 "error.duplicateProfile" = "Izen hori duen profil bat badago jada.";
 "error.profileMissing" = "Profil hori jada ez dago erabilgarri.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Exekuzio-ingurunea";
 "common.controllers" = "Aginteak";
 "common.profiles" = "Profilak";
-"common.controllerIdentity" = "Agintearen identitatea";
 "common.protocol" = "Protokoloa";
-"common.parser" = "Parser bat";
 "common.serialNumber" = "Serie-zenbakia";
 "common.inputEndpoint" = "Sarrerako amaiera-puntua";
 "common.outputEndpoint" = "Irteerako amaiera-puntua";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Aukeratutako profila ez dago jada eskuragarri.";
 "cli.catalog.app_ready.summary" = "Egiaztatu autentifikatutako aplikazio-zerbitzuaren prestasuna";
 "cli.catalog.app_status.summary" = "Erakutsi aplikazio-zerbitzuaren egoera";
-"cli.catalog.compat.summary" = "Kudeatu aginte birtualaren bateragarritasuna";
 "cli.catalog.controller_list.summary" = "Zerrendatu konektatutako aginteak";
 "cli.catalog.controller_output.summary" = "Probatu onartutako aginte fisikoaren irteera";
 "cli.catalog.controller_packets.summary" = "Erakutsi aginte-pakete berriak";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Erakutsi kontrolatzailearen eta exekuzio-ingurunearen egoera";
 "cli.catalog.test.summary" = "Probatu aginte birtualaren sarrera-bidalketa";
 "cli.catalog.update.summary" = "Egiaztatu GitHub eguneratze erabilgarrietarako";
-"cli.compat.identity" = "bateragarritasun-identitatea: %@";
-"cli.compat.identity_unknown" = "bateragarritasun-identitatea: ezezaguna";
-"cli.compat.set_failed" = "Ezin izan da bateragarritasun-identitatea %@ gisa ezarri. Abiarazi instalatutako aplikazioa eta egiaztatu Sarreraren jarraipena eta Erabilerraztasuna.";
-"cli.compat.usage" = "Erabilera: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "erabiltzaile-espazioaren egoera: %@";
 "cli.controller.allAppleEntries" = "Apple katalogoko sarrera zehatz guztiak:";
 "cli.controller.appleIDs" = "    Apple IDak: %@";
 "cli.controller.applePairs" = "  Apple bikoteak: %d VID/PID sarrera zehatz";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Ez dago --device %@-(r)ekin bat datorren aginterik konektatuta.";
 "cli.controller.selection.multiple" = "Hainbat aginte datoz bat. Hautatu bat --device-rekin:\n  %@";
 "cli.controller.selection.none" = "Ez dago aginterik konektatuta.";
+"cli.controller.virtual.live" = "HID profil birtuala: %@ (%@)";
+"cli.controller.virtual.none" = "HID profil birtuala: bat ere ez (%@)";
+"cli.controller.virtual.failed" = "HID profil birtualaren eskaerak huts egin du: %@";
+"cli.controller.virtual.unknown_profile" = "HID profil birtual ezezaguna «%@». Erabili hauetako bat: %@.";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» komandoak HID profil birtual bat behar du. Erabili hauetako bat: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "«--all» ezin da --vid, --pid edo --device aukerekin konbinatu.";
+"cli.controller.virtual.reset_all.success" = "Ados: HID profil birtualaren gainidazketa guztiak garbitu dira.";
+"cli.controller.virtual.reset_all.failed" = "Ezin izan dira ezarpenak berrezarri. Abiarazi instalatutako aplikazioa eta egiaztatu haren baimenak.";
 "cli.controller.selection.vid_pid_missing" = "Ez dago %@:%@-(r)ekin bat datorren aginterik konektatuta.";
 "cli.controller.selection.vid_pid_pair" = "Igaro VID eta PID biak, edo kendu biak.";
 "cli.controller.serviceControllers" = "Aginteak (martxan dagoen aplikazio-zerbitzutik):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Iradokizuna: eman beharrezko eskubidea eta Sarreraren jarraipena sarbidea.";
 "cli.controller.usbControllers" = "USB aginteak (0xFF klasea / GIP):";
 "cli.controller.vidPidOrSingle" = "Igaro VID eta PID biak, edo kendu biak aginte bat konektatuta dagoenean.";
-"cli.diagnose.advisory_candidate" = "    Protokolo aholku-hautagaia: %@";
 "cli.diagnose.app_missing" = "  Aplikazioa: falta da hemen: %@";
 "cli.diagnose.app_missing_fix" = "  Konponketa: eraiki eta instalatu aplikazioa /Applications-en";
 "cli.diagnose.app_present" = "  Aplikazioa: presente";
 "cli.diagnose.binary_path" = "Binarioa: %@";
-"cli.diagnose.catalog_conflict" = "      Behaketak katalogo-familiarekin gatazka du; analizatzailea aldatu gabe";
-"cli.diagnose.catalog_parser" = "      Katalogo-analizatzaileak %@ izaten jarraitzen du (%@)";
 "cli.diagnose.dext_found" = "  Aurkitutako .dext paketeak:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      0x amaiera-puntua%02X %@ %@ MaxPacket=%@ Intervaloa%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Erantzun-kurba ezezaguna «%@».";
 "cli.mapping.double_tap_format" = "--double-tap-ek <ms>:<target> espero du, adib. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Erabilera: OpenJoystickDriver --headless map <command>\n\nKomandoak:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nIturburua: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nHelburua: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nArdatz-aukerak:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo aukerak (teklatu- eta sagu-botoiak soilik):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktibazio-aukerak (teklatu- eta sagu-botoiak soilik, turboarekin elkar baztertzaile):\n  --long-hold <ms>:<target>     adib. --long-hold 500:key:b\n  --double-tap <ms>:<target>    adib. --double-tap 300:key:c\n\n<profile>-k UUID bat edo maiuskula/minuskula bereizten ez duen profil-izen zehatza onartzen du.\n<id>-k hamartarra edo 0x aurrizkiko hamaseitarra onartzen du.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Erabilera: OpenJoystickDriver --headless map <command>\n\nKomandoak:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nIturburua: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nHelburua: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nArdatz-aukerak:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo aukerak (teklatu- eta sagu-botoiak soilik):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktibazio-aukerak (teklatu- eta sagu-botoiak soilik, turboarekin elkar baztertzaile):\n  --long-hold <ms>:<target>     adib. --long-hold 500:key:b\n  --double-tap <ms>:<target>    adib. --double-tap 300:key:c\n\n<profile>-k UUID bat edo maiuskula/minuskula bereizten ez duen profil-izen zehatza onartzen du.\n<id>-k hamartarra edo 0x aurrizkiko hamaseitarra onartzen du.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ 16 biteko hamartarra edo 0x aurrizkiko hamaseitar identifikatzailea izan behar da.";
 "cli.mapping.jsonEncodeFailed" = "Ezin izan da UTF-8 JSON kodetu.";
 "cli.mapping.layer_action_unknown" = "Geruza-ekintza ezezaguna «%@». Esperotakoa: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver aplikazio-zerbitzua ez dago martxan.";
 "cli.runtime.sample_limit" = "Konfigurazioak %d lagin bilduko lituzke; handitu --interval-ms.";
 "cli.runtime.stable_note" = "Bustitze mugatu egonkorra lan-karga honen froga da, ez ihes guztiak falta direnaren froga.";
-"cli.settings.reset.failed" = "Ezin izan dira ezarpenak berrezarri. Abiarazi instalatutako aplikazioa eta egiaztatu haren baimenak.";
-"cli.settings.reset.next" = "Hurrengoa: exekutatu compat set <identity> bateragarritasun-identitatea aukeratzeko.";
-"cli.settings.reset.success" = "Ados: aplikazio-zerbitzuaren ezarpenak berrezarri dira.";
 "cli.status.access_denied" = "Sarbidea ukatzen bada, exekutatu --headless permissions request eta onartu Sarreraren jarraipena eta Erabilerraztasuna Sistemaren ezarpenetan.";
 "cli.status.heading" = "OpenJoystickDriver egoera";
 "cli.status.json_error" = "Ezin izan da egoera JSON kodetu: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Egoera      : %@";
 "cli.updates.unknown_option" = "Eguneratze-aukera ezezaguna: %@";
 "common.unknown" = "Ezezaguna";
-"compatibility.appleGameController" = "Sagarra GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox - Ez, ez.";
 "developer.buttons" = "Botoiak";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B botoia";
 "inputTest.bCircle" = "B / Zirkulua";
 "inputTest.brightness" = "Argitasuna";
-"inputTest.circle" = "Zirkulua";
 "inputTest.color" = "Kolorea";
 "inputTest.controls" = "Zuzeneko sarrera";
-"inputTest.cross" = "Gurutzea";
 "inputTest.disconnected" = "Kontrolgailua deskonektatuta";
 "inputTest.dpadDown" = "Norabide-gurutzea behera";
 "inputTest.dpadLeft" = "Norabide-gurutzea ezkerrera";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Ez dago argindarra kontrolatzeko modurik.";
 "inputTest.live" = "Sarrera aktiboa";
 "inputTest.menu" = "Menua";
-"inputTest.minus" = "Kenketa";
 "inputTest.off" = "Desaktibatuta";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Aukerak";
 "inputTest.outputError" = "Etengailu fisikoaren akatsa";
 "inputTest.outputRejected" = "Kontrolgailuak ez zuen probaren emaitza onartu.";
 "inputTest.permissionRequired" = "Sarrera Segurtasun baimena beharrezkoa";
 "inputTest.playerIndicator" = "Jokalariaren adierazlea";
-"inputTest.plus" = "Gehiketa";
 "inputTest.pressed" = "Sakatuta";
-"inputTest.psButton" = "PS botoia";
 "inputTest.released" = "Askatuta";
 "inputTest.rightBumper" = "Eskuineko bumperra";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Eskuineko Y";
 "inputTest.rumble" = "- Ez, ez.";
 "inputTest.rumbleUnavailable" = "Rumble ez da kontrolatzaile honetan.";
-"inputTest.share" = "Partekatu";
-"inputTest.square" = "Karratua";
 "inputTest.stale" = "Sarrera eten egin da.";
 "inputTest.start" = "Sarrera probak hasi";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Zuzeneko sarrera";
 "inputTest.tabMotion" = "Mozioa";
 "inputTest.tabOutput" = "Eragiketa";
-"inputTest.steamButton" = "Steam botoia";
 "inputTest.summary" = "Probatu botoiak, makilak, pizgarriak, zarata eta kontrolagailuaren argiztapena.";
 "inputTest.testRumble" = "Probako Rumble";
 "inputTest.title" = "Sarrera-proba";
-"inputTest.triangle" = "Triangelua";
 "inputTest.unavailable" = "Sarrera ez dago eskura";
 "inputTest.view" = "Ikusi";
 "inputTest.windowTitle" = "Sarrera-proba %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Ez da posible Joy-Cons hautatuak bikoiztea.";
 "profiles.joyConExplicitSession" = "Bikote esplizitu bateko saioarekin hasi zen.";
 "profiles.joyConSessionState" = "Bikote esplizitua";
-"profiles.gyro.virtualMotion" = "Mugimendu birtuala aurrerantz kalibratua";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ \"Barrugarririk\"%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Kontrolgailua deskonektatuta";
 "controllers.resume" = "Saiatu berriro";
 "controllers.disconnectFromOJD" = "Kontrolgailua deskonektatuta";
-"error.compatibilityTransitionDetailed" = "Ezin izan da hautatutako aginte-irteera gaitu. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Ezin izan da hautatutako aginte-irteera gaitu.";
 "cli.catalog.controller_disconnect.summary" = "Kontrolgailua deskonektatuta";
 "cli.catalog.controller_resume.summary" = "Saiatu berriro — Kontrolgailua deskonektatuta";
+"cli.catalog.controller_virtual_set.summary" = "Gainidatzi kontrolagailu baten HID profil birtuala";
+"cli.catalog.controller_virtual_reset.summary" = "Hautatu automatikoki kontrolagailu baten HID profil birtuala, edo garbitu gainidazketa guztiak --all erabiliz";
 "cli.controller.disconnected" = "Kontrolgailua deskonektatuta";
 "cli.controller.resumed" = "Sarrera aktiboa";
 

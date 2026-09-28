@@ -2,12 +2,16 @@ import Foundation
 
 extension RemappingEventEngine {
 
-  /// Processes a normalized event batch using the supplied validated profile.
+  /// Processes one source's snapshot using the supplied validated profile.
   ///
-  /// A changed profile first neutralizes the controller's previous mapping.
+  /// The snapshot is diffed against the last one `source` delivered; the changes drive `target`,
+  /// which defaults to the source itself. A changed profile first neutralizes the target's
+  /// previous mapping.
   public func process(
-    events: [ControllerEvent],
-    from identifier: DeviceIdentifier,
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
+    from source: DeviceIdentifier,
+    into target: DeviceIdentifier? = nil,
     using profile: RemappingProfile,
     at uptimeNanoseconds: UInt64
   ) async throws {
@@ -15,8 +19,10 @@ extension RemappingEventEngine {
       throw RemappingEventEngineError.outputSuspended
     }
     try await process(
-      events: events,
-      from: identifier,
+      event,
+      labels: labels,
+      from: source,
+      into: target,
       using: profile,
       at: uptimeNanoseconds,
       requiring: permit
@@ -24,8 +30,10 @@ extension RemappingEventEngine {
   }
 
   public func process(
-    events: [ControllerEvent],
-    from identifier: DeviceIdentifier,
+    _ event: ControllerEvent,
+    labels: ControllerButtonLabels,
+    from source: DeviceIdentifier,
+    into target: DeviceIdentifier? = nil,
     using profile: RemappingProfile,
     at uptimeNanoseconds: UInt64,
     requiring permit: RemappingEmissionPermit
@@ -33,8 +41,22 @@ extension RemappingEventEngine {
     try ensureAvailable()
     try profile.validate()
     try await commit(requiring: permit) { state in
-      state.process(events: events, from: identifier, profile: profile, at: uptimeNanoseconds)
+      state.process(
+        event,
+        labels: labels,
+        from: source,
+        into: target ?? source,
+        profile: profile,
+        at: uptimeNanoseconds
+      )
     }
+  }
+
+  /// Forgets the baseline of a stopped source, so its next snapshot is diffed against neutral.
+  public func endSource(_ source: DeviceIdentifier) async {
+    await acquireOperation()
+    defer { finishOperation() }
+    state.sourceBaselines.removeValue(forKey: source)
   }
 
   /// Replaces or deactivates the profile for one exact controller.
@@ -126,7 +148,7 @@ extension RemappingEventEngine {
     let status = try calibrated.calibrateMotion(command, for: identifier)
     var actions: [RemappingEngineAction] = []
     if command == .reset, var device = calibrated.devices[identifier] {
-      actions = device.clearGyroStick() + device.clearVirtualMotion()
+      actions = device.clearGyroStick()
       calibrated.devices[identifier] = device
       actions += calibrated.clearMotionStick(for: identifier, at: device.lastUptime)
     }
@@ -256,15 +278,6 @@ extension RemappingEventEngine {
         uncertainGamepadDevices.remove(identifier)
       } catch { failed = true }
     }
-    for identifier in uncertainMotionDevices.sorted(by: {
-      $0.runtimeIdentifier < $1.runtimeIdentifier
-    }) {
-      do {
-        guard let gamepadSink else { throw RemappingEventEngineError.sinkUnavailable }
-        try await gamepadSink.send(nil, for: identifier)
-        uncertainMotionDevices.remove(identifier)
-      } catch { failed = true }
-    }
     for identifier in uncertainPhysicalDevices.sorted(by: {
       $0.runtimeIdentifier < $1.runtimeIdentifier
     }) {
@@ -329,11 +342,6 @@ extension RemappingEventEngine {
           heldGamepadDevices.insert(identifier)
           try await gamepadSink.send(gamepadState, for: identifier)
           if gamepadState == .neutral { heldGamepadDevices.remove(identifier) }
-        case .motion(let motion, let identifier):
-          guard let gamepadSink else { throw RemappingEventEngineError.sinkUnavailable }
-          heldMotionDevices.insert(identifier)
-          try await gamepadSink.send(motion, for: identifier)
-          if motion == nil { heldMotionDevices.remove(identifier) }
         case .physical(let output, let active, let owner, let identifier):
           guard let physicalOutputSink else { throw RemappingEventEngineError.sinkUnavailable }
           try await physicalOutputSink.set(output, active: active, owner: owner, for: identifier)

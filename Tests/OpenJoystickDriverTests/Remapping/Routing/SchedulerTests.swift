@@ -24,7 +24,7 @@ struct RemappingOutputSchedulerTests {
     #expect(!harness.router.tickerIsRunning)
 
     try await harness.router.dispatchCausally(
-      events: [.buttonPressed(.a)],
+      changes: [.press(.faceSouth)],
       from: remappingRouterDevice(1)
     )
     _ = await yieldUntil { false }
@@ -48,17 +48,18 @@ struct RemappingOutputSchedulerTests {
     }
     let device = remappingRouterDevice(1)
     harness.router.startTicker()
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: device)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: device)
     #expect(await yieldUntil { probe.sleepCount == 1 })
     #expect(harness.router.tickerIsRunning)
 
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: device)
+    // A repeated report of the held button starts no second ticker.
+    try await harness.router.dispatchCausally(changes: [], from: device)
     _ = await yieldUntil { false }
     #expect(probe.sleepCount == 1)
-    try await harness.router.dispatchCausally(events: [.buttonReleased(.a)], from: device)
+    try await harness.router.dispatchCausally(changes: [.release(.faceSouth)], from: device)
     #expect(!harness.router.tickerIsRunning)
 
-    try await harness.router.dispatchCausally(events: [.buttonPressed(.a)], from: device)
+    try await harness.router.dispatchCausally(changes: [.press(.faceSouth)], from: device)
     #expect(await yieldUntil { probe.sleepCount == 2 })
     #expect(harness.router.tickerIsRunning)
   }
@@ -82,7 +83,7 @@ struct RemappingOutputSchedulerTests {
     }
     harness.router.startTicker()
     try await harness.router.dispatchCausally(
-      events: [.buttonPressed(.a)],
+      changes: [.press(.faceSouth)],
       from: remappingRouterDevice(1)
     )
     #expect(await yieldUntil { probe.sleepCount == 1 })
@@ -128,17 +129,11 @@ struct RemappingOutputSchedulerTests {
     }
     let device = remappingRouterDevice(1)
     harness.router.startTicker()
-    try await harness.router.dispatchCausally(
-      events: [.rightStickChanged(x: 0.75, y: 0)],
-      from: device
-    )
+    try await harness.router.dispatchCausally(changes: [.rightStick(x: 0.75, y: 0)], from: device)
     #expect(await yieldUntil { probe.sleepCount == 1 })
     #expect(harness.router.tickerIsRunning)
 
-    try await harness.router.dispatchCausally(
-      events: [.rightStickChanged(x: 0, y: 0)],
-      from: device
-    )
+    try await harness.router.dispatchCausally(changes: [.rightStick(x: 0, y: 0)], from: device)
     #expect(!harness.router.tickerIsRunning)
   }
 

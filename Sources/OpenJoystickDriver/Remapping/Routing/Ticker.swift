@@ -132,15 +132,10 @@ extension RemappingOutputRouter {
     }
   }
 
-  func updateControls(
-    outputSuppressed: Bool? = nil,
-    compatibilityOutputAllowed: Bool? = nil
-  ) -> RemappingRoutingControls {
+  func updateControls(outputSuppressed: Bool) -> RemappingRoutingControls {
     lock.withLock {
       controls = RemappingRoutingControls(
-        outputSuppressed: outputSuppressed ?? controls.outputSuppressed,
-        compatibilityOutputAllowed: compatibilityOutputAllowed
-          ?? controls.compatibilityOutputAllowed,
+        outputSuppressed: outputSuppressed,
         revision: controls.revision &+ 1
       )
       return controls
@@ -152,23 +147,17 @@ extension RemappingOutputRouter {
       profileTransactionGateActive = active
       return controls
     }
-    await updateCompatibilitySuppression(controls: snapshot)
+    await updateOutputSuppression(controls: snapshot)
   }
 
-  func updateCompatibilitySuppression(controls snapshot: RemappingRoutingControls) async {
+  func updateOutputSuppression(controls snapshot: RemappingRoutingControls) async {
     let transactionSuppressed = lock.withLock { profileTransactionGateActive }
-    await compatibility.setOutputSuppressed(
-      Self.compatibilityIsSuppressed(snapshot) || transactionSuppressed
-    )
+    await compatibility.setOutputSuppressed(snapshot.outputSuppressed || transactionSuppressed)
     if let controlling = compatibility as? any RemappingGamepadOutputControlling {
       await controlling.setRemappingOutputSuppressed(
         snapshot.outputSuppressed || transactionSuppressed
       )
     }
-  }
-
-  private static func compatibilityIsSuppressed(_ controls: RemappingRoutingControls) -> Bool {
-    controls.outputSuppressed || !controls.compatibilityOutputAllowed
   }
 
   func outputLeaseIfOpen() throws -> RemappingEmissionLease? {

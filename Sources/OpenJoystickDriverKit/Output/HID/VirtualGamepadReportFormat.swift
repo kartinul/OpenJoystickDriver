@@ -11,12 +11,7 @@ public struct VirtualGamepadState: Sendable {
   public var rightTrigger: Int16
   public var leftTriggerPressed: Bool
   public var rightTriggerPressed: Bool
-  public var touchpadPressed: Bool
-  public var mutePressed: Bool
   public var hat: GamepadHIDDescriptor.Hat
-  public var motion: RemappingVirtualMotionState?
-  public var motionSamples: [RemappingVirtualMotionState]
-  public var motionTimestampNanoseconds: UInt64
 
   /// Digital-only sources expose a full axis press without replacing analog pressure.
   public var effectiveLeftTrigger: Int16 {
@@ -36,12 +31,7 @@ public struct VirtualGamepadState: Sendable {
     rightTrigger: Int16 = 0,
     leftTriggerPressed: Bool = false,
     rightTriggerPressed: Bool = false,
-    touchpadPressed: Bool = false,
-    mutePressed: Bool = false,
-    hat: GamepadHIDDescriptor.Hat = .neutral,
-    motion: RemappingVirtualMotionState? = nil,
-    motionSamples: [RemappingVirtualMotionState] = [],
-    motionTimestampNanoseconds: UInt64 = 0
+    hat: GamepadHIDDescriptor.Hat = .neutral
   ) {
     self.buttons = buttons
     self.leftStickX = leftStickX
@@ -52,12 +42,7 @@ public struct VirtualGamepadState: Sendable {
     self.rightTrigger = rightTrigger
     self.leftTriggerPressed = leftTriggerPressed
     self.rightTriggerPressed = rightTriggerPressed
-    self.touchpadPressed = touchpadPressed
-    self.mutePressed = mutePressed
     self.hat = hat
-    self.motion = motion
-    self.motionSamples = motionSamples
-    self.motionTimestampNanoseconds = motionTimestampNanoseconds
   }
 }
 
@@ -82,16 +67,11 @@ public protocol VirtualGamepadReportFormat: Sendable {
   ///
   /// If `inputReportID` is non-nil, the returned bytes MUST begin with that Report ID byte.
   func buildInputReport(from state: VirtualGamepadState) -> [UInt8]
-
-  /// Whether this exact descriptor/report pair carries gyroscope and accelerometer values.
-  var supportsMotion: Bool { get }
-
 }
 
 extension VirtualGamepadReportFormat {
   public var outputReportPayloadSize: Int? { nil }
   public var outputReportID: UInt8? { nil }
-  public var supportsMotion: Bool { false }
 }
 
 /// Generic OJD HID GamePad format (matches ``GamepadHIDDescriptor``).

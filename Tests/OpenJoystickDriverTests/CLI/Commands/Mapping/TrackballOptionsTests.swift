@@ -4,15 +4,10 @@ import Testing
 
 struct TrackballOptionsTests {
   @Test
-  func virtualMotionOptionIsTypedAndPreserved() throws {
-    let enabled = try MappingProfileEditor.gyroOutput(
-      MappingOptions(["--gyro-virtual-motion", "true"])
-    )
-    #expect(enabled.virtualMotion)
-    let preserved = try MappingProfileEditor.gyroOutput(MappingOptions([]), defaultValue: enabled)
-    #expect(preserved.virtualMotion)
+  func virtualMotionOptionIsRejected() throws {
+    let options = try MappingOptions(["--gyro-virtual-motion", "true"])
     #expect(throws: (any Error).self) {
-      try MappingProfileEditor.gyroOutput(MappingOptions(["--gyro-virtual-motion", "yes"]))
+      try options.validate(allowed: MappingProfileEditor.motionOptions)
     }
   }
 

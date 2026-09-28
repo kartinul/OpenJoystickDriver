@@ -19,14 +19,12 @@ extension RemappingRoutingCore {
   ) async -> RemappingRouterStatusSnapshot {
     defer { schedulingRevision &+= 1 }
     if proposedControls.revision >= controls.revision {
-      let previousCompatibilitySuppressed = compatibilityIsSuppressed
+      let suppressionBegan = !controls.outputSuppressed && proposedControls.outputSuppressed
       controls = proposedControls
-      if !previousCompatibilitySuppressed, compatibilityIsSuppressed,
-        !profileTransactionState.blocksOutput
-      {
+      if suppressionBegan, !profileTransactionState.blocksOutput {
         for identifier in sortedIdentifiers {
-          guard case .compatibility = routes[identifier]?.selection else { continue }
-          await notifyCompatibilityStop(identifier)
+          guard case .virtualGamepad = routes[identifier]?.selection else { continue }
+          await notifyVirtualGamepadStop(identifier)
         }
       }
     }
@@ -62,8 +60,8 @@ extension RemappingRoutingCore {
     let selection: RemappingRouteSelection
     let profile: RemappingProfile?
     switch route.selection {
-    case .compatibility:
-      selection = .compatibility
+    case .virtualGamepad:
+      selection = .virtualGamepad
       profile = nil
     case .remapping(let activeProfile):
       selection = .remapping(profileID: activeProfile.id)

@@ -69,7 +69,6 @@
 "status.checkingControllers" = "جارٍ التحقق من وحدات التحكم المتصلة…";
 "status.refreshingProfile" = "جارٍ تحديث حالة ملف التعريف…";
 "status.loadingProfiles" = "جارٍ تحميل ملفات التعريف…";
-"status.updatingIdentity" = "جارٍ تحديث هوية وحدة التحكم…";
 "status.listening" = "جارٍ الاستماع…";
 "status.readyToListen" = "جاهز للاستماع";
 "status.checkingInput" = "جارٍ التحقق";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "وحدات التحكم";
 "settings.controllerDisconnectedNotifications" = "تم فصل وحدة التحكم";
 "settings.controllerDisconnectedShort" = "غير متصل";
-"settings.controllerIdentity" = "هوية وحدة التحكم";
 "settings.controllerNotifications" = "تم توصيل وحدة التحكم";
 "settings.diagnostics" = "التشخيص";
 "settings.service" = "الخدمة";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "قيد التفريغ";
 "controllers.charging" = "قيد الشحن";
 "controllers.batteryFull" = "ممتلئة";
+"controllers.notChargeable" = "غير قابلة للشحن";
 "controllers.batteryAccessibilityDetails" = "البطارية: %@. حالة الشحن: %@. حالة الكابل: %@.";
 "controllers.activeProfile" = "ملف التعريف النشط";
 "controllers.profileChecking" = "جارٍ التحقق…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "ملف التعريف النشط غير متوفر";
 "controllers.profileLoadError" = "تعذر تحميل ملف التعريف النشط";
 "controllers.protocol" = "البروتوكول";
-"controllers.parser" = "المصفح";
 "controllers.serialNumber" = "الرقم التسلسلي";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "نقطة نهاية الإدخال";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "خطأ في ملف التعريف النشط: %@";
 "controllers.accessibilityDetails" = "%@. %@. البروتوكول: %@. Parser: %@. الرقم التسلسلي: %@. USB VID/PID: %@. نقطة نهاية الإدخال: %@. نقطة نهاية الإخراج: %@.";
 "controllers.publishedAs" = "منشور باسم";
-"identity.title" = "هوية وحدة التحكم";
-"identity.needsAttention" = "يحتاج إلى انتباه";
-"identity.error" = "خطأ في هوية وحدة التحكم";
-"identity.updating" = "جارٍ تحديث هوية وحدة التحكم…";
-"identity.reset" = "إعادة التعيين إلى الموصى به";
-"identity.checking" = "جارٍ التحقق";
-"identity.globalScope" = "ينطبق على جميع وحدات التحكم الافتراضية التي ينشرها OpenJoystickDriver.";
-"identity.unavailable" = "غير متوفر";
-"identity.notSelected" = "غير محدد";
+"controllers.nativeGamepadNotPublished" = "ذراع ألعاب macOS أصلية، غير منشورة";
+"virtualProfile.advanced" = "متقدم";
+"virtualProfile.title" = "ملف تعريف HID الافتراضي";
+"virtualProfile.modelScope" = "ينطبق على كل وحدة تحكم متصلة من هذا الطراز.";
+"virtualProfile.sourceOverride" = "تجاوز";
+"virtualProfile.sourceAutomaticAfterRejecting" = "تلقائي، تم رفض التجاوز";
+"virtualProfile.none" = "لا يوجد ملف تعريف HID افتراضي";
+"virtualProfile.unavailable" = "لا يوجد ملف تعريف HID افتراضي يمكنه تمثيل وحدة التحكم هذه.";
+"virtualProfile.updating" = "جارٍ تحديث ملف تعريف HID الافتراضي…";
+"virtualProfile.live" = "الملف الحالي";
+"virtualProfile.failure.unknownProfile" = "ملف تعريف HID الافتراضي هذا غير معروف. لم يُحفظ أي شيء.";
+"virtualProfile.failure.controllerNotFound" = "انقطع اتصال وحدة التحكم أو تعذر العثور عليها. لم يتغير التجاوز.";
+"virtualProfile.failure.overrideRejected" = "تم حفظ التجاوز، لكن وحدة التحكم هذه لا يمكنها استخدامه، لذا تختار تلقائيًا.";
+"virtualProfile.failure.activationFailed" = "فشل التنشيط، لذا تمت استعادة ملف تعريف HID الافتراضي السابق: %@";
+"virtualProfile.failure.outputDisabled" = "تم حفظ التجاوز وسيُطبق عند تمكين الإخراج الافتراضي.";
+"virtualProfile.failure.serverStopped" = "توقفت الخدمة. لم يتغير التجاوز.";
+"virtualProfile.failure.persistenceFailed" = "تعذر حفظ التجاوز. لم يُحفظ أي شيء.";
+"virtualProfile.storeError" = "تتعذر قراءة تجاوزات ملف تعريف HID الافتراضي (%@). تختار وحدات التحكم تلقائيًا.";
+"virtualProfile.legacyIdentityRejected" = "لم يعد إعداد هوية وحدة التحكم المتقاعد %@ مطبقًا. شغّل controller virtual reset --all لمسحه.";
 "keyboard.noKey" = "لم يُحدد أي مفتاح";
 "keyboard.pressKey" = "اضغط مفتاحاً…";
 "keyboard.captureKey" = "التقاط مفتاح";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "الحالة الحالية";
 "debug.runtime" = "وقت التشغيل";
 "debug.controllers" = "وحدات التحكم";
-"debug.controllerIdentity" = "هوية وحدة التحكم";
 "debug.unavailable" = "وقت التشغيل · غير متوفر";
 "debug.needsAttention" = "وقت التشغيل · يحتاج إلى انتباه";
 "debug.diagnostics" = "التشخيص";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "إخراج وحدة التحكم متوقف.";
 "debug.outputNeedsAttention" = "إخراج وحدة التحكم يحتاج إلى انتباه.";
 "debug.serviceUnavailable" = "تشخيص الخدمة غير متوفر حالياً.";
-"error.selectedOutputUnavailable" = "إخراج وحدة التحكم المحدد غير متوفر.";
-"error.selectedOutputEnableFailed" = "تعذر تمكين إخراج وحدة التحكم المحدد.";
 "error.profileChanged" = "غُيّر ملف التعريف هذا في مكان آخر. أعد التحميل أو تابع التحرير.";
 "error.duplicateProfile" = "يوجد بالفعل ملف تعريف بهذا الاسم.";
 "error.profileMissing" = "ملف التعريف هذا لم يعد متوفراً.";
@@ -443,9 +448,7 @@
 "common.runtime" = "وقت التشغيل";
 "common.controllers" = "وحدات التحكم";
 "common.profiles" = "ملفات التعريف";
-"common.controllerIdentity" = "هوية وحدة التحكم";
 "common.protocol" = "البروتوكول";
-"common.parser" = "المصفح";
 "common.serialNumber" = "الرقم التسلسلي";
 "common.inputEndpoint" = "نقطة نهاية الإدخال";
 "common.outputEndpoint" = "نقطة نهاية الإخراج";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "البند المحدد لم يعد متاحا.";
 "cli.catalog.app_ready.summary" = "التحقق من جاهزية خدمة التطبيق المصادق عليها";
 "cli.catalog.app_status.summary" = "عرض حالة خدمة التطبيق";
-"cli.catalog.compat.summary" = "إدارة توافق وحدة التحكم الافتراضية";
 "cli.catalog.controller_list.summary" = "سرد وحدات التحكم المتصلة";
 "cli.catalog.controller_output.summary" = "اختبار إخراج وحدة التحكم الفعلية المدعوم";
 "cli.catalog.controller_packets.summary" = "عرض حزم وحدة التحكم الأخيرة";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "عرض حالة برنامج التشغيل ووقت التشغيل";
 "cli.catalog.test.summary" = "اختبار توصيل إدخال وحدة التحكم الافتراضية";
 "cli.catalog.update.summary" = "التحقق من GitHub للتحديثات المتاحة";
-"cli.compat.identity" = "هوية التوافق: %@";
-"cli.compat.identity_unknown" = "هوية التوافق: غير معروفة";
-"cli.compat.set_failed" = "تعذر تعيين هوية التوافق إلى %@. شغّل التطبيق المثبّت وتحقق من وصول مراقبة الإدخال وتسهيلات الاستخدام.";
-"cli.compat.usage" = "الاستخدام: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "حالة مساحة المستخدم: %@";
 "cli.controller.allAppleEntries" = "كل إدخالات كتالوج Apple المطابقة تماماً:";
 "cli.controller.appleIDs" = "    معرّفات Apple: %@";
 "cli.controller.applePairs" = "  أزواج Apple  : %d إدخالات VID/PID مطابقة تماماً";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "لا تطابق أي وحدة تحكم متصلة --device %@.";
 "cli.controller.selection.multiple" = "تطابق عدة وحدات تحكم. اختر واحدة بـ --device:\n  %@";
 "cli.controller.selection.none" = "لا توجد وحدة تحكم متصلة.";
+"cli.controller.virtual.live" = "ملف تعريف HID الافتراضي: %@ (%@)";
+"cli.controller.virtual.none" = "ملف تعريف HID الافتراضي: لا يوجد (%@)";
+"cli.controller.virtual.failed" = "فشل طلب ملف تعريف HID الافتراضي: %@";
+"cli.controller.virtual.unknown_profile" = "ملف تعريف HID افتراضي غير معروف «%@». استخدم أحد الملفات التالية: %@.";
+"cli.controller.virtual.missing_profile" = "يتطلب «controller virtual set» ملف تعريف HID افتراضيًا. استخدم أحد الملفات التالية: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "لا يمكن الجمع بين «--all» و --vid أو --pid أو --device.";
+"cli.controller.virtual.reset_all.success" = "حسناً: أُزيلت كل تجاوزات ملف تعريف HID الافتراضي.";
+"cli.controller.virtual.reset_all.failed" = "تعذر إعادة تعيين الإعدادات. شغّل التطبيق المثبّت وتحقق من أذوناته.";
 "cli.controller.selection.vid_pid_missing" = "لا تطابق أي وحدة تحكم متصلة %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "مرّر VID و PID معاً، أو احذفهما معاً.";
 "cli.controller.serviceControllers" = "وحدات التحكم (من خدمة التطبيق قيد التشغيل):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "تلميح: امنح الاستحقاق المطلوب ووصول مراقبة الإدخال.";
 "cli.controller.usbControllers" = "وحدات تحكم USB (الصنف 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "مرّر VID و PID معاً، أو احذفهما معاً عندما تكون وحدة تحكم واحدة متصلة.";
-"cli.diagnose.advisory_candidate" = "    مرشح بروتوكول استشاري: %@";
 "cli.diagnose.app_missing" = "  التطبيق: مفقود في %@";
 "cli.diagnose.app_missing_fix" = "  الإصلاح: ابنِ وثبّت التطبيق في /Applications";
 "cli.diagnose.app_present" = "  التطبيق: موجود";
 "cli.diagnose.binary_path" = "الثنائي: %@";
-"cli.diagnose.catalog_conflict" = "      تتعارض الملاحظة مع عائلة الكتالوج؛ المحلّل دون تغيير";
-"cli.diagnose.catalog_parser" = "      محلّل الكتالوج يبقى %@ (%@)";
 "cli.diagnose.dext_found" = "  حزم .dext الموجودة:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      نقطة نهاية 0x%02X %@ %@ ماكس باكيت=%@ الفاصل=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "منحنى استجابة غير معروف «%@».";
 "cli.mapping.double_tap_format" = "--double-tap يتوقع <ms>:<target>، مثلاً --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "الاستخدام: OpenJoystickDriver --headless map <command>\n\nالأوامر:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nالمصدر: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nالهدف: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nخيارات المحور:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nخيارات التيربو (أزرار لوحة المفاتيح والفأرة فقط):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nخيارات التفعيل (أزرار لوحة المفاتيح والفأرة فقط، متعارضة مع التيربو):\n  --long-hold <ms>:<target>     مثلاً --long-hold 500:key:b\n  --double-tap <ms>:<target>    مثلاً --double-tap 300:key:c\n\n<profile> يقبل UUID أو اسماً مطابقاً تماماً غير حساس لحالة الأحرف.\n<id> يقبل عشرياً أو ست عشرياً مسبوقاً بـ 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "الاستخدام: OpenJoystickDriver --headless map <command>\n\nالأوامر:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nالمصدر: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nالهدف: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nخيارات المحور:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nخيارات التيربو (أزرار لوحة المفاتيح والفأرة فقط):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nخيارات التفعيل (أزرار لوحة المفاتيح والفأرة فقط، متعارضة مع التيربو):\n  --long-hold <ms>:<target>     مثلاً --long-hold 500:key:b\n  --double-tap <ms>:<target>    مثلاً --double-tap 300:key:c\n\n<profile> يقبل UUID أو اسماً مطابقاً تماماً غير حساس لحالة الأحرف.\n<id> يقبل عشرياً أو ست عشرياً مسبوقاً بـ 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "يجب أن يكون %@ معرّف 16 بت عشري أو ست عشري مسبوق بـ 0x.";
 "cli.mapping.jsonEncodeFailed" = "تعذر ترميز UTF-8 JSON.";
 "cli.mapping.layer_action_unknown" = "إجراء طبقة غير معروف «%@». المتوقع: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "خدمة تطبيق OpenJoystickDriver غير قيد التشغيل.";
 "cli.runtime.sample_limit" = "سيجمع الإعداد %d عينة؛ زِد --interval-ms.";
 "cli.runtime.stable_note" = "النقع المستقر المحدود دليل لهذا الحمل، وليس إثباتاً لغياب كل التسريبات.";
-"cli.settings.reset.failed" = "تعذر إعادة تعيين الإعدادات. شغّل التطبيق المثبّت وتحقق من أذوناته.";
-"cli.settings.reset.next" = "التالي: نفّذ compat set <identity> لاختيار هوية التوافق.";
-"cli.settings.reset.success" = "حسناً: أُعيد تعيين إعدادات خدمة التطبيق.";
 "cli.status.access_denied" = "إذا رُفض الوصول، نفّذ --headless permissions request ووافق على مراقبة الإدخال وتسهيلات الاستخدام في إعدادات النظام.";
 "cli.status.heading" = "حالة OpenJoystickDriver";
 "cli.status.json_error" = "تعذر ترميز JSON الحالة: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  الحالة      : %@";
 "cli.updates.unknown_option" = "خيار تحديثات غير معروف: %@";
 "common.unknown" = "غير معروف";
-"compatibility.appleGameController" = "التفاح GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (أصلي)";
 "developer.buttons" = "الأزرار";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "الزر B";
 "inputTest.bCircle" = "ب / دائرة";
 "inputTest.brightness" = "البهجة";
-"inputTest.circle" = "دائرة";
 "inputTest.color" = "اللون";
 "inputTest.controls" = "إدخال مباشر";
-"inputTest.cross" = "تقاطع";
 "inputTest.disconnected" = "المراقب منفصل";
 "inputTest.dpadDown" = "لوحة الاتجاهات للأسفل";
 "inputTest.dpadLeft" = "لوحة الاتجاهات لليسار";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "لا توجد سيطرة إضاءة لهذا التحكم.";
 "inputTest.live" = "إدخال نشط";
 "inputTest.menu" = "القائمة";
-"inputTest.minus" = "ناقص";
 "inputTest.off" = "إيقاف";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "خيارات";
 "inputTest.outputError" = "خطأ الإخراج الفيزيائي";
 "inputTest.outputRejected" = "رفض جهاز التحكم هذا الاختبار";
 "inputTest.permissionRequired" = "الإذن المطلوب لمراقبة المدخل";
 "inputTest.playerIndicator" = "مؤشر اللاعبين";
-"inputTest.plus" = "زائد";
 "inputTest.pressed" = "مضغوط";
-"inputTest.psButton" = "زر PS";
 "inputTest.released" = "محرَّر";
 "inputTest.rightBumper" = "الصادم الأيمن";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Y الأيمن";
 "inputTest.rumble" = "\" ريمبل \"";
 "inputTest.rumbleUnavailable" = "لا يدعم الرمبل هذا التحكم";
-"inputTest.share" = "مشاركة";
-"inputTest.square" = "مربع";
 "inputTest.stale" = "إدخال مقاطعة";
 "inputTest.start" = "ابدأ اختبار المدخل";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "إدخال مباشر";
 "inputTest.tabMotion" = "القانون";
 "inputTest.tabOutput" = "الناتج";
-"inputTest.steamButton" = "زر Steam";
 "inputTest.summary" = "أزرار الاختبار، العصا، أزرار، ضجيج، وإضاءة التحكم.";
 "inputTest.testRumble" = "الاختبار الرمبل";
 "inputTest.title" = "اختبار المدخل";
-"inputTest.triangle" = "مثلث";
 "inputTest.unavailable" = "المدخل غير متوفر";
 "inputTest.view" = "عرض";
 "inputTest.windowTitle" = "اختبار المدخل %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "لم يتم إعادة تشبيك جهازات التحكم المحددة، قم بتجديد التحكمات المتصلة ومحاولة أخرى";
 "profiles.joyConExplicitSession" = "بدأ مع جلسة زوج صريحة";
 "profiles.joyConSessionState" = "الزواج الصريح";
-"profiles.gyro.virtualMotion" = "الحركة الافتراضية المعدلة للأمام";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (المراد)%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "المراقب منفصل";
 "controllers.resume" = "حاول مرة أخرى";
 "controllers.disconnectFromOJD" = "المراقب منفصل";
-"error.compatibilityTransitionDetailed" = "تعذر تمكين إخراج وحدة التحكم المحدد. (%@, %@)";
 "error.controllerSessionChangeRejected" = "تعذر تمكين إخراج وحدة التحكم المحدد.";
 "cli.catalog.controller_disconnect.summary" = "المراقب منفصل";
 "cli.catalog.controller_resume.summary" = "حاول مرة أخرى — المراقب منفصل";
+"cli.catalog.controller_virtual_set.summary" = "تجاوز ملف تعريف HID الافتراضي لوحدة التحكم";
+"cli.catalog.controller_virtual_reset.summary" = "اختيار ملف تعريف HID الافتراضي لوحدة التحكم تلقائيًا، أو مسح كل تجاوز باستخدام --all";
 "cli.controller.disconnected" = "المراقب منفصل";
 "cli.controller.resumed" = "إدخال نشط";
 

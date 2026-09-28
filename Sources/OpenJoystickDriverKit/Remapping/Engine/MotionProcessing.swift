@@ -1,8 +1,34 @@
+/// The engine's motion space: degrees per second and standard gravities in the GamepadMotionHelpers
+/// frame (X right, Y up, Z toward the player). Tuning, projections, pointer scales, and manual
+/// calibration offsets are expressed in it, so converting here keeps their effective sensitivity.
+struct RemappingMotionReading {
+  let gyroscopeDegreesPerSecond: ControllerMotionVector
+  let accelerationG: ControllerMotionVector
+}
+
+extension RemappingMotionReading {
+  /// Inverts the producers' SI conversion and maps canonical (x, y, z) to engine (x, z, -y).
+  init(_ sample: ControllerMotionSample) {
+    let radians = ControllerMotionUnits.radiansPerDegree
+    let gravity = ControllerMotionUnits.standardGravity
+    let gyro = sample.angularVelocity
+    let accel = sample.acceleration
+    gyroscopeDegreesPerSecond = ControllerMotionVector(
+      x: gyro.x / radians,
+      y: gyro.z / radians,
+      z: -gyro.y / radians
+    )
+    accelerationG = ControllerMotionVector(
+      x: accel.x / gravity,
+      y: accel.z / gravity,
+      z: -accel.y / gravity
+    )
+  }
+}
+
 struct RemappingProcessedMotion {
   let timestamp: ControllerSampleTimestamp
-  let deltaNanoseconds: UInt64
   let deltaTime: Double
-  let calibratedGyro: ControllerMotionVector
   let fused: RemappingFusedMotion
   let tunedGyro: RemappingGyroProjection
 }
@@ -47,10 +73,11 @@ struct RemappingMotionProcessor {
     let timestamp = sample.timestamp
     if let previous {
       guard timestamp.sequenceIndex > previous.sequenceIndex,
-        timestamp.elapsedNanoseconds >= previous.elapsedNanoseconds
+        timestamp.monotonic >= previous.monotonic
       else { return nil }
     }
-    guard (try? tuning.validate()) != nil, let reading = sample.physicalReading,
+    let reading = RemappingMotionReading(sample)
+    guard (try? tuning.validate()) != nil,
       Self.withinBounds(reading.gyroscopeDegreesPerSecond, limit: 1_000_000),
       Self.withinBounds(reading.accelerationG, limit: 1_000)
     else {
@@ -58,16 +85,16 @@ struct RemappingMotionProcessor {
       resetEstimates()
       return nil
     }
-    let elapsed = previous.map { timestamp.elapsedNanoseconds - $0.elapsedNanoseconds } ?? 0
+    let elapsed = previous.map { timestamp.monotonic.nanoseconds - $0.monotonic.nanoseconds } ?? 0
     let discontinuity =
       previous == nil || latest == nil || elapsed > 100_000_000 || previousTuning != tuning
-      || calibrationRevision != reading.calibrationRevision || previous?.basis != timestamp.basis
-      || calibrationSource != reading.calibrationSource
+      || calibrationRevision != sample.calibrationRevision || previous?.basis != timestamp.basis
+      || calibrationSource != sample.calibrationSource
       || previous?.tickNanosecondsNumerator != timestamp.tickNanosecondsNumerator
       || previous?.tickNanosecondsDenominator != timestamp.tickNanosecondsDenominator
     previous = timestamp
-    calibrationSource = reading.calibrationSource
-    calibrationRevision = reading.calibrationRevision
+    calibrationSource = sample.calibrationSource
+    calibrationRevision = sample.calibrationRevision
     previousTuning = tuning
     if discontinuity { resetEstimates() }
     if elapsed == 0, !discontinuity { return nil }
@@ -98,9 +125,7 @@ struct RemappingMotionProcessor {
     }
     let result = RemappingProcessedMotion(
       timestamp: timestamp,
-      deltaNanoseconds: elapsed,
       deltaTime: deltaTime,
-      calibratedGyro: corrected,
       fused: fused,
       tunedGyro: tuned
     )

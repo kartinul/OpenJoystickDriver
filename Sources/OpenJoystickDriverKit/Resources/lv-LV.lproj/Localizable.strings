@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Pārbauda pievienotos kontrolierus…";
 "status.refreshingProfile" = "Atsvaidzina profila stāvokli…";
 "status.loadingProfiles" = "Ielādē profilus…";
-"status.updatingIdentity" = "Atjaunina kontroliera identitāti…";
 "status.listening" = "Klausās…";
 "status.readyToListen" = "Gatavs klausīties";
 "status.checkingInput" = "Pārbauda";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Kontrolieri";
 "settings.controllerDisconnectedNotifications" = "Kontroleris ir atlēks";
 "settings.controllerDisconnectedShort" = "Izšķirošana";
-"settings.controllerIdentity" = "Kontroliera identitāte";
 "settings.controllerNotifications" = "Kontroles savienojums";
 "settings.diagnostics" = "Diagnostika";
 "settings.service" = "Pakalpojums";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Izlādējas";
 "controllers.charging" = "Uzlādējas";
 "controllers.batteryFull" = "Pilns";
+"controllers.notChargeable" = "Nav uzlādējams";
 "controllers.batteryAccessibilityDetails" = "Akumulators: %@. Uzlādes stāvoklis: %@. Kabeļa stāvoklis: %@.";
 "controllers.activeProfile" = "Aktīvais profils";
 "controllers.profileChecking" = "Pārbauda…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Aktīvais profils nav pieejams";
 "controllers.profileLoadError" = "Neizdevās ielādēt aktīvo profilu";
 "controllers.protocol" = "Protokols";
-"controllers.parser" = "Parsētājs";
 "controllers.serialNumber" = "Sērijas numurs";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Ievades galapunkts";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Aktīvā profila kļūda: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokols: %@. Parser: %@. Sērijas numurs: %@. USB VID/PID: %@. Ievades galapunkts: %@. Izvades galapunkts: %@.";
 "controllers.publishedAs" = "Publicēts kā";
-"identity.title" = "Kontroliera identitāte";
-"identity.needsAttention" = "Nepieciešama uzmanība";
-"identity.error" = "Kontroliera identitātes kļūda";
-"identity.updating" = "Atjaunina kontroliera identitāti…";
-"identity.reset" = "Atiestatīt uz ieteikto";
-"identity.checking" = "Pārbauda";
-"identity.globalScope" = "Apdrošina visus virtuālos kontroleri, kurus publicē OpenJoystickDriver.";
-"identity.unavailable" = "Nav pieejams";
-"identity.notSelected" = "Nav atlasīts";
+"controllers.nativeGamepadNotPublished" = "macOS vietējais spēļu pults, nav publicēts";
+"virtualProfile.advanced" = "Papildu";
+"virtualProfile.title" = "Virtuālais HID profils";
+"virtualProfile.modelScope" = "Attiecas uz katru pievienoto šī modeļa kontrolieri.";
+"virtualProfile.sourceOverride" = "Ignorēšana";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Automātiski, ignorēšana noraidīta";
+"virtualProfile.none" = "Nav virtuālā HID profila";
+"virtualProfile.unavailable" = "Neviens virtuālais HID profils nevar attēlot šo kontrolieri.";
+"virtualProfile.updating" = "Atjaunina virtuālo HID profilu…";
+"virtualProfile.live" = "Aktīvais profils";
+"virtualProfile.failure.unknownProfile" = "Šis virtuālais HID profils nav zināms. Nekas netika saglabāts.";
+"virtualProfile.failure.controllerNotFound" = "Kontrolieris ir atvienots vai nav atrodams. Ignorēšana nav mainīta.";
+"virtualProfile.failure.overrideRejected" = "Ignorēšana ir saglabāta, bet šis kontrolieris to nevar izmantot, tāpēc izvēlas automātiski.";
+"virtualProfile.failure.activationFailed" = "Aktivizēšana neizdevās, tāpēc tika atjaunots iepriekšējais virtuālais HID profils: %@";
+"virtualProfile.failure.outputDisabled" = "Ignorēšana ir saglabāta un tiks lietota, kad virtuālā izvade būs ieslēgta.";
+"virtualProfile.failure.serverStopped" = "Pakalpojums apstājās. Ignorēšana nav mainīta.";
+"virtualProfile.failure.persistenceFailed" = "Ignorēšanu neizdevās saglabāt. Nekas netika saglabāts.";
+"virtualProfile.storeError" = "Virtuālā HID profila ignorēšanas nevar nolasīt (%@). Kontrolieri izvēlas automātiski.";
+"virtualProfile.legacyIdentityRejected" = "Novecojušais kontroliera identitātes iestatījums %@ vairs netiek lietots. Palaidiet controller virtual reset --all, lai to notīrītu.";
 "keyboard.noKey" = "Nav atlasīts taustiņš";
 "keyboard.pressKey" = "Nospiediet taustiņu…";
 "keyboard.captureKey" = "Tvert taustiņu";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Pašreizējais statuss";
 "debug.runtime" = "Izpildlaiks";
 "debug.controllers" = "Kontrolieri";
-"debug.controllerIdentity" = "Kontroliera identitāte";
 "debug.unavailable" = "Izpildlaiks · nav pieejams";
 "debug.needsAttention" = "Izpildlaiks · nepieciešama uzmanība";
 "debug.diagnostics" = "Diagnostika";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Kontroliera izvade ir izslēgta.";
 "debug.outputNeedsAttention" = "Kontroliera izvadei nepieciešama uzmanība.";
 "debug.serviceUnavailable" = "Pakalpojuma diagnostika pašlaik nav pieejama.";
-"error.selectedOutputUnavailable" = "Atlasītā kontroliera izvade nav pieejama.";
-"error.selectedOutputEnableFailed" = "Atlasīto kontroliera izvadi neizdevās iespējot.";
 "error.profileChanged" = "Šis profils tika mainīts citur. Ielādējiet atkārtoti vai turpiniet rediģēšanu.";
 "error.duplicateProfile" = "Profils ar šādu nosaukumu jau pastāv.";
 "error.profileMissing" = "Šis profils vairs nav pieejams.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Izpildlaiks";
 "common.controllers" = "Kontrolieri";
 "common.profiles" = "Profili";
-"common.controllerIdentity" = "Kontroliera identitāte";
 "common.protocol" = "Protokols";
-"common.parser" = "Parsētājs";
 "common.serialNumber" = "Sērijas numurs";
 "common.inputEndpoint" = "Ievades galapunkts";
 "common.outputEndpoint" = "Izvades galapunkts";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Izvēlēta profilu pozīcija vairs nav pieejama.";
 "cli.catalog.app_ready.summary" = "Pārbaudīt autentificētā lietotnes pakalpojuma gatavību";
 "cli.catalog.app_status.summary" = "Rādīt lietotnes pakalpojuma statusu";
-"cli.catalog.compat.summary" = "Pārvaldīt virtuālā kontroliera saderību";
 "cli.catalog.controller_list.summary" = "Uzskaitīt pievienotos kontrolierus";
 "cli.catalog.controller_output.summary" = "Pārbaudīt atbalstīto fiziskā kontroliera izvadi";
 "cli.catalog.controller_packets.summary" = "Rādīt nesenos kontroliera paketes";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Rādīt draivera un izpildlaika statusu";
 "cli.catalog.test.summary" = "Pārbaudīt virtuālā kontroliera ievades piegādi";
 "cli.catalog.update.summary" = "Pārbaudīt GitHub, vai ir pieejami atjauninājumi";
-"cli.compat.identity" = "saderības identitāte: %@";
-"cli.compat.identity_unknown" = "saderības identitāte: nezināma";
-"cli.compat.set_failed" = "Neizdevās iestatīt saderības identitāti uz %@. Palaižiet instalēto lietotni un pārbaudiet Ievades pārraudzības un Pieejamības piekļuvi.";
-"cli.compat.usage" = "Lietošana: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "lietotāja telpas statuss: %@";
 "cli.controller.allAppleEntries" = "Visi precīzie Apple kataloga ieraksti:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Apple pāri   : %d precīzi VID/PID ieraksti";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Neviens pievienots kontrolieris neatbilst --device %@.";
 "cli.controller.selection.multiple" = "Atbilst vairāki kontrolieri. Izvēlieties vienu ar --device:\n  %@";
 "cli.controller.selection.none" = "Kontrolieris nav pievienots.";
+"cli.controller.virtual.live" = "Virtuālais HID profils: %@ (%@)";
+"cli.controller.virtual.none" = "Virtuālais HID profils: nav (%@)";
+"cli.controller.virtual.failed" = "Virtuālā HID profila pieprasījums neizdevās: %@";
+"cli.controller.virtual.unknown_profile" = "Nezināms virtuālais HID profils „%@“. Izmantojiet vienu no: %@.";
+"cli.controller.virtual.missing_profile" = "Komandai „controller virtual set“ nepieciešams virtuālais HID profils. Izmantojiet vienu no: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "„--all“ nevar apvienot ar --vid, --pid vai --device.";
+"cli.controller.virtual.reset_all.success" = "Labi: visi virtuālā HID profila ignorējumi notīrīti.";
+"cli.controller.virtual.reset_all.failed" = "Neizdevās atiestatīt iestatījumus. Palaižiet instalēto lietotni un pārbaudiet tās atļaujas.";
 "cli.controller.selection.vid_pid_missing" = "Neviens pievienots kontrolieris neatbilst %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Padodiet gan VID, gan PID vai izlaidiet abus.";
 "cli.controller.serviceControllers" = "Kontrolieri (no darbojošā lietotnes pakalpojuma):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Padoms: piešķiriet nepieciešamo tiesību un Ievades pārraudzības piekļuvi.";
 "cli.controller.usbControllers" = "USB kontrolieri (klase 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Padodiet gan VID, gan PID vai izlaidiet abus, kad pievienots viens kontrolieris.";
-"cli.diagnose.advisory_candidate" = "    Ieteikuma protokola kandidāts: %@";
 "cli.diagnose.app_missing" = "  Lietotne: trūkst %@";
 "cli.diagnose.app_missing_fix" = "  Labojums: izveidojiet un instalējiet lietotni uz /Applications";
 "cli.diagnose.app_present" = "  Lietotne: ir";
 "cli.diagnose.binary_path" = "Binārais: %@";
-"cli.diagnose.catalog_conflict" = "      Novērojums konfliktē ar kataloga saimi; parsers nemainīts";
-"cli.diagnose.catalog_parser" = "      Kataloga parsers paliek %@ (%@)";
 "cli.diagnose.dext_found" = "  Atrastās .dext pakotnes:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      galīgais punkts 0x%02X %@ %@ maxPacket=%@ intervāls%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Nezināma atbildes līkne „%@“.";
 "cli.mapping.double_tap_format" = "--double-tap sagaida <ms>:<target>, piem. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Lietošana: OpenJoystickDriver --headless map <command>\n\nKomandas:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nAvots: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nMērķis: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAss opcijas:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo opcijas (tikai tastatūras un peles pogas):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktivizācijas opcijas (tikai tastatūras un peles pogas, savstarpēji izslēdzošas ar turbo):\n  --long-hold <ms>:<target>     piem. --long-hold 500:key:b\n  --double-tap <ms>:<target>    piem. --double-tap 300:key:c\n\n<profile> pieņem UUID vai precīzu, reģistrnejutīgu profila nosaukumu.\n<id> pieņem decimālu vai 0x prefiksa heksadecimālu.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Lietošana: OpenJoystickDriver --headless map <command>\n\nKomandas:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nAvots: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nMērķis: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nAss opcijas:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo opcijas (tikai tastatūras un peles pogas):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nAktivizācijas opcijas (tikai tastatūras un peles pogas, savstarpēji izslēdzošas ar turbo):\n  --long-hold <ms>:<target>     piem. --long-hold 500:key:b\n  --double-tap <ms>:<target>    piem. --double-tap 300:key:c\n\n<profile> pieņem UUID vai precīzu, reģistrnejutīgu profila nosaukumu.\n<id> pieņem decimālu vai 0x prefiksa heksadecimālu.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ jābūt 16 bitu decimālam vai 0x prefiksa heksadecimālam identifikatoram.";
 "cli.mapping.jsonEncodeFailed" = "Neizdevās kodēt UTF-8 JSON.";
 "cli.mapping.layer_action_unknown" = "Nezināma slāņa darbība „%@“. Gaidāms: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver lietotnes pakalpojums nedarbojas.";
 "cli.runtime.sample_limit" = "Konfigurācija savāktu %d paraugus; palieliniet --interval-ms.";
 "cli.runtime.stable_note" = "Stabila ierobežota mērcēšana ir pierādījums šai slodzei, nevis pierādījums, ka nav visām noplūdēm.";
-"cli.settings.reset.failed" = "Neizdevās atiestatīt iestatījumus. Palaižiet instalēto lietotni un pārbaudiet tās atļaujas.";
-"cli.settings.reset.next" = "Tālāk: palaidiet compat set <identity>, lai izvēlētos saderības identitāti.";
-"cli.settings.reset.success" = "Labi: lietotnes pakalpojuma iestatījumi atiestatīti.";
 "cli.status.access_denied" = "Ja piekļuve tiek liegta, palaidiet --headless permissions request un apstipriniet Ievades pārraudzību un Pieejamību Sistēmas iestatījumos.";
 "cli.status.heading" = "OpenJoystickDriver statuss";
 "cli.status.json_error" = "Neizdevās kodēt statusa JSON: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Statuss      : %@";
 "cli.updates.unknown_option" = "Nezināma atjauninājumu opcija: %@";
 "common.unknown" = "Nezināms";
-"compatibility.appleGameController" = "Apels GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (origināls)";
 "developer.buttons" = "Pogas";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Poga B";
 "inputTest.bCircle" = "B / apvalks";
 "inputTest.brightness" = "Skaistošana";
-"inputTest.circle" = "Aplis";
 "inputTest.color" = "Smalta";
 "inputTest.controls" = "Tiešā ievade";
-"inputTest.cross" = "Krusts";
 "inputTest.disconnected" = "Kontroleris ir atlēks";
 "inputTest.dpadDown" = "Virzienu pults lejup";
 "inputTest.dpadLeft" = "Virzienu pults pa kreisi";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Šam regulāram nav pieejamas apgaismojuma vadības ierīces.";
 "inputTest.live" = "Input aktivizēts";
 "inputTest.menu" = "Izvēlne";
-"inputTest.minus" = "Mīnuss";
 "inputTest.off" = "Izslēgts";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Opcijas";
 "inputTest.outputError" = "Fiziskā izlidošanas kļūda";
 "inputTest.outputRejected" = "Kontroleris noraidīja šo izlidošanas testu.";
 "inputTest.permissionRequired" = "Input Uzraudzības atļauja";
 "inputTest.playerIndicator" = "Spēlētāju rādītājs";
-"inputTest.plus" = "Pluss";
 "inputTest.pressed" = "Nospiests";
-"inputTest.psButton" = "PS poga";
 "inputTest.released" = "Atlaists";
 "inputTest.rightBumper" = "Labais bamperis";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Labais Y";
 "inputTest.rumble" = "Rūms";
 "inputTest.rumbleUnavailable" = "Šā kontrolētājs nerada Rumble.";
-"inputTest.share" = "Kopīgot";
-"inputTest.square" = "Kvadrāts";
 "inputTest.stale" = "Ievadīšana pārtraukta";
 "inputTest.start" = "Sākotnēji ievadīšanas tests";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Tiešā ievade";
 "inputTest.tabMotion" = "Pieprasījums";
 "inputTest.tabOutput" = "Izslēgums";
-"inputTest.steamButton" = "Steam poga";
 "inputTest.summary" = "Testēšanas pulksteņi, stikli, izdzīvošanas ierīces, bruņotājs un vadības ierīču apgaismes.";
 "inputTest.testRumble" = "Testa dārdoņa";
 "inputTest.title" = "Iegšanas tests";
-"inputTest.triangle" = "Trīsstūris";
 "inputTest.unavailable" = "Vārds nav pieejams";
 "inputTest.view" = "Skatīt";
 "inputTest.windowTitle" = "Iegšanas tests %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Izvēlēti Joy-Cons nevarēja būt apbalvoti.";
 "profiles.joyConExplicitSession" = "Sākums ar eksplicētu pāris sesiju";
 "profiles.joyConSessionState" = "Izskatīt par to, kā ir";
-"profiles.gyro.virtualMotion" = "Virtuālā kustība, kas kalibrēta uz priekšu";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ bruņot (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Kontroleris ir atlēks";
 "controllers.resume" = "Mēģināt vēlreiz";
 "controllers.disconnectFromOJD" = "Kontroleris ir atlēks";
-"error.compatibilityTransitionDetailed" = "Atlasīto kontroliera izvadi neizdevās iespējot. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Atlasīto kontroliera izvadi neizdevās iespējot.";
 "cli.catalog.controller_disconnect.summary" = "Kontroleris ir atlēks";
 "cli.catalog.controller_resume.summary" = "Mēģināt vēlreiz — Kontroleris ir atlēks";
+"cli.catalog.controller_virtual_set.summary" = "Aizstāt kontroliera virtuālo HID profilu";
+"cli.catalog.controller_virtual_reset.summary" = "Automātiski izvēlēties kontroliera virtuālo HID profilu, vai notīrīt visus pārrakstījumus ar --all";
 "cli.controller.disconnected" = "Kontroleris ir atlēks";
 "cli.controller.resumed" = "Input aktivizēts";
 

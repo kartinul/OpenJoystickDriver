@@ -69,7 +69,6 @@
 "status.checkingControllers" = "בודק בקרים מחוברים…";
 "status.refreshingProfile" = "מרענן את מצב הפרופיל…";
 "status.loadingProfiles" = "טוען פרופילים…";
-"status.updatingIdentity" = "מעדכן את זהות הבקר…";
 "status.listening" = "מאזין…";
 "status.readyToListen" = "מוכן להאזנה";
 "status.checkingInput" = "בודק";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "בקרים";
 "settings.controllerDisconnectedNotifications" = "בקר נותק";
 "settings.controllerDisconnectedShort" = "מנותק";
-"settings.controllerIdentity" = "זהות הבקר";
 "settings.controllerNotifications" = "בקר חובר";
 "settings.diagnostics" = "אבחון";
 "settings.service" = "שירות";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "בפריקה";
 "controllers.charging" = "בטעינה";
 "controllers.batteryFull" = "מלאה";
+"controllers.notChargeable" = "לא נטענת";
 "controllers.batteryAccessibilityDetails" = "סוללה: %@. מצב טעינה: %@. מצב הכבל: %@.";
 "controllers.activeProfile" = "פרופיל פעיל";
 "controllers.profileChecking" = "בודק…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "הפרופיל הפעיל אינו זמין";
 "controllers.profileLoadError" = "לא ניתן לטעון את הפרופיל הפעיל";
 "controllers.protocol" = "פרוטוקול";
-"controllers.parser" = "סופר";
 "controllers.serialNumber" = "מספר סידורי";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "נקודת קצה לקלט";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "שגיאת פרופיל פעיל: %@";
 "controllers.accessibilityDetails" = "%@. %@. פרוטוקול: %@. Parser: %@. מספר סידורי: %@. USB VID/PID: %@. נקודת קצה לקלט: %@. נקודת קצה לפלט: %@.";
 "controllers.publishedAs" = "פורסם בתור";
-"identity.title" = "זהות הבקר";
-"identity.needsAttention" = "דורש תשומת לב";
-"identity.error" = "שגיאת זהות בקר";
-"identity.updating" = "מעדכן את זהות הבקר…";
-"identity.reset" = "איפוס למומלץ";
-"identity.checking" = "בודק";
-"identity.globalScope" = "חל על כל בקרי המשחק הווירטואליים ש־OpenJoystickDriver מפרסם.";
-"identity.unavailable" = "לא זמין";
-"identity.notSelected" = "לא נבחר";
+"controllers.nativeGamepadNotPublished" = "שלט משחק מקורי של macOS, לא מפורסם";
+"virtualProfile.advanced" = "מתקדם";
+"virtualProfile.title" = "פרופיל HID וירטואלי";
+"virtualProfile.modelScope" = "חל על כל בקר מחובר מדגם זה.";
+"virtualProfile.sourceOverride" = "עקיפה";
+"virtualProfile.sourceAutomaticAfterRejecting" = "אוטומטי, העקיפה נדחתה";
+"virtualProfile.none" = "אין פרופיל HID וירטואלי";
+"virtualProfile.unavailable" = "אין פרופיל HID וירטואלי שיכול לייצג בקר זה.";
+"virtualProfile.updating" = "מעדכן את פרופיל ה־HID הווירטואלי…";
+"virtualProfile.live" = "פרופיל פעיל";
+"virtualProfile.failure.unknownProfile" = "פרופיל ה־HID הווירטואלי הזה אינו מוכר. דבר לא נשמר.";
+"virtualProfile.failure.controllerNotFound" = "הבקר נותק או שלא ניתן למצוא אותו. העקיפה לא השתנתה.";
+"virtualProfile.failure.overrideRejected" = "העקיפה נשמרה, אך בקר זה אינו יכול להשתמש בה ולכן הוא בוחר אוטומטית.";
+"virtualProfile.failure.activationFailed" = "ההפעלה נכשלה ולכן פרופיל ה־HID הווירטואלי הקודם שוחזר: %@";
+"virtualProfile.failure.outputDisabled" = "העקיפה נשמרה ותחול כאשר הפלט הווירטואלי יופעל.";
+"virtualProfile.failure.serverStopped" = "השירות הפסיק. העקיפה לא השתנתה.";
+"virtualProfile.failure.persistenceFailed" = "לא ניתן היה לשמור את העקיפה. דבר לא נשמר.";
+"virtualProfile.storeError" = "לא ניתן לקרוא את עקיפות פרופיל ה־HID הווירטואלי (%@). הבקרים בוחרים אוטומטית.";
+"virtualProfile.legacyIdentityRejected" = "הגדרת זהות הבקר שהוצאה משימוש %@ אינה מוחלת עוד. הרץ את controller virtual reset --all כדי לנקות אותה.";
 "keyboard.noKey" = "לא נבחר מקש";
 "keyboard.pressKey" = "לחץ על מקש…";
 "keyboard.captureKey" = "לכידת מקש";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "מצב נוכחי";
 "debug.runtime" = "זמן ריצה";
 "debug.controllers" = "בקרים";
-"debug.controllerIdentity" = "זהות הבקר";
 "debug.unavailable" = "זמן ריצה · לא זמין";
 "debug.needsAttention" = "זמן ריצה · דורש תשומת לב";
 "debug.diagnostics" = "אבחון";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "פלט הבקר כבוי.";
 "debug.outputNeedsAttention" = "פלט הבקר דורש תשומת לב.";
 "debug.serviceUnavailable" = "אבחון השירות אינו זמין כרגע.";
-"error.selectedOutputUnavailable" = "פלט הבקר שנבחר אינו זמין.";
-"error.selectedOutputEnableFailed" = "לא ניתן להפעיל את פלט הבקר שנבחר.";
 "error.profileChanged" = "הפרופיל הזה השתנה במקום אחר. טען מחדש או המשך לערוך.";
 "error.duplicateProfile" = "כבר קיים פרופיל בשם זה.";
 "error.profileMissing" = "הפרופיל הזה אינו זמין עוד.";
@@ -443,9 +448,7 @@
 "common.runtime" = "זמן ריצה";
 "common.controllers" = "בקרים";
 "common.profiles" = "פרופילים";
-"common.controllerIdentity" = "זהות הבקר";
 "common.protocol" = "פרוטוקול";
-"common.parser" = "סופר";
 "common.serialNumber" = "מספר סידורי";
 "common.inputEndpoint" = "נקודת קצה לקלט";
 "common.outputEndpoint" = "נקודת קצה לפלט";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "פריט הפרופיל הנבחר כבר לא זמין.";
 "cli.catalog.app_ready.summary" = "בדיקת מוכנות שירות היישום המאומת";
 "cli.catalog.app_status.summary" = "הצגת מצב שירות היישום";
-"cli.catalog.compat.summary" = "ניהול תאימות בקר וירטואלי";
 "cli.catalog.controller_list.summary" = "רשימת בקרים מחוברים";
 "cli.catalog.controller_output.summary" = "בדיקת פלט בקר פיזי נתמך";
 "cli.catalog.controller_packets.summary" = "הצגת מנות בקר אחרונות";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "הצגת מצב מנהל ההתקן וזמן הריצה";
 "cli.catalog.test.summary" = "בדיקת מסירת קלט של בקר וירטואלי";
 "cli.catalog.update.summary" = "בדיקת GitHub לעדכונים זמינים";
-"cli.compat.identity" = "זהות תאימות: %@";
-"cli.compat.identity_unknown" = "זהות תאימות: לא ידועה";
-"cli.compat.set_failed" = "הגדרת זהות התאימות ל-%@ נכשלה. הפעילו את היישום המותקן ואמתו גישת ניטור קלט ונגישות.";
-"cli.compat.usage" = "שימוש: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "מצב מרחב המשתמש: %@";
 "cli.controller.allAppleEntries" = "כל רשומות קטלוג Apple המדויקות:";
 "cli.controller.appleIDs" = "    מזהי Apple: %@";
 "cli.controller.applePairs" = "  זוגות Apple  : %d רשומות VID/PID מדויקות";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "אין בקר מחובר שתואם ל--device %@.";
 "cli.controller.selection.multiple" = "מספר בקרים תואמים. בחרו אחד עם --device:\n  %@";
 "cli.controller.selection.none" = "אין בקר מחובר.";
+"cli.controller.virtual.live" = "פרופיל HID וירטואלי: %@ (%@)";
+"cli.controller.virtual.none" = "פרופיל HID וירטואלי: אין (%@)";
+"cli.controller.virtual.failed" = "בקשת פרופיל ה־HID הווירטואלי נכשלה: %@";
+"cli.controller.virtual.unknown_profile" = "פרופיל HID וירטואלי לא ידוע «%@». יש להשתמש באחד מאלה: %@.";
+"cli.controller.virtual.missing_profile" = "«controller virtual set» דורש פרופיל HID וירטואלי. יש להשתמש באחד מאלה: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "לא ניתן לשלב את «--all» עם --vid, --pid או --device.";
+"cli.controller.virtual.reset_all.success" = "אישור: נוקו כל העקיפות של פרופיל HID וירטואלי.";
+"cli.controller.virtual.reset_all.failed" = "איפוס ההגדרות נכשל. הפעילו את היישום המותקן ואמתו את הרשאותיו.";
 "cli.controller.selection.vid_pid_missing" = "אין בקר מחובר שתואם ל-%@:%@.";
 "cli.controller.selection.vid_pid_pair" = "העבירו גם VID וגם PID, או השמיטו את שניהם.";
 "cli.controller.serviceControllers" = "בקרים (משירות היישום הפועל):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "טיפ: העניקו את ההרשאה הנדרשת וגישת ניטור קלט.";
 "cli.controller.usbControllers" = "בקרי USB (מחלקה 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "העבירו גם VID וגם PID, או השמיטו את שניהם כאשר בקר אחד מחובר.";
-"cli.diagnose.advisory_candidate" = "    מועמד פרוטוקול מייעץ: %@";
 "cli.diagnose.app_missing" = "  יישום: חסר ב-%@";
 "cli.diagnose.app_missing_fix" = "  תיקון: בנו והתקינו את היישום אל /Applications";
 "cli.diagnose.app_present" = "  יישום: קיים";
 "cli.diagnose.binary_path" = "בינארי: %@";
-"cli.diagnose.catalog_conflict" = "      התצפית סותרת את משפחת הקטלוג; המפענח ללא שינוי";
-"cli.diagnose.catalog_parser" = "      מפענח הקטלוג נשאר %@ (%@)";
 "cli.diagnose.dext_found" = "  חבילות .dext שנמצאו:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      נקודת סוף 0x%02X %@ %@ MaxPacket=%@ מרווח=%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "עקומת תגובה לא ידועה «%@».";
 "cli.mapping.double_tap_format" = "--double-tap מצפה ל-<ms>:<target>, למשל --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "שימוש: OpenJoystickDriver --headless map <command>\n\nפקודות:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nמקור: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nיעד: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nאפשרויות ציר:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nאפשרויות טורבו (כפתורי מקלדת ועכבר בלבד):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nאפשרויות הפעלה (כפתורי מקלדת ועכבר בלבד, בלעדיות הדדית עם טורבו):\n  --long-hold <ms>:<target>     למשל --long-hold 500:key:b\n  --double-tap <ms>:<target>    למשל --double-tap 300:key:c\n\n<profile> מקבל UUID או שם פרופיל מדויק שאינו תלוי רישיות.\n<id> מקבל עשרוני או הקסדצימלי עם קידומת 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "שימוש: OpenJoystickDriver --headless map <command>\n\nפקודות:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nמקור: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nיעד: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nאפשרויות ציר:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nאפשרויות טורבו (כפתורי מקלדת ועכבר בלבד):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nאפשרויות הפעלה (כפתורי מקלדת ועכבר בלבד, בלעדיות הדדית עם טורבו):\n  --long-hold <ms>:<target>     למשל --long-hold 500:key:b\n  --double-tap <ms>:<target>    למשל --double-tap 300:key:c\n\n<profile> מקבל UUID או שם פרופיל מדויק שאינו תלוי רישיות.\n<id> מקבל עשרוני או הקסדצימלי עם קידומת 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ חייב להיות מזהה 16 סיביות עשרוני או הקסדצימלי עם קידומת 0x.";
 "cli.mapping.jsonEncodeFailed" = "לא ניתן לקודד UTF-8 JSON.";
 "cli.mapping.layer_action_unknown" = "פעולת שכבה לא ידועה «%@». צפוי: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "שירות יישום OpenJoystickDriver אינו פועל.";
 "cli.runtime.sample_limit" = "התצורה תאסוף %d דגימות; הגדילו את --interval-ms.";
 "cli.runtime.stable_note" = "השריה יציבה וחסומה היא ראיה לעומס זה, לא הוכחה שכל הדליפות נעדרות.";
-"cli.settings.reset.failed" = "איפוס ההגדרות נכשל. הפעילו את היישום המותקן ואמתו את הרשאותיו.";
-"cli.settings.reset.next" = "הבא: הריצו compat set <identity> כדי לבחור את זהות התאימות.";
-"cli.settings.reset.success" = "אישור: אופסו הגדרות שירות היישום.";
 "cli.status.access_denied" = "אם הגישה נדחית, הריצו --headless permissions request ואשרו ניטור קלט ונגישות בהגדרות המערכת.";
 "cli.status.heading" = "מצב OpenJoystickDriver";
 "cli.status.json_error" = "לא ניתן לקודד JSON מצב: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  מצב         : %@";
 "cli.updates.unknown_option" = "אפשרות עדכונים לא ידועה: %@";
 "common.unknown" = "לא ידוע";
-"compatibility.appleGameController" = "תפוחים GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (אריגינלי)";
 "developer.buttons" = "כפתורים";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "כפתור B";
 "inputTest.bCircle" = "ב / סגל";
 "inputTest.brightness" = "בהירות";
-"inputTest.circle" = "עיגול";
 "inputTest.color" = "צבע";
 "inputTest.controls" = "קלט חי";
-"inputTest.cross" = "איקס";
 "inputTest.disconnected" = "המפקד מנותק";
 "inputTest.dpadDown" = "משטח כיוונים למטה";
 "inputTest.dpadLeft" = "משטח כיוונים שמאלה";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "שלילי תאורה לא זמינים עבור המנוגד הזה.";
 "inputTest.live" = "הכניס פעיל";
 "inputTest.menu" = "תפריט";
-"inputTest.minus" = "מינוס";
 "inputTest.off" = "כבוי";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "אפשרויות";
 "inputTest.outputError" = "טעות יצירה פיזית";
 "inputTest.outputRejected" = "המפעיל דחה את מבחן ההוצא הזה.";
 "inputTest.permissionRequired" = "הכניסה רשיון רישוי נדרש";
 "inputTest.playerIndicator" = "אינדיקת שחקן";
-"inputTest.plus" = "פלוס";
 "inputTest.pressed" = "לחוץ";
-"inputTest.psButton" = "כפתור PS";
 "inputTest.released" = "משוחרר";
 "inputTest.rightBumper" = "באמפר ימני";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Y ימני";
 "inputTest.rumble" = "רומבל";
 "inputTest.rumbleUnavailable" = "רומבל לא תופס על ידי המפעיל הזה.";
-"inputTest.share" = "שיתוף";
-"inputTest.square" = "ריבוע";
 "inputTest.stale" = "הכניסות מפוצצות";
 "inputTest.start" = "תחילת בדיקת הכניסות";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "קלט חי";
 "inputTest.tabMotion" = "הצעה";
 "inputTest.tabOutput" = "תוצאת";
-"inputTest.steamButton" = "כפתור Steam";
 "inputTest.summary" = "כפתורים, מקלות, תפעילים, רומבלים, ואור שליטה.";
 "inputTest.testRumble" = "רמבל מבחן";
 "inputTest.title" = "מבחן הכניסה";
-"inputTest.triangle" = "משולש";
 "inputTest.unavailable" = "הכניסה לא זמינה";
 "inputTest.view" = "תצוגה";
 "inputTest.windowTitle" = "מבחן הכניסה %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "לא ניתן לצדיר את Joy-Cons הנבחרים.";
 "profiles.joyConExplicitSession" = "התחלתי עם פגישה זוג מפורשת";
 "profiles.joyConSessionState" = "זוג מפורש";
-"profiles.gyro.virtualMotion" = "תנועה וירטואלית מעוצבת קדימה";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ רומב (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "המפקד מנותק";
 "controllers.resume" = "ניסיון חוזר";
 "controllers.disconnectFromOJD" = "המפקד מנותק";
-"error.compatibilityTransitionDetailed" = "לא ניתן להפעיל את פלט הבקר שנבחר. (%@, %@)";
 "error.controllerSessionChangeRejected" = "לא ניתן להפעיל את פלט הבקר שנבחר.";
 "cli.catalog.controller_disconnect.summary" = "המפקד מנותק";
 "cli.catalog.controller_resume.summary" = "ניסיון חוזר — המפקד מנותק";
+"cli.catalog.controller_virtual_set.summary" = "עקיפת פרופיל ה־HID הווירטואלי של בקר";
+"cli.catalog.controller_virtual_reset.summary" = "בחירה אוטומטית של פרופיל ה־HID הווירטואלי של בקר, או ניקוי כל העקיפות באמצעות --all";
 "cli.controller.disconnected" = "המפקד מנותק";
 "cli.controller.resumed" = "הכניס פעיל";
 

@@ -24,24 +24,20 @@ struct NintendoSensorSamplesTests {
     return Data(bytes)
   }
 
-  private func samples(_ events: [ControllerEvent]) -> [ControllerMotionSample] {
-    events.compactMap {
-      if case .motionSample(let sample) = $0 { return sample }
-      return nil
-    }
+  private func samples(_ event: ControllerEvent?) -> [ControllerMotionSample] {
+    event?.motion ?? []
   }
 
   @Test
   func threeRawSamplesRetainOrderAndUseExplicitHostEstimates() throws {
-    let parser: any InputParser = SwitchProParser()
-    let first = samples(try parser.parse(data: report(), receivedAtNanoseconds: 100_000_000))
-    #expect(first.map(\.rawAccelerometer.x) == [1, 2, 3])
-    #expect(
-      first.allSatisfy {
-        $0.rawGyroscope == ControllerRawSensorVector(x: -32_768, y: 32_767, z: -1)
-      }
-    )
-    #expect(first.map(\.timestamp.elapsedNanoseconds) == [0, 5_000_000, 10_000_000])
+    let parser: any PhysicalProtocolDriver = Switch1Driver()
+    let first = samples(try parser.parseReport(report(), at: 100_000_000))
+    // Pro nominal: raw (x, y, z) lands canonical as (-y, x, z).
+    let gravity = ControllerMotionUnits.standardGravity
+    #expect(first.map(\.acceleration.y) == [1, 2, 3].map { $0 / 4096 * gravity })
+    let gyro = radiansPerSecond(-32_767 / 14.2842, -32_768 / 14.2842, -1 / 14.2842)
+    #expect(first.allSatisfy { isClose($0.angularVelocity, gyro) })
+    #expect(first.map(\.timestamp.monotonic.nanoseconds) == [100, 105, 110].map { $0 * 1_000_000 })
     #expect(first.map(\.timestamp.sequenceIndex) == [0, 1, 2])
     #expect(
       first.allSatisfy {
@@ -50,32 +46,36 @@ struct NintendoSensorSamplesTests {
           && $0.timestamp.tickNanosecondsDenominator == nil
       }
     )
-    let second = samples(try parser.parse(data: report(), receivedAtNanoseconds: 115_000_000))
-    #expect(second.map(\.timestamp.elapsedNanoseconds) == [15_000_000, 20_000_000, 25_000_000])
+    let second = samples(try parser.parseReport(report(), at: 115_000_000))
+    #expect(
+      second.map(\.timestamp.monotonic.nanoseconds) == [115, 120, 125].map { $0 * 1_000_000 }
+    )
     #expect(second.map(\.timestamp.sequenceIndex) == [3, 4, 5])
   }
 
   @Test
   func backwardReceiptDoesNotReverseTimeAndLongGapDoesNotStretchSamples() throws {
-    let parser = SwitchProParser()
-    _ = try parser.parse(data: report(), receivedAtNanoseconds: 100_000_000)
-    let backward = samples(try parser.parse(data: report(), receivedAtNanoseconds: 90_000_000))
-    #expect(backward.map(\.timestamp.elapsedNanoseconds) == [10_000_000, 10_000_000, 10_000_000])
-    let gap = samples(try parser.parse(data: report(), receivedAtNanoseconds: 1_100_000_000))
+    let parser = Switch1Driver()
+    _ = try parser.parseReport(report(), at: 100_000_000)
+    let backward = samples(try parser.parseReport(report(), at: 90_000_000))
     #expect(
-      gap.map(\.timestamp.elapsedNanoseconds) == [1_000_000_000, 1_005_000_000, 1_010_000_000]
+      backward.map(\.timestamp.monotonic.nanoseconds) == [110, 110, 110].map { $0 * 1_000_000 }
+    )
+    let gap = samples(try parser.parseReport(report(), at: 1_100_000_000))
+    #expect(
+      gap.map(\.timestamp.monotonic.nanoseconds) == [1_100, 1_105, 1_110].map { $0 * 1_000_000 }
     )
   }
 
   @Test
   func shortReportCannotAdvanceSensorClock() throws {
-    let parser = SwitchProParser()
-    let short = try parser.parse(data: report().prefix(12), receivedAtNanoseconds: 1)
+    let parser = Switch1Driver()
+    let short = try parser.parseReport(report().prefix(12), at: 1)
     #expect(samples(short).isEmpty)
-    let full = samples(try parser.parse(data: report(), receivedAtNanoseconds: 100_000_000))
-    #expect(full.first?.timestamp.elapsedNanoseconds == 0)
+    let full = samples(try parser.parseReport(report(), at: 100_000_000))
+    #expect(full.first?.timestamp.monotonic.nanoseconds == 100_000_000)
     #expect(full.first?.timestamp.sequenceIndex == 0)
-    #expect(parser.physicalInputCapabilities.rawMotion)
-    #expect(parser.physicalInputCapabilities.touchContactsPerFrame == 0)
+    #expect(parser.capabilities.motion)
+    #expect(parser.capabilities.touchContactCount == 0)
   }
 }

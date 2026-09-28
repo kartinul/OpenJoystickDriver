@@ -128,9 +128,24 @@ enum InstalledCommandCatalog {
       outputs: [.text, .json]
     ),
     command(
-      "compat show|reset | compat set <identity>",
-      CLILocalized.text("cli.catalog.compat.summary", "Manage virtual-controller compatibility"),
+      "controller virtual set <hid-xbox-one-s-bt|hid-generic> [options]",
+      CLILocalized.text(
+        "cli.catalog.controller_virtual_set.summary",
+        "Override a controller's virtual HID profile"
+      ),
       group: CLILocalized.text("cli.catalog.group.configuration", "Configuration"),
+      audience: .advanced,
+      sideEffect: .persistentConfiguration
+    ),
+    command(
+      "controller virtual reset [options]",
+      CLILocalized.text(
+        "cli.catalog.controller_virtual_reset.summary",
+        "Select a controller's virtual HID profile automatically, or clear every override with"
+          + " --all"
+      ),
+      group: CLILocalized.text("cli.catalog.group.configuration", "Configuration"),
+      audience: .advanced,
       sideEffect: .persistentConfiguration
     ),
     command(

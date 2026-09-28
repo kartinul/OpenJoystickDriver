@@ -19,10 +19,11 @@ extension RemappingRoutingCore {
     var firstError: (any Error)?
     for identifier in sortedIdentifiers {
       guard let route = routes[identifier] else { continue }
+      await engine.endSource(identifier)
       do {
         switch route.selection {
-        case .compatibility:
-          if route.eligibility == .eligible { await notifyCompatibilityStop(identifier) }
+        case .virtualGamepad:
+          if route.eligibility == .eligible { await notifyVirtualGamepadStop(identifier) }
         case .remapping(let profile):
           try await releaseAndRetire(for: identifier, profile: profile, requiring: permit)
         case .unavailable: try await releaseAllSafely(for: identifier, requiring: permit)
@@ -113,8 +114,8 @@ extension RemappingRoutingCore {
       let profile: RemappingProfile?
       do {
         profile = try await library.activeProfile(
-          vendorID: identifier.vendorID,
-          productID: identifier.productID,
+          vendorID: identifier.controllerIdentity.vendorID,
+          productID: identifier.controllerIdentity.productID,
           frontmostBundleIdentifier: environment.frontmostBundleIdentifier
         )
       } catch let error as RemappingProfileLibraryError {
@@ -163,12 +164,11 @@ extension RemappingRoutingCore {
     environment: RemappingEligibilityEnvironment
   ) -> RemappingControllerRoute {
     switch selection {
-    case .compatibility:
-      let suppressed = controls.outputSuppressed || !controls.compatibilityOutputAllowed
+    case .virtualGamepad:
       return RemappingControllerRoute(
         selection: selection,
         eligibilitySnapshot: RemappingEligibilitySnapshot(
-          eligibility: suppressed ? .compatibilityOutputSuppressed : .eligible,
+          eligibility: virtualGamepadEligibility,
           environment: environment
         ),
         error: nil

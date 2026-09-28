@@ -1,6 +1,12 @@
 import Foundation
 import OpenJoystickDriverKit
 
+/// What one routed call carries: a controller's snapshot, or a request to activate its output.
+enum RemappingRoutedInput: Sendable {
+  case input(ControllerEvent, ControllerButtonLabels)
+  case activation
+}
+
 actor RemappingRoutingCore {
   let library: RemappingProfileLibrary
   let engine: RemappingEventEngine
@@ -9,16 +15,16 @@ actor RemappingRoutingCore {
   let postEventAccess: any RemappingPostEventAccessProviding
   let operationCheckpoint: @Sendable (RemappingRoutingCheckpoint) async -> Void
   var emissionBarrier: RemappingEmissionBarrier { engine.emissionBarrier }
-  var controls = RemappingRoutingControls(
-    outputSuppressed: false,
-    compatibilityOutputAllowed: true,
-    revision: 0
-  )
-  var routes: [DeviceIdentifier: RemappingControllerRoute] = [:]
+  var controls = RemappingRoutingControls(outputSuppressed: false, revision: 0)
+  var routes: [DeviceIdentifier: RemappingControllerRoute] = [:] {
+    didSet { publishObservedInputDemand() }
+  }
   var connectedIdentifiers: Set<DeviceIdentifier> = []
   var inputOwnership: [DeviceIdentifier: HIDInputOwnership] = [:]
   var joyConPairs: [UUID: RemappingJoyConPairSession] = [:]
-  var joyConPairByMember: [DeviceIdentifier: UUID] = [:]
+  var joyConPairByMember: [DeviceIdentifier: UUID] = [:] { didSet { publishObservedInputDemand() } }
+  /// Controllers a remapping route or Joy-Con pair consumes, for observe-only pipelines.
+  let observedInputDemand = RemappingObservedInputDemand()
   var profileTransactionState = RemappingProfileTransactionState.inactive
   var terminationRequested = false
   internal var terminalCleanupComplete = false
@@ -40,38 +46,36 @@ actor RemappingRoutingCore {
     self.operationCheckpoint = operationCheckpoint
   }
 
+  private func publishObservedInputDemand() {
+    let remapped = routes.compactMap { $0.value.selection.profile == nil ? nil : $0.key }
+    observedInputDemand.replace(with: Set(remapped).union(joyConPairByMember.keys))
+  }
+
   func apply(
     _ proposed: RemappingRoutingControls,
-    requiring permit: RemappingEmissionPermit?,
-    refreshEligibilityWhenUnchanged: Bool = false
+    requiring permit: RemappingEmissionPermit?
   ) async throws {
     defer { schedulingRevision &+= 1 }
     _ = try requireOperationalPermit(permit)
     guard proposed.revision >= controls.revision else { return }
-    let previousCompatibilitySuppressed = compatibilityIsSuppressed
+    let suppressionBegan = !controls.outputSuppressed && proposed.outputSuppressed
     let outputSuppressionChanged = proposed.outputSuppressed != controls.outputSuppressed
-    let compatibilityEligibilityChanged =
-      proposed.compatibilityOutputAllowed != controls.compatibilityOutputAllowed
     controls = proposed
     await operationCheckpoint(.apply)
     _ = try requireOperationalPermit(permit)
     if case .unreconciled = profileTransactionState { return }
-    let compatibilityBecameSuppressed =
-      !previousCompatibilitySuppressed && compatibilityIsSuppressed
-    if compatibilityBecameSuppressed && !profileTransactionState.blocksOutput {
+    if suppressionBegan && !profileTransactionState.blocksOutput {
       for identifier in sortedIdentifiers {
-        guard case .compatibility = routes[identifier]?.selection else { continue }
-        await notifyCompatibilityStop(identifier)
+        guard case .virtualGamepad = routes[identifier]?.selection else { continue }
+        await notifyVirtualGamepadStop(identifier)
       }
     }
-    guard
-      outputSuppressionChanged || compatibilityEligibilityChanged || refreshEligibilityWhenUnchanged
-    else { return }
+    guard outputSuppressionChanged else { return }
     try await refreshEligibility(requiring: permit)
   }
 
   func dispatch(
-    events: [ControllerEvent],
+    _ input: RemappingRoutedInput,
     from identifier: DeviceIdentifier,
     at uptimeNanoseconds: UInt64,
     requiring proposedPermit: RemappingEmissionPermit?
@@ -92,21 +96,32 @@ actor RemappingRoutingCore {
     await operationCheckpoint(.dispatch)
     guard let route = routes[routingIdentifier] else { return }
     switch route.selection {
-    case .compatibility:
+    case .virtualGamepad:
       guard route.eligibility == .eligible else { return }
       _ = try requireOperationalPermit(proposedPermit)
-      await compatibility.dispatch(events: events, from: identifier)
+      switch input {
+      case .input(let event, let labels):
+        await compatibility.dispatch(event, labels: labels, from: identifier)
+      case .activation: await compatibility.activateOutput(for: identifier)
+      }
     case .remapping(let profile):
       guard route.eligibility == .eligible else { return }
       let permit = try requireOperationalPermit(proposedPermit)
       do {
-        try await engine.process(
-          events: pairEvents(events, from: identifier),
-          from: routingIdentifier,
-          using: profile,
-          at: uptimeNanoseconds,
-          requiring: permit
-        )
+        switch input {
+        case .input(let event, let labels):
+          try await engine.process(
+            pairEvent(event, from: identifier),
+            labels: labels,
+            from: identifier,
+            into: routingIdentifier,
+            using: profile,
+            at: uptimeNanoseconds,
+            requiring: permit
+          )
+        case .activation:
+          try await engine.setProfile(profile, for: routingIdentifier, requiring: permit)
+        }
       } catch let error as RemappingEventEngineError {
         if error == .outputSuspended {
           if emissionBarrier.isTerminated { throw RemappingOutputRoutingError.shutDown }
@@ -152,7 +167,9 @@ actor RemappingRoutingCore {
     defer { schedulingRevision &+= 1 }
     try ensureRunning()
     if case .unreconciled(_, let error) = profileTransactionState { throw error }
-    let affected = sortedIdentifiers.filter { $0.vendorID == vendorID && $0.productID == productID }
+    let affected = sortedIdentifiers.filter {
+      $0.controllerIdentity.vendorID == vendorID && $0.controllerIdentity.productID == productID
+    }
     let profile: RemappingProfile?
     do {
       let frontmostBundleID = foregroundApplication.frontmostBundleIdentifier()
@@ -241,6 +258,7 @@ actor RemappingRoutingCore {
   ) async throws {
     defer { schedulingRevision &+= 1 }
     inputOwnership.removeValue(forKey: identifier)
+    await engine.endSource(identifier)
     if try await stopPairedJoyCon(identifier, requiring: proposedPermit) { return }
     guard let route = routes[identifier] else { return }
     if profileTransactionState.blocksOutput {
@@ -249,7 +267,7 @@ actor RemappingRoutingCore {
       return
     }
     switch route.selection {
-    case .compatibility: await notifyCompatibilityStop(identifier)
+    case .virtualGamepad: await notifyVirtualGamepadStop(identifier)
     case .remapping(let profile):
       try await releaseAndRetire(for: identifier, profile: profile, requiring: proposedPermit)
     case .unavailable: try await releaseAllSafely(for: identifier, requiring: proposedPermit)
@@ -272,9 +290,9 @@ actor RemappingRoutingCore {
     for identifier in sortedIdentifiers where !terminalRetiredIdentifiers.contains(identifier) {
       if let session = pairSession(for: identifier), identifier != session.left { continue }
       switch routes[identifier]?.selection {
-      case .compatibility: await notifyCompatibilityStop(identifier)
+      case .virtualGamepad: await notifyVirtualGamepadStop(identifier)
       case .remapping(let profile) where profile.outputPolicy.virtualGamepad != .disabled:
-        await notifyCompatibilityStop(identifier)
+        await notifyVirtualGamepadStop(identifier)
       default: continue
       }
       terminalRetiredIdentifiers.insert(identifier)

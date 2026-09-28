@@ -134,7 +134,7 @@
               symbolName: "pencil",
               label: OJDLocalized.string("profiles.motion.title", fallback: "Motion tuning")
             ) { openSheet(.layerMotion(layer)) }.disabled(
-              !capabilities.physicalInput.rawMotion && layer.motionTuning == nil
+              !capabilities.physicalInput.motion && layer.motionTuning == nil
             )
             removeButton { removeLayer(layer.id) }
           }
@@ -184,7 +184,7 @@
           title: OJDLocalized.string("profiles.motion.title", fallback: "Motion tuning"),
           summary: OJDLocalized.string("profiles.motion.space", fallback: "Coordinate space")
             + " · " + OJDLocalized.string("profiles.gyro.output", fallback: "Gyro output"),
-          supported: capabilities.physicalInput.rawMotion
+          supported: capabilities.physicalInput.motion
         ) { openSheet(.motion) }
         configurationGroup(
           title: OJDLocalized.string("profiles.stick.title", fallback: "Stick modes"),
@@ -201,9 +201,8 @@
         configurationGroup(
           title: OJDLocalized.string("profiles.touch.title", fallback: "Touch mappings"),
           summary: assignmentCountLabel(profile.touchMappings.count),
-          supported: capabilities.physicalInput.touchContactsPerFrame > 0
-            && !capabilities.physicalInput.touchSurfaces.isEmpty,
-          enabled: capabilities.physicalInput.touchContactsPerFrame > 0
+          supported: !capabilities.physicalInput.touchSurfaces.isEmpty,
+          enabled: capabilities.physicalInput.touchContactCount > 0
             || !profile.touchMappings.isEmpty
         ) { openSheet(.touch) }
         ProfileLightingEditor(color: profile.physicalColor, onChange: updatePhysicalColor).disabled(

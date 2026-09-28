@@ -6,9 +6,15 @@ import json
 import unittest
 import urllib.error
 from email.message import Message
+from typing import Any, ClassVar
 from unittest.mock import patch
 
 from Scripts.Catalog import generate_controller_catalog as catalog
+from Scripts.Catalog import generate_xpad_records as xpad
+
+
+def hid_source(vendor: str, product: str) -> str:
+    return f"static const struct hid_device_id ids[] = {{ HID_USB_DEVICE({vendor}, {product}) }};"
 
 
 class CatalogGenerationTests(unittest.TestCase):
@@ -37,7 +43,7 @@ class CatalogGenerationTests(unittest.TestCase):
             patch.object(catalog.urllib.request, "urlopen", side_effect=rate_limit),
             patch.object(catalog, "run_gh", return_value=response) as run_gh,
         ):
-            files = catalog.load_locked_linux_files(linux)
+            files = catalog.load_locked_files(linux)
 
         self.assertEqual(files, {"xpad": source})
         run_gh.assert_called_once_with(
@@ -51,3 +57,424 @@ class CatalogGenerationTests(unittest.TestCase):
             ],
             catalog.CatalogError,
         )
+
+
+class XpadTranslationTests(unittest.TestCase):
+    def device(self, xtype: str, mapping: str) -> xpad.XpadDevice:
+        return xpad.XpadDevice(
+            vendor_id=0x0C12,
+            product_id=0x8809,
+            name="pad",
+            mapping_expression=mapping,
+            xtype=xtype,
+            flags_expression="0",
+        )
+
+    def test_dance_pad_mapping_becomes_capability_absences(self) -> None:
+        profile = xpad.build_profile(
+            self.device("XTYPE_XBOX", "DANCEPAD_MAP_CONFIG"), init_rules=[]
+        )
+        self.assertEqual(
+            profile["protocol"], {"family": "xbox.xid", "variant": "gamepad"}
+        )
+        self.assertNotIn("transport", profile)
+        self.assertEqual(
+            profile["capabilities"],
+            {
+                "absent": [
+                    "left-stick-x",
+                    "left-stick-y",
+                    "right-stick-x",
+                    "right-stick-y",
+                    "left-trigger",
+                    "right-trigger",
+                ]
+            },
+        )
+
+    def test_gip_share_offset_and_initialization_use_driver_ids(self) -> None:
+        rules = [
+            xpad.InitRule(0, 0, "xboxone_power_on"),
+            xpad.InitRule(0x0C12, 0x8809, "xboxone_s_init"),
+            xpad.InitRule(0, 0, "xboxone_led_on"),
+            xpad.InitRule(0, 0, "xboxone_auth_done"),
+        ]
+        profile = xpad.build_profile(
+            self.device("XTYPE_XBOXONE", "MAP_SHARE_BUTTON | MAP_SHARE_OFFSET"), rules
+        )
+        self.assertEqual(
+            profile["protocol"],
+            {
+                "family": "xbox.gip",
+                "quirks": ["share-offset"],
+                "initialization": [
+                    "xbox.gip/power-on",
+                    "xbox.gip/s-init",
+                    "xbox.gip/led-on",
+                    "xbox.gip/auth-done",
+                ],
+            },
+        )
+        self.assertNotIn("capabilities", profile)
+
+    def test_quirk_outside_its_driver_is_rejected(self) -> None:
+        with self.assertRaises(xpad.GenerationError):
+            xpad.build_profile(
+                self.device("XTYPE_XBOX360", "MAP_SHARE_OFFSET"), init_rules=[]
+            )
+
+    def test_xpad_types_map_to_family_and_stored_variant(self) -> None:
+        expected = {
+            "XTYPE_XBOX": {"family": "xbox.xid", "variant": "gamepad"},
+            "XTYPE_XBOX360": {"family": "xbox.xusb", "variant": "wired"},
+            "XTYPE_XBOX360W": {"family": "xbox.xusb", "variant": "receiver"},
+        }
+        for xtype, protocol in expected.items():
+            with self.subTest(xtype):
+                profile = xpad.build_profile(self.device(xtype, "0"), init_rules=[])
+                self.assertEqual(profile["protocol"], protocol)
+
+
+class HIDRecordTests(unittest.TestCase):
+    def test_steam_receiver_is_the_dongle_variant_without_quirks(self) -> None:
+        defines = (
+            "#define USB_VENDOR_ID_VALVE 0x28de\n"
+            "#define USB_DEVICE_ID_STEAM_CONTROLLER_WIRELESS 0x1142\n"
+        )
+        entries = [
+            row
+            for row in catalog.HID_RECORDS
+            if row[2] == "USB_DEVICE_ID_STEAM_CONTROLLER_WIRELESS"
+        ]
+        with patch.object(catalog, "HID_RECORDS", tuple(entries)):
+            records = catalog.build_hid_records(
+                {
+                    "hid_ids": defines,
+                    "hid_steam": hid_source(
+                        "USB_VENDOR_ID_VALVE", "USB_DEVICE_ID_STEAM_CONTROLLER_WIRELESS"
+                    ),
+                }
+            )
+        self.assertEqual(
+            records[0]["protocol"],
+            {"family": "valve.steam-controller", "variant": "dongle"},
+        )
+        self.assertNotIn("transport", records[0])
+
+    def test_patch_override_rejects_the_removed_transport_field(self) -> None:
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "045e" / "045e-02ea.json"
+            path.parent.mkdir()
+            path.write_text(
+                json.dumps(
+                    {
+                        "$schema": (
+                            "https://raw.githubusercontent.com/xsyetopz/"
+                            "OpenJoystickDriver/main/Resources/Schemas/"
+                            "controller-override.schema.json"
+                        ),
+                        "operation": "patch",
+                        "vendorID": 0x045E,
+                        "productID": 0x02EA,
+                        "set": {"transport": "hid"},
+                    }
+                )
+            )
+            with self.assertRaises(catalog.CatalogError):
+                catalog.load_overrides(validator=None, override_dir=root)
+
+
+SDL_FIXTURE = """\
+#define MAKE_CONTROLLER_ID( nVID, nPID )\t(unsigned int)( (unsigned int)nVID << 16 | (unsigned int)nPID )
+
+static const ControllerDescription_t arrControllers[] = {
+\t{ MAKE_CONTROLLER_ID( 0x054c, 0x0268 ), k_eControllerType_PS3Controller, NULL },\t// Sony PS3 Controller
+\t//{ MAKE_CONTROLLER_ID( 0x046d, 0xc24f ), k_eControllerType_PS3Controller, NULL },\t// Logitech G29 (PS3)
+\t{ MAKE_CONTROLLER_ID( 0x1532, 0X0401 ), k_eControllerType_PS4Controller, NULL },\t// Razer Panthera
+    { MAKE_CONTROLLER_ID (0x9886, 0x0024 ), k_eControllerType_XInputPS4Controller, NULL },  // Astro C40
+\t{ MAKE_CONTROLLER_ID( 0x2f24,\t0x2e ), k_eControllerType_XBoxOneController, NULL },\t// Unknown Controller
+\t{ MAKE_CONTROLLER_ID( 0x0,\t\t0x6686 ), k_eControllerType_XBoxOneController, NULL },\t// Unknown Controller
+\t// Added 12-17-2020
+\t{ MAKE_CONTROLLER_ID( 0x0e6f, 0x018c ), k_eControllerType_SwitchProController, "PDP REALMz Wireless Controller" },  // PDP
+};
+"""
+
+
+class SDLControllerListTests(unittest.TestCase):
+    def test_parser_reads_active_rows_in_every_spelling(self) -> None:
+        self.assertEqual(
+            catalog.parse_sdl_controllers(SDL_FIXTURE),
+            [
+                (0x054C, 0x0268, "PS3Controller"),
+                (0x1532, 0x0401, "PS4Controller"),
+                (0x9886, 0x0024, "XInputPS4Controller"),
+                (0x2F24, 0x002E, "XBoxOneController"),
+                (0x0000, 0x6686, "XBoxOneController"),
+                (0x0E6F, 0x018C, "SwitchProController"),
+            ],
+        )
+
+    def test_unparsed_row_inside_the_table_fails_generation(self) -> None:
+        source = SDL_FIXTURE.replace(
+            "};", "\t{ MAKE_CONTROLLER_ID( 0x0001, 0x0002 ), 7, NULL },\n};"
+        )
+        with self.assertRaises(catalog.CatalogError):
+            catalog.parse_sdl_controllers(source)
+
+    def build(
+        self,
+        rows: list[tuple[int, int, str]],
+        existing: dict[tuple[int, int], str] | None = None,
+    ) -> tuple[dict[tuple[int, int], dict[str, object]], dict[str, int]]:
+        with patch.object(catalog, "SDL_EXCLUSIONS", {}):
+            return catalog.build_sdl_records(rows, existing or {})
+
+    def test_types_map_to_implemented_families_and_variants(self) -> None:
+        expected = {
+            "PS3Controller": {"family": "sony.sixaxis"},
+            "PS4Controller": {"family": "sony.dualshock4"},
+            "PS5Controller": {"family": "sony.dualsense"},
+            "SwitchProController": {"family": "nintendo.switch1"},
+            "XBox360Controller": {"family": "xbox.xusb", "variant": "wired"},
+            "XBoxOneController": {"family": "xbox.gip"},
+        }
+        for controller_type, protocol in expected.items():
+            with self.subTest(controller_type):
+                records, counts = self.build([(0x054C, 0x1234, controller_type)])
+                self.assertEqual(records[(0x054C, 0x1234)]["protocol"], protocol)
+                self.assertEqual(counts, {"added": 1})
+
+    def test_unmapped_and_excluded_types_are_skipped_and_counted(self) -> None:
+        rows = [
+            (0x057E, 0x2006, "SwitchJoyConLeft"),
+            (0x0F0D, 0x00C1, "SwitchInputOnlyController"),
+            (0x0079, 0x0006, "UnknownNonSteamController"),
+            (0x0F0D, 0x0092, "SwitchInputOnlyController"),
+            (0x0738, 0x3250, "PS3Controller"),
+            (0x0955, 0x7210, "XBox360Controller"),
+            (0x0000, 0x6686, "XBoxOneController"),
+            (0x28DE, 0x1106, "SteamController"),
+        ]
+        records, counts = self.build(rows)
+        self.assertEqual(records, {})
+        self.assertEqual(
+            counts,
+            {
+                "unmapped:SwitchJoyConLeft": 1,
+                "unmapped:SwitchInputOnlyController": 2,
+                "unmapped:UnknownNonSteamController": 1,
+                "excluded:third-party-ps3": 1,
+                "excluded:not-xbox-protocol": 1,
+                "excluded:not-usb-identity": 1,
+                "excluded:variant-undeterminable": 1,
+            },
+        )
+
+    def test_existing_rows_win_as_duplicates_or_conflicts(self) -> None:
+        existing = {
+            (0x045E, 0x028E): "xbox.xusb",
+            (0x28DE, 0x1102): "valve.steam-controller",
+            (0x0E6F, 0x0147): "xbox.gip",
+        }
+        records, counts = self.build(
+            [
+                (0x045E, 0x028E, "XBox360Controller"),
+                (0x28DE, 0x1102, "SteamController"),
+                (0x0E6F, 0x0147, "XBox360Controller"),
+            ],
+            existing,
+        )
+        self.assertEqual(records, {})
+        self.assertEqual(counts, {"duplicate": 2, "conflict": 1})
+
+    def test_repeated_identity_counts_once_and_mixed_types_are_skipped(self) -> None:
+        rows = [
+            (0x146B, 0x0D10, "PS4Controller"),
+            (0x0F0D, 0x00ED, "XInputPS4Controller"),
+            (0x146B, 0x0D10, "PS4Controller"),
+            (0x0F0D, 0x00ED, "XBoxOneController"),
+        ]
+        records, counts = self.build(rows)
+        self.assertEqual(list(records), [(0x146B, 0x0D10)])
+        self.assertEqual(counts, {"added": 1, "sdl-conflict": 1})
+        self.assertEqual(self.build(list(reversed(rows))), (records, counts))
+
+    def test_exclusions_must_match_the_pinned_list_and_stay_uncatalogued(self) -> None:
+        exclusions = {(0x057E, 0x2069): ("SwitchProController", "switch-2")}
+        rows = [(0x057E, 0x2069, "SwitchProController")]
+        with patch.object(catalog, "SDL_EXCLUSIONS", exclusions):
+            self.assertEqual(
+                catalog.build_sdl_records(rows, {}), ({}, {"excluded:switch-2": 1})
+            )
+            with self.assertRaises(catalog.CatalogError):
+                catalog.build_sdl_records([(0x057E, 0x2069, "PS5Controller")], {})
+            with self.assertRaises(catalog.CatalogError):
+                catalog.build_sdl_records(rows, {(0x057E, 0x2069): "nintendo.switch1"})
+
+    def test_add_override_wins_over_an_sdl_identity(self) -> None:
+        override = {
+            "$schema": catalog.RECORD_SCHEMA_ID,
+            "vendorID": 0x1532,
+            "productID": 0x1000,
+            "protocol": {"family": "hid.descriptor"},
+        }
+        overrides = [("add", (0x1532, 0x1000), override)]
+        records: dict[tuple[int, int], dict[str, object]] = {}
+        with patch.object(catalog, "SDL_EXCLUSIONS", {}):
+            counts = catalog.merge_sdl_records(
+                records, overrides, [(0x1532, 0x1000, "PS4Controller")]
+            )
+        self.assertEqual(counts, {"conflict": 1})
+        catalog.apply_overrides(records, overrides)
+        self.assertEqual(records, {(0x1532, 0x1000): override})
+
+    def test_third_party_rules_skip_rows_the_implemented_parsers_do_not_decode(
+        self,
+    ) -> None:
+        rows = [
+            (0x1532, 0x100B, "PS5Controller"),
+            (0x054C, 0x0CE6, "PS5Controller"),
+            (0x1430, 0x0719, "XBoxOneController"),
+            (0x1BAD, 0x028E, "XBoxOneController"),
+            (0x1532, 0x0A15, "XBoxOneController"),
+        ]
+        records, counts = self.build(rows)
+        self.assertEqual(sorted(records), [(0x054C, 0x0CE6), (0x1532, 0x0A15)])
+        self.assertEqual(
+            counts,
+            {
+                "added": 2,
+                "excluded:third-party-ps5": 1,
+                "excluded:xbox-360-product-id": 2,
+            },
+        )
+
+    def test_unreviewed_microsoft_xbox_one_row_fails_generation(self) -> None:
+        with self.assertRaises(catalog.CatalogError):
+            self.build([(0x045E, 0x0B99, "XBoxOneController")])
+        records, counts = self.build(
+            [(0x045E, 0x0B12, "XBoxOneController")], {(0x045E, 0x0B12): "xbox.gip"}
+        )
+        self.assertEqual((records, counts), ({}, {"duplicate": 1}))
+
+    def test_exclusion_shadowed_by_a_rule_fails_generation(self) -> None:
+        exclusions = {(0x358A, 0x0304): ("PS5Controller", "not-dualsense-protocol")}
+        with (
+            patch.object(catalog, "SDL_EXCLUSIONS", exclusions),
+            self.assertRaises(catalog.CatalogError),
+        ):
+            catalog.build_sdl_records([(0x358A, 0x0304, "PS5Controller")], {})
+
+    def test_records_carry_no_provenance(self) -> None:
+        records, _ = self.build([(0x1532, 0x1000, "PS4Controller")])
+        self.assertEqual(
+            set(records[(0x1532, 0x1000)]),
+            {"$schema", "vendorID", "productID", "protocol"},
+        )
+
+
+def committed_records() -> dict[tuple[int, int], dict[str, Any]]:
+    records: dict[tuple[int, int], dict[str, Any]] = {}
+    for path in sorted(catalog.OUTPUT_DIR.glob("*/*.json")):
+        record = json.loads(path.read_text())
+        records[catalog.record_key(record)] = record
+    return records
+
+
+class CommittedCatalogTests(unittest.TestCase):
+    """Data-level invariants of the generated catalog; no network needed."""
+
+    def setUp(self) -> None:
+        self.records = committed_records()
+
+    def test_only_sony_dualsense_records_are_catalogued(self) -> None:
+        offenders = [
+            key
+            for key, record in self.records.items()
+            if record["protocol"]["family"] == "sony.dualsense"
+            and key[0] != catalog.SONY_VENDOR_ID
+        ]
+        self.assertEqual(offenders, [])
+
+    def test_excluded_sdl_identities_are_not_catalogued(self) -> None:
+        self.assertEqual(sorted(set(catalog.SDL_EXCLUSIONS) & set(self.records)), [])
+
+
+class PinnedSDLDataTests(unittest.TestCase):
+    """Runs the real exclusion list against the pinned SDL list and committed catalog."""
+
+    rows: ClassVar[list[tuple[int, int, str]]] = []
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        lock = json.loads(catalog.LOCK_PATH.read_text())
+        try:
+            source = catalog.load_locked_files(lock["sdl"])["controller_list"]
+        except (OSError, catalog.CatalogError) as error:
+            raise unittest.SkipTest(
+                f"pinned SDL source unavailable: {error}"
+            ) from error
+        cls.rows = catalog.parse_sdl_controllers(source)
+
+    def test_every_microsoft_xbox_one_row_is_catalogued_or_excluded(self) -> None:
+        records = committed_records()
+        unreviewed = sorted(
+            (vendor_id, product_id)
+            for vendor_id, product_id, controller_type in self.rows
+            if vendor_id == 0x045E
+            and controller_type == "XBoxOneController"
+            and (vendor_id, product_id) not in records
+            and (vendor_id, product_id) not in catalog.SDL_EXCLUSIONS
+        )
+        self.assertEqual(unreviewed, [])
+
+    def test_admitted_rows_avoid_360_product_ids_and_third_party_dualsense(
+        self,
+    ) -> None:
+        # Linux xpad legitimately binds PDP 0e6f:02a0/02a1 to GIP, so check what SDL
+        # itself would admit, with only Microsoft rows treated as already catalogued.
+        microsoft = {
+            key: record["protocol"]["family"]
+            for key, record in committed_records().items()
+            if key[0] == catalog.MICROSOFT_VENDOR_ID
+        }
+        records, _ = catalog.build_sdl_records(self.rows, microsoft)
+        families = {
+            key: record["protocol"]["family"] for key, record in records.items()
+        }
+        self.assertEqual(
+            [
+                key
+                for key, family in families.items()
+                if family == "xbox.gip"
+                and key[1] in catalog.MICROSOFT_XBOX_360_PRODUCT_IDS
+            ],
+            [],
+        )
+        self.assertEqual(
+            [
+                key
+                for key, family in families.items()
+                if family == "sony.dualsense" and key[0] != catalog.SONY_VENDOR_ID
+            ],
+            [],
+        )
+        self.assertTrue(set(records) <= set(committed_records()))
+
+    def test_real_exclusions_hold_and_every_admissible_row_is_committed(self) -> None:
+        existing = {
+            key: record["protocol"]["family"]
+            for key, record in committed_records().items()
+        }
+        records, counts = catalog.build_sdl_records(self.rows, existing)
+        self.assertEqual(records, {})
+        excluded = {
+            reason
+            for key, (_, reason) in catalog.SDL_EXCLUSIONS.items()
+            if key not in existing
+        }
+        self.assertTrue(excluded <= {bucket[9:] for bucket in counts})

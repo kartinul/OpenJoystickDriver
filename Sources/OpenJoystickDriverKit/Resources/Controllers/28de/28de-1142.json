@@ -2,14 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
   "vendorID": 10462,
   "productID": 4418,
-  "transport": "hid",
   "protocol": {
-    "driver": "SteamController",
-    "variant": "steamController",
-    "quirks": [
-      "lizardMode",
-      "trackpads",
-      "wirelessReceiver"
-    ]
+    "family": "valve.steam-controller",
+    "variant": "dongle"
   }
 }

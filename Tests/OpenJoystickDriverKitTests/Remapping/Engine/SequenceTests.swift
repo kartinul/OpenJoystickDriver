@@ -21,43 +21,43 @@ struct RemappingSequenceTests {
     let start: UInt64 = 1_000_000_000
 
     try await engine.process(
-      events: [.dpadChanged(.north)],
+      inputs: [.hat(.north)],
       from: device(1),
       using: currentProfile,
       at: start
     )
     try await engine.process(
-      events: [.dpadChanged(.neutral)],
+      inputs: [.hat(.neutral)],
       from: device(1),
       using: currentProfile,
       at: start + 100_000_000
     )
     try await engine.process(
-      events: [.dpadChanged(.north)],
+      inputs: [.hat(.north)],
       from: device(1),
       using: currentProfile,
       at: start + 200_000_000
     )
     try await engine.process(
-      events: [.dpadChanged(.neutral)],
+      inputs: [.hat(.neutral)],
       from: device(1),
       using: currentProfile,
       at: start + 300_000_000
     )
     try await engine.process(
-      events: [.dpadChanged(.south)],
+      inputs: [.hat(.south)],
       from: device(1),
       using: currentProfile,
       at: start + 400_000_000
     )
     try await engine.process(
-      events: [.dpadChanged(.neutral)],
+      inputs: [.hat(.neutral)],
       from: device(1),
       using: currentProfile,
       at: start + 500_000_000
     )
     try await engine.process(
-      events: [.dpadChanged(.south)],
+      inputs: [.hat(.south)],
       from: device(1),
       using: currentProfile,
       at: start + 600_000_000

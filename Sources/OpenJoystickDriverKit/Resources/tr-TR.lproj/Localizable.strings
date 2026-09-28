@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Bağlı kontrolcüler denetleniyor…";
 "status.refreshingProfile" = "Profil Durumu Yenileniyor…";
 "status.loadingProfiles" = "Profiller Yükleniyor…";
-"status.updatingIdentity" = "Kontrolcü Kimliği Güncelleniyor…";
 "status.listening" = "Dinleniyor…";
 "status.readyToListen" = "Dinlemeye Hazır";
 "status.checkingInput" = "Denetleniyor";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Kontrolcüler";
 "settings.controllerDisconnectedNotifications" = "Kumanda bağlantısı kesildi";
 "settings.controllerDisconnectedShort" = "Bağlantı kesildi";
-"settings.controllerIdentity" = "Kontrolcü Kimliği";
 "settings.controllerNotifications" = "Kumanda bağlandı";
 "settings.diagnostics" = "Tanılama";
 "settings.service" = "Servis";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Boşalıyor";
 "controllers.charging" = "Şarj oluyor";
 "controllers.batteryFull" = "Dolu";
+"controllers.notChargeable" = "Şarj edilemez";
 "controllers.batteryAccessibilityDetails" = "Pil: %@. Şarj durumu: %@. Kablo durumu: %@.";
 "controllers.activeProfile" = "Etkin profil";
 "controllers.profileChecking" = "Denetleniyor…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Etkin profil kullanılamıyor";
 "controllers.profileLoadError" = "Etkin profil yüklenemedi";
 "controllers.protocol" = "Protokol";
-"controllers.parser" = "Ayrıştırıcı";
 "controllers.serialNumber" = "Seri Numarası";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Giriş Uç Noktası";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Etkin profil hatası: %@";
 "controllers.accessibilityDetails" = "%@. %@. Protokol: %@. Parser: %@. Seri numarası: %@. USB VID/PID: %@. Giriş uç noktası: %@. Çıkış uç noktası: %@.";
 "controllers.publishedAs" = "Şu olarak yayımlandı";
-"identity.title" = "Kontrolcü Kimliği";
-"identity.needsAttention" = "İlgi Gerekiyor";
-"identity.error" = "Kontrolcü kimliği hatası";
-"identity.updating" = "Kontrolcü kimliği güncelleniyor…";
-"identity.reset" = "Önerilene sıfırla";
-"identity.checking" = "Denetleniyor";
-"identity.globalScope" = "OpenJoystickDriver tarafından yayımlanan tüm sanal kumandalara uygulanır.";
-"identity.unavailable" = "Kullanılamıyor";
-"identity.notSelected" = "Seçilmedi";
+"controllers.nativeGamepadNotPublished" = "Yerel macOS oyun kumandası, yayımlanmadı";
+"virtualProfile.advanced" = "Gelişmiş";
+"virtualProfile.title" = "Sanal HID profili";
+"virtualProfile.modelScope" = "Bu modelin bağlı her kumandasına uygulanır.";
+"virtualProfile.sourceOverride" = "Geçersiz kılma";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Otomatik, geçersiz kılma reddedildi";
+"virtualProfile.none" = "Sanal HID profili yok";
+"virtualProfile.unavailable" = "Hiçbir sanal HID profili bu kumandayı temsil edemez.";
+"virtualProfile.updating" = "Sanal HID profili güncelleniyor…";
+"virtualProfile.live" = "Etkin profil";
+"virtualProfile.failure.unknownProfile" = "Bu sanal HID profili bilinmiyor. Hiçbir şey kaydedilmedi.";
+"virtualProfile.failure.controllerNotFound" = "Kumandanın bağlantısı kesildi veya bulunamıyor. Geçersiz kılma değişmedi.";
+"virtualProfile.failure.overrideRejected" = "Geçersiz kılma kaydedildi, ancak bu kumanda onu kullanamadığı için otomatik olarak seçiyor.";
+"virtualProfile.failure.activationFailed" = "Etkinleştirme başarısız oldu, bu nedenle önceki sanal HID profili geri yüklendi: %@";
+"virtualProfile.failure.outputDisabled" = "Geçersiz kılma kaydedildi ve sanal çıkış etkinleştirildiğinde uygulanacak.";
+"virtualProfile.failure.serverStopped" = "Hizmet durdu. Geçersiz kılma değişmedi.";
+"virtualProfile.failure.persistenceFailed" = "Geçersiz kılma kaydedilemedi. Hiçbir şey kaydedilmedi.";
+"virtualProfile.storeError" = "Sanal HID profili geçersiz kılmaları okunamıyor (%@). Kumandalar otomatik olarak seçer.";
+"virtualProfile.legacyIdentityRejected" = "Kullanımdan kaldırılan kumanda kimliği ayarı %@ artık uygulanmıyor. Temizlemek için controller virtual reset --all komutunu çalıştırın.";
 "keyboard.noKey" = "Tuş seçilmedi";
 "keyboard.pressKey" = "Bir tuşa bas…";
 "keyboard.captureKey" = "Tuşu yakala";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Geçerli durum";
 "debug.runtime" = "Çalışma zamanı";
 "debug.controllers" = "Kontrolcüler";
-"debug.controllerIdentity" = "Kontrolcü Kimliği";
 "debug.unavailable" = "Çalışma zamanı · Kullanılamıyor";
 "debug.needsAttention" = "Çalışma zamanı · İlgi Gerekiyor";
 "debug.diagnostics" = "Tanılama";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Kontrolcü çıkışı kapalı.";
 "debug.outputNeedsAttention" = "Kontrolcü çıkışı ilgi gerektiriyor.";
 "debug.serviceUnavailable" = "Servis tanılaması şu anda kullanılamıyor.";
-"error.selectedOutputUnavailable" = "Seçilen kontrolcü çıkışı kullanılamıyor.";
-"error.selectedOutputEnableFailed" = "Seçilen kontrolcü çıkışı etkinleştirilemedi.";
 "error.profileChanged" = "Bu profil başka yerde değiştirildi. Yeniden yükle veya düzenlemeye devam et.";
 "error.duplicateProfile" = "Bu ada sahip bir profil zaten var.";
 "error.profileMissing" = "Bu profil artık kullanılamıyor.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Çalışma zamanı";
 "common.controllers" = "Kontrolcüler";
 "common.profiles" = "Profiller";
-"common.controllerIdentity" = "Kontrolcü kimliği";
 "common.protocol" = "Protokol";
-"common.parser" = "Ayrıştırıcı";
 "common.serialNumber" = "Seri numarası";
 "common.inputEndpoint" = "Giriş uç noktası";
 "common.outputEndpoint" = "Çıkış uç noktası";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Seçilen profil öğesi artık kullanılamıyor.";
 "cli.catalog.app_ready.summary" = "Kimliği doğrulanmış uygulama servisinin hazır olup olmadığını denetle";
 "cli.catalog.app_status.summary" = "Uygulama servisi durumunu göster";
-"cli.catalog.compat.summary" = "Sanal kontrolcü uyumluluğunu yönet";
 "cli.catalog.controller_list.summary" = "Bağlı kontrolcüleri listele";
 "cli.catalog.controller_output.summary" = "Desteklenen fiziksel kontrolcü çıkışını sına";
 "cli.catalog.controller_packets.summary" = "Son kontrolcü paketlerini göster";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Sürücü ve çalışma zamanı durumunu göster";
 "cli.catalog.test.summary" = "Sanal kontrolcü giriş iletimini sına";
 "cli.catalog.update.summary" = "GitHub’da kullanılabilir güncellemelere bak";
-"cli.compat.identity" = "uyumluluk kimliği: %@";
-"cli.compat.identity_unknown" = "uyumluluk kimliği: bilinmiyor";
-"cli.compat.set_failed" = "Uyumluluk kimliği %@ olarak ayarlanamadı. Yüklü uygulamayı başlatın ve Giriş İzleme ile Erişilebilirlik erişimini doğrulayın.";
-"cli.compat.usage" = "Kullanım: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "kullanıcı alanı durumu: %@";
 "cli.controller.allAppleEntries" = "Tüm tam Apple katalog girdileri:";
 "cli.controller.appleIDs" = "    Apple ID’ler: %@";
 "cli.controller.applePairs" = "  Apple çiftleri : %d tam VID/PID girdisi";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Bağlı hiçbir kontrolcü --device %@ ile eşleşmiyor.";
 "cli.controller.selection.multiple" = "Birden fazla kontrolcü eşleşiyor. --device ile birini seçin:\n  %@";
 "cli.controller.selection.none" = "Kontrolcü bağlı değil.";
+"cli.controller.virtual.live" = "Sanal HID profili: %@ (%@)";
+"cli.controller.virtual.none" = "Sanal HID profili: yok (%@)";
+"cli.controller.virtual.failed" = "Sanal HID profili isteği başarısız oldu: %@";
+"cli.controller.virtual.unknown_profile" = "Bilinmeyen sanal HID profili “%@”. Şunlardan birini kullanın: %@.";
+"cli.controller.virtual.missing_profile" = "“controller virtual set” bir sanal HID profili gerektirir. Şunlardan birini kullanın: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "“--all”; --vid, --pid veya --device ile birlikte kullanılamaz.";
+"cli.controller.virtual.reset_all.success" = "OK: tüm sanal HID profili geçersiz kılmaları temizlendi.";
+"cli.controller.virtual.reset_all.failed" = "Ayarlar sıfırlanamadı. Yüklü uygulamayı başlatın ve izinlerini doğrulayın.";
 "cli.controller.selection.vid_pid_missing" = "Bağlı hiçbir kontrolcü %@:%@ ile eşleşmiyor.";
 "cli.controller.selection.vid_pid_pair" = "VID ve PID’nin ikisini de geçin veya ikisini de atlayın.";
 "cli.controller.serviceControllers" = "Kontrolcüler (çalışan uygulama servisinden):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "İpucu: gerekli yetkiyi ve Giriş İzleme erişimini verin.";
 "cli.controller.usbControllers" = "USB Kontrolcüler (class 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "VID ve PID’nin ikisini de geçin veya bir kontrolcü bağlıysa ikisini de atlayın.";
-"cli.diagnose.advisory_candidate" = "    Danışma protokolü adayı: %@";
 "cli.diagnose.app_missing" = "  Uygulama: %@ konumunda yok";
 "cli.diagnose.app_missing_fix" = "  Düzeltme: uygulamayı derleyip /Applications konumuna yükleyin";
 "cli.diagnose.app_present" = "  Uygulama: var";
 "cli.diagnose.binary_path" = "İkili: %@";
-"cli.diagnose.catalog_conflict" = "      Gözlem katalog ailesiyle çakışıyor; ayrıştırıcı değişmedi";
-"cli.diagnose.catalog_parser" = "      Katalog ayrıştırıcısı %@ (%@) olarak kalır";
 "cli.diagnose.dext_found" = "  Bulunan .dext paketleri:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      Son nokta 0x%02X %@ %@ MaxPacket=%@ Aralık =%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Bilinmeyen yanıt eğrisi “%@”.";
 "cli.mapping.double_tap_format" = "--double-tap <ms>:<target> bekler, örn. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Kullanım: OpenJoystickDriver --headless map <command>\n\nKomutlar:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nKaynak: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nHedef: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nEksen seçenekleri:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo seçenekleri (yalnızca klavye ve fare düğmeleri):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nEtkinleştirme seçenekleri (yalnızca klavye ve fare düğmeleri, turbo ile karşılıklı dışlayıcı):\n  --long-hold <ms>:<target>     örn. --long-hold 500:key:b\n  --double-tap <ms>:<target>    örn. --double-tap 300:key:c\n\n<profile> bir UUID veya tam, büyük/küçük harf duyarsız profil adı kabul eder.\n<id> ondalık veya 0x önekli onaltılık kabul eder.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Kullanım: OpenJoystickDriver --headless map <command>\n\nKomutlar:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nKaynak: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nHedef: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nEksen seçenekleri:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nTurbo seçenekleri (yalnızca klavye ve fare düğmeleri):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nEtkinleştirme seçenekleri (yalnızca klavye ve fare düğmeleri, turbo ile karşılıklı dışlayıcı):\n  --long-hold <ms>:<target>     örn. --long-hold 500:key:b\n  --double-tap <ms>:<target>    örn. --double-tap 300:key:c\n\n<profile> bir UUID veya tam, büyük/küçük harf duyarsız profil adı kabul eder.\n<id> ondalık veya 0x önekli onaltılık kabul eder.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "%@ 16 bitlik ondalık veya 0x önekli onaltılık bir tanımlayıcı olmalıdır.";
 "cli.mapping.jsonEncodeFailed" = "UTF-8 JSON kodlanamadı.";
 "cli.mapping.layer_action_unknown" = "Bilinmeyen katman eylemi “%@”. Beklenen: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "OpenJoystickDriver uygulama servisi çalışmıyor.";
 "cli.runtime.sample_limit" = "Yapılandırma %d örnek toplardı; --interval-ms değerini artırın.";
 "cli.runtime.stable_note" = "Kararlı, sınırlı bir soğuk test bu iş yükü için kanıttır; tüm sızıntıların yokluğunun kanıtı değildir.";
-"cli.settings.reset.failed" = "Ayarlar sıfırlanamadı. Yüklü uygulamayı başlatın ve izinlerini doğrulayın.";
-"cli.settings.reset.next" = "Sonraki: uyumluluk kimliğini seçmek için compat set <identity> çalıştırın.";
-"cli.settings.reset.success" = "OK: uygulama servisi ayarları sıfırlandı.";
 "cli.status.access_denied" = "Erişim reddedilirse --headless permissions request çalıştırın ve Sistem Ayarları’nda Giriş İzleme ile Erişilebilirlik’i onaylayın.";
 "cli.status.heading" = "OpenJoystickDriver Durumu";
 "cli.status.json_error" = "Durum JSON’u kodlanamadı: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Durum        : %@";
 "cli.updates.unknown_option" = "Bilinmeyen updates seçeneği: %@";
 "common.unknown" = "Bilinmiyor";
-"compatibility.appleGameController" = "Elma GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox - Evet .";
 "developer.buttons" = "Düğmeler";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "B düğmesi";
 "inputTest.bCircle" = "B / Çember";
 "inputTest.brightness" = "Parlaklık";
-"inputTest.circle" = "Daire";
 "inputTest.color" = "Renk";
 "inputTest.controls" = "Canlı giriş";
-"inputTest.cross" = "Çarpı";
 "inputTest.disconnected" = "Kontrolör koparıldı";
 "inputTest.dpadDown" = "D-pad aşağı";
 "inputTest.dpadLeft" = "D-pad sol";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Bu kontrolör için ışık kontrolleri mevcut değil.";
 "inputTest.live" = "Giriş aktif";
 "inputTest.menu" = "Menü";
-"inputTest.minus" = "Eksi";
 "inputTest.off" = "Kapalı";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Seçenekler";
 "inputTest.outputError" = "Fiziksel çıkış hatası";
 "inputTest.outputRejected" = "Kontrolör bu çıkış testi reddetti.";
 "inputTest.permissionRequired" = "Girit İzleme izni gereklidir";
 "inputTest.playerIndicator" = "Oyuncu göstergesi";
-"inputTest.plus" = "Artı";
 "inputTest.pressed" = "Basılı";
-"inputTest.psButton" = "PS düğmesi";
 "inputTest.released" = "Bırakıldı";
 "inputTest.rightBumper" = "Sağ tampon";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Sağ Y";
 "inputTest.rumble" = "Gümbürtü";
 "inputTest.rumbleUnavailable" = "Rumble bu kontrolör tarafından desteklenmiyor.";
-"inputTest.share" = "Paylaş";
-"inputTest.square" = "Kare";
 "inputTest.stale" = "Giriş kesildi";
 "inputTest.start" = "Giriş Testini Başlat";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Canlı giriş";
 "inputTest.tabMotion" = "Tavsiye";
 "inputTest.tabOutput" = "Çıktı";
-"inputTest.steamButton" = "Steam düğmesi";
 "inputTest.summary" = "Test düğmeleri, sopaklar, tetikleyici, gürültü ve kontrolör aydınlatması.";
 "inputTest.testRumble" = "Gürültü Testi";
 "inputTest.title" = "Giriş Deneme";
-"inputTest.triangle" = "Üçgen";
 "inputTest.unavailable" = "Giriş bulunamıyor";
 "inputTest.view" = "Görünüm";
 "inputTest.windowTitle" = "Giriş Testi %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Seçilen Joy-Cons eşleştirilmedi.";
 "profiles.joyConExplicitSession" = "Açık bir çift seansıyla başladım .";
 "profiles.joyConSessionState" = "Açık çiftleşme";
-"profiles.gyro.virtualMotion" = "Önüne kalibrlenen sanal hareket";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ (Rumble)%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Kontrolör koparıldı";
 "controllers.resume" = "Yeniden dene";
 "controllers.disconnectFromOJD" = "Kontrolör koparıldı";
-"error.compatibilityTransitionDetailed" = "Seçilen kontrolcü çıkışı etkinleştirilemedi. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Seçilen kontrolcü çıkışı etkinleştirilemedi.";
 "cli.catalog.controller_disconnect.summary" = "Kontrolör koparıldı";
 "cli.catalog.controller_resume.summary" = "Yeniden dene — Kontrolör koparıldı";
+"cli.catalog.controller_virtual_set.summary" = "Bir denetleyicinin sanal HID profilini geçersiz kıl";
+"cli.catalog.controller_virtual_reset.summary" = "Bir denetleyicinin sanal HID profilini otomatik seç, veya --all ile tüm geçersiz kılmaları temizle";
 "cli.controller.disconnected" = "Kontrolör koparıldı";
 "cli.controller.resumed" = "Giriş aktif";
 

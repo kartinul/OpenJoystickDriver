@@ -1,0 +1,330 @@
+import Foundation
+import OpenJoystickDriverKit
+import Testing
+
+@testable import OpenJoystickDriver
+
+/// A server whose automatic dispatcher builds retarget probes and reads overrides from isolated
+/// defaults.
+struct ProfileOverrideServerFixture {
+  let server: ApplicationServiceServer
+  let defaults: UserDefaults
+  let suiteName: String
+  let log: RetargetEventLog
+
+  var store: VirtualHIDProfileOverrideStore { VirtualHIDProfileOverrideStore(defaults: defaults) }
+
+  func change(
+    _ change: ApplicationServiceServer.VirtualHIDProfileOverrideChange,
+    vendorID: Int = 1,
+    productID: Int = 2,
+    runtimeIdentifier: String? = nil
+  ) async -> VirtualHIDProfileOverrideResult {
+    await server.changeVirtualHIDProfileOverride(
+      change,
+      vendorID: vendorID,
+      productID: productID,
+      runtimeIdentifier: runtimeIdentifier
+    )
+  }
+
+  func tearDown() async {
+    await server.automaticUserSpaceDispatcher()?.close()
+    defaults.removePersistentDomain(forName: suiteName)
+  }
+}
+
+extension CompatibilityTests {
+  func profileOverrideServer(
+    _ identifiers: [DeviceIdentifier] = [DeviceIdentifier(vendorID: 1, productID: 2)],
+    failure: (VirtualHIDProfileID, ProfileRetargetFailure)? = nil,
+    outputEnabled: Bool = true,
+    activationGate: (VirtualHIDProfileID, InstallationGate)? = nil,
+    timeouts: CompatibilityTransitionTimeouts = .standard,
+    configure: (UserDefaults) -> Void = { _ in }
+  ) async throws -> ProfileOverrideServerFixture {
+    let suiteName = "OpenJoystickDriverTests.ProfileOverrideRPC.\(UUID().uuidString)"
+    let defaults = try #require(UserDefaults(suiteName: suiteName))
+    configure(defaults)
+    let store = VirtualHIDProfileOverrideStore(defaults: defaults)
+    let log = RetargetEventLog()
+    let descriptions = provider(identifiers.map { description($0) })
+    let overrideProvider: @Sendable (ApplicationServiceDeviceDescription) -> VirtualHIDProfileID? =
+      { store.override(vendorID: $0.vendorID, productID: $0.productID) }
+    let dispatcher = CompatibilityOutputDispatcher()
+    let profileLibrary = RemappingProfileLibrary()
+    let postEventAccess = CoreGraphicsPostEventAccess()
+    let remappingRouter = RemappingOutputRouter(
+      library: profileLibrary,
+      engine: RemappingEventEngine(sink: CoreGraphicsSystemInputSink(access: postEventAccess)),
+      compatibility: dispatcher,
+      foregroundApplication: WorkspaceRemappingForegroundApplication(),
+      postEventAccess: postEventAccess
+    )
+    let server = ApplicationServiceServer(
+      deviceManager: DeviceManager(dispatcher: remappingRouter),
+      permissionManager: PermissionManager(),
+      dispatcher: dispatcher,
+      remappingProfileLibrary: profileLibrary,
+      remappingRouter: remappingRouter,
+      postEventAccess: postEventAccess,
+      userSpaceDispatcherBuilder: {
+        AutomaticUserSpaceOutputDispatcher(
+          deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
+          ownershipProvider: { _ in .exclusiveRawUSB },
+          builder: { profile in
+            let backend = RetargetBackendProbe(
+              profile: profile,
+              log: log,
+              failsActivation: failure.map { $0.0 == profile && $0.1 == .activation } ?? false,
+              activationGate: activationGate.flatMap { $0.0 == profile ? $0.1 : nil }
+            )
+            log.append(backend)
+            return backend
+          },
+          descriptionsProvider: descriptions,
+          overrideProvider: overrideProvider
+        )
+      },
+      connectedIdentifierProvider: { identifiers },
+      compatibilityTransitionTimeouts: timeouts,
+      defaults: defaults
+    )
+    if outputEnabled { _ = await server.activateCompatibilityBackendForCurrentDevices() }
+    return ProfileOverrideServerFixture(
+      server: server,
+      defaults: defaults,
+      suiteName: suiteName,
+      log: log
+    )
+  }
+
+  @Test
+  func settingAnOverridePersistsAndRetargetsTheController() async throws {
+    let fixture = try await profileOverrideServer()
+
+    let result = await fixture.change(.set("hid-generic"))
+
+    #expect(
+      result
+        == VirtualHIDProfileOverrideResult(
+          requested: .generic,
+          live: .generic,
+          source: "override",
+          failure: nil
+        )
+    )
+    #expect(fixture.store.override(vendorID: 1, productID: 2) == .generic)
+    #expect(fixture.log.built().map(\.profile) == [.xboxOneSBluetooth, .generic])
+    await fixture.tearDown()
+  }
+
+  @Test
+  func resettingAnOverrideReturnsTheControllerToAutomaticSelection() async throws {
+    let fixture = try await profileOverrideServer()
+    _ = await fixture.change(.set("hid-generic"))
+
+    let result = await fixture.change(.reset)
+
+    #expect(
+      result
+        == VirtualHIDProfileOverrideResult(
+          requested: nil,
+          live: .xboxOneSBluetooth,
+          source: "automatic",
+          failure: nil
+        )
+    )
+    #expect(fixture.store.override(vendorID: 1, productID: 2) == nil)
+    #expect(fixture.defaults.object(forKey: VirtualHIDProfileOverrideStore.defaultsKey) == nil)
+    await fixture.tearDown()
+  }
+
+  @Test
+  func anUnknownProfileIsRejectedWithoutPersisting() async throws {
+    let fixture = try await profileOverrideServer()
+
+    let result = await fixture.change(.set("xone-hid"))
+
+    #expect(result.failure == .unknownProfile)
+    #expect(result.requested == nil)
+    #expect(result.live == .xboxOneSBluetooth)
+    #expect(fixture.defaults.object(forKey: VirtualHIDProfileOverrideStore.defaultsKey) == nil)
+    #expect(fixture.log.built().count == 1)
+    await fixture.tearDown()
+  }
+
+  @Test
+  func anUnmatchedControllerIsNotFoundAndNothingIsPersisted() async throws {
+    let fixture = try await profileOverrideServer()
+
+    let otherModel = await fixture.change(.set("hid-generic"), vendorID: 3)
+    let otherSession = await fixture.change(.set("hid-generic"), runtimeIdentifier: "missing")
+
+    #expect(otherModel.failure == .controllerNotFound)
+    #expect(otherSession.failure == .controllerNotFound)
+    #expect(fixture.defaults.object(forKey: VirtualHIDProfileOverrideStore.defaultsKey) == nil)
+    await fixture.tearDown()
+  }
+
+  @Test
+  func disabledOutputStillPersistsTheOverride() async throws {
+    let fixture = try await profileOverrideServer(outputEnabled: false)
+
+    let result = await fixture.change(.set("hid-generic"))
+
+    #expect(
+      result
+        == VirtualHIDProfileOverrideResult(
+          requested: .generic,
+          live: nil,
+          source: "override",
+          failure: .outputDisabled
+        )
+    )
+    #expect(fixture.store.override(vendorID: 1, productID: 2) == .generic)
+    await fixture.tearDown()
+  }
+
+  @Test
+  func aStoppedServerRejectsOverrideChangesWithoutPersisting() async throws {
+    let fixture = try await profileOverrideServer()
+    await fixture.server.stop()
+
+    let result = await fixture.change(.set("hid-generic"))
+
+    #expect(result.failure == .serverStopped)
+    #expect(result.requested == .generic)
+    #expect(fixture.defaults.object(forKey: VirtualHIDProfileOverrideStore.defaultsKey) == nil)
+    await fixture.tearDown()
+  }
+
+  @Test
+  func failedActivationRestoresThePriorStoredOverride() async throws {
+    let fixture = try await profileOverrideServer(failure: (.xboxOneSBluetooth, .activation)) {
+      VirtualHIDProfileOverrideStore(defaults: $0).setGenericForTest()
+    }
+    #expect(fixture.log.built().map(\.profile) == [.generic])
+
+    let result = await fixture.change(.set("hid-xbox-one-s-bt"))
+
+    guard case .activationFailed(let detail) = result.failure else {
+      Issue.record("Expected activation-failed, got \(String(describing: result.failure))")
+      return
+    }
+    #expect(!detail.isEmpty)
+    #expect(result.requested == .xboxOneSBluetooth)
+    #expect(result.live == .generic)
+    #expect(result.source == "override")
+    #expect(fixture.store.override(vendorID: 1, productID: 2) == .generic)
+    #expect(fixture.log.built().first?.closed == false)
+    await fixture.tearDown()
+  }
+
+  @Test
+  func anOverrideRetargetsEveryControllerOfTheModel() async throws {
+    let first = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 1)
+    let second = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 2)
+    let fixture = try await profileOverrideServer([first, second])
+
+    let result = await fixture.change(.set("hid-generic"))
+    let unmatched = await fixture.change(.reset, runtimeIdentifier: "missing")
+
+    #expect(result.failure == nil)
+    #expect(result.live == .generic)
+    let automatic = fixture.server.automaticUserSpaceDispatcher()
+    for identifier in [first, second] {
+      let state = automatic?.profileState(runtimeIdentifier: identifier.runtimeIdentifier)
+      #expect(state?.selection?.profileID == .generic)
+    }
+    #expect(unmatched.failure == .controllerNotFound)
+    #expect(fixture.store.override(vendorID: 1, productID: 2) == .generic)
+    await fixture.tearDown()
+  }
+
+  @Test
+  func overrideRequestsRoundTripThroughTheLocalRPCBridge() async throws {
+    let fixture = try await profileOverrideServer()
+    let set = try await localRPC(
+      fixture.server,
+      method: "setVirtualHIDProfileOverride",
+      arguments: LocalServiceRPCVirtualHIDProfileOverrideArguments(
+        vendorID: 1,
+        productID: 2,
+        profile: "hid-generic"
+      )
+    )
+    let reset = try await localRPC(
+      fixture.server,
+      method: "resetVirtualHIDProfileOverride",
+      arguments: LocalServiceRPCDeviceArguments(vendorID: 1, productID: 2)
+    )
+
+    #expect(
+      set
+        == VirtualHIDProfileOverrideResult(
+          requested: .generic,
+          live: .generic,
+          source: "override",
+          failure: nil
+        )
+    )
+    #expect(
+      reset
+        == VirtualHIDProfileOverrideResult(
+          requested: nil,
+          live: .xboxOneSBluetooth,
+          source: "automatic",
+          failure: nil
+        )
+    )
+    await fixture.tearDown()
+  }
+
+  private func localRPC(
+    _ server: ApplicationServiceServer,
+    method: String,
+    arguments: some Encodable
+  ) async throws -> VirtualHIDProfileOverrideResult {
+    let envelope: [String: String] = [
+      "method": method, "arguments": try JSONEncoder().encode(arguments).base64EncodedString(),
+    ]
+    let request = try JSONDecoder().decode(
+      LocalServiceRPCRequest.self,
+      from: JSONEncoder().encode(envelope)
+    )
+    let response = await withCheckedContinuation { continuation in
+      server.handleLocalRPC(request) { continuation.resume(returning: $0) }
+    }
+    let data = try #require(response.result, "\(String(describing: response.error))")
+    return try JSONDecoder().decode(VirtualHIDProfileOverrideResult.self, from: data)
+  }
+
+  @Test
+  func aTimedOutRetargetRestoresThePriorStoredOverride() async throws {
+    let gate = InstallationGate()
+    let fixture = try await profileOverrideServer(
+      activationGate: (.xboxOneSBluetooth, gate),
+      timeouts: CompatibilityTransitionTimeouts(
+        stageNanoseconds: 2_000_000_000,
+        perControllerNanoseconds: 50_000_000,
+        totalNanoseconds: 10_000_000_000
+      )
+    ) { VirtualHIDProfileOverrideStore(defaults: $0).setGenericForTest() }
+
+    let result = await fixture.change(.set("hid-xbox-one-s-bt"))
+
+    guard case .activationFailed = result.failure else {
+      Issue.record("Expected activation-failed, got \(String(describing: result.failure))")
+      return
+    }
+    #expect(result.live == .generic)
+    #expect(fixture.store.override(vendorID: 1, productID: 2) == .generic)
+    await gate.release()
+    await fixture.tearDown()
+  }
+}
+
+extension VirtualHIDProfileOverrideStore {
+  func setGenericForTest() { try? set(.generic, vendorID: 1, productID: 2) }
+}

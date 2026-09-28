@@ -66,7 +66,7 @@ final class UserSpaceDispatcherTestBackend: UserSpaceOutputDispatcher.VirtualDev
 
 struct ContinuitySnapshotReportFormat: VirtualGamepadReportFormat {
   let descriptor: [UInt8] = []
-  let inputReportPayloadSize = 21
+  let inputReportPayloadSize = 19
   let inputReportID: UInt8? = nil
 
   func buildInputReport(from state: VirtualGamepadState) -> [UInt8] {
@@ -84,8 +84,6 @@ struct ContinuitySnapshotReportFormat: VirtualGamepadReportFormat {
     }
     report.append(state.leftTriggerPressed ? 1 : 0)
     report.append(state.rightTriggerPressed ? 1 : 0)
-    report.append(state.touchpadPressed ? 1 : 0)
-    report.append(state.mutePressed ? 1 : 0)
     report.append(state.hat.rawValue)
     return report
   }
@@ -95,8 +93,6 @@ enum ExpectedButtonOutput {
   case bit(Int)
   case leftTrigger
   case rightTrigger
-  case touchpad
-  case mute
 }
 
 struct UserSpaceOutputDispatcherLifecycleTests {}
@@ -108,6 +104,7 @@ final class LockedBackends: @unchecked Sendable {
   func append(_ backend: UserSpaceDispatcherTestBackend) {
     lock.withLock { values.append(backend) }
   }
+
   func snapshot() -> [UserSpaceDispatcherTestBackend] { lock.withLock { values } }
 }
 

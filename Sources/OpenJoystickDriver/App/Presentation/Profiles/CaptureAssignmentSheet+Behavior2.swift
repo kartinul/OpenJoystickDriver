@@ -15,8 +15,11 @@
           "capture.listening",
           fallback: "Listening for a controller control."
         )
-      case .received(_, let state):
-        if let detected = RuntimePresentation.detectedSource(from: state) {
+      case .received(let selector, let state):
+        if let detected = RuntimePresentation.detectedSource(
+          from: state,
+          labels: viewModel.buttonLabels(for: selector)
+        ) {
           return OJDLocalized.formatted(
             "capture.detected",
             fallback: "Detected: %@.",
@@ -84,9 +87,12 @@
               fallback: "Listening for a controller control..."
             )
           )
-        case .received(_, let state):
+        case .received(let selector, let state):
           VStack(alignment: .leading, spacing: 3) {
-            if let detected = RuntimePresentation.detectedSource(from: state) {
+            if let detected = RuntimePresentation.detectedSource(
+              from: state,
+              labels: viewModel.buttonLabels(for: selector)
+            ) {
               Text(
                 OJDLocalized.formatted(
                   "capture.detectedNoPeriod",
@@ -102,15 +108,7 @@
                 )
               ).font(.subheadline.weight(.semibold))
             }
-            Text(
-              state.pressedButtons.isEmpty
-                ? OJDLocalized.string("capture.noButton", fallback: "No button is currently held.")
-                : OJDLocalized.formatted(
-                  "capture.buttonsHeld",
-                  fallback: "Buttons held: %@",
-                  state.pressedButtons.joined(separator: ", ")
-                )
-            )
+            Text(heldControlsText(state))
           }
         case .detected(_, let state, let detected):
           VStack(alignment: .leading, spacing: 3) {
@@ -121,21 +119,24 @@
                 RuntimePresentation.sourceLabel(detected)
               )
             ).font(.subheadline.weight(.semibold))
-            Text(
-              state.pressedButtons.isEmpty
-                ? OJDLocalized.string("capture.noButton", fallback: "No button is currently held.")
-                : OJDLocalized.formatted(
-                  "capture.buttonsHeld",
-                  fallback: "Buttons held: %@",
-                  state.pressedButtons.joined(separator: ", ")
-                )
-            )
+            Text(heldControlsText(state))
           }
         case .unavailable(_, let message), .error(_, let message):
           Text(message).foregroundColor(Color(NSColor.systemRed))
         }
       }.ojdAccessibilityLabel(OJDLocalized.string("capture.status", fallback: "Capture status"))
         .ojdAccessibilityValue(captureStatusAccessibilityValue)
+    }
+    private func heldControlsText(_ state: ControllerState) -> String {
+      let held = ControlID.allCases.filter(state.pressed.contains)
+      guard !held.isEmpty else {
+        return OJDLocalized.string("capture.noButton", fallback: "No button is currently held.")
+      }
+      return OJDLocalized.formatted(
+        "capture.buttonsHeld",
+        fallback: "Buttons held: %@",
+        held.map(\.rawValue).joined(separator: ", ")
+      )
     }
   }
 

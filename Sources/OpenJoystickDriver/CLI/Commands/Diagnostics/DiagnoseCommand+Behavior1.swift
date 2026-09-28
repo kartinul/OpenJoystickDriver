@@ -241,39 +241,47 @@ extension DiagnoseCommand {
   }
 
   private func printProtocolObservation(_ device: USBControllerDescription) {
-    guard let observation = device.transportObservation else {
-      CLIOutput.diagnostic(
-        CLILocalized.text(
-          "cli.diagnose.protocol_unavailable",
-          "    Protocol observation: unavailable (catalog admission unchanged)"
-        )
-      )
+    guard let observation = device.physicalDevice, let interfaces = observation.interfaces else {
+      printProtocolObservationUnavailable()
       return
     }
-    for interface in observation.interfaces {
+    for interface in interfaces {
+      guard let number = interface.interfaceNumber,
+        let alternateSetting = interface.alternateSetting,
+        let interfaceClass = interface.interfaceClass, let endpoints = interface.endpoints
+      else {
+        printProtocolObservationUnavailable()
+        return
+      }
       let subclass = interface.interfaceSubclass.map { String(format: "%02X", $0) } ?? "--"
       let protocolValue = interface.interfaceProtocol.map { String(format: "%02X", $0) } ?? "--"
       CLIOutput.diagnostic(
         CLILocalized.format(
           "cli.diagnose.interface_line",
           "    Interface %d/%d: %02X/%@/%@",
-          interface.interfaceNumber,
-          interface.alternateSetting,
-          interface.interfaceClass,
+          number,
+          alternateSetting,
+          interfaceClass,
           subclass,
           protocolValue
         )
       )
-      for endpoint in interface.endpoints {
+      for endpoint in endpoints {
+        guard let address = endpoint.address, let transferType = endpoint.transferType,
+          let direction = endpoint.direction
+        else {
+          printProtocolObservationUnavailable()
+          return
+        }
         let packet = endpoint.maxPacketSize.map(String.init) ?? "unknown"
         let interval = endpoint.interval.map(String.init) ?? "unknown"
         CLIOutput.diagnostic(
           CLILocalized.format(
             "cli.diagnose.endpoint_line",
             "      endpoint 0x%02X %@ %@ maxPacket=%@ interval=%@",
-            endpoint.address,
-            endpoint.transferType.rawValue,
-            endpoint.direction.rawValue,
+            address,
+            transferType.rawValue,
+            direction.rawValue,
             packet,
             interval
           )
@@ -281,46 +289,44 @@ extension DiagnoseCommand {
       }
     }
     guard let classification = device.classification else { return }
-    let candidate = classification.selected?.rawValue ?? classification.disposition.rawValue
-    CLIOutput.diagnostic(
-      CLILocalized.format(
-        "cli.diagnose.advisory_candidate",
-        "    Advisory protocol candidate: %@",
-        candidate
-      )
-    )
-    if !classification.matchedPredicates.isEmpty {
+    switch classification {
+    case .bound(let binding):
+      let protocolName = [binding.protocolID.rawValue, binding.variant?.rawValue].compactMap { $0 }
+        .joined(separator: ":")
+      let predicates = binding.matchedPredicates.map(\.rawValue).joined(separator: ", ")
       CLIOutput.diagnostic(
         CLILocalized.format(
           "cli.diagnose.matched_predicates",
           "      Matched: %@",
-          classification.matchedPredicates.map(\.rawValue).joined(separator: ", ")
+          "\(protocolName) (\(binding.rule.rawValue): \(predicates))"
         )
       )
-    }
-    if !classification.rejectedPredicates.isEmpty {
-      let rejected = classification.rejectedPredicates.map(\.rawValue).joined(separator: ", ")
-      CLIOutput.diagnostic(
-        CLILocalized.format("cli.diagnose.rejected_predicates", "      Rejected: %@", rejected)
-      )
-    }
-    if let reconciliation = device.reconciliation {
+    case .unsupported(let reason):
       CLIOutput.diagnostic(
         CLILocalized.format(
-          "cli.diagnose.catalog_parser",
-          "      Catalog parser remains %@ (%@)",
-          device.parser,
-          reconciliation.knownVariant.rawValue
+          "cli.diagnose.rejected_predicates",
+          "      Rejected: %@",
+          reason.rawValue
         )
       )
-      if reconciliation.hasConflict {
-        CLIOutput.diagnostic(
-          CLILocalized.text(
-            "cli.diagnose.catalog_conflict",
-            "      Observation conflicts with the catalog family; parser unchanged"
-          )
+    case .conflict(let reason, let candidates):
+      let candidateNames = candidates.map(\.rawValue).joined(separator: ", ")
+      CLIOutput.diagnostic(
+        CLILocalized.format(
+          "cli.diagnose.rejected_predicates",
+          "      Rejected: %@",
+          "\(reason.rawValue) [\(candidateNames)]"
         )
-      }
+      )
     }
+  }
+
+  private func printProtocolObservationUnavailable() {
+    CLIOutput.diagnostic(
+      CLILocalized.text(
+        "cli.diagnose.protocol_unavailable",
+        "    Protocol observation: unavailable (catalog admission unchanged)"
+      )
+    )
   }
 }

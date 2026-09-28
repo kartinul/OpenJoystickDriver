@@ -6,35 +6,35 @@ import Testing
 
 extension VirtualControllerBackendTests {
   @Test
-  func testUserSpaceSDLIdentityAdvertisesXbox360HIDAPIReportSizes() {
-    let format = Xbox360MacHIDReportFormat()
+  func testUserSpaceXboxOneSIdentityAdvertisesNumberedReportSizes() throws {
+    let format = try XboxGeckoHIDReportFormat()
     let properties = UserSpaceOutputDispatcher.deviceProperties(
-      profile: .xbox360Wired,
+      profile: .xboxOneS,
       format: format,
       identifier: DeviceIdentifier(vendorID: 13623, productID: 4112)
     )
 
     let inputSize = properties[kIOHIDMaxInputReportSizeKey as String] as? Int
     let outputSize = properties[kIOHIDMaxOutputReportSizeKey as String] as? Int
-    #expect(inputSize == format.inputReportPayloadSize)
-    #expect(outputSize == format.outputReportPayloadSize)
+    #expect(inputSize == format.inputReportPayloadSize + 1)
+    #expect(outputSize == ConsumerOutputCodec.xboxOneReportPayloadSize + 1)
   }
 
-  @available(macOS 15, *)
   @Test
-  func testCoreHIDPropertiesPreserveDescriptorAndIdentity() {
-    let format = Xbox360MacHIDReportFormat()
-    let properties = UserSpaceOutputDispatcher.virtualDeviceProperties(
-      profile: .xbox360Wired,
+  func testIOKitPropertiesPreserveDescriptorAndIdentity() throws {
+    let format = try XboxGeckoHIDReportFormat()
+    let profile = VirtualDeviceProfile.xboxOneS
+    let properties = UserSpaceOutputDispatcher.deviceProperties(
+      profile: profile,
       format: format,
       identifier: DeviceIdentifier(vendorID: 13623, productID: 4112)
     )
 
-    #expect(properties.descriptor == Data(format.descriptor))
-    #expect(properties.vendorID == UInt32(VirtualDeviceProfile.xbox360Wired.vendorID))
-    #expect(properties.productID == UInt32(VirtualDeviceProfile.xbox360Wired.productID))
-    #expect(properties.versionNumber == UInt64(VirtualDeviceProfile.xbox360Wired.versionNumber))
-    #expect(properties.versionNumber != 0)
+    #expect(properties[kIOHIDReportDescriptorKey as String] as? Data == Data(format.descriptor))
+    #expect(properties[kIOHIDVendorIDKey as String] as? Int == profile.vendorID)
+    #expect(properties[kIOHIDProductIDKey as String] as? Int == profile.productID)
+    #expect(properties[kIOHIDVersionNumberKey as String] as? Int == profile.versionNumber)
+    #expect(profile.versionNumber == 0)
   }
 
   @Test
@@ -50,68 +50,24 @@ extension VirtualControllerBackendTests {
   }
 
   @Test
-  func testXbox360FormatDefaultsToJoystickPrimaryUsage() {
-    #expect(
-      UserSpaceOutputDispatcher.defaultPrimaryUsage(for: Xbox360MacHIDReportFormat())
-        == kHIDUsage_GD_Joystick
-    )
-  }
-
-  @Test
-  func testXbox360GamePadFormatDefaultsToGamePadPrimaryUsage() {
-    #expect(
-      UserSpaceOutputDispatcher.defaultPrimaryUsage(
-        for: Xbox360MacHIDReportFormat(topLevelUsage: UInt8(kHIDUsage_GD_GamePad))
-      ) == kHIDUsage_GD_GamePad
-    )
-  }
-
-  @Test
   func testXboxOneCompatibilityFormatDeclaresRumbleOutputSize() throws {
     let format = try HIDDescriptorReportFormat(
       descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
-      outputReportID: VirtualRumbleOutputReportParser.xboxOneReportID,
-      outputReportPayloadSize: VirtualRumbleOutputReportParser.xboxOneReportPayloadSize
+      outputReportID: ConsumerOutputCodec.xboxOneReportID,
+      outputReportPayloadSize: ConsumerOutputCodec.xboxOneReportPayloadSize
     )
 
     #expect(format.inputReportID == 1)
-    #expect(format.outputReportID == VirtualRumbleOutputReportParser.xboxOneReportID)
-    #expect(
-      format.outputReportPayloadSize == VirtualRumbleOutputReportParser.xboxOneReportPayloadSize
-    )
-  }
-
-  @Test
-  func testXboxGIPCompatibilityFormatAdvertisesFullOutputSize() throws {
-    let format = try HIDDescriptorReportFormat(
-      descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
-      outputReportID: VirtualRumbleOutputReportParser.xboxGIPReportID,
-      outputReportPayloadSize: VirtualRumbleOutputReportParser
-        .xboxGIPReportPayloadSizeWithoutReportID
-    )
-    let properties = UserSpaceOutputDispatcher.deviceProperties(
-      profile: .xboxOneS,
-      format: format,
-      identifier: DeviceIdentifier(vendorID: 13623, productID: 4112)
-    )
-
-    let outputSize = properties[kIOHIDMaxOutputReportSizeKey as String] as? Int
-    #expect(outputSize == 13)
+    #expect(format.outputReportID == ConsumerOutputCodec.xboxOneReportID)
+    #expect(format.outputReportPayloadSize == ConsumerOutputCodec.xboxOneReportPayloadSize)
   }
 
   @Test
   func testCompatibilityFormatsReturnFullyNeutralReportsAfterRelease() throws {
     let generic = OJDGenericGamepadFormat().buildInputReport(from: VirtualGamepadState())
-    let apple = Xbox360MacHIDReportFormat(topLevelUsage: UInt8(kHIDUsage_GD_GamePad))
-      .buildInputReport(from: VirtualGamepadState())
-    let x360 = Xbox360MacHIDReportFormat().buildInputReport(from: VirtualGamepadState())
-    let xone = try HIDDescriptorReportFormat(
-      descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor
-    ).buildInputReport(from: VirtualGamepadState())
+    let xone = try XboxGeckoHIDReportFormat().buildInputReport(from: VirtualGamepadState())
 
     #expect(generic == [UInt8](repeating: 0, count: generic.count))
-    #expect(Array(apple.dropFirst(2)) == [UInt8](repeating: 0, count: apple.count - 2))
-    #expect(Array(x360.dropFirst(2)) == [UInt8](repeating: 0, count: x360.count - 2))
     #expect(xone[0] == 1)
     #expect(Array(xone[1...8]) == [0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80])
     #expect(xone[14] == 0x00)
@@ -123,57 +79,11 @@ extension VirtualControllerBackendTests {
   func userSpaceCreationErrorsDistinguishPermissionFromEntitlementAndCreation() {
     let errors: [UserSpaceOutputDispatcher.CreationError] = [
       .inputMonitoringDenied, .accessibilityDenied, .createFailed, .missingEntitlement("test"),
-      .provisioningProfileExcludesHost,
     ]
     for error in errors {
       switch error {
-      case .inputMonitoringDenied, .accessibilityDenied, .createFailed, .missingEntitlement,
-        .provisioningProfileExcludesHost:
-        break
+      case .inputMonitoringDenied, .accessibilityDenied, .createFailed, .missingEntitlement: break
       }
     }
   }
-
-  @Test
-  func mapsCoreHIDNilCreateToAccessibilityDeniedWhenPostEventNotGranted() {
-    for accessibility: PermissionManager.AccessState in [.denied, .unknown] {
-      let error = UserSpaceOutputDispatcher.mappedCoreHIDCreationFailure(
-        provisioning: .includesHost,
-        accessibility: accessibility
-      )
-      guard case .accessibilityDenied = error else {
-        Issue.record("expected accessibilityDenied for accessibility \(accessibility)")
-        return
-      }
-    }
-  }
-
-  @Test
-  func mapsCoreHIDNilCreateToCreateFailedWhenAccessibilityGranted() {
-    for provisioning: VirtualHIDProvisioningHost.Authorization in [
-      .includesHost, .unrestricted, .unavailable,
-    ] {
-      let error = UserSpaceOutputDispatcher.mappedCoreHIDCreationFailure(
-        provisioning: provisioning,
-        accessibility: .granted
-      )
-      guard case .createFailed = error else {
-        Issue.record("expected createFailed for provisioning \(provisioning)")
-        return
-      }
-    }
-  }
-
-  @Test
-  func mapsCoreHIDNilCreateToProvisioningExcludeBeforeAccessibility() {
-    let error = UserSpaceOutputDispatcher.mappedCoreHIDCreationFailure(
-      provisioning: .excludesHost,
-      accessibility: .denied
-    )
-    guard case .provisioningProfileExcludesHost = error else {
-      Issue.record("expected provisioningProfileExcludesHost")
-      return
-    }
-  }
-
 }

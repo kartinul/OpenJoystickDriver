@@ -2,47 +2,100 @@ import Foundation
 import IOKit
 import IOKit.hid
 
-@available(macOS, introduced: 10.15, obsoleted: 15.0)
 extension HIDDeviceStream {
 
   /// Returns a live stream of HID device events (connect, disconnect, input report).
   ///
   /// Only one stream can be active at a time. The stream ends when its
-  /// consuming task is cancelled.
-  public func deviceEvents() -> AsyncStream<HIDDeviceEvent> {
+  /// consuming task is cancelled. Runs on main, where IOKit delivers every callback, so admission
+  /// of present devices never races the matching, removal, and input callbacks.
+  func deviceEvents() -> AsyncStream<HIDDeviceEvent> {
+    dispatchPrecondition(condition: .onQueue(.main))
     if continuation != nil { cleanup() }
+    streamGeneration &+= 1
+    let generation = streamGeneration
     return AsyncStream { continuation in
       self.continuation = continuation
-      continuation.onTermination = { [weak self] _ in self?.cleanup() }
+      continuation.onTermination = { [weak self] _ in
+        // Termination can fire on any thread; a newer stream must not be torn down by it.
+        DispatchQueue.main.async {
+          guard let self, self.streamGeneration == generation else { return }
+          self.cleanup()
+        }
+      }
       self.registerCallbacks()
     }
   }
 
+  func currentConnectionSnapshots() async -> [HIDDeviceConnectionSnapshot]? {
+    await MainActor.run { self.currentConnectionSnapshotsOnMainRunLoop() }
+  }
+
+  @MainActor
+  private func currentConnectionSnapshotsOnMainRunLoop() -> [HIDDeviceConnectionSnapshot]? {
+    guard let devices = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> else { return nil }
+    let presentDeviceIDs = Set(devices.map(trackingID(for:)))
+    let trackedConnections = seizeLock.withLock { connectionsByDeviceID }
+    var ownershipByLocation: [UInt32: HIDInputOwnership] = [:]
+    for connection in trackedConnections.values {
+      ownershipByLocation[connection.routingLocationID] = eventAdapter.ownership(
+        locationID: connection.routingLocationID
+      )
+    }
+    return HIDDeviceConnectionSnapshot.reconcile(
+      trackedConnections: trackedConnections,
+      presentDeviceIDs: presentDeviceIDs,
+      ownershipByLocation: ownershipByLocation
+    )
+  }
+
   // MARK: - Callback registration
 
-  /// Registers IOKit callbacks for device matching, removal, and input reports,
-  /// then opens the HID manager on the main run loop.
+  /// Registers IOKit callbacks for device matching and removal on the main run loop, then admits
+  /// the devices already present.
+  ///
+  /// The manager is never opened. `IOHIDManagerOpen` opens every matched device object, which
+  /// includes OJD's own virtual gamepads (they match the GamePad usage, and IOKit matching
+  /// ignores negative property keys) and a second object for any service that satisfies more
+  /// than one matching dictionary. `handleDeviceAdded` opens only admitted devices.
   private func registerCallbacks() {
+    if !deviceMatchingApplied {
+      IOHIDManagerSetDeviceMatchingMultiple(manager, deviceMatching)
+      deviceMatchingApplied = true
+    }
     let context = Unmanaged.passUnretained(self).toOpaque()
     IOHIDManagerRegisterDeviceMatchingCallback(manager, Self.matchingCallback, context)
     IOHIDManagerRegisterDeviceRemovalCallback(manager, Self.removalCallback, context)
-    IOHIDManagerRegisterInputReportCallback(manager, Self.inputReportCallback, context)
-    IOHIDManagerRegisterInputValueCallback(manager, Self.inputValueCallback, context)
-    // CRITICAL: schedule BEFORE open
     IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.defaultMode.rawValue)
-    IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
+    // A rescheduled manager does not repeat matching callbacks for devices it already holds, so
+    // a restarted stream admits them here; admission is idempotent per device and service.
+    let present = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> ?? []
+    for device in present {
+      if let failure = handleDeviceAdded(device, failingOnAccessDenial: true) {
+        continuation?.yield(failure)
+        cleanup()
+        return
+      }
+    }
   }
 
-  /// Unschedules the HID manager from the run loop, closes it, and finishes
-  /// the async stream.
+  /// Maps a denied shared open of an already-present device to a stream-level access failure.
+  static func accessFailure(forInitialOpenResult result: IOReturn) -> HIDDeviceEvent? {
+    guard result == kIOReturnNotPermitted || result == kIOReturnNotPrivileged else { return nil }
+    return .accessFailure(.ioReturn(result))
+  }
+
+  /// Unschedules the HID manager from the run loop, closes the devices this stream opened, and
+  /// finishes the async stream. Runs on main.
   func cleanup() {
+    guard let continuation else { return }
+    self.continuation = nil
     IOHIDManagerUnscheduleFromRunLoop(
       manager,
       CFRunLoopGetMain(),
       CFRunLoopMode.defaultMode.rawValue
     )
-    IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
-    seizeLock.withLock {
+    let sharedOpens = seizeLock.withLock {
       for devices in seizedByLocation.values {
         for device in devices {
           IOHIDDeviceClose(device, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
@@ -50,10 +103,13 @@ extension HIDDeviceStream {
       }
       seizedByLocation.removeAll()
       releasedByLocation.removeAll()
+      connectionsByDeviceID.removeAll()
+      defer { sharedOpenByDeviceID.removeAll() }
+      return Array(sharedOpenByDeviceID.values)
     }
+    sharedOpens.forEach(closeSharedOpen)
     eventAdapter.reset()
-    continuation?.finish()
-    continuation = nil
+    continuation.finish()
   }
 
   public func setOutputReport(
@@ -61,6 +117,20 @@ extension HIDDeviceStream {
     report: PhysicalHIDOutputReport
   ) -> PhysicalHIDReportResult<Void> {
     setReport(locationID: locationID, report: report, type: kIOHIDReportTypeOutput, label: "Output")
+  }
+
+  public func setOutputReport(
+    connection: HIDDeviceConnection,
+    report: PhysicalHIDOutputReport
+  ) async -> PhysicalHIDReportResult<Void> {
+    await MainActor.run {
+      setReport(
+        connection: connection,
+        report: report,
+        type: kIOHIDReportTypeOutput,
+        label: "Output"
+      )
+    }
   }
 
   public func setFeatureReport(
@@ -73,6 +143,20 @@ extension HIDDeviceStream {
       type: kIOHIDReportTypeFeature,
       label: "Feature"
     )
+  }
+
+  public func setFeatureReport(
+    connection: HIDDeviceConnection,
+    report: PhysicalHIDOutputReport
+  ) async -> PhysicalHIDReportResult<Void> {
+    await MainActor.run {
+      setReport(
+        connection: connection,
+        report: report,
+        type: kIOHIDReportTypeFeature,
+        label: "Feature"
+      )
+    }
   }
 
   public func getFeatureReport(
@@ -181,158 +265,81 @@ extension HIDDeviceStream {
     return .failed(.ioReturn(lastResult))
   }
 
-  // MARK: - Event handlers
+  /// Reads a feature report only from the exact connection lifetime, never a sibling at its
+  /// location.
+  public func getFeatureReport(
+    connection: HIDDeviceConnection,
+    request: PhysicalHIDFeatureReadRequest
+  ) async -> PhysicalHIDReportResult<Data> {
+    await MainActor.run {
+      guard let device = exactDevice(for: connection, type: kIOHIDReportTypeFeature) else {
+        return .unavailable
+      }
+      var bytes = [UInt8](repeating: 0, count: request.length)
+      var reportLength = request.length
+      let result = bytes.withUnsafeMutableBufferPointer { pointer in
+        guard let baseAddress = pointer.baseAddress else { return kIOReturnBadArgument }
+        return IOHIDDeviceGetReport(
+          device,
+          kIOHIDReportTypeFeature,
+          CFIndex(request.reportID),
+          baseAddress,
+          &reportLength
+        )
+      }
+      guard result == kIOReturnSuccess else { return .failed(.ioReturn(result)) }
+      return .success(Data(bytes.prefix(reportLength)))
+    }
+  }
 
-  /// Reads device properties and yields a `.connected` event into the stream.
-  func handleDeviceAdded(_ device: IOHIDDevice) {
-    guard !AppleGameControllerSyntheticHID.isSynthetic(device: device) else { return }
-    let vid = deviceProperty(device, kIOHIDVendorIDKey)
-    let pid = deviceProperty(device, kIOHIDProductIDKey)
-    let serial = IOHIDDeviceGetProperty(device, kIOHIDSerialNumberKey as CFString) as? String
-    let productName = IOHIDDeviceGetProperty(device, kIOHIDProductKey as CFString) as? String
-    let transport = IOHIDDeviceGetProperty(device, kIOHIDTransportKey as CFString) as? String ?? ""
-    let syntheticProperty = IOHIDDeviceGetProperty(
-      device,
-      AppleGameControllerSyntheticHID.propertyKey as CFString
-    )
-    let loc = deviceProperty(device, kIOHIDLocationIDKey)
-    let locationID = UInt32(truncatingIfNeeded: loc)
-    guard
-      PhysicalHIDBackendEventPolicy.acceptsDevice(
-        serialNumber: serial,
-        productName: productName,
-        transport: transport.isEmpty ? nil : transport,
-        locationID: locationID,
-        syntheticProperty: syntheticProperty
+  @MainActor
+  private func setReport(
+    connection: HIDDeviceConnection,
+    report: PhysicalHIDOutputReport,
+    type: IOHIDReportType,
+    label: String
+  ) -> PhysicalHIDReportResult<Void> {
+    guard let device = exactDevice(for: connection, type: type) else { return .unavailable }
+    var bytes = report.bytes
+    let reportLength = bytes.count
+    let result = bytes.withUnsafeMutableBufferPointer { pointer in
+      guard let baseAddress = pointer.baseAddress else { return kIOReturnBadArgument }
+      return IOHIDDeviceSetReport(device, type, CFIndex(report.reportID), baseAddress, reportLength)
+    }
+    guard result == kIOReturnSuccess else {
+      print(
+        "[HIDDeviceStream] \(label) report failed for exact connection "
+          + "report=0x\(String(format: "%02X", report.reportID)) kr=\(result)"
       )
-    else { return }
-    guard
-      eventAdapter.add(
-        deviceID: trackingID(for: device),
-        locationID: locationID,
-        syntheticProperty: syntheticProperty
-      )
-    else { return }
+      return .failed(.ioReturn(result))
+    }
+    return .success(())
+  }
 
-    // Preserve shared input for existing profiles, but report whether isolation was acquired.
-    let seizeKr = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
-    if seizeKr == kIOReturnSuccess {
-      seizeLock.withLock {
-        var devices = seizedByLocation[locationID] ?? []
-        if !devices.contains(where: { CFEqual($0, device) }) {
-          devices.append(device)
-          seizedByLocation[locationID] = devices
+  /// The device object of an exact connection lifetime that accepts a `type` report.
+  @MainActor
+  private func exactDevice(
+    for connection: HIDDeviceConnection,
+    type: IOHIDReportType
+  ) -> IOHIDDevice? {
+    guard let devices = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice>,
+      let deviceID = seizeLock.withLock({
+        connectionsByDeviceID.first { $0.value == connection }?.key
+      }), let device = devices.first(where: { trackingID(for: $0) == deviceID }),
+      eventAdapter.acceptsInput(deviceID: deviceID),
+      seizeLock.withLock({
+        // A native device is never seized: an output report DeviceManager's native allowance
+        // permits goes through its shared open; every other write needs the seize.
+        if connection.physicalDevice.nativePassThrough {
+          return type == kIOHIDReportTypeOutput && sharedOpenByDeviceID[deviceID] != nil
         }
-      }
-    }
-    let ownership: HIDInputOwnership
-    switch seizeKr {
-    case kIOReturnSuccess: ownership = .exclusive
-    case kIOReturnExclusiveAccess: ownership = .ownedByAnotherClient
-    case kIOReturnNotPermitted, kIOReturnNotPrivileged: ownership = .accessDenied
-    default: ownership = .acquisitionFailed
-    }
-    eventAdapter.updateOwnership(ownership, deviceID: trackingID(for: device))
-
-    continuation?.yield(
-      .connected(
-        vendorID: UInt16(truncatingIfNeeded: vid),
-        productID: UInt16(truncatingIfNeeded: pid),
-        serialNumber: serial,
-        locationID: locationID,
-        productName: productName,
-        transport: transport.isEmpty ? nil : transport,
-        ownership: eventAdapter.ownership(locationID: locationID)
-      )
-    )
+        return seizedByLocation[connection.routingLocationID]?.contains(where: {
+          CFEqual($0, device)
+        }) == true
+      })
+    else { return nil }
+    return device
   }
 
-  /// Yields a `.disconnected` event when IOKit reports a device removal.
-  func handleDeviceRemoved(_ device: IOHIDDevice) {
-    let deviceID = trackingID(for: device)
-    let removal = eventAdapter.remove(deviceID: deviceID)
-    guard removal.wasTracked else { return }
-    let vid = deviceProperty(device, kIOHIDVendorIDKey)
-    let pid = deviceProperty(device, kIOHIDProductIDKey)
-    let loc = deviceProperty(device, kIOHIDLocationIDKey)
-    let locationID = UInt32(truncatingIfNeeded: loc)
-    seizeLock.withLock {
-      releasedByLocation[locationID]?.removeAll { CFEqual($0, device) }
-      if releasedByLocation[locationID]?.isEmpty == true {
-        releasedByLocation.removeValue(forKey: locationID)
-      }
-      guard var devices = seizedByLocation[locationID] else { return }
-      let removed = devices.filter { CFEqual($0, device) }
-      devices.removeAll { CFEqual($0, device) }
-      for removedDevice in removed {
-        IOHIDDeviceClose(removedDevice, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
-      }
-      if devices.isEmpty {
-        seizedByLocation.removeValue(forKey: locationID)
-        return
-      }
-      seizedByLocation[locationID] = devices
-    }
-    if removal.shouldEmitDisconnect {
-      continuation?.yield(
-        .disconnected(
-          vendorID: UInt16(truncatingIfNeeded: vid),
-          productID: UInt16(truncatingIfNeeded: pid),
-          locationID: locationID
-        )
-      )
-    } else {
-      continuation?.yield(
-        .ownershipChanged(
-          locationID: locationID,
-          ownership: eventAdapter.ownership(locationID: locationID)
-        )
-      )
-    }
-  }
-
-  /// Copies raw report bytes and yields an `.inputReport` event.
-  func handleInputReport(
-    deviceID: UInt64,
-    locationID: UInt32,
-    reportID: UInt8,
-    report: UnsafePointer<UInt8>,
-    reportLength: CFIndex
-  ) {
-    guard eventAdapter.acceptsInput(deviceID: deviceID) else { return }
-    var bytes = [UInt8](UnsafeBufferPointer(start: report, count: reportLength))
-    if reportID != 0, bytes.first != reportID { bytes.insert(reportID, at: 0) }
-    continuation?.yield(.inputReport(locationID: locationID, reportID: reportID, data: Data(bytes)))
-  }
-
-  /// Yields one descriptor-decoded input element value.
-  func handleInputValue(_ value: IOHIDValue) {
-    let element = IOHIDValueGetElement(value)
-    let device = IOHIDElementGetDevice(element)
-    let loc = deviceProperty(device, kIOHIDLocationIDKey)
-    let deviceID = trackingID(for: device)
-    guard eventAdapter.acceptsInput(deviceID: deviceID) else { return }
-    let semanticValue = HIDElementValue(
-      usagePage: IOHIDElementGetUsagePage(element),
-      usage: IOHIDElementGetUsage(element),
-      logicalMinimum: IOHIDElementGetLogicalMin(element),
-      logicalMaximum: IOHIDElementGetLogicalMax(element),
-      integerValue: IOHIDValueGetIntegerValue(value),
-      reportID: IOHIDElementReportID.value(IOHIDElementGetReportID(element))
-    )
-    continuation?.yield(
-      .inputValue(locationID: UInt32(truncatingIfNeeded: loc), value: semanticValue)
-    )
-  }
-
-  func trackingID(for device: IOHIDDevice) -> UInt64 {
-    UInt64(UInt(bitPattern: Unmanaged.passUnretained(device).toOpaque()))
-  }
-
-  /// Reads an integer property from an IOKit HID device.
-  ///
-  /// Returns 0 if missing.
-  private func deviceProperty(_ device: IOHIDDevice, _ key: String) -> Int {
-    IOHIDDeviceGetProperty(device, key as CFString) as? Int ?? 0
-  }
+  // MARK: - Event handlers
 }

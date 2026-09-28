@@ -20,15 +20,16 @@ struct RemappingDirectionSourceTests {
     var state = RemappingEngineState()
     #expect(
       state.process(
-        events: [.leftTriggerChanged(1), .buttonPressed(.a)],
+        inputs: [.leftTrigger(1), .press(.faceSouth)],
         from: identifier,
         profile: profile,
         at: 0
       ) == [.system(.keyDown(.a))]
     )
     #expect(
-      state.process(events: [.leftTriggerChanged(0)], from: identifier, profile: profile, at: 1)
-        == [.system(.keyUp(.a))]
+      state.process(inputs: [.leftTrigger(0)], from: identifier, profile: profile, at: 1) == [
+        .system(.keyUp(.a))
+      ]
     )
   }
 
@@ -44,19 +45,15 @@ struct RemappingDirectionSourceTests {
     var state = RemappingEngineState()
     #expect(
       state.process(
-        events: [.leftStickChanged(x: -1, y: 0), .buttonPressed(.a)],
+        inputs: [.leftStick(x: -1, y: 0), .press(.faceSouth)],
         from: identifier,
         profile: profile,
         at: 0
       ) == [.system(.keyDown(.b))]
     )
     #expect(
-      state.process(
-        events: [.leftStickChanged(x: 0, y: 0)],
-        from: identifier,
-        profile: profile,
-        at: 1
-      ) == [.system(.keyUp(.b))]
+      state.process(inputs: [.leftStick(x: 0, y: 0)], from: identifier, profile: profile, at: 1)
+        == [.system(.keyUp(.b))]
     )
   }
 
@@ -79,7 +76,7 @@ struct RemappingDirectionSourceTests {
     var state = RemappingEngineState()
     #expect(
       state.process(
-        events: [.rightStickChanged(x: 1, y: 0), .buttonPressed(.a)],
+        inputs: [.rightStick(x: 1, y: 0), .press(.faceSouth)],
         from: identifier,
         profile: profile,
         at: 0

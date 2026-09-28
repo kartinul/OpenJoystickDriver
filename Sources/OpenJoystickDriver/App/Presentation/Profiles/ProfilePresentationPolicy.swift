@@ -81,11 +81,5 @@
     static let twoColumnMinimumWidth: CGFloat = 560
 
     static func factColumnCount(for width: CGFloat) -> Int { width < twoColumnMinimumWidth ? 1 : 2 }
-
-    static func identityColumnCount(for width: CGFloat) -> Int {
-      if width < 360 { return 1 }
-      if width < 680 { return 2 }
-      return 4
-    }
   }
 #endif

@@ -17,8 +17,8 @@ extension RemappingRoutingCore {
     do {
       let frontmostBundleID = foregroundApplication.frontmostBundleIdentifier()
       let profile = try await library.activeProfile(
-        vendorID: identifier.vendorID,
-        productID: identifier.productID,
+        vendorID: identifier.controllerIdentity.vendorID,
+        productID: identifier.controllerIdentity.productID,
         frontmostBundleIdentifier: frontmostBundleID
       )
       _ = try requireOperationalPermit(permit)
@@ -40,8 +40,8 @@ extension RemappingRoutingCore {
   ) async throws {
     _ = try requireOperationalPermit(proposedPermit)
     let oldRoute = routes[identifier]
-    if case .compatibility = oldRoute?.selection, case .compatibility = selection {
-      let route = compatibilityRoute()
+    if case .virtualGamepad = oldRoute?.selection, case .virtualGamepad = selection {
+      let route = virtualGamepadRoute()
       _ = try requireOperationalPermit(proposedPermit)
       routes[identifier] = route
       return
@@ -58,17 +58,19 @@ extension RemappingRoutingCore {
       try await releaseAndRetire(for: identifier, profile: profile, requiring: proposedPermit)
     }
     if profileTransactionState.blocksOutput {
-      // The transaction entry already stopped compatibility output once.
-    } else if case .compatibility = oldRoute?.selection, case .compatibility = selection {
-    } else if case .compatibility = oldRoute?.selection {
-      await notifyCompatibilityStop(identifier)
+      // The transaction entry already stopped the virtual gamepad output once.
+    } else if case .virtualGamepad = oldRoute?.selection, case .virtualGamepad = selection {
+    } else if case .virtualGamepad = oldRoute?.selection {
+      await notifyVirtualGamepadStop(identifier)
     }
+    // A profile switch keeps feeding the engine; any other route stops, so its baseline goes.
+    if selection.profile == nil { await engine.endSource(identifier) }
 
     switch selection {
-    case .compatibility:
+    case .virtualGamepad:
       let permit = try requireOperationalPermit(proposedPermit)
       try await engine.setProfileColor(nil, for: identifier, requiring: permit)
-      let route = compatibilityRoute()
+      let route = virtualGamepadRoute()
       _ = try requireOperationalPermit(proposedPermit)
       routes[identifier] = route
     case .remapping(let profile):
@@ -151,18 +153,18 @@ extension RemappingRoutingCore {
     let applyOutputState = forceOutputState || !profileTransactionState.blocksOutput
     if applyOutputState { _ = try requireOperationalPermit(proposedPermit) }
     switch route.selection {
-    case .compatibility:
-      let eligibility: RemappingRouteEligibility =
-        controls.outputSuppressed || !controls.compatibilityOutputAllowed
-        ? .compatibilityOutputSuppressed : .eligible
+    case .virtualGamepad:
       route.eligibilitySnapshot = RemappingEligibilitySnapshot(
-        eligibility: eligibility,
+        eligibility: virtualGamepadEligibility,
         environment: environment
       )
       route.error = nil
       routes[identifier] = route
     case .remapping(let profile):
       let eligibility = remappingEligibility(profile, for: identifier, environment: environment)
+      if eligibility != .eligible, route.eligibility == .eligible {
+        await engine.endSource(identifier)
+      }
       do {
         if eligibility == .eligible && applyOutputState {
           let permit = try requireOperationalPermit(proposedPermit)

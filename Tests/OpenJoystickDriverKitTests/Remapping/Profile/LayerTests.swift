@@ -22,7 +22,7 @@ struct RemappingLayerTests {
     )
 
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 0
@@ -32,19 +32,19 @@ struct RemappingLayerTests {
     _ = sink.removeActions()
 
     try await engine.process(
-      events: [.buttonPressed(.leftBumper)],
+      inputs: [.press(.leftShoulder)],
       from: device(1),
       using: currentProfile,
       at: 1
     )
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 2
     )
     try await engine.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 3
@@ -54,13 +54,13 @@ struct RemappingLayerTests {
     _ = sink.removeActions()
 
     try await engine.process(
-      events: [.buttonReleased(.leftBumper)],
+      inputs: [.release(.leftShoulder)],
       from: device(1),
       using: currentProfile,
       at: 4
     )
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 5
@@ -86,7 +86,7 @@ struct RemappingLayerTests {
     )
 
     try await engine.process(
-      events: [.buttonPressed(.rightBumper), .buttonReleased(.rightBumper)],
+      inputs: [.press(.rightShoulder), .release(.rightShoulder)],
       from: device(1),
       using: currentProfile,
       at: 0
@@ -94,7 +94,7 @@ struct RemappingLayerTests {
     _ = sink.removeActions()
 
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 1
@@ -104,7 +104,7 @@ struct RemappingLayerTests {
     _ = sink.removeActions()
 
     try await engine.process(
-      events: [.buttonPressed(.rightBumper), .buttonReleased(.rightBumper)],
+      inputs: [.press(.rightShoulder), .release(.rightShoulder)],
       from: device(1),
       using: currentProfile,
       at: 2
@@ -112,7 +112,7 @@ struct RemappingLayerTests {
     _ = sink.removeActions()
 
     try await engine.process(
-      events: [.buttonPressed(.a), .buttonReleased(.a)],
+      inputs: [.press(.faceSouth), .release(.faceSouth)],
       from: device(1),
       using: currentProfile,
       at: 3
@@ -133,7 +133,7 @@ struct RemappingLayerTests {
     let invalid = profile(bindings: [], layers: [layer])
     await #expect(throws: RemappingValidationError.axisTuningRequired(index: 0)) {
       try await engine.process(
-        events: [.buttonPressed(.leftBumper)],
+        inputs: [.press(.leftShoulder)],
         from: device(1),
         using: invalid,
         at: 0

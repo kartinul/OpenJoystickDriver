@@ -47,22 +47,68 @@ enum RuntimePresentation {
     }
   }
 
-  static func compatibilityLabel(_ identity: CompatibilityIdentity) -> String {
-    switch identity {
-    case .automatic: return OJDLocalized.string("mapping.automatic", fallback: "Automatic")
-    case .genericHID:
-      return OJDLocalized.string("compatibility.genericHID", fallback: "Generic HID")
-    case .sdl2_3: return OJDLocalized.string("compatibility.sdl2_3", fallback: "SDL2/3")
-    case .appleGameController:
+  static var noVirtualHIDProfileLabel: String {
+    OJDLocalized.string("virtualProfile.none", fallback: "No virtual HID profile")
+  }
+
+  /// The wire source of a virtual HID profile: `automatic`, `override`, or
+  /// `automatic-after-rejecting`.
+  static func virtualHIDProfileSourceLabel(_ source: String) -> String {
+    switch source {
+    case "automatic": return OJDLocalized.string("mapping.automatic", fallback: "Automatic")
+    case "override":
+      return OJDLocalized.string("virtualProfile.sourceOverride", fallback: "Override")
+    case "automatic-after-rejecting":
       return OJDLocalized.string(
-        "compatibility.appleGameController",
-        fallback: "Apple GameController"
+        "virtualProfile.sourceAutomaticAfterRejecting",
+        fallback: "Automatic, override rejected"
       )
-    case .xbox360HID:
-      return OJDLocalized.string("compatibility.xbox360HID", fallback: "Xbox 360 HID")
-    case .dualShock4: return OJDLocalized.string("controller.dualShock4", fallback: "DualShock 4")
-    case .dualSense: return OJDLocalized.string("controller.dualSense", fallback: "DualSense")
-    case .switchPro: return OJDLocalized.string("controller.switchPro", fallback: "Switch Pro")
+    default: return source
+    }
+  }
+
+  /// A failed virtual HID profile override request. Says whether the override was stored.
+  static func virtualHIDProfileOverrideFailure(
+    _ failure: VirtualHIDProfileOverrideFailure
+  ) -> String {
+    switch failure {
+    case .unknownProfile:
+      return OJDLocalized.string(
+        "virtualProfile.failure.unknownProfile",
+        fallback: "This virtual HID profile is unknown. Nothing was stored."
+      )
+    case .controllerNotFound:
+      return OJDLocalized.string(
+        "virtualProfile.failure.controllerNotFound",
+        fallback: "The controller disconnected or can't be found. The override is unchanged."
+      )
+    case .overrideRejectedByController:
+      return OJDLocalized.string(
+        "virtualProfile.failure.overrideRejected",
+        fallback:
+          "The override is stored, but this controller can't use it, so it selects automatically."
+      )
+    case .activationFailed(let detail):
+      return OJDLocalized.formatted(
+        "virtualProfile.failure.activationFailed",
+        fallback: "Activation failed, so the previous virtual HID profile was restored: %@",
+        detail
+      )
+    case .outputDisabled:
+      return OJDLocalized.string(
+        "virtualProfile.failure.outputDisabled",
+        fallback: "The override is stored and applies once virtual output is enabled."
+      )
+    case .serverStopped:
+      return OJDLocalized.string(
+        "virtualProfile.failure.serverStopped",
+        fallback: "The service stopped. The override is unchanged."
+      )
+    case .persistenceFailed:
+      return OJDLocalized.string(
+        "virtualProfile.failure.persistenceFailed",
+        fallback: "The override couldn't be saved. Nothing was stored."
+      )
     }
   }
 
@@ -201,107 +247,48 @@ enum RuntimePresentation {
     }
   }
 
-  static func detectedSource(from state: DeviceInputState) -> RemappingSource? {
-    if let sample = state.touchSamples.first(where: { $0.contacts.contains(where: \.isActive) }) {
+  /// Buttons in capture priority order. Guide/Home/logo is reserved for the operating system and
+  /// is intentionally excluded from automatic capture, just like the manual SourceOption catalog.
+  private static let captureButtonOrder: [RemappingButton] = [
+    .leftFunction, .rightFunction, .leftPaddle, .rightPaddle, .leftSL, .leftSR, .rightSL, .rightSR,
+    .leftGrip, .rightGrip, .leftPadClick, .rightPadClick, .south, .east, .west, .north,
+    .leftShoulder, .rightShoulder, .leftStick, .rightStick, .start, .back, .share, .options,
+    .touchpad, .mute, .leftTriggerClick, .rightTriggerClick,
+  ]
+
+  static func detectedSource(
+    from state: ControllerState,
+    labels: ControllerButtonLabels
+  ) -> RemappingSource? {
+    if let sample = state.touch.first(where: { $0.contacts.contains(where: \.isActive) }) {
       return .touchContact(RemappingTouchSurface(sample.surface))
     }
-    let pressed = Set(state.pressedButtons.map(normalizedInputName))
-    var buttons: [(Set<String>, RemappingButton)] = []
-    buttons.append((Set(["leftfunction"]), .leftFunction))
-    buttons.append((Set(["rightfunction"]), .rightFunction))
-    buttons.append((Set(["leftpaddle"]), .leftPaddle))
-    buttons.append((Set(["rightpaddle"]), .rightPaddle))
-    buttons.append((Set(["leftsl"]), .leftSL))
-    buttons.append((Set(["leftsr"]), .leftSR))
-    buttons.append((Set(["rightsl"]), .rightSL))
-    buttons.append((Set(["rightsr"]), .rightSR))
-    buttons.append((Set(["leftgrip"]), .leftGrip))
-    buttons.append((Set(["rightgrip"]), .rightGrip))
-    buttons.append((Set(["leftpadclick"]), .leftPadClick))
-    buttons.append((Set(["rightpadclick"]), .rightPadClick))
-    buttons.append((Set(["a", "cross", "south", "buttona", "buttoncross"]), .south))
-    buttons.append((Set(["b", "circle", "east", "buttonb", "buttoncircle"]), .east))
-    buttons.append((Set(["x", "square", "west", "buttonx", "buttonsquare"]), .west))
-    buttons.append((Set(["y", "triangle", "north", "buttony", "buttontriangle"]), .north))
-    buttons.append((Set(["lb", "l1", "leftshoulder", "leftbumper"]), .leftShoulder))
-    buttons.append((Set(["rb", "r1", "rightshoulder", "rightbumper"]), .rightShoulder))
-    buttons.append((Set(["ls", "l3", "leftstick", "leftstickclick"]), .leftStick))
-    buttons.append((Set(["rs", "r3", "rightstick", "rightstickclick"]), .rightStick))
-    buttons.append((Set(["start", "menu"]), .start))
-    buttons.append((Set(["back", "select", "view"]), .back))
-    // Guide/Home/logo is reserved for the operating system and is intentionally excluded from
-    // automatic capture, just like the manual SourceOption catalog.
-    buttons.append((Set(["share", "create"]), .share))
-    buttons.append((Set(["options", "pause"]), .options))
-    buttons.append((Set(["touchpad", "touchpadclick"]), .touchpad))
-    buttons.append((Set(["mute", "micmute", "microphonemute"]), .mute))
-    buttons.append((Set(["l2digital", "lefttriggerclick"]), .leftTriggerClick))
-    buttons.append((Set(["r2digital", "righttriggerclick"]), .rightTriggerClick))
-    for (aliases, button) in buttons where !pressed.isDisjoint(with: aliases) {
-      return .button(button)
-    }
-
-    var dpad: [(Set<String>, RemappingDpadDirection)] = []
-    dpad.append((Set(["dpadup", "hatup", "up"]), .up))
-    dpad.append((Set(["dpaddown", "hatdown", "down"]), .down))
-    dpad.append((Set(["dpadleft", "hatleft", "left"]), .left))
-    dpad.append((Set(["dpadright", "hatright", "right"]), .right))
-    for (aliases, direction) in dpad where !pressed.isDisjoint(with: aliases) {
-      return .dpad(direction)
-    }
-
-    var axes: [(Double, RemappingAxis)] = []
-    axes.append((Double(state.leftStickX), .leftStickX))
-    axes.append((Double(state.leftStickY), .leftStickY))
-    axes.append((Double(state.rightStickX), .rightStickX))
-    axes.append((Double(state.rightStickY), .rightStickY))
-    axes.append((Double(state.leftTrigger), .leftTrigger))
-    axes.append((Double(state.rightTrigger), .rightTrigger))
-    for (value, axis) in axes {
-      guard value.isFinite, abs(value) >= 0.5 else { continue }
-      let direction: RemappingAxisDirection = value < 0 ? .negative : .positive
-      return .axisDirection(axis, direction)
-    }
-    return nil
+    return detectedButton(pressed: state.pressed, dpad: dpadDirections(state.hat), labels: labels)
+      ?? detectedAxis(in: state)
   }
 
   static func detectedTransition(
-    from previous: DeviceInputState,
-    to current: DeviceInputState
+    from previous: ControllerState,
+    to current: ControllerState,
+    labels: ControllerButtonLabels
   ) -> RemappingSource? {
-    let previousTouches = Set(
-      previous.touchSamples.compactMap { sample in
-        sample.contacts.contains(where: \.isActive) ? RemappingTouchSurface(sample.surface) : nil
-      }
-    )
-    let currentTouches = Set(
-      current.touchSamples.compactMap { sample in
-        sample.contacts.contains(where: \.isActive) ? RemappingTouchSurface(sample.surface) : nil
-      }
-    )
+    let previousTouches = activeTouchSurfaces(previous)
+    let currentTouches = activeTouchSurfaces(current)
     if let surface = RemappingTouchSurface.allCases.first(where: {
       currentTouches.contains($0) && !previousTouches.contains($0)
     }) {
       return .touchContact(surface)
     }
-    let previousButtons = Set(previous.pressedButtons.map(normalizedInputName))
-    let currentButtons = Set(current.pressedButtons.map(normalizedInputName))
-    let newlyPressed = currentButtons.subtracting(previousButtons)
-    if !newlyPressed.isEmpty {
-      var newlyPressedState = current
-      newlyPressedState.pressedButtons = Array(newlyPressed)
-      if let source = detectedSource(from: newlyPressedState) { return source }
+    if let source = detectedButton(
+      pressed: current.pressed.subtracting(previous.pressed),
+      dpad: dpadDirections(current.hat).subtracting(dpadDirections(previous.hat)),
+      labels: labels
+    ) {
+      return source
     }
-
-    var axes: [(Float, Float, RemappingAxis)] = []
-    axes.append((previous.leftStickX, current.leftStickX, .leftStickX))
-    axes.append((previous.leftStickY, current.leftStickY, .leftStickY))
-    axes.append((previous.rightStickX, current.rightStickX, .rightStickX))
-    axes.append((previous.rightStickY, current.rightStickY, .rightStickY))
-    axes.append((previous.leftTrigger, current.leftTrigger, .leftTrigger))
-    axes.append((previous.rightTrigger, current.rightTrigger, .rightTrigger))
-    for (previousValue, currentValue, axis) in axes {
-      guard currentValue.isFinite, previousValue.isFinite else { continue }
+    let previousAxes = axisValues(previous)
+    for (index, (currentValue, axis)) in axisValues(current).enumerated() {
+      let previousValue = previousAxes[index].value
       let crossedActivation = abs(currentValue) >= 0.5 && abs(previousValue) < 0.5
       let changedDirection =
         abs(currentValue) >= 0.5 && abs(previousValue) >= 0.5
@@ -312,8 +299,62 @@ enum RuntimePresentation {
     }
 
     // A source becoming unrecognized or disappearing is a release, not a new assignment.  Only
-    // newly pressed aliases and axis activation/direction transitions above count as input.
+    // newly pressed controls and axis activation/direction transitions above count as input.
     return nil
+  }
+
+  private static func detectedButton(
+    pressed: Set<ControlID>,
+    dpad: Set<RemappingDpadDirection>,
+    labels: ControllerButtonLabels
+  ) -> RemappingSource? {
+    if let button = captureButtonOrder.first(where: { button in
+      button.controlID(labels: labels).map(pressed.contains) ?? false
+    }) {
+      return .button(button)
+    }
+    let order: [RemappingDpadDirection] = [.up, .down, .left, .right]
+    return order.first(where: dpad.contains).map(RemappingSource.dpad)
+  }
+
+  private static func detectedAxis(in state: ControllerState) -> RemappingSource? {
+    for (value, axis) in axisValues(state) where abs(value) >= 0.5 {
+      let direction: RemappingAxisDirection = value < 0 ? .negative : .positive
+      return .axisDirection(axis, direction)
+    }
+    return nil
+  }
+
+  /// Axis values in the remapping frame, where stick Y points down.
+  private static func axisValues(_ state: ControllerState) -> [(value: Float, axis: RemappingAxis)]
+  {
+    [
+      (state.leftStick.x.normalized, .leftStickX), (-state.leftStick.y.normalized, .leftStickY),
+      (state.rightStick.x.normalized, .rightStickX), (-state.rightStick.y.normalized, .rightStickY),
+      (state.leftTrigger.normalized, .leftTrigger), (state.rightTrigger.normalized, .rightTrigger),
+    ]
+  }
+
+  private static func activeTouchSurfaces(_ state: ControllerState) -> Set<RemappingTouchSurface> {
+    Set(
+      state.touch.compactMap { sample in
+        sample.contacts.contains(where: \.isActive) ? RemappingTouchSurface(sample.surface) : nil
+      }
+    )
+  }
+
+  static func dpadDirections(_ hat: HatDirection) -> Set<RemappingDpadDirection> {
+    switch hat {
+    case .neutral: []
+    case .north: [.up]
+    case .northEast: [.up, .right]
+    case .east: [.right]
+    case .southEast: [.down, .right]
+    case .south: [.down]
+    case .southWest: [.down, .left]
+    case .west: [.left]
+    case .northWest: [.up, .left]
+    }
   }
 
 }

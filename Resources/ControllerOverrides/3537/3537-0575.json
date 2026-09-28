@@ -5,7 +5,6 @@
     "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
     "vendorID": 13623,
     "productID": 1397,
-    "transport": "hid",
-    "protocol": { "driver": "GameSir", "variant": "gameSirEnhancedHID" }
+    "protocol": { "family": "vendor.gamesir", "variant": "enhanced-hid", "quirks": ["lighting-slots"] }
   }
 }

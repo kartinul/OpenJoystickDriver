@@ -69,7 +69,6 @@
 "status.checkingControllers" = "Έλεγχος συνδεδεμένων χειριστηρίων…";
 "status.refreshingProfile" = "Ανανέωση κατάστασης προφίλ…";
 "status.loadingProfiles" = "Φόρτωση προφίλ…";
-"status.updatingIdentity" = "Ενημέρωση ταυτότητας χειριστηρίου…";
 "status.listening" = "Ακρόαση…";
 "status.readyToListen" = "Έτοιμο για ακρόαση";
 "status.checkingInput" = "Έλεγχος";
@@ -94,7 +93,6 @@
 "settings.controllerCount" = "Χειριστήρια";
 "settings.controllerDisconnectedNotifications" = "Διακόπωση του ελεγκτή";
 "settings.controllerDisconnectedShort" = "Αποσυνδεδεμένο";
-"settings.controllerIdentity" = "Ταυτότητα χειριστηρίου";
 "settings.controllerNotifications" = "Επαναλαμβάνεται ο ελεγκτής";
 "settings.diagnostics" = "Διαγνωστικά";
 "settings.service" = "Υπηρεσία";
@@ -153,6 +151,7 @@
 "controllers.discharging" = "Εκφόρτιση";
 "controllers.charging" = "Φόρτιση";
 "controllers.batteryFull" = "Πλήρης";
+"controllers.notChargeable" = "Μη επαναφορτιζόμενη";
 "controllers.batteryAccessibilityDetails" = "Μπαταρία: %@. Κατάσταση φόρτισης: %@. Κατάσταση καλωδίου: %@.";
 "controllers.activeProfile" = "Ενεργό προφίλ";
 "controllers.profileChecking" = "Έλεγχος…";
@@ -160,7 +159,6 @@
 "controllers.profileUnavailable" = "Το ενεργό προφίλ δεν είναι διαθέσιμο";
 "controllers.profileLoadError" = "Δεν ήταν δυνατή η φόρτωση του ενεργού προφίλ";
 "controllers.protocol" = "Πρωτόκολλο";
-"controllers.parser" = "Δοκίμαση";
 "controllers.serialNumber" = "Σειριακός αριθμός";
 "controllers.usbIdentifier" = "USB VID/PID";
 "controllers.inputEndpoint" = "Τελικό σημείο εισόδου";
@@ -172,15 +170,25 @@
 "controllers.profileErrorSentence" = "Σφάλμα ενεργού προφίλ: %@";
 "controllers.accessibilityDetails" = "%@. %@. Πρωτόκολλο: %@. Parser: %@. Σειριακός αριθμός: %@. USB VID/PID: %@. Τελικό σημείο εισόδου: %@. Τελικό σημείο εξόδου: %@.";
 "controllers.publishedAs" = "Εκδόθηκε ως";
-"identity.title" = "Ταυτότητα χειριστηρίου";
-"identity.needsAttention" = "Απαιτείται προσοχή";
-"identity.error" = "Σφάλμα ταυτότητας χειριστηρίου";
-"identity.updating" = "Ενημέρωση ταυτότητας χειριστηρίου…";
-"identity.reset" = "Επαναφορά στα προτεινόμενα";
-"identity.checking" = "Έλεγχος";
-"identity.globalScope" = "Εφαρμόζεται σε όλους τους εικονικούς ελεγκτές που δημοσιεύονται από: OpenJoystickDriver.";
-"identity.unavailable" = "Μη διαθέσιμο";
-"identity.notSelected" = "Δεν έχει επιλεγεί";
+"controllers.nativeGamepadNotPublished" = "Εγγενές χειριστήριο macOS, δεν δημοσιεύεται";
+"virtualProfile.advanced" = "Για προχωρημένους";
+"virtualProfile.title" = "Εικονικό προφίλ HID";
+"virtualProfile.modelScope" = "Ισχύει για κάθε συνδεδεμένο χειριστήριο αυτού του μοντέλου.";
+"virtualProfile.sourceOverride" = "Παράκαμψη";
+"virtualProfile.sourceAutomaticAfterRejecting" = "Αυτόματα, η παράκαμψη απορρίφθηκε";
+"virtualProfile.none" = "Κανένα εικονικό προφίλ HID";
+"virtualProfile.unavailable" = "Κανένα εικονικό προφίλ HID δεν μπορεί να αναπαραστήσει αυτό το χειριστήριο.";
+"virtualProfile.updating" = "Ενημέρωση εικονικού προφίλ HID…";
+"virtualProfile.live" = "Ενεργό προφίλ";
+"virtualProfile.failure.unknownProfile" = "Αυτό το εικονικό προφίλ HID είναι άγνωστο. Δεν αποθηκεύτηκε τίποτα.";
+"virtualProfile.failure.controllerNotFound" = "Το χειριστήριο αποσυνδέθηκε ή δεν βρέθηκε. Η παράκαμψη δεν άλλαξε.";
+"virtualProfile.failure.overrideRejected" = "Η παράκαμψη αποθηκεύτηκε, αλλά αυτό το χειριστήριο δεν μπορεί να τη χρησιμοποιήσει, οπότε επιλέγει αυτόματα.";
+"virtualProfile.failure.activationFailed" = "Η ενεργοποίηση απέτυχε, οπότε επαναφέρθηκε το προηγούμενο εικονικό προφίλ HID: %@";
+"virtualProfile.failure.outputDisabled" = "Η παράκαμψη αποθηκεύτηκε και θα εφαρμοστεί μόλις ενεργοποιηθεί η εικονική έξοδος.";
+"virtualProfile.failure.serverStopped" = "Η υπηρεσία σταμάτησε. Η παράκαμψη δεν άλλαξε.";
+"virtualProfile.failure.persistenceFailed" = "Δεν ήταν δυνατή η αποθήκευση της παράκαμψης. Δεν αποθηκεύτηκε τίποτα.";
+"virtualProfile.storeError" = "Δεν είναι δυνατή η ανάγνωση των παρακάμψεων εικονικού προφίλ HID (%@). Τα χειριστήρια επιλέγουν αυτόματα.";
+"virtualProfile.legacyIdentityRejected" = "Η καταργημένη ρύθμιση ταυτότητας χειριστηρίου %@ δεν εφαρμόζεται πλέον. Εκτελέστε controller virtual reset --all για να την απαλείψετε.";
 "keyboard.noKey" = "Δεν έχει επιλεγεί πλήκτρο";
 "keyboard.pressKey" = "Πατήστε ένα πλήκτρο…";
 "keyboard.captureKey" = "Καταγραφή πλήκτρου";
@@ -328,7 +336,6 @@
 "debug.currentStatus" = "Τρέχουσα κατάσταση";
 "debug.runtime" = "Χρόνος εκτέλεσης";
 "debug.controllers" = "Χειριστήρια";
-"debug.controllerIdentity" = "Ταυτότητα χειριστηρίου";
 "debug.unavailable" = "Χρόνος εκτέλεσης · Μη διαθέσιμο";
 "debug.needsAttention" = "Χρόνος εκτέλεσης · Απαιτείται προσοχή";
 "debug.diagnostics" = "Διαγνωστικά";
@@ -352,8 +359,6 @@
 "debug.outputOff" = "Η έξοδος χειριστηρίου είναι απενεργοποιημένη.";
 "debug.outputNeedsAttention" = "Η έξοδος χειριστηρίου απαιτεί προσοχή.";
 "debug.serviceUnavailable" = "Τα διαγνωστικά υπηρεσίας δεν είναι διαθέσιμα αυτή τη στιγμή.";
-"error.selectedOutputUnavailable" = "Η επιλεγμένη έξοδος χειριστηρίου δεν είναι διαθέσιμη.";
-"error.selectedOutputEnableFailed" = "Δεν ήταν δυνατή η ενεργοποίηση της επιλεγμένης εξόδου χειριστηρίου.";
 "error.profileChanged" = "Αυτό το προφίλ άλλαξε αλλού. Επαναφορτώστε ή συνεχίστε την επεξεργασία.";
 "error.duplicateProfile" = "Υπάρχει ήδη προφίλ με αυτό το όνομα.";
 "error.profileMissing" = "Αυτό το προφίλ δεν είναι πλέον διαθέσιμο.";
@@ -443,9 +448,7 @@
 "common.runtime" = "Χρόνος εκτέλεσης";
 "common.controllers" = "Χειριστήρια";
 "common.profiles" = "Προφίλ";
-"common.controllerIdentity" = "Ταυτότητα χειριστηρίου";
 "common.protocol" = "Πρωτόκολλο";
-"common.parser" = "Δοκίμαση";
 "common.serialNumber" = "Σειριακός αριθμός";
 "common.inputEndpoint" = "Τελικό σημείο εισόδου";
 "common.outputEndpoint" = "Τελικό σημείο εξόδου";
@@ -479,7 +482,6 @@
 "error.selectedProfileItemMissing" = "Το επιλεγμένο στοιχείο προφίλ δεν είναι πλέον διαθέσιμο.";
 "cli.catalog.app_ready.summary" = "Έλεγχος ετοιμότητας της πιστοποιημένης υπηρεσίας εφαρμογής";
 "cli.catalog.app_status.summary" = "Εμφάνιση κατάστασης υπηρεσίας εφαρμογής";
-"cli.catalog.compat.summary" = "Διαχείριση συμβατότητας εικονικού χειριστηρίου";
 "cli.catalog.controller_list.summary" = "Λίστα συνδεδεμένων χειριστηρίων";
 "cli.catalog.controller_output.summary" = "Δοκιμή υποστηριζόμενης φυσικής εξόδου χειριστηρίου";
 "cli.catalog.controller_packets.summary" = "Εμφάνιση πρόσφατων πακέτων χειριστηρίου";
@@ -500,11 +502,6 @@
 "cli.catalog.status.summary" = "Εμφάνιση κατάστασης οδηγού και χρόνου εκτέλεσης";
 "cli.catalog.test.summary" = "Δοκιμή παράδοσης εισόδου εικονικού χειριστηρίου";
 "cli.catalog.update.summary" = "Έλεγχος στο GitHub για διαθέσιμες ενημερώσεις";
-"cli.compat.identity" = "ταυτότητα συμβατότητας: %@";
-"cli.compat.identity_unknown" = "ταυτότητα συμβατότητας: άγνωστη";
-"cli.compat.set_failed" = "Αποτυχία ορισμού ταυτότητας συμβατότητας σε %@. Εκκινήστε την εγκατεστημένη εφαρμογή και επαληθεύστε την πρόσβαση Παρακολούθησης εισόδου και Προσβασιμότητας.";
-"cli.compat.usage" = "Χρήση: OpenJoystickDriver --headless compat show\n       OpenJoystickDriver --headless compat set \\\n<generic-hid|sdl2-3|apple-gamecontroller|xbox360-hid>";
-"cli.compat.user_space_status" = "κατάσταση χώρου χρήστη: %@";
 "cli.controller.allAppleEntries" = "Όλες οι ακριβείς καταχωρίσεις καταλόγου Apple:";
 "cli.controller.appleIDs" = "    Apple ID: %@";
 "cli.controller.applePairs" = "  Ζεύγη Apple  : %d ακριβείς καταχωρίσεις VID/PID";
@@ -574,6 +571,14 @@
 "cli.controller.selection.device_missing" = "Κανένα συνδεδεμένο χειριστήριο δεν αντιστοιχεί στο --device %@.";
 "cli.controller.selection.multiple" = "Αντιστοιχούν πολλά χειριστήρια. Επιλέξτε ένα με --device:\n  %@";
 "cli.controller.selection.none" = "Δεν είναι συνδεδεμένο χειριστήριο.";
+"cli.controller.virtual.live" = "Εικονικό προφίλ HID: %@ (%@)";
+"cli.controller.virtual.none" = "Εικονικό προφίλ HID: κανένα (%@)";
+"cli.controller.virtual.failed" = "Το αίτημα εικονικού προφίλ HID απέτυχε: %@";
+"cli.controller.virtual.unknown_profile" = "Άγνωστο εικονικό προφίλ HID «%@». Χρησιμοποιήστε ένα από: %@.";
+"cli.controller.virtual.missing_profile" = "Το «controller virtual set» απαιτεί εικονικό προφίλ HID. Χρησιμοποιήστε ένα από: %@.";
+"cli.controller.virtual.reset_all_with_selector" = "Το «--all» δεν μπορεί να συνδυαστεί με --vid, --pid ή --device.";
+"cli.controller.virtual.reset_all.success" = "OK: διαγράφηκαν όλες οι παρακάμψεις εικονικού προφίλ HID.";
+"cli.controller.virtual.reset_all.failed" = "Αποτυχία επαναφοράς ρυθμίσεων. Εκκινήστε την εγκατεστημένη εφαρμογή και επαληθεύστε τις άδειές της.";
 "cli.controller.selection.vid_pid_missing" = "Κανένα συνδεδεμένο χειριστήριο δεν αντιστοιχεί σε %@:%@.";
 "cli.controller.selection.vid_pid_pair" = "Περάστε και τα δύο VID και PID, ή παραλείψτε και τα δύο.";
 "cli.controller.serviceControllers" = "Χειριστήρια (από την εκτελούμενη υπηρεσία εφαρμογής):";
@@ -587,13 +592,10 @@
 "cli.controller.usbAccessTip" = "Συμβουλή: χορηγήστε το απαιτούμενο δικαίωμα και την πρόσβαση Παρακολούθησης εισόδου.";
 "cli.controller.usbControllers" = "Χειριστήρια USB (class 0xFF / GIP):";
 "cli.controller.vidPidOrSingle" = "Περάστε και τα δύο VID και PID, ή παραλείψτε και τα δύο όταν είναι συνδεδεμένο ένα χειριστήριο.";
-"cli.diagnose.advisory_candidate" = "    Υποψήφιο συμβουλευτικό πρωτόκολλο: %@";
 "cli.diagnose.app_missing" = "  Εφαρμογή: λείπει στο %@";
 "cli.diagnose.app_missing_fix" = "  Διόρθωση: δημιουργήστε + εγκαταστήστε την εφαρμογή στο /Applications";
 "cli.diagnose.app_present" = "  Εφαρμογή: υπάρχει";
 "cli.diagnose.binary_path" = "Δυαδικό: %@";
-"cli.diagnose.catalog_conflict" = "      Η παρατήρηση συγκρούεται με την οικογένεια καταλόγου· ο αναλυτής αμετάβλητος";
-"cli.diagnose.catalog_parser" = "      Ο αναλυτής καταλόγου παραμένει %@ (%@)";
 "cli.diagnose.dext_found" = "  Βρέθηκαν πακέτα .dext:";
 "cli.diagnose.dext_list_item" = "    - %@ (id: %@)";
 "cli.diagnose.endpoint_line" = "      τελικό σημείο 0x%02X %@ %@ MaxPacket=%@ Επατάσταση =%@";
@@ -689,7 +691,7 @@
 "cli.mapping.curve_unknown" = "Άγνωστη καμπύλη απόκρισης «%@».";
 "cli.mapping.double_tap_format" = "Το --double-tap αναμένει <ms>:<target>, π.χ. --double-tap 300:key:c";
 "cli.mapping.error" = "%@";
-"cli.mapping.help" = "Χρήση: OpenJoystickDriver --headless map <command>\n\nΕντολές:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nΠηγή: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nΣτόχος: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nΕπιλογές άξονα:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nΕπιλογές turbo (μόνο κουμπιά πληκτρολογίου και ποντικιού):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nΕπιλογές ενεργοποίησης (μόνο κουμπιά πληκτρολογίου και ποντικιού, αμοιβαία αποκλειόμενες με turbo):\n  --long-hold <ms>:<target>     π.χ. --long-hold 500:key:b\n  --double-tap <ms>:<target>    π.χ. --double-tap 300:key:c\n\nΤο <profile> δέχεται UUID ή ακριβές όνομα προφίλ χωρίς διάκριση πεζών-κεφαλαίων.\nΤο <id> δέχεται δεκαδικό ή δεκαεξαδικό με πρόθεμα 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-virtual-motion true|false\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
+"cli.mapping.help" = "Χρήση: OpenJoystickDriver --headless map <command>\n\nΕντολές:\n  list [--json]\n  show <profile> [--json]\n  create <name> --vid <id> --pid <id> (--target-app <bundle-id> | --global)\n  update <profile> [--name <name>] [--vid <id>] [--pid <id>]\n    [--target-app <bundle-id> | --global]\n  bind <profile> --source <source> --target <target> [binding options]\n  unbind <profile> --source <source>\n  delete <profile>\n  import <file>\n  export <profile> [--output <file>]\n  enable <profile>\n  disable --vid <id> --pid <id> | --profile <uuid-or-name>\n  permission status | request\n  chord add <profile> --sources <s1>,<s2>,… --target <destination>\n    [--mode modifier|simultaneous] [--window-ms <1...1000>]\n  chord delete <profile> --id <chord-id>\n  sequence add <profile> --sources <s1>,<s2>,… --window <ms> --target <destination>\n  sequence delete <profile> --id <sequence-id>\n  layer create <profile> --name <name> --activator <source> --mode hold|toggle\n  layer delete <profile> --id <layer-id>\n  layer bind <profile> --layer <layer-id> --source <s> --target <t> [binding options]\n  layer unbind <profile> --layer <layer-id> --source <s>\n  layer list <profile>\n\nΠηγή: button:<name> | dpad:<direction> | axis:<name>[:negative|positive]\nΣτόχος: key:<key>[:mods=command,control,option,shift] | mouse:<button> |\n  move:x|y | scroll:x|y\n\nΕπιλογές άξονα:\n  --deadzone <0...0.95> --gain <0.1...10>\n  --invert --response-curve <linear|ease_in|ease_out|smooth_step>\n  --digital-threshold <0.01...1>\n\nΕπιλογές turbo (μόνο κουμπιά πληκτρολογίου και ποντικιού):\n  --turbo-rate <1...60> --turbo-duty <0.05...0.95>\n\nΕπιλογές ενεργοποίησης (μόνο κουμπιά πληκτρολογίου και ποντικιού, αμοιβαία αποκλειόμενες με turbo):\n  --long-hold <ms>:<target>     π.χ. --long-hold 500:key:b\n  --double-tap <ms>:<target>    π.χ. --double-tap 300:key:c\n\nΤο <profile> δέχεται UUID ή ακριβές όνομα προφίλ χωρίς διάκριση πεζών-κεφαλαίων.\nΤο <id> δέχεται δεκαδικό ή δεκαεξαδικό με πρόθεμα 0x.\n\nmap update <profile> --virtual-gamepad disabled|mapped|passthrough\nmap update <profile> --physical-input shared|exclusive\ngamepad:button:<name> | gamepad:dpad:<direction> | gamepad:axis:<name>\n--behavior hold|toggle|tap_on_press|tap_on_release|pulse|press|release\n--pulse-ms <1...5000>\n--actions-json <JSON-array>\n\nmap update <profile> --motion-space local|player|world\n--motion-pitch-sensitivity <0...100> --motion-yaw-sensitivity <0...100>\n--motion-invert-pitch true|false --motion-invert-yaw true|false\n--motion-smoothing-half-time-ms <0...1000>\n--motion-threshold-degrees-per-second <0...1000>\n--motion-automatic-bias true|false --motion-yaw-relaxation <0...10>\n--motion-side-reduction-threshold <0...1> --motion-gravity-correction-rate <0...100>\n\nmap calibration status|start|pause|reset --controller <runtime-identifier>\n\n--gyro-output disabled|mouse|left_stick|right_stick\n--gyro-pointer-points-per-degree <0...1000>\n--gyro-full-stick-degrees-per-second <1...10000>\n--gyro-activation always|while_held|while_released|toggle\n--gyro-activation-source <source>\n  --gyro-consume-activation true|false\n  --gyro-trackball-source <source>|none --gyro-trackball-axes pitch|yaw|both\n  --gyro-trackball-decay <halvings/s> --gyro-trackball-consume true|false\n\nStick options (create and update; select one stick per command):\n  --stick-source left|right --stick-mode aim|flick|flick_only|rotate_only|none\n  --stick-inner-deadzone <0...0.95> --stick-outer-deadzone <0...0.95>\n  --stick-response-exponent <0.1...10> --stick-invert-x true|false\n  --stick-invert-y true|false --stick-aim-degrees-per-second <0...10000>\n  --stick-pointer-points-per-degree <0...1000> --stick-flick-duration-ms <0...10000>\n  --stick-flick-threshold <0.1...1> --stick-flick-hysteresis <0...0.5>\n\n\nPaired Joy-Con:\n  map create <name> --vid 0x057e --pid 0x2006 --joy-con-pair-gyro left|right|disabled --global\n  map joy-con pair <profile> --left <runtime-identifier> --right <runtime-identifier>\n  map joy-con unpair --session <session-uuid>";
 "cli.mapping.identifier_invalid" = "Το %@ πρέπει να είναι 16-bit δεκαδικό ή δεκαεξαδικό αναγνωριστικό με πρόθεμα 0x.";
 "cli.mapping.jsonEncodeFailed" = "Αδυναμία κωδικοποίησης UTF-8 JSON.";
 "cli.mapping.layer_action_unknown" = "Άγνωστη ενέργεια επιπέδου «%@». Αναμενόμενο: create | delete | bind | unbind | motion | list";
@@ -759,9 +761,6 @@
 "cli.runtime.not_running" = "Η υπηρεσία εφαρμογής OpenJoystickDriver δεν εκτελείται.";
 "cli.runtime.sample_limit" = "Η διαμόρφωση θα συνέλεγε %d δείγματα· αυξήστε το --interval-ms.";
 "cli.runtime.stable_note" = "Μια σταθερή οριοθετημένη εμβάπτιση είναι τεκμήριο για αυτό το φορτίο εργασίας, όχι απόδειξη ότι απουσιάζουν όλες οι διαρροές.";
-"cli.settings.reset.failed" = "Αποτυχία επαναφοράς ρυθμίσεων. Εκκινήστε την εγκατεστημένη εφαρμογή και επαληθεύστε τις άδειές της.";
-"cli.settings.reset.next" = "Επόμενο: εκτελέστε compat set <identity> για να επιλέξετε την ταυτότητα συμβατότητας.";
-"cli.settings.reset.success" = "OK: επαναφορά ρυθμίσεων υπηρεσίας εφαρμογής.";
 "cli.status.access_denied" = "Αν η πρόσβαση απορριφθεί, εκτελέστε --headless permissions request και εγκρίνετε Παρακολούθηση εισόδου και Προσβασιμότητα στις Ρυθμίσεις συστήματος.";
 "cli.status.heading" = "Κατάσταση OpenJoystickDriver";
 "cli.status.json_error" = "Αδυναμία κωδικοποίησης JSON κατάστασης: %@";
@@ -787,10 +786,6 @@
 "cli.updates.status_none" = "  Κατάσταση    : %@";
 "cli.updates.unknown_option" = "Άγνωστη επιλογή updates: %@";
 "common.unknown" = "Άγνωστο";
-"compatibility.appleGameController" = "Αμπελο GameController";
-"compatibility.genericHID" = "Generic HID";
-"compatibility.sdl2_3" = "SDL2/3";
-"compatibility.xbox360HID" = "Xbox 360 HID";
 "controller.dualSense" = "DualSense";
 "controller.dualShock3" = "DualShock 3";
 "controller.dualShock4" = "DualShock 4";
@@ -804,7 +799,6 @@
 "controller.xbox360" = "Xbox 360";
 "controller.xbox360Wireless" = "Xbox 360 wireless";
 "controller.xbox360WirelessDeveloper" = "Xbox 360 Wireless";
-"controller.xboxAdaptiveJoystick" = "Xbox Adaptive Joystick";
 "controller.xboxOne" = "Xbox One";
 "controller.xboxOriginal" = "Xbox (αρχικό)";
 "developer.buttons" = "Κουμπιά";
@@ -857,10 +851,8 @@
 "inputTest.bButton" = "Κουμπί B";
 "inputTest.bCircle" = "Β / Κύκλος";
 "inputTest.brightness" = "Φωτεινότητα";
-"inputTest.circle" = "Κύκλος";
 "inputTest.color" = "Χρώμα";
 "inputTest.controls" = "Ζωντανή είσοδος";
-"inputTest.cross" = "Σταυρός";
 "inputTest.disconnected" = "Διακόπωση του ελεγκτή";
 "inputTest.dpadDown" = "D-pad κάτω";
 "inputTest.dpadLeft" = "D-pad αριστερά";
@@ -884,17 +876,13 @@
 "inputTest.lightingUnavailable" = "Δεν υπάρχουν ελεγχόμενα συστήματα φωτισμού για αυτό το ελεγκτή.";
 "inputTest.live" = "Ενεργή εισόδου";
 "inputTest.menu" = "Μενού";
-"inputTest.minus" = "Μείον";
 "inputTest.off" = "Ανενεργό";
 "inputTest.open" = "Open Input Test…";
-"inputTest.options" = "Επιλογές";
 "inputTest.outputError" = "Φυσικό σφάλμα εξόδου";
 "inputTest.outputRejected" = "Ο ελεγκτής απέρριψε αυτή την δοκιμή εξόδου.";
 "inputTest.permissionRequired" = "Εισαγωγή Απαιτείται άδεια παρακολούθησης";
 "inputTest.playerIndicator" = "Δείκτης παίκτη";
-"inputTest.plus" = "Συν";
 "inputTest.pressed" = "Πατημένο";
-"inputTest.psButton" = "Κουμπί PS";
 "inputTest.released" = "Αφημένο";
 "inputTest.rightBumper" = "Δεξιό bumper";
 "inputTest.rightBumperGeneric" = "RB / R1";
@@ -908,8 +896,6 @@
 "inputTest.rightY" = "Δεξιό Y";
 "inputTest.rumble" = "Ράμμπερ";
 "inputTest.rumbleUnavailable" = "Το Rumble δεν υποστηρίζεται από αυτό το ελεγκτικό.";
-"inputTest.share" = "Κοινή χρήση";
-"inputTest.square" = "Τετράγωνο";
 "inputTest.stale" = "Διακόπηση εισόδου";
 "inputTest.start" = "Ξεκινήστε την δοκιμή εισόδου";
 "inputTest.starting" = "Starting…";
@@ -917,11 +903,9 @@
 "inputTest.tabInput" = "Ζωντανή είσοδος";
 "inputTest.tabMotion" = "Προτάσεις";
 "inputTest.tabOutput" = "Ενεργειακή απόδοση";
-"inputTest.steamButton" = "Κουμπί Steam";
 "inputTest.summary" = "Δοκιμάστε κουμπιά, μπαστούνια, πυροδοτήματα, θορύβωμα και φωτισμό του ελεγκτή.";
 "inputTest.testRumble" = "Τεστ Ράμμπλ";
 "inputTest.title" = "Δοκιμή εισόδου";
-"inputTest.triangle" = "Τρίγωνο";
 "inputTest.unavailable" = "Εισαγωγή διαλειτουργική";
 "inputTest.view" = "Προβολή";
 "inputTest.windowTitle" = "Δοκιμή εισόδου %@";
@@ -1199,7 +1183,6 @@
 "error.joyConPairUnavailable" = "Δεν μπορούσαν να συνδυαστούν τα Joy-Cons.";
 "profiles.joyConExplicitSession" = "Ξεκίνησε με μια ρητή συνεδρία ζευγάρι";
 "profiles.joyConSessionState" = "Επικρατεινό ζευγάρι";
-"profiles.gyro.virtualMotion" = "Προηγούμενη κλιβρωμένη εικονική κίνηση";
 
 /* Mapping-owned physical controller output. Translation review pending. */
 "mapping.physicalRumble" = "%@ βήμα (%@%%)";
@@ -1247,10 +1230,11 @@
 "controllers.disconnectSummary" = "Διακόπωση του ελεγκτή";
 "controllers.resume" = "Δοκιμάστε ξανά";
 "controllers.disconnectFromOJD" = "Διακόπωση του ελεγκτή";
-"error.compatibilityTransitionDetailed" = "Δεν ήταν δυνατή η ενεργοποίηση της επιλεγμένης εξόδου χειριστηρίου. (%@, %@)";
 "error.controllerSessionChangeRejected" = "Δεν ήταν δυνατή η ενεργοποίηση της επιλεγμένης εξόδου χειριστηρίου.";
 "cli.catalog.controller_disconnect.summary" = "Διακόπωση του ελεγκτή";
 "cli.catalog.controller_resume.summary" = "Δοκιμάστε ξανά — Διακόπωση του ελεγκτή";
+"cli.catalog.controller_virtual_set.summary" = "Παράκαμψη του εικονικού προφίλ HID ενός χειριστηρίου";
+"cli.catalog.controller_virtual_reset.summary" = "Αυτόματη επιλογή του εικονικού προφίλ HID ενός χειριστηρίου, ή διαγραφή όλων των παρακάμψεων με --all";
 "cli.controller.disconnected" = "Διακόπωση του ελεγκτή";
 "cli.controller.resumed" = "Ενεργή εισόδου";
 

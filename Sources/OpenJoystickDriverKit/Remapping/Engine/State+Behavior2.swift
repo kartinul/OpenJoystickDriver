@@ -39,7 +39,6 @@ extension RemappingEngineState {
     guard previousLayers != device.activeLayers else { return [] }
     if previousTuning != device.effectiveMotionTuning {
       actions += device.clearGyroStick()
-      actions += device.clearVirtualMotion()
       actions += device.clearMotionSteering()
       device.motionStickDeadline = nil
       for direction in device.activeMotionLeans {

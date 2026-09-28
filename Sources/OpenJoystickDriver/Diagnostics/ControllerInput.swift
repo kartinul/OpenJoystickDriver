@@ -15,12 +15,12 @@ actor ControllerInputDiagnosticService {
     try await client.getStatus().connectedDevices
   }
 
-  func deviceInputState(
+  func controllerState(
     vendorID: UInt16,
     productID: UInt16,
     runtimeIdentifier: String? = nil
-  ) async throws -> DeviceInputState? {
-    try await client.deviceInputState(
+  ) async throws -> ControllerState? {
+    try await client.controllerState(
       vendorID: vendorID,
       productID: productID,
       runtimeIdentifier: runtimeIdentifier

@@ -16,7 +16,10 @@ private final class ExposureBackendProbe: CompatibilityUserSpaceOutputDispatchin
 
   func activate(for identifiers: [DeviceIdentifier]) { activations.append(identifiers) }
   func activate(controller identifier: DeviceIdentifier) { activations.append([identifier]) }
-  func dispatch(events _: [ControllerEvent], from _: DeviceIdentifier) { dispatches += 1 }
+  func dispatch(_: ControllerEvent, labels _: ControllerButtonLabels, from _: DeviceIdentifier) {
+    dispatches += 1
+  }
+  func activateOutput(for _: DeviceIdentifier) { dispatches += 1 }
   func controllerDidStop(_: DeviceIdentifier) { stops += 1 }
   func close() { closes += 1 }
 }
@@ -33,116 +36,31 @@ struct CompatibilityExposureRuntimeTests {
   private func gipDescription() -> ApplicationServiceDeviceDescription {
     ApplicationServiceDeviceDescription(
       name: "GIP",
-      vendorID: identifier.vendorID,
-      productID: identifier.productID,
-      parser: "GIP",
+      vendorID: identifier.controllerIdentity.vendorID,
+      productID: identifier.controllerIdentity.productID,
+      protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
       serialNumber: nil,
-      protocolVariant: .xboxOne,
       runtimeIdentifier: identifier.runtimeIdentifier
     )
   }
 
-  private func makeAdapter(
-    identity: CompatibilityIdentity,
-    state: ExposureState,
-    backend: ExposureBackendProbe = ExposureBackendProbe()
-  ) -> (CompatibilityUserSpaceOutputDispatchingAdapter, ExposureBackendProbe) {
-    let manager = DeviceManager(dispatcher: LoggingOutputDispatcher())
-    let adapter = CompatibilityUserSpaceOutputDispatchingAdapter(
-      backend: backend,
-      deviceManager: manager,
-      identity: identity,
-      descriptionsProvider: { state.descriptions },
-      ownershipProvider: { _ in state.ownership }
-    )
-    return (adapter, backend)
-  }
-
   @Test
-  func explicitAppleIdentityPublishesForRawUSBGIP() async throws {
-    let state = ExposureState()
-    state.descriptions = [gipDescription()]
-    let (adapter, backend) = makeAdapter(identity: .appleGameController, state: state)
-
-    try await adapter.activate(controller: identifier)
-    await adapter.dispatch(events: [], from: identifier)
-
-    #expect(backend.activations == [[identifier]])
-    #expect(backend.dispatches == 1)
-  }
-
-  @Test
-  func explicitActivationAndLazyDispatchRejectUnavailableProfile() async throws {
-    let state = ExposureState()
-    state.descriptions = [gipDescription()]
-    let (adapter, backend) = makeAdapter(identity: .xbox360HID, state: state)
-
-    try await adapter.activate(controller: identifier)
-    await adapter.dispatch(events: [], from: identifier)
-    #expect(backend.activations.isEmpty)
-    #expect(backend.dispatches == 0)
-
-  }
-
-  @Test
-  func explicitActivationAndLazyDispatchRejectMissingDevice() async throws {
-    let state = ExposureState()
-    let (adapter, backend) = makeAdapter(identity: .appleGameController, state: state)
-    try await adapter.activate(controller: identifier)
-    await adapter.dispatch(events: [], from: identifier)
-    #expect(backend.activations.isEmpty)
-    #expect(backend.dispatches == 0)
-  }
-
-  @Test
-  func explicitIdentityContinuesPublishingWhenOwnershipIsUnknown() async throws {
-    let state = ExposureState()
-    state.descriptions = [gipDescription()]
-    state.ownership = .unknown
-    let (adapter, backend) = makeAdapter(identity: .appleGameController, state: state)
-
-    try await adapter.activate(controller: identifier)
-    await adapter.dispatch(events: [], from: identifier)
-
-    #expect(backend.activations == [[identifier]])
-    #expect(backend.dispatches == 1)
-  }
-
-  @Test
-  func suppressionAndCloseForwardThroughAdapter() async {
-    let state = ExposureState()
-    state.descriptions = [gipDescription()]
-    let (adapter, backend) = makeAdapter(identity: .appleGameController, state: state)
-
-    await adapter.setOutputSuppressed(true)
-    await adapter.controllerDidStop(identifier)
-    await adapter.close()
-
-    #expect(backend.suppressOutput)
-    #expect(backend.stops == 1)
-    #expect(backend.closes == 1)
-  }
-
-  @Test
-  func automaticResolvedIdentityUsesTheSameEligibilityGate() async {
+  func automaticSelectedProfileUsesTheSameEligibilityGate() async {
     let state = ExposureState()
     state.descriptions = [gipDescription()]
     let backend = ExposureBackendProbe()
     let dispatcher = AutomaticUserSpaceOutputDispatcher(
       deviceManager: DeviceManager(dispatcher: LoggingOutputDispatcher()),
       ownershipProvider: { _ in state.ownership },
-      consumerProvider: { .appleGameController },
       builder: { _ in backend },
-      observeConsumerChanges: false,
-      descriptionsProvider: { state.descriptions },
-      identityProvider: { _, _ in .appleGameController }
+      descriptionsProvider: { state.descriptions }
     )
 
-    await dispatcher.dispatch(events: [], from: identifier)
+    await dispatcher.activateOutput(for: identifier)
     #expect(backend.dispatches == 1)
     state.ownership = .unknown
-    await dispatcher.dispatch(events: [], from: identifier)
+    await dispatcher.activateOutput(for: identifier)
     #expect(backend.dispatches == 2)
     await dispatcher.close()
   }

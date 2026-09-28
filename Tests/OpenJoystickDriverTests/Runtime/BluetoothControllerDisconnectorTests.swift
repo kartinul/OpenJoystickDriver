@@ -24,20 +24,20 @@ struct BluetoothControllerDisconnectorTests {
 
   @Test
   func timeoutReturnsBeforeALateCloseCompletes() async {
+    let releaseClose = DispatchSemaphore(value: 0)
     let disconnector = BluetoothControllerDisconnector { _, _ in
-      Thread.sleep(forTimeInterval: 0.2)
+      releaseClose.wait()
       return .init(status: kIOReturnSuccess, isConnected: false)
     }
-    let startedAt = DispatchTime.now().uptimeNanoseconds
 
     let result = await disconnector.disconnect(
       address: "AA:BB:CC:DD:EE:FF",
       timeoutNanoseconds: 10_000_000
     )
 
+    // The close is still blocked here, so only the timeout can have produced the result.
     #expect(result == .timedOut)
-    #expect(DispatchTime.now().uptimeNanoseconds - startedAt < 150_000_000)
-    try? await Task.sleep(nanoseconds: 220_000_000)
+    releaseClose.signal()
   }
 
   @Test

@@ -14,7 +14,7 @@ struct RemappingMonotonicTimeTests {
         turbo: RemappingTurbo(repeatRateHz: 10, dutyCycle: 0.5)
       )
     )
-    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 0)
+    _ = state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 0)
     #expect(state.tick(at: 60_000_000) == [.system(.keyUp(.a))])
     #expect(state.tick(at: 10_000_000).isEmpty)
     #expect(
@@ -22,7 +22,7 @@ struct RemappingMonotonicTimeTests {
     )
     #expect(
       state.process(
-        events: [.buttonReleased(.a)],
+        inputs: [.release(.faceSouth)],
         from: identifier,
         profile: profile,
         at: 5_000_000
@@ -36,19 +36,19 @@ struct RemappingMonotonicTimeTests {
     var state = RemappingEngineState()
     let profile = pulseProfile(key: .a)
     _ = state.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: identifier,
       profile: profile,
       at: 100_000_000
     )
     _ = state.process(
-      events: [.buttonReleased(.a)],
+      inputs: [.release(.faceSouth)],
       from: identifier,
       profile: profile,
       at: 110_000_000
     )
     _ = state.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: identifier,
       profile: profile,
       at: 50_000_000
@@ -62,13 +62,13 @@ struct RemappingMonotonicTimeTests {
     var state = RemappingEngineState()
     let other = DeviceIdentifier(vendorID: 1, productID: 2, locationID: 2)
     _ = state.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: identifier,
       profile: pulseProfile(key: .a),
       at: 100_000_000
     )
     _ = state.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: other,
       profile: pulseProfile(key: .b),
       at: 0
@@ -86,9 +86,9 @@ struct RemappingMonotonicTimeTests {
         destination: .keyboard(key: .a, modifiers: [])
       )
     )
-    _ = state.process(events: [.buttonPressed(.a)], from: identifier, profile: profile, at: 100)
+    _ = state.process(inputs: [.press(.faceSouth)], from: identifier, profile: profile, at: 100)
     #expect(
-      state.process(events: [.buttonReleased(.a)], from: identifier, profile: profile, at: 0) == [
+      state.process(inputs: [.release(.faceSouth)], from: identifier, profile: profile, at: 0) == [
         .system(.keyUp(.a))
       ]
     )

@@ -9,7 +9,7 @@ struct PhysicalOutputValidationPlanTests {
       name: "Secret Controller Name",
       vendorID: 1234,
       productID: 5678,
-      parser: "GIP",
+      protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
       serialNumber: "SERIAL-SECRET",
       physicalOutputCapabilities: PhysicalControllerOutputCapabilities(
@@ -38,14 +38,14 @@ struct PhysicalOutputValidationPlanTests {
     let haptics = PhysicalOutputValidationPlan(
       vendorID: 10,
       productID: 20,
-      parser: "Steam",
+      protocolBinding: ProtocolBindingID(.valveSteamController, variant: .wired),
       capabilities: PhysicalControllerOutputCapabilities(rumbleMotors: [.leftHaptic, .rightHaptic])
     )
     #expect(haptics.steps.map(\.id) == ["left-haptic", "right-haptic"])
     let unavailable = PhysicalOutputValidationPlan(
       vendorID: 10,
       productID: 21,
-      parser: "Unknown",
+      protocolBinding: ProtocolBindingID(.hidDescriptor),
       capabilities: PhysicalControllerOutputCapabilities()
     )
     #expect(unavailable.steps.isEmpty)

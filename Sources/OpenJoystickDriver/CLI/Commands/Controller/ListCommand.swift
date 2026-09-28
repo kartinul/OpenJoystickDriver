@@ -96,10 +96,13 @@ struct ListCommand {
       let vid = String(format: "%04X", device.vendorID)
       let pid = String(format: "%04X", device.productID)
       let quirks = device.quirks.isEmpty ? "none" : device.quirks.joined(separator: ",")
+      let endpoints =
+        if let input = device.inputEndpoint, let output = device.outputEndpoint {
+          "in:0x\(input) out:0x\(output)"
+        } else { "none" }
       print(
         "  VID=0x\(vid)" + " PID=0x\(pid)" + " bus=\(device.bus)" + " addr=\(device.address)"
-          + " parser=\(device.parser)" + " protocol=\(device.protocolVariant)"
-          + " endpoints=in:0x\(device.inputEndpoint)" + " out:0x\(device.outputEndpoint)"
+          + " protocol=\(device.protocolBinding?.rawValue ?? "none")" + " endpoints=\(endpoints)"
           + " quirks=\(quirks)"
       )
     }

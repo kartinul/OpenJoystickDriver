@@ -2,12 +2,6 @@ import Testing
 
 @testable import OpenJoystickDriverKit
 
-private enum CompatibilitySpecialControl: CaseIterable {
-  case share
-  case touchpad
-  case mute
-}
-
 struct UserSpaceInputReportStateTests {
   @Test
   func currentInputReportTracksChangesForHostGetReportRequests() throws {
@@ -32,12 +26,8 @@ struct UserSpaceInputReportStateTests {
   }
 
   @Test
-  func seriesIdleReportMatchesInterruptGetReportLayout() throws {
-    let format = try HIDDescriptorReportFormat(
-      descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
-      buttonUsageMap: XboxOneBluetoothHIDDescriptor.buttonUsageMap,
-      digitalUsageMap: XboxOneBluetoothHIDDescriptor.seriesDigitalUsageMap
-    )
+  func xboxOneSIdleReportMatchesInterruptGetReportLayout() throws {
+    let format = try XboxGeckoHIDReportFormat()
     let report = UserSpaceInputReportState(format: format).currentReport()
     #expect(report.count == 17)
     #expect(report[0] == 1)
@@ -67,72 +57,60 @@ struct UserSpaceInputReportStateTests {
   }
 
   @Test
-  func appleCompatibilityTracksShareSeparatelyFromView() throws {
-    let format = try HIDDescriptorReportFormat(
-      descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
-      buttonUsageMap: XboxOneBluetoothHIDDescriptor.buttonUsageMap,
-      digitalUsageMap: XboxOneBluetoothHIDDescriptor.seriesDigitalUsageMap
-    )
+  func xboxOneSNeverSetsShareAndKeepsViewOnItsButton() throws {
+    let format = try XboxGeckoHIDReportFormat()
     let state = UserSpaceInputReportState(format: format)
     let neutral = state.currentReport()
 
     let share = state.update { $0.buttons = 1 << GamepadHIDDescriptor.ButtonBit.share.rawValue }
     let view = state.update { $0.buttons = 1 << GamepadHIDDescriptor.ButtonBit.back.rawValue }
 
-    #expect(share[14] == 0)
-    #expect(share[16] == 1)
+    #expect(share == neutral)
     #expect(view[14] == 0x40)
     #expect(view[16] == 0)
     #expect(state.update { $0 = VirtualGamepadState() } == neutral)
   }
 
   @Test
-  func everyCompatibilityFormatPreservesCompoundStateAcrossUpdatesAndRelease() throws {
-    let identities: [CompatibilityIdentity] = [
-      .automatic, .genericHID, .sdl2_3, .appleGameController, .xbox360HID, .dualShock4, .dualSense,
-      .switchPro,
-    ]
-    for identity in identities {
-      let format = try CompatibilityOutputCompositionFactory.make(identity: identity).format
+  func everyVirtualHIDProfileFormatPreservesCompoundStateAcrossUpdatesAndRelease() throws {
+    for profile in VirtualHIDProfileID.allCases {
+      let format = try profile.makeProfile().reportFormat
       let reportState = UserSpaceInputReportState(format: format)
       let neutral = reportState.currentReport()
       var expected = compoundState()
 
       let active = reportState.update { $0 = expected }
-      #expect(active == format.buildInputReport(from: expected), "\(identity)")
-      #expect(active != neutral, "\(identity)")
+      #expect(active == format.buildInputReport(from: expected), "\(profile)")
+      #expect(active != neutral, "\(profile)")
 
       expected.rightStickX = 12_345
       let updated = reportState.update { $0.rightStickX = expected.rightStickX }
-      #expect(updated == format.buildInputReport(from: expected), "\(identity)")
+      #expect(updated == format.buildInputReport(from: expected), "\(profile)")
 
       let released = reportState.update { $0 = VirtualGamepadState() }
-      #expect(released == neutral, "\(identity)")
+      #expect(released == neutral, "\(profile)")
     }
   }
 
   @Test
-  func compatibilityFormatsExplicitlyClassifySpecialControlSupport() throws {
-    let supported: [CompatibilityIdentity: Set<CompatibilitySpecialControl>] = [
-      .automatic: [.share], .genericHID: [.share], .sdl2_3: [], .appleGameController: [.share],
-      .xbox360HID: [], .dualShock4: [.share, .touchpad], .dualSense: [.share, .touchpad, .mute],
-      .switchPro: [.share],
+  func everyVirtualHIDProfileFormatExplicitlyClassifiesSpecialControlSupport() throws {
+    let supported: [VirtualHIDProfileID: Set<SpecialControl>] = [
+      .xboxOneSBluetooth: [], .generic: [.share],
     ]
-    #expect(Set(supported.keys) == Set(CompatibilityIdentity.allCases))
+    #expect(Set(supported.keys) == Set(VirtualHIDProfileID.allCases))
 
-    for (identity, supportedControls) in supported {
-      let format = try CompatibilityOutputCompositionFactory.make(identity: identity).format
+    for profile in VirtualHIDProfileID.allCases {
+      let format = try profile.makeProfile().reportFormat
       let neutral = format.buildInputReport(from: VirtualGamepadState())
-      for control in CompatibilitySpecialControl.allCases {
+      let supportedControls = supported[profile] ?? []
+      for control in SpecialControl.allCases {
         var state = VirtualGamepadState()
         switch control {
         case .share: state.buttons = 1 << GamepadHIDDescriptor.ButtonBit.share.rawValue
-        case .touchpad: state.touchpadPressed = true
-        case .mute: state.mutePressed = true
         }
         #expect(
           (format.buildInputReport(from: state) != neutral) == supportedControls.contains(control),
-          "\(identity) \(control)"
+          "\(profile) \(control)"
         )
       }
     }
@@ -149,9 +127,10 @@ struct UserSpaceInputReportStateTests {
       rightTrigger: 12_000,
       leftTriggerPressed: true,
       rightTriggerPressed: true,
-      touchpadPressed: true,
-      mutePressed: true,
       hat: .southWest
     )
   }
 }
+
+/// A control that only some virtual HID report formats carry.
+private enum SpecialControl: CaseIterable { case share }

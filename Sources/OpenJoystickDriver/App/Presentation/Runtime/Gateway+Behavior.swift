@@ -27,9 +27,9 @@ extension ApplicationServiceClientGateway {
     return try await client.requestAccess(requirement)
   }
 
-  func deviceInputState(for selector: RuntimeDeviceSelector) async throws -> DeviceInputState? {
+  func controllerState(for selector: RuntimeDeviceSelector) async throws -> ControllerState? {
     await ensureConnection()
-    return try await client.deviceInputState(
+    return try await client.controllerState(
       vendorID: selector.vendorID,
       productID: selector.productID,
       runtimeIdentifier: selector.runtimeIdentifier
@@ -147,25 +147,28 @@ extension ApplicationServiceClientGateway {
     return try await client.unpairRemappingJoyCons(sessionID: sessionID)
   }
 
-  func compatibilityIdentity() async throws -> CompatibilityIdentity {
+  func setVirtualHIDProfileOverride(
+    _ profile: VirtualHIDProfileID,
+    for selector: RuntimeDeviceSelector
+  ) async throws -> VirtualHIDProfileOverrideResult {
     await ensureConnection()
-    let rawValue = try await client.getCompatibilityIdentity()
-    guard let identity = CompatibilityIdentity(rawValue: rawValue) else {
-      throw ApplicationServiceGatewayError.invalidCompatibilityIdentity(rawValue)
-    }
-    return identity
+    return try await client.setVirtualHIDProfileOverride(
+      profile.rawValue,
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier
+    )
   }
 
-  func setCompatibilityIdentity(_ identity: CompatibilityIdentity) async throws -> Bool {
+  func resetVirtualHIDProfileOverride(
+    for selector: RuntimeDeviceSelector
+  ) async throws -> VirtualHIDProfileOverrideResult {
     await ensureConnection()
-    return try await client.setCompatibilityIdentity(identity.rawValue)
-  }
-
-  func setCompatibilityIdentityDetailed(
-    _ identity: CompatibilityIdentity
-  ) async throws -> CompatibilityIdentityTransitionResult {
-    await ensureConnection()
-    return try await client.setCompatibilityIdentityDetailed(identity.rawValue)
+    return try await client.resetVirtualHIDProfileOverride(
+      vendorID: selector.vendorID,
+      productID: selector.productID,
+      runtimeIdentifier: selector.runtimeIdentifier
+    )
   }
 
   func suspendController(_ selector: RuntimeDeviceSelector) async throws -> ControllerSuspendResult

@@ -71,7 +71,7 @@
       device?.physicalOutputCapabilities ?? .none
     }
 
-    var latestInput: DeviceInputState { liveState.snapshot }
+    var latestInput: ControllerState { liveState.snapshot }
 
     var isSampling: Bool { samplingTask != nil }
 
@@ -95,7 +95,9 @@
       cancelOutput(stopSelector: oldSelector)
       device = selectedDevice
       isDeviceConnected = true
-      liveState.reset(vendorID: selectedDevice.vendorID, productID: selectedDevice.productID)
+      liveState.reset(
+        labels: ControllerButtonLabels(protocolID: selectedDevice.protocolBinding.protocolID)
+      )
       rumbleIntensities = Dictionary(
         uniqueKeysWithValues: selectedDevice.physicalOutputCapabilities.rumbleMotors.map {
           ($0, 0.0)
@@ -168,15 +170,18 @@
       let selector = RuntimeDeviceSelector(device: device)
       let duration = max(100, min(2_000, Int(rumbleDurationMilliseconds.rounded())))
       beginOutputOperation(.rumble, selector: selector) { [gateway, rumbleSleep] in
-        let sent = try await gateway.sendRumble(
-          for: selector,
-          left: command.left,
-          right: command.right,
-          leftTrigger: command.leftTrigger,
-          rightTrigger: command.rightTrigger,
-          durationMilliseconds: duration
+        let intensities = RumbleIntensities(
+          leftMain: UnipolarValue(byte: command.left),
+          rightMain: UnipolarValue(byte: command.right),
+          leftTrigger: UnipolarValue(byte: command.leftTrigger),
+          rightTrigger: UnipolarValue(byte: command.rightTrigger)
+        ).mirroringMainOntoHaptics()
+        // The daemon stops the rumble when the duration ends; the wait keeps the test running.
+        let result = try await gateway.sendControllerOutput(
+          .setRumble(intensities, duration: .milliseconds(duration)),
+          for: selector
         )
-        guard sent else { return false }
+        guard result.isDelivered else { return false }
         try await rumbleSleep(UInt64(duration) * 1_000_000)
         return true
       }
@@ -192,7 +197,8 @@
       let selector = RuntimeDeviceSelector(device: device)
       let indicator = playerIndicator
       beginOutputOperation(.playerIndicator, selector: selector) { [gateway] in
-        try await gateway.setPlayerIndicator(for: selector, indicator: indicator)
+        try await gateway.sendControllerOutput(.setPlayerIndicator(indicator), for: selector)
+          .isDelivered
       }
     }
 
@@ -219,7 +225,10 @@
       let selector = RuntimeDeviceSelector(device: device)
       let value = Self.byte(brightness)
       beginOutputOperation(.brightness, selector: selector) { [gateway] in
-        try await gateway.setBrightness(for: selector, brightness: value)
+        try await gateway.sendControllerOutput(
+          .setLightBrightness(UnipolarValue(byte: value)),
+          for: selector
+        ).isDelivered
       }
     }
 
@@ -228,7 +237,7 @@
       var consecutiveFailures = 0
       while !Task.isCancelled, generation == samplingGeneration {
         do {
-          let snapshot = try await gateway.inputState(for: selector)
+          let snapshot = try await gateway.controllerState(for: selector)
           try Task.checkCancellation()
           guard generation == samplingGeneration else { return }
           if let snapshot {
@@ -283,14 +292,7 @@
         do {
           await previousTask?.value
           if shouldStopPreviousRumble, let previousSelector {
-            _ = try? await gateway.sendRumble(
-              for: previousSelector,
-              left: 0,
-              right: 0,
-              leftTrigger: 0,
-              rightTrigger: 0,
-              durationMilliseconds: 0
-            )
+            _ = try? await gateway.sendControllerOutput(.stopRumble, for: previousSelector)
           }
           try Task.checkCancellation()
           let succeeded = try await body()
@@ -340,14 +342,7 @@
       outputTask = Task { [gateway] in
         await previousTask?.value
         if shouldStopRumble, let activeSelector {
-          _ = try? await gateway.sendRumble(
-            for: activeSelector,
-            left: 0,
-            right: 0,
-            leftTrigger: 0,
-            rightTrigger: 0,
-            durationMilliseconds: 0
-          )
+          _ = try? await gateway.sendControllerOutput(.stopRumble, for: activeSelector)
         }
         if let previewSelector {
           _ = try? await gateway.releaseColorPreview(for: previewSelector, token: colorPreviewToken)

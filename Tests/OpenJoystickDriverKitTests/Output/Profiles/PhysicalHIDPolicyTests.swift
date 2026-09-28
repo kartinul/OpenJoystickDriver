@@ -1,5 +1,6 @@
 import Dispatch
 import Foundation
+import IOKit
 import Testing
 
 @testable import OpenJoystickDriverKit
@@ -59,6 +60,45 @@ struct PhysicalHIDPolicyTests {
     #expect(adapter.updateOwnership(.exclusive, deviceID: 1) == false)
     #expect(adapter.ownership(locationID: 77) == .unknown)
     #expect(adapter.acceptsFeedback(locationID: 77) == false)
+  }
+
+  @Test
+  func secondDeviceObjectForTheSameServiceIsNotAdmitted() {
+    // IOHIDManager creates one device object per matching dictionary a service satisfies, e.g. a
+    // DualShock 4 that matches both the GamePad usage and its profile VID/PID.
+    let adapter = SynchronizedPhysicalHIDBackendEventAdapter()
+    #expect(adapter.add(deviceID: 1, locationID: 77, syntheticProperty: false, serviceID: 900))
+    #expect(
+      adapter.add(deviceID: 2, locationID: 77, syntheticProperty: false, serviceID: 900) == false
+    )
+    #expect(adapter.acceptsInput(deviceID: 1))
+    #expect(adapter.acceptsInput(deviceID: 2) == false)
+    #expect(adapter.add(deviceID: 3, locationID: 77, syntheticProperty: false, serviceID: 901))
+
+    let duplicateRemoval = adapter.remove(deviceID: 2)
+    #expect(duplicateRemoval.wasTracked == false)
+    #expect(adapter.acceptsInput(deviceID: 1))
+
+    #expect(adapter.remove(deviceID: 1).shouldEmitDisconnect == false)
+    #expect(adapter.add(deviceID: 4, locationID: 77, syntheticProperty: false, serviceID: 900))
+    adapter.reset()
+    #expect(adapter.add(deviceID: 5, locationID: 77, syntheticProperty: false, serviceID: 901))
+  }
+
+  @Test
+  func onlyDeniedInitialOpensEndTheHIDStream() {
+    func failureCode(_ result: IOReturn) -> IOReturn? {
+      guard
+        case .accessFailure(.ioReturn(let code)) = HIDDeviceStream.accessFailure(
+          forInitialOpenResult: result
+        )
+      else { return nil }
+      return code
+    }
+    #expect(failureCode(kIOReturnNotPermitted) == kIOReturnNotPermitted)
+    #expect(failureCode(kIOReturnNotPrivileged) == kIOReturnNotPrivileged)
+    #expect(HIDDeviceStream.accessFailure(forInitialOpenResult: kIOReturnSuccess) == nil)
+    #expect(HIDDeviceStream.accessFailure(forInitialOpenResult: kIOReturnExclusiveAccess) == nil)
   }
 
   @Test
@@ -205,12 +245,11 @@ struct PhysicalHIDPolicyTests {
   }
 
   @Test
-  func productionBackendAdaptersRejectSyntheticSharedLocationAndCleanPhysicalState() {
+  func productionBackendAdapterRejectsSyntheticSharedLocationAndCleansPhysicalState() {
     var ioHID = PhysicalHIDBackendEventAdapter()
-    var coreHID = PhysicalHIDBackendEventAdapter()
 
-    for adapter in [ioHID, coreHID] {
-      var adapter = adapter
+    do {
+      var adapter = ioHID
       let syntheticAdded = adapter.add(
         deviceID: 2,
         locationID: 77,
@@ -238,12 +277,12 @@ struct PhysicalHIDPolicyTests {
     #expect(!ioHID.acceptsFeedback(locationID: 77))
     #expect(!ioHID.remove(deviceID: 1).shouldEmitDisconnect)
 
-    let coreAdded = coreHID.add(deviceID: 1, locationID: 77, syntheticProperty: kCFBooleanFalse)
-    #expect(coreAdded)
-    let coreRemoval = coreHID.remove(deviceID: 1)
-    #expect(coreRemoval.wasTracked)
-    #expect(coreRemoval.shouldCancelNotification)
-    #expect(coreRemoval.shouldEmitDisconnect)
+    let readded = ioHID.add(deviceID: 1, locationID: 77, syntheticProperty: kCFBooleanFalse)
+    #expect(readded)
+    let readdedRemoval = ioHID.remove(deviceID: 1)
+    #expect(readdedRemoval.wasTracked)
+    #expect(readdedRemoval.shouldCancelNotification)
+    #expect(readdedRemoval.shouldEmitDisconnect)
   }
 
   @Test

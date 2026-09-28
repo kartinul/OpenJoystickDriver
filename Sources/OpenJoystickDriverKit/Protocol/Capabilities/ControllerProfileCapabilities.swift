@@ -1,52 +1,56 @@
+/// How a controller family labels the buttons around its guide button.
+///
+/// Parsers emit family labels (`Button.options` on PlayStation, `Button.share` for Nintendo
+/// Capture), so the same remapping source names a different control per family.
+public enum ControllerButtonLabels: Equatable, Sendable {
+  case standard
+  case playStation
+  case nintendo
+
+  public init(protocolID: PhysicalProtocolID) {
+    switch protocolID {
+    case .sonyDualShock4, .sonyDualSense: self = .playStation
+    case .nintendoSwitch1: self = .nintendo
+    default: self = .standard
+    }
+  }
+}
+
 /// Controller features that can be selected safely while editing a remapping profile.
 public struct ControllerProfileCapabilities: Equatable, Sendable {
-  public let physicalInput: PhysicalControllerInputCapabilities
+  public let physicalInput: ControllerCapabilities
   public let physicalOutput: PhysicalControllerOutputCapabilities
-  public let supportsStickAxes: Bool
-  public let supportsAnalogTriggers: Bool
+  public let buttonLabels: ControllerButtonLabels
 
-  public static let unsupported = Self(
-    physicalInput: .none,
+  /// A device OJD cannot describe: every standard-labelled control stays selectable, without
+  /// touch, motion or physical output.
+  public static let unknown = Self(
+    physicalInput: ControllerCapabilities(controls: Set(ControlID.allCases)),
     physicalOutput: .none,
-    supportsStickAxes: false,
-    supportsAnalogTriggers: false
+    buttonLabels: .standard
   )
 
   public init(
-    physicalInput: PhysicalControllerInputCapabilities,
+    physicalInput: ControllerCapabilities,
     physicalOutput: PhysicalControllerOutputCapabilities,
-    supportsStickAxes: Bool = true,
-    supportsAnalogTriggers: Bool = true
+    buttonLabels: ControllerButtonLabels
   ) {
     self.physicalInput = physicalInput
     self.physicalOutput = physicalOutput
-    self.supportsStickAxes = supportsStickAxes
-    self.supportsAnalogTriggers = supportsAnalogTriggers
+    self.buttonLabels = buttonLabels
   }
 
-  public init(parser: any InputParser, mappingOptions: ControllerMappingOptions = []) {
-    self.init(
-      physicalInput: parser.physicalInputCapabilities,
-      physicalOutput: Self.physicalOutputCapabilities(for: parser),
-      supportsStickAxes: !mappingOptions.contains(.sticksToNull),
-      supportsAnalogTriggers: !mappingOptions.contains(.triggersToButtons)
-    )
+  public var supportsStickAxes: Bool {
+    !physicalInput.controls.isDisjoint(with: [.leftStickX, .leftStickY, .rightStickX, .rightStickY])
+  }
+
+  public var supportsAnalogTriggers: Bool {
+    !physicalInput.controls.isDisjoint(with: [.leftTrigger, .rightTrigger])
   }
 
   public func intersecting(_ other: Self) -> Self {
     Self(
-      physicalInput: PhysicalControllerInputCapabilities(
-        rawMotion: physicalInput.rawMotion && other.physicalInput.rawMotion,
-        touchContactsPerFrame: min(
-          physicalInput.touchContactsPerFrame,
-          other.physicalInput.touchContactsPerFrame
-        ),
-        additionalButtons: intersection(
-          physicalInput.additionalButtons,
-          other.physicalInput.additionalButtons
-        ),
-        touchSurfaces: intersection(physicalInput.touchSurfaces, other.physicalInput.touchSurfaces)
-      ),
+      physicalInput: physicalInput.intersecting(other.physicalInput),
       physicalOutput: PhysicalControllerOutputCapabilities(
         rumbleMotors: intersection(physicalOutput.rumbleMotors, other.physicalOutput.rumbleMotors),
         lightingFeatures: intersection(
@@ -62,42 +66,7 @@ public struct ControllerProfileCapabilities: Equatable, Sendable {
           other.physicalOutput.adaptiveTriggers
         )
       ),
-      supportsStickAxes: supportsStickAxes && other.supportsStickAxes,
-      supportsAnalogTriggers: supportsAnalogTriggers && other.supportsAnalogTriggers
-    )
-  }
-
-  public static func physicalOutputCapabilities(
-    for parser: any InputParser
-  ) -> PhysicalControllerOutputCapabilities {
-    let rumbleMotors: [PhysicalRumbleMotor]
-    if let output = parser as? PhysicalRumbleOutput {
-      rumbleMotors = output.physicalRumbleMotors
-    } else if let output = parser as? PhysicalHIDRumbleOutput {
-      rumbleMotors = output.physicalRumbleMotors
-    } else if let output = parser as? PhysicalHIDFeatureHapticOutput {
-      rumbleMotors = output.physicalRumbleMotors
-    } else {
-      rumbleMotors = []
-    }
-
-    var lightingFeatures: [PhysicalLightingFeature] = []
-    lightingFeatures += (parser as? PhysicalPlayerIndicatorOutput)?.physicalLightingFeatures ?? []
-    lightingFeatures +=
-      (parser as? PhysicalHIDPlayerIndicatorOutput)?.physicalLightingFeatures ?? []
-    lightingFeatures += (parser as? PhysicalHIDColorOutput)?.physicalLightingFeatures ?? []
-    lightingFeatures += (parser as? PhysicalHIDColorOutputPlan)?.physicalLightingFeatures ?? []
-    lightingFeatures +=
-      (parser as? PhysicalHIDFeatureBrightnessOutput)?.physicalLightingFeatures ?? []
-    lightingFeatures += (parser as? PhysicalHIDBrightnessOutputPlan)?.physicalLightingFeatures ?? []
-    lightingFeatures += (parser as? PhysicalUSBBrightnessOutputPlan)?.physicalLightingFeatures ?? []
-
-    return PhysicalControllerOutputCapabilities(
-      rumbleMotors: rumbleMotors,
-      lightingFeatures: lightingFeatures,
-      binaryRumbleMotors: (parser as? PhysicalHIDRumbleOutput)?.physicalBinaryRumbleMotors ?? [],
-      adaptiveTriggers: (parser as? PhysicalHIDAdaptiveTriggerOutput)?.physicalAdaptiveTriggers
-        ?? []
+      buttonLabels: buttonLabels
     )
   }
 }

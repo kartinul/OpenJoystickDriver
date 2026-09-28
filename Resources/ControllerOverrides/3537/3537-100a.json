@@ -5,7 +5,6 @@
     "$schema": "https://raw.githubusercontent.com/xsyetopz/OpenJoystickDriver/main/Resources/Schemas/controller.schema.json",
     "vendorID": 13623,
     "productID": 4106,
-    "transport": "hid",
-    "protocol": { "driver": "GenericHID", "variant": "genericHID" }
+    "protocol": { "family": "hid.descriptor" }
   }
 }

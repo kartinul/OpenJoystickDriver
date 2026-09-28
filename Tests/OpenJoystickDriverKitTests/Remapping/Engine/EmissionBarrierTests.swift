@@ -36,7 +36,7 @@ struct RemappingEmissionBarrierTests {
     sink.barrier = barrier
     let engine = RemappingEventEngine(sink: sink, emissionBarrier: barrier)
 
-    try await engine.process(events: [.buttonPressed(.a)], from: device(), using: profile(), at: 1)
+    try await engine.process(inputs: [.press(.faceSouth)], from: device(), using: profile(), at: 1)
     await barrier.terminate()
     try await engine.drainAfterTermination()
 
@@ -60,7 +60,7 @@ struct RemappingEmissionBarrierTests {
 
     await #expect(throws: RemappingEventEngineError.outputSuspended) {
       try await engine.process(
-        events: [.buttonPressed(.a)],
+        inputs: [.press(.faceSouth)],
         from: device(),
         using: profile(),
         at: 1,
@@ -77,7 +77,7 @@ struct RemappingEmissionBarrierTests {
 
     let currentPermit = try #require(barrier.currentPermit())
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(),
       using: profile(),
       at: 2,
@@ -93,7 +93,7 @@ struct RemappingEmissionBarrierTests {
     let engine = RemappingEventEngine(sink: sink, emissionBarrier: barrier)
     let admitted = try #require(barrier.currentPermit())
     try await engine.process(
-      events: [.buttonPressed(.a)],
+      inputs: [.press(.faceSouth)],
       from: device(),
       using: profile(),
       at: 1,
@@ -106,7 +106,7 @@ struct RemappingEmissionBarrierTests {
 
     await #expect(throws: RemappingEventEngineError.outputSuspended) {
       try await engine.process(
-        events: [.buttonPressed(.a)],
+        inputs: [.press(.faceSouth)],
         from: device(),
         using: profile(),
         at: 2,

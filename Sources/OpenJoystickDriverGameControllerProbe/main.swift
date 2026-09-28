@@ -146,6 +146,7 @@ final class ProbeEvidence: @unchecked Sendable {
     connected: false, extended: false, input: false, disconnected: false, reconnected: false,
     sawDisconnect: false
   )
+
   func markConnected(_ controller: GCController) {
     lock.lock()
     defer { lock.unlock() }
@@ -153,17 +154,20 @@ final class ProbeEvidence: @unchecked Sendable {
     if values.sawDisconnect { values.reconnected = true }
     if controller.extendedGamepad != nil { values.extended = true }
   }
+
   func markInput() {
     lock.lock()
     values.input = true
     lock.unlock()
   }
+
   func markDisconnected() {
     lock.lock()
     values.disconnected = true
     values.sawDisconnect = true
     lock.unlock()
   }
+
   func snapshot() -> (Bool, Bool, Bool, Bool, Bool) {
     lock.lock()
     defer { lock.unlock() }

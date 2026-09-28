@@ -102,6 +102,8 @@ def tracked_swift_files(root: Path = ROOT) -> list[Path]:
         for relative_path in result.stdout.splitlines()
         if Path(relative_path).suffix == ".swift"
         and Path(relative_path).parts[0] in {"Sources", "Tests"}
+        # A tracked file deleted in the working tree has nothing left to measure.
+        and (root / relative_path).exists()
     ]
 
 

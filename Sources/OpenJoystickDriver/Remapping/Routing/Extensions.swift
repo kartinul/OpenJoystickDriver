@@ -3,16 +3,15 @@ import OpenJoystickDriverKit
 
 extension RemappingRoutingCore {
   func independentSelection(for profile: RemappingProfile?) -> RemappingSelectedRoute {
-    guard let profile, profile.joyConPair == nil else { return .compatibility }
+    guard let profile, profile.joyConPair == nil else { return .virtualGamepad }
     return .remapping(profile)
   }
 
-  func compatibilityRoute() -> RemappingControllerRoute {
-    let suppressed = controls.outputSuppressed || !controls.compatibilityOutputAllowed
-    return RemappingControllerRoute(
-      selection: .compatibility,
+  func virtualGamepadRoute() -> RemappingControllerRoute {
+    RemappingControllerRoute(
+      selection: .virtualGamepad,
       eligibilitySnapshot: RemappingEligibilitySnapshot(
-        eligibility: suppressed ? .compatibilityOutputSuppressed : .eligible,
+        eligibility: virtualGamepadEligibility,
         environment: sampleEligibilityEnvironment()
       ),
       error: nil
@@ -39,11 +38,19 @@ extension RemappingRoutingCore {
     connectedIdentifiers.sorted { $0.runtimeIdentifier < $1.runtimeIdentifier }
   }
 
-  var compatibilityIsSuppressed: Bool {
-    controls.outputSuppressed || !controls.compatibilityOutputAllowed
+  /// The eligibility of a virtual-gamepad route: suppressed when output is suppressed, eligible
+  /// otherwise.
+  var virtualGamepadEligibility: RemappingRouteEligibility {
+    controls.outputSuppressed ? .virtualOutputSuppressed : .eligible
   }
 
-  func notifyCompatibilityStop(_ identifier: DeviceIdentifier) async {
+  /// Forgets the engine baselines of sources the route no longer feeds to the engine, so input
+  /// that changed meanwhile is diffed against neutral when feeding resumes.
+  func endSources(_ sources: some Sequence<DeviceIdentifier>) async {
+    for source in sources { await engine.endSource(source) }
+  }
+
+  func notifyVirtualGamepadStop(_ identifier: DeviceIdentifier) async {
     await (compatibility as? any ControllerLifecycleListener)?.controllerDidStop(identifier)
   }
 
@@ -72,7 +79,7 @@ extension RemappingRoutingCore {
       releaseError = error
     }
     if profile.outputPolicy.virtualGamepad != .disabled {
-      await notifyCompatibilityStop(identifier)
+      await notifyVirtualGamepadStop(identifier)
     }
     if let releaseError { throw releaseError }
   }

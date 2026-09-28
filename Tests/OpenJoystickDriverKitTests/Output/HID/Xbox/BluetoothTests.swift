@@ -4,13 +4,7 @@ import Testing
 @testable import OpenJoystickDriverKit
 
 struct XboxOneHIDReportFormatTests {
-  private func format() throws -> HIDDescriptorReportFormat {
-    try HIDDescriptorReportFormat(
-      descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor,
-      buttonUsageMap: XboxOneBluetoothHIDDescriptor.buttonUsageMap,
-      digitalUsageMap: XboxOneBluetoothHIDDescriptor.seriesDigitalUsageMap
-    )
-  }
+  private func format() throws -> XboxGeckoHIDReportFormat { try XboxGeckoHIDReportFormat() }
 
   private func report(buttonBit: Int) throws -> [UInt8] {
     try format().buildInputReport(from: VirtualGamepadState(buttons: 1 << UInt32(buttonBit)))
@@ -22,8 +16,11 @@ struct XboxOneHIDReportFormatTests {
     let controls: [(GamepadHIDDescriptor.ButtonBit, Int, UInt8)] = [
       (.a, 14, 0x01), (.b, 14, 0x02), (.x, 14, 0x04), (.y, 14, 0x08), (.leftBumper, 14, 0x10),
       (.rightBumper, 14, 0x20), (.back, 14, 0x40), (.start, 14, 0x80), (.leftStick, 15, 0x01),
-      (.rightStick, 15, 0x02), (.guide, 15, 0x04), (.dpadUp, 15, 0x08), (.dpadDown, 15, 0x10),
-      (.dpadLeft, 15, 0x20), (.dpadRight, 15, 0x40), (.share, 16, 0x01),
+      (.rightStick, 15, 0x02), (.guide, 15, 0x04),
+    ]
+    // The d-pad travels as the hat, and share is never set.
+    let unavailable: [GamepadHIDDescriptor.ButtonBit] = [
+      .dpadUp, .dpadDown, .dpadLeft, .dpadRight, .share,
     ]
 
     #expect(neutral == ProtocolPacketFixtures.XboxBluetooth.neutralInputReport)
@@ -35,22 +32,24 @@ struct XboxOneHIDReportFormatTests {
         }
       )
     }
+    for button in unavailable { #expect(try report(buttonBit: button.rawValue) == neutral) }
   }
 
   @Test
-  func appleGameControllerIdentityAndReportShapeRemainXboxSeries() throws {
-    let profile = VirtualDeviceProfile.xboxSeries
+  func identityAndReportShapeRemainXboxOneS() throws {
+    let profile = VirtualHIDProfileID.xboxOneSBluetooth.identity
     let parsed = try #require(
       HIDReportDescriptorParser.parse(descriptor: XboxOneBluetoothHIDDescriptor.seriesDescriptor)
     )
 
     #expect(profile.vendorID == 0x045E)
-    #expect(profile.productID == 0x0B13)
+    #expect(profile.productID == 0x02FD)
     #expect(profile.productName == "Xbox Wireless Controller")
     #expect(try format().inputReportID == 1)
     #expect(parsed.payloadSizeBytesByReportID[1] == 16)
     #expect(parsed.payloadSizeBytesByReportID[2] == 1)
   }
+
   @Test
   func testMapsFaceAndShoulderButtonsDirectly() throws {
     let a = try report(buttonBit: 0)
@@ -61,6 +60,7 @@ struct XboxOneHIDReportFormatTests {
     #expect(a[14] == 0x01)
     #expect(rb[14] == 0x20)
   }
+
   @Test
   func testParsesAndPacksPrimaryAxes() throws {
     let full = try format().buildInputReport(
@@ -99,6 +99,7 @@ struct XboxOneHIDReportFormatTests {
     #expect(idle[0] == 1)
     #expect(Array(idle[1...8]) == [0x00, 0x80, 0x00, 0x80, 0x00, 0x80, 0x00, 0x80])
   }
+
   @Test
   func testMapsAppleGameControllerButtonsOneAtATime() throws {
     let neutral = try format().buildInputReport(from: VirtualGamepadState())
@@ -118,6 +119,7 @@ struct XboxOneHIDReportFormatTests {
       )
     }
   }
+
   @Test
   func testPreservesPrimaryButtonCountAndGuideMapping() throws {
     let parsed = try #require(
@@ -137,20 +139,18 @@ struct XboxOneHIDReportFormatTests {
     #expect(parsed.fields.contains { $0.reportID == 1 && $0.usagePage == 0x0C && $0.usage == 0xB2 })
     #expect(buttonUsages.count == 15)
   }
+
   @Test
-  func testMapsShareIndependentlyFromView() throws {
+  func testNeverSetsShareAndKeepsViewOnItsButton() throws {
     let neutral = try format().buildInputReport(from: VirtualGamepadState())
     let view = try report(buttonBit: GamepadHIDDescriptor.ButtonBit.back.rawValue)
     let share = try report(buttonBit: GamepadHIDDescriptor.ButtonBit.share.rawValue)
 
     #expect(view[14] == 0x40)
     #expect(view[16] == 0x00)
-    #expect(share[14] == 0x00)
-    #expect(share[16] == 0x01)
-    #expect(
-      share.enumerated().allSatisfy { index, value in index == 16 || value == neutral[index] }
-    )
+    #expect(share == neutral)
   }
+
   @Test
   func testPacksDpadAsHatSwitch() throws {
     let north = try format().buildInputReport(from: VirtualGamepadState(hat: .north))
@@ -161,8 +161,9 @@ struct XboxOneHIDReportFormatTests {
     #expect(east[13] == 0x03)
     #expect(neutral[13] == 0x00)
   }
+
   @Test
-  func testPacksDpadAsDigitalButtons() throws {
+  func testNeverPacksDpadAsDigitalButtons() throws {
     let north = try format().buildInputReport(
       from: VirtualGamepadState(buttons: GamepadHIDDescriptor.dpadButtonBits(for: .north))
     )
@@ -170,7 +171,8 @@ struct XboxOneHIDReportFormatTests {
       from: VirtualGamepadState(buttons: GamepadHIDDescriptor.dpadButtonBits(for: .east))
     )
 
-    #expect(north[15] == 0x08)
-    #expect(east[15] == 0x40)
+    let neutral = try format().buildInputReport(from: VirtualGamepadState())
+    #expect(north == neutral)
+    #expect(east == neutral)
   }
 }
