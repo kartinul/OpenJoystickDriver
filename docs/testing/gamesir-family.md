@@ -66,6 +66,41 @@ The player LED stays dark in HID mode `1082`. OJD does not write to native
 pads, and it is unknown which output, if any, lights the LED in this mode.
 Firmware 6.4.0 appeared on macOS as `3537:1010`.
 
+2026-09-28, the same G7 SE on firmware 6.6.4, macOS 27: attempts to restore
+the LED. None lit it, and the pad works as a gamepad throughout.
+
+- **Interface 1 of `1082`** has a 214-byte descriptor. It holds a keyboard
+  (report 3), consumer (report 2), mouse (report 9), and a vendor collection
+  on page `0xFFF0`: input `0x10` and `0x12` and output `0x0F`, 63 bytes each.
+  When opened, it sent one keyboard report with usage `0x46` (Print Screen).
+- **Output report 5** (the four LED bytes on interface 0) did not change the
+  LED.
+- **G7 Pro framing does not work.** The G7 Pro configuration framing from
+  the open-source g7ctl tool (report `0x0F`: heartbeat `0f 00 seq 02 f2 00`
+  every 0.316 s, device-info queries `01 09` and `01 0b`) was accepted on
+  both interfaces but got no reply. The same holds after the `gamesirapp`
+  handshake, sent as HID report ID 0 on interface 0. The pad did not
+  re-enumerate. A control-transfer SET_REPORT to interface 1 stalls.
+- **The handshake could not be sent raw.** Sending it as raw 8-byte writes on
+  endpoint `0x02` needs the interface itself. macOS refuses to seize it from
+  Apple's HID driver (`0xE00002C9`), even with OJD closed.
+- **Combos.** Xbox+Share (3 s), Xbox+M (3 s, then replug), and M+Y changed
+  nothing, and a hardware reset done on a borrowed computer did not restore
+  the LED. Holding
+  View+Xbox+Menu while plugging in makes the LED blink white rapidly. The pad
+  then enumerates as `3537:1010` with one HID interface:
+  - input report 1: 64 bytes, about 250 Hz;
+  - output report 5: 31 bytes;
+  - feature reports 3 (47 bytes) and `0xE0` (2 bytes), both of which stall on
+    read;
+  - the same `0xFFF0` vendor collection, which also did not answer.
+
+  A normal replug returns it to `1082` with the LED dark. The LED hardware
+  works, so the dark LED in `1082` is firmware or profile state.
+
+Still untested: the raw handshake from Linux, and GameSir Nexus with the pad
+in this `1010` mode.
+
 ## Validate Records And Input
 
 Run from the repository root:
@@ -149,8 +184,9 @@ USBPcap is capturing.
   106D`. `1082` does not appear.
 - **Firmware:** the images are embedded in the app. They are JieLi AC695X
   `.ufw` files with a CRC16-keystream header. The payload was not decoded.
-- **Not settled:** motion scale, axes and byte order, the HID `1082` layout,
-  and how the LED is driven in HID mode.
+- **Not settled:** motion scale, axes and byte order, and how the LED is
+  driven in HID mode. The HID `1082` layout has since been recorded (see
+  Observed).
 
 This static analysis is unverified on hardware.
 
