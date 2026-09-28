@@ -112,7 +112,7 @@
             OJDListGlyphSlot {
               OJDSystemSymbol(
                 name: presentation.controllerSymbolName,
-                fallback: OJDLocalized.string("common.controller", fallback: "Controller"),
+                fallback: nil,
                 fallbackSymbolName: presentation.controllerSymbolFallback
               ).foregroundColor(presentation.glyphFamily.controllerSymbolColor)
             }

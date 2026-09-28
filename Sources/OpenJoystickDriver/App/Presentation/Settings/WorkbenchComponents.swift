@@ -4,13 +4,15 @@
   import OpenJoystickDriverKit
   import SwiftUI
 
-  // SF Symbol via NSImage(systemSymbolName:), else fallback text.
+  // SF Symbol via NSImage(systemSymbolName:), else fallback text. Pass a nil fallback for a
+  // decorative glyph whose meaning is already printed beside it: macOS 10.15 has no SF Symbols,
+  // and fallback text in a glyph-sized frame wraps into a column.
   struct OJDSystemSymbol: View {
     let name: String
-    let fallback: String
+    let fallback: String?
     let fallbackSymbolName: String?
 
-    init(name: String, fallback: String, fallbackSymbolName: String? = nil) {
+    init(name: String, fallback: String?, fallbackSymbolName: String? = nil) {
       self.name = name
       self.fallback = fallback
       self.fallbackSymbolName = fallbackSymbolName
@@ -34,9 +36,9 @@
           } else if let fallbackImage {
             Image(nsImage: fallbackImage)
           }
-        case .text: Text(fallback).font(.caption)
+        case .text: if let fallback { Text(fallback).font(.caption) }
         }
-      } else {
+      } else if let fallback {
         Text(fallback).font(.caption)
       }
     }
@@ -138,7 +140,7 @@
       List(selection: selection) {
         ForEach(panes) { pane in
           HStack(spacing: 8) {
-            OJDSystemSymbol(name: pane.symbolName, fallback: pane.title).frame(width: 18)
+            OJDSystemSymbol(name: pane.symbolName, fallback: nil).frame(width: 18)
               .ojdAccessibilityHidden(true)
             Text(pane.title)
             Spacer(minLength: 0)

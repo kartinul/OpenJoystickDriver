@@ -149,7 +149,7 @@
         let presentation = device.publishedIdentityPresentation
         OJDSystemSymbol(
           name: presentation.controllerSymbolName,
-          fallback: OJDLocalized.string("common.controller", fallback: "Controller"),
+          fallback: nil,
           fallbackSymbolName: presentation.controllerSymbolFallback
         ).font(.title).foregroundColor(presentation.glyphFamily.controllerSymbolColor)
           .ojdAccessibilityHidden(true)

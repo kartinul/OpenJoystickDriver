@@ -43,7 +43,7 @@
 
     var body: some View {
       VStack(alignment: .leading, spacing: 6) {
-        OJDSystemSymbol(name: symbol, fallback: title).foregroundColor(Color(tone.color)).frame(
+        OJDSystemSymbol(name: symbol, fallback: nil).foregroundColor(Color(tone.color)).frame(
           width: 20,
           height: 20
         ).ojdAccessibilityHidden(true)
