@@ -22,19 +22,25 @@ public final class HIDDescriptorDriver: PhysicalProtocolDriver {
   private static let wr007ProductID: UInt16 = 0x5600
   private static let envisionVendorID: UInt16 = 0x2E95
   private static let envisionProductID: UInt16 = 0x434D
+  private static let gameSirG7SEVendorID: UInt16 = 0x3537
+  private static let gameSirG7SEProductID: UInt16 = 0x1082
 
   private enum AxisLayout {
     case standard
     case wr007
     case envision
+    /// WR007's Z/Rz right stick and button order, with Brake as LT and a Home button.
+    case gameSirG7SE
+
+    var zRzIsRightStick: Bool { self == .wr007 || self == .gameSirG7SE }
   }
 
   private let identifier: DeviceIdentifier
   private let stateLock = NSLock()
   private var state = ControllerState.neutral
-  /// Stick axes as decoded. HID Generic Desktop Y and Ry (and the WR007 right-stick Rz) put the
-  /// logical minimum up, so the decoded value is already Y down. An element carries one axis, so
-  /// each keeps its pair's other.
+  /// Stick axes as decoded. HID Generic Desktop Y and Ry (and a Z/Rz layout's right-stick Rz) put
+  /// the logical minimum up, so the decoded value is already Y down. An element carries one axis,
+  /// so each keeps its pair's other.
   private var leftX: Float = 0
   private var leftY: Float = 0
   private var rightX: Float = 0
@@ -52,6 +58,10 @@ public final class HIDDescriptorDriver: PhysicalProtocolDriver {
       && identifier.controllerIdentity.productID == Self.envisionProductID
     {
       axisLayout = .envision
+    } else if identifier.controllerIdentity.vendorID == Self.gameSirG7SEVendorID
+      && identifier.controllerIdentity.productID == Self.gameSirG7SEProductID
+    {
+      axisLayout = .gameSirG7SE
     } else {
       axisLayout = .standard
     }
@@ -118,7 +128,7 @@ public final class HIDDescriptorDriver: PhysicalProtocolDriver {
     case Self.usageX: leftX = Self.normalizedAxis(value)
     case Self.usageY: leftY = Self.normalizedAxis(value)
     case Self.usageZ:
-      guard axisLayout == .wr007 else {
+      guard axisLayout.zRzIsRightStick else {
         next.leftTrigger = UnipolarValue(normalized: Self.normalizedTrigger(value))
         return true
       }
@@ -126,7 +136,7 @@ public final class HIDDescriptorDriver: PhysicalProtocolDriver {
     case Self.usageRx: rightX = Self.normalizedAxis(value)
     case Self.usageRy: rightY = Self.normalizedAxis(value)
     case Self.usageRz:
-      guard axisLayout == .wr007 else {
+      guard axisLayout.zRzIsRightStick else {
         next.rightTrigger = UnipolarValue(normalized: Self.normalizedTrigger(value))
         return true
       }
@@ -155,12 +165,14 @@ public final class HIDDescriptorDriver: PhysicalProtocolDriver {
     _ value: HIDElementValue,
     into next: inout ControllerState
   ) -> Bool {
-    guard axisLayout == .wr007 else { return false }
+    guard axisLayout.zRzIsRightStick else { return false }
+    let trigger = UnipolarValue(normalized: Self.normalizedTrigger(value))
+    let brakeIsLeft = axisLayout == .gameSirG7SE
     switch value.usage {
     case Self.usageAccelerator:
-      next.leftTrigger = UnipolarValue(normalized: Self.normalizedTrigger(value))
+      if brakeIsLeft { next.rightTrigger = trigger } else { next.leftTrigger = trigger }
     case Self.usageBrake:
-      next.rightTrigger = UnipolarValue(normalized: Self.normalizedTrigger(value))
+      if brakeIsLeft { next.leftTrigger = trigger } else { next.rightTrigger = trigger }
     default: return false
     }
     return true
@@ -187,7 +199,9 @@ public final class HIDDescriptorDriver: PhysicalProtocolDriver {
   }
 
   private func control(for usage: UInt32) -> ControlID? {
-    if axisLayout == .wr007 {
+    if axisLayout.zRzIsRightStick {
+      // Buttons 9 and 10 mirror the analog triggers.
+      if axisLayout == .gameSirG7SE, usage == 13 { return .guide }
       return [
         1: .faceSouth, 2: .faceEast, 4: .faceWest, 5: .faceNorth, 7: .leftShoulder,
         8: .rightShoulder, 11: .view, 12: .menu, 14: .leftStickClick, 15: .rightStickClick,
