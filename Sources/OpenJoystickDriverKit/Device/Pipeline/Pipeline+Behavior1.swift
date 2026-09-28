@@ -88,6 +88,14 @@ extension DevicePipeline {
     }
   }
 
+  /// The native startup player indicator, returned once. The caller asks after an input report,
+  /// because a USB Sixaxis ignores the LED report until it streams input.
+  func takeStartupPlayerIndicator() -> PhysicalPlayerIndicator? {
+    guard startupPlayerIndicatorPending else { return nil }
+    startupPlayerIndicatorPending = false
+    return nativeWrites?.startupPlayerIndicator
+  }
+
   func sessionPlan() -> DriverSessionPlan { driver.sessionPlan }
 
   func consumeFeatureReply(_ data: Data, request: PhysicalHIDFeatureReadRequest) -> Bool {

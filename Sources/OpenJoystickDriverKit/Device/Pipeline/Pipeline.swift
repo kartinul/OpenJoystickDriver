@@ -108,6 +108,8 @@ actor DevicePipeline {
   var awaitingNeutralAfterLivenessLoss = false
   var inputHealthRecoveryCount = 0
   var startupOutputStatus: String?
+  /// Whether the native startup player indicator still waits for the first input report.
+  var startupPlayerIndicatorPending: Bool
 
   init(
     identifier: DeviceIdentifier,
@@ -136,6 +138,7 @@ actor DevicePipeline {
       binding.map { ControllerButtonLabels(protocolID: $0.protocolID) } ?? .standard
     self.nativeWrites = nativeWrites
     self.observesOnly = nativeWrites != nil
+    self.startupPlayerIndicatorPending = nativeWrites?.startupPlayerIndicator != nil
     self.observedInputDemand = nativeWrites == nil ? nil : dispatcher as? any ObservedInputDemand
     self.usbTransportProvider = usbTransportProvider
     self.transportProfile = transportProfile

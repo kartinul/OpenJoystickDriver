@@ -134,9 +134,12 @@ Native gamepads are observed and remapped. On macOS 11 and later, a device for w
 It stays out of its location's ownership and disconnect coalescing, and it is classified and
 bound like any HID device. Its `DevicePipeline` carries a `NativeGamepadWrites` allowance: OJD
 sends it no startup, feature, status, periodic, shutdown or recovery report, reads no feature
-report (motion keeps nominal calibration), and the HID write executors refuse every report the
-allowance does not name. The only entry is the DualShock 3 / Sixaxis player LED, which macOS
-never sets: output report 0x01, sent with player 1 at bind and on player-indicator requests.
+report unless the allowance says so (motion keeps nominal calibration), and the HID write
+executors refuse every report the allowance does not name. The only entry is the DualShock 3 /
+Sixaxis. macOS never sets its player LED: output report 0x01, sent with player 1 after the first
+input report and on player-indicator requests. On USB it sends no input and ignores that report
+until the host reads feature 0xF2, which macOS does not do, so OJD makes the driver's F2 and F5
+reads at bind.
 Its `physicalOwnership` is `nativeGamepad`, which `ControllerExposureDecision` suppresses for
 every intent, so OJD never publishes a virtual gamepad for it. Remapping profiles still run on
 its input; a profile that needs exclusive input or a virtual gamepad is ineligible. While no

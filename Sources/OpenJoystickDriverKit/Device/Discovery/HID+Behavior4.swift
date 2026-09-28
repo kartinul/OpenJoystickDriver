@@ -160,5 +160,13 @@ extension DeviceManager {
       pipeline: pipeline,
       startupConnection: connection
     )
+    guard pipeline.nativeWrites?.startupPlayerIndicator != nil,
+      let indicator = await pipeline.takeStartupPlayerIndicator()
+    else { return }
+    _ = await sendControllerOutput(
+      .setPlayerIndicator(indicator),
+      for: key,
+      runtimeIdentifier: key.runtimeIdentifier
+    )
   }
 }

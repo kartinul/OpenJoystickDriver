@@ -209,14 +209,10 @@ extension DeviceManager {
     await reconcileUnboundHIDClaims()
     guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
     // macOS initializes a native controller; OJD sends it no startup, status or periodic output
-    // beyond its allowance and reads no feature reports, so its parser keeps nominal motion
-    // calibration.
-    if let indicator = pipeline.nativeWrites?.startupPlayerIndicator {
-      _ = await sendControllerOutput(
-        .setPlayerIndicator(indicator),
-        for: identifier,
-        runtimeIdentifier: identifier.runtimeIdentifier
-      )
+    // beyond its allowance, and makes feature reads only where the allowance says macOS does not.
+    // Its startup player indicator follows its first input report (`routeHIDInputReport`).
+    if pipeline.nativeWrites?.readsStartupFeatures == true {
+      await sendHIDStartupFeatureReadRequestsIfNeeded(pipeline: pipeline, connection: connection)
       guard await isCurrentHIDStartupPipeline(pipeline, connection: connection) else { return }
     }
     guard !pipeline.observesOnly else {

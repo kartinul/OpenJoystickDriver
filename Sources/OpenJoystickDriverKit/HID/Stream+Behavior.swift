@@ -272,9 +272,8 @@ extension HIDDeviceStream {
     request: PhysicalHIDFeatureReadRequest
   ) async -> PhysicalHIDReportResult<Data> {
     await MainActor.run {
-      guard let device = exactDevice(for: connection, type: kIOHIDReportTypeFeature) else {
-        return .unavailable
-      }
+      guard let device = exactDevice(for: connection, type: kIOHIDReportTypeFeature, reads: true)
+      else { return .unavailable }
       var bytes = [UInt8](repeating: 0, count: request.length)
       var reportLength = request.length
       let result = bytes.withUnsafeMutableBufferPointer { pointer in
@@ -316,11 +315,13 @@ extension HIDDeviceStream {
     return .success(())
   }
 
-  /// The device object of an exact connection lifetime that accepts a `type` report.
+  /// The device object of an exact connection lifetime that accepts a `type` report, read when
+  /// `reads` is set and written otherwise.
   @MainActor
   private func exactDevice(
     for connection: HIDDeviceConnection,
-    type: IOHIDReportType
+    type: IOHIDReportType,
+    reads: Bool = false
   ) -> IOHIDDevice? {
     guard let devices = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice>,
       let deviceID = seizeLock.withLock({
@@ -329,9 +330,11 @@ extension HIDDeviceStream {
       eventAdapter.acceptsInput(deviceID: deviceID),
       seizeLock.withLock({
         // A native device is never seized: an output report DeviceManager's native allowance
-        // permits goes through its shared open; every other write needs the seize.
+        // permits, or a feature read it makes, goes through its shared open; every other write
+        // needs the seize.
         if connection.physicalDevice.nativePassThrough {
-          return type == kIOHIDReportTypeOutput && sharedOpenByDeviceID[deviceID] != nil
+          let permitted = reads ? type == kIOHIDReportTypeFeature : type == kIOHIDReportTypeOutput
+          return permitted && sharedOpenByDeviceID[deviceID] != nil
         }
         return seizedByLocation[connection.routingLocationID]?.contains(where: {
           CFEqual($0, device)

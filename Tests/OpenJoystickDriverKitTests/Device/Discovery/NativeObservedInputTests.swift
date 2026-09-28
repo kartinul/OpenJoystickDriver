@@ -35,6 +35,19 @@ struct NativeObservedInputTests {
         durationMs: 50
       ))
     )
+    // A USB Sixaxis ignores its LED report until it streams input, so player 1 follows the first
+    // input report, once.
+    #expect(await backend.recordedOutputReports().isEmpty)
+    var input = [UInt8](repeating: 0, count: 49)
+    input[0] = 0x01
+    input.replaceSubrange(6...9, with: [0x80, 0x80, 0x80, 0x80])
+    for _ in 0..<2 {
+      await manager.routeHIDInputReport(
+        locationID: connection.routingLocationID,
+        connectionID: connection.connectionID,
+        data: Data(input)
+      )
+    }
     let expected = SixaxisDriver().encoded(.setPlayerIndicator(.player1)).onlyReport
     #expect(await backend.recordedOutputReports() == [expected])
     // Only the exact-connection path can reach a never-seized native device.
@@ -42,7 +55,11 @@ struct NativeObservedInputTests {
     #expect(expected.reportID == 0x01 && expected.bytes.count == 49 && expected.bytes[10] == 0x02)
     #expect(expected.bytes[3] == 0 && expected.bytes[5] == 0)
     #expect(await backend.recordedFeatureReports().isEmpty)
-    #expect(await backend.recordedFeatureReadCount() == 0)
+    // A USB Sixaxis sends no input until the host reads feature 0xF2; macOS does not.
+    #expect(await backend.recordedFeatureReadReportIDs() == [0xF2, 0xF5])
+    // A never-seized native device is reachable only through its exact connection.
+    let target: UUID? = connection.connectionID
+    #expect(await backend.recordedFeatureReadTargets() == [target, target])
     await manager.stop()
   }
 

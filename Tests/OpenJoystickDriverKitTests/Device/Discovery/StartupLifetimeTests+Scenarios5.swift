@@ -22,6 +22,8 @@ actor ScriptedHIDAccessBackend: HIDAccessBackend {
   private var featureReports: [PhysicalHIDOutputReport] = []
   private var featureReportTargets: [UUID?] = []
   private var featureReads = 0
+  private var featureReadReportIDs: [UInt8] = []
+  private var featureReadTargets: [UUID?] = []
   private var rejectedReports: [PhysicalHIDOutputReport] = []
   private var failingOutputReportCount = 0
   private var neutralMotorOutputGate: (started: StartupTestGate, release: StartupTestGate)?
@@ -110,17 +112,21 @@ actor ScriptedHIDAccessBackend: HIDAccessBackend {
 
   func getFeatureReport(
     locationID _: UInt32,
-    request _: PhysicalHIDFeatureReadRequest
+    request: PhysicalHIDFeatureReadRequest
   ) -> PhysicalHIDReportResult<Data> {
     featureReads += 1
+    featureReadReportIDs.append(request.reportID)
+    featureReadTargets.append(nil)
     return .unavailable
   }
 
   func getFeatureReport(
-    connection _: HIDDeviceConnection,
-    request _: PhysicalHIDFeatureReadRequest
+    connection: HIDDeviceConnection,
+    request: PhysicalHIDFeatureReadRequest
   ) -> PhysicalHIDReportResult<Data> {
     featureReads += 1
+    featureReadReportIDs.append(request.reportID)
+    featureReadTargets.append(connection.connectionID)
     return .unavailable
   }
 
@@ -168,6 +174,11 @@ actor ScriptedHIDAccessBackend: HIDAccessBackend {
   func recordedFeatureReportTargets() -> [UUID?] { featureReportTargets }
 
   func recordedFeatureReadCount() -> Int { featureReads }
+
+  func recordedFeatureReadReportIDs() -> [UInt8] { featureReadReportIDs }
+
+  /// The connection each feature read targeted; nil for a location-routed read.
+  func recordedFeatureReadTargets() -> [UUID?] { featureReadTargets }
 
   func setConnectionSnapshots(_ snapshots: [HIDDeviceConnectionSnapshot]?) {
     connectionSnapshots = snapshots

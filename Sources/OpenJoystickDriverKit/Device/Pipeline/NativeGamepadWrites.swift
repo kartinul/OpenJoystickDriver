@@ -1,26 +1,35 @@
-/// The writes OJD still makes to a controller macOS serves natively: only what macOS leaves
-/// undone for that family. Every other native controller gets none.
+/// What OJD still sends to a controller macOS serves natively: only what macOS leaves undone for
+/// that family. Every other native controller gets nothing.
 struct NativeGamepadWrites: Equatable, Sendable {
   /// Lighting OJD drives because macOS does not.
   let lightingFeatures: Set<PhysicalLightingFeature>
   /// HID output report IDs that carry that lighting; the write executors refuse every other
   /// output report and every feature report.
   let outputReportIDs: Set<UInt8>
-  /// Player indicator OJD sets once the controller binds.
+  /// Player indicator OJD sets after the controller's first input report.
   let startupPlayerIndicator: PhysicalPlayerIndicator?
+  /// Whether OJD makes the driver's startup feature reads, which macOS does not.
+  let readsStartupFeatures: Bool
 
-  static let none = Self(lightingFeatures: [], outputReportIDs: [], startupPlayerIndicator: nil)
+  static let none = Self(
+    lightingFeatures: [],
+    outputReportIDs: [],
+    startupPlayerIndicator: nil,
+    readsStartupFeatures: false
+  )
 
   /// The allowance table, keyed by bound protocol.
   static func allowance(for protocolID: PhysicalProtocolID) -> Self {
     switch protocolID {
     // macOS never lights a DualShock 3 / Sixaxis player LED. Output report 0x01 sets it; its
-    // rumble fields stay off because rumble is not allowed.
+    // rumble fields stay off because rumble is not allowed. On USB the controller sends no input
+    // and ignores that report until the host reads feature 0xF2, which macOS does not do.
     case .sonySixaxis:
       Self(
         lightingFeatures: [.playerIndicator],
         outputReportIDs: [0x01],
-        startupPlayerIndicator: .player1
+        startupPlayerIndicator: .player1,
+        readsStartupFeatures: true
       )
     default: .none
     }

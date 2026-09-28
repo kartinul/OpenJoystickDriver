@@ -41,13 +41,12 @@ extension DeviceManager {
       return .stopped
     }
     // The read is an operation on the interface's output queue, so it never interleaves with a
-    // write's operation. A protocol role reads from its own connection, like its writes, never a
-    // sibling's.
+    // write's operation. It takes the same route as the controller's writes.
     let outcome = await physicalOutputQueue(for: pipeline.identifier).perform {
       [weak self] _ -> PhysicalHIDReportResult<Data>? in
       guard let self, await self.isCurrentHIDStartupConnection(pipeline, connection: connection)
       else { return nil }
-      return pipeline.identifier.interfaceNumber != nil
+      return await self.writesExactHIDConnection(pipeline.identifier, pipeline: pipeline)
         ? await self.hidManager.getFeatureReport(connection: connection, request: request)
         : await self.hidManager.getFeatureReport(locationID: locationID, request: request)
     }
