@@ -5,7 +5,6 @@
 [![Swift](https://img.shields.io/badge/Swift-Package-orange)](Package.swift)
 
 ![Github-sponsors](https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA)
-[![BuyMeACoffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/jarveaarkry)
 
 A macOS userspace gamepad driver. The signed app binary hosts the runtime and CLI.
 Use it when a controller works here but not in a game, emulator, SDL app, or native macOS app.
@@ -21,10 +20,10 @@ Support matrix: [docs/user/compatibility.md](docs/user/compatibility.md).
 ## Install
 
 1. Drag `OpenJoystickDriver.app` to `/Applications` and open it.
-2. Use the menu-bar item. Settings is ⌘,.
-3. Grant **Input Monitoring** and **Accessibility** when asked. Profiles that
+1. Use the menu-bar item. Settings is ⌘,.
+1. Grant **Input Monitoring** and **Accessibility** when asked. Profiles that
    send keyboard or mouse events also need **Keyboard & pointer**.
-4. Connect a controller. **Open Profiles...** for assignments; **Controllers...**
+1. Connect a controller. **Open Profiles...** for assignments; **Controllers...**
    or **Refresh** for the menu summary.
 
 One bundle, no helper app: `/Applications/OpenJoystickDriver.app`.

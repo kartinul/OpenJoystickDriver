@@ -34,23 +34,23 @@ Controller records contain only facts consumed at runtime. Keep:
    transport: the family and variant fix the access path (`xbox.*` and
    `vendor.gamesir:usb` use raw USB, every other binding IOHID), and a `usb` block is
    accepted only on raw-USB bindings;
-2. driver-declared quirks scoped by family in `protocol.quirks`: `xbox.gip`
+1. driver-declared quirks scoped by family in `protocol.quirks`: `xbox.gip`
    `share-offset`, `nintendo.switch1` `joy-con-left` or `joy-con-right` (at most
    one), and `vendor.gamesir` `inner-grips` (enhanced HID extras report the inner
    grips) and `lighting-slots` (enhanced HID lighting memory is slot-based: the
    driver reads, tracks and writes the active slot). Every other family declares
    none;
-3. named driver-owned initialization actions in `protocol.initialization` (`xbox.gip` only,
+1. named driver-owned initialization actions in `protocol.initialization` (`xbox.gip` only,
    for example `xbox.gip/power-on`), plus `keepAlive` and USB overrides. Rows never
    carry raw packet bytes; omit the driver's default sequence;
-4. a named driver-owned assembly policy in `protocol.assembly`, which assembles one
+1. a named driver-owned assembly policy in `protocol.assembly`, which assembles one
    logical controller from several protocol roles of one device. Discovery consumes it
    (`ProtocolDriverRegistry.assemblyPolicy(for:)`), but its vocabulary is empty
    (`"enum": []`, the Swift `ControllerAssemblyPolicy` has no cases), so every value is
    rejected: no row has multi-interface evidence yet, and until a row adds the first
    policy each protocol role is its own logical controller;
-5. evidenced capability corrections in the top-level `capabilities` object; and
-6. packet-mapped controls in parser events.
+1. evidenced capability corrections in the top-level `capabilities` object; and
+1. packet-mapped controls in parser events.
 
 `capabilities` holds only deltas against the bound parser's declared controls:
 `absent` and `present` are disjoint, nonempty lists of `controlID` values from the
