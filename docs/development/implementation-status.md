@@ -58,3 +58,19 @@ consumer virtual output uses `IOHIDUserDevice`. Raw USB uses
 IOUSBHost/USBDriverKit. `OpenJoystickDriverUSB` hides the
 USB host transport from parsers and application callers. OJD does not retain a
 libusb fallback.
+
+## Known Issues
+
+An intermittent crash ends the app on macOS 27.0 (26A428). It has been seen twice, with
+0.5.0-beta.4 development builds. The main thread traps with `CFRelease() called with NULL` while
+`IOHIDManager` drops a removed device: `__IOHIDManagerDeviceRemoved` releases the device,
+`IODestroyPlugInInterface` destroys its `IOHIDDeviceClass`, and `CFPlugInRemoveInstanceForFactory`
+deallocates the plug-in bundle. No OJD frame is on the stack, and no other thread was doing HID
+work. The manager is OJD's `HIDDeviceStream`, scheduled on the main run loop.
+
+Before the second crash, the log showed every controller behind one USB 2 hub disconnect at the
+same moment. On macOS 27, Sony pads and the GameSir G7 SE load Apple's `GCHIDLib` plug-in rather
+than `IOHIDLib`, so a suspected trigger is the last `GCHIDLib`-backed device leaving the process.
+That trigger is unconfirmed. Per-device USB resets of each controller did not reproduce the
+crash, singly or several at once. Neither did a standalone `IOHIDManager` program. Controllers
+work normally once the app is relaunched. A reproduction still needs a whole-hub disconnect.
