@@ -61,6 +61,7 @@
       VStack(alignment: .leading, spacing: 8) {
         HStack {
           Text(OJDLocalized.string("common.controllers", fallback: "Controllers")).font(.headline)
+            .lineLimit(1).layoutPriority(1)
           Spacer()
           OJDCompactSymbolButton(
             symbolName: "arrow.clockwise",

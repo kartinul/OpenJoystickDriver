@@ -242,6 +242,7 @@
       VStack(alignment: .leading, spacing: 8) {
         HStack {
           Text(OJDLocalized.string("common.profiles", fallback: "Profiles")).font(.headline)
+            .lineLimit(1).layoutPriority(1)
           Spacer()
           OJDCompactSymbolButton(
             symbolName: "plus",
