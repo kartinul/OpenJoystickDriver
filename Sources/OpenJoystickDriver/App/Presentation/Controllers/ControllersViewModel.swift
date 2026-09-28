@@ -1,5 +1,6 @@
 #if canImport(SwiftUI)
 
+  import Combine
   import Foundation
   import OpenJoystickDriverKit
 
@@ -9,8 +10,17 @@
     private(set) var selectedRuntimeIdentifier: String?
 
     let runtime: RuntimeViewModel
+    private var runtimeObservation: AnyCancellable?
 
-    init(runtime: RuntimeViewModel) { self.runtime = runtime }
+    init(runtime: RuntimeViewModel) {
+      self.runtime = runtime
+      // The list is derived from the runtime's status, so its changes must redraw this screen.
+      runtimeObservation = runtime.$statusState.map { _ in () }.merge(
+        with: runtime.$liveStatusError.map { _ in () }
+      ).sink { [weak self] in self?.objectWillChange.send() }
+    }
+
+    var liveStatusError: String? { runtime.liveStatusError }
 
     var devices: [ApplicationServiceDeviceDescription] {
       guard case .available(let status) = runtime.statusState else { return [] }

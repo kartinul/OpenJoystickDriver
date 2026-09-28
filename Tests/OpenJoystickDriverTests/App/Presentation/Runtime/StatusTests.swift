@@ -162,6 +162,27 @@ struct StatusTests {
       return
     }
     #expect(status.devices.map(\.runtimeIdentifier) == [device.runtimeIdentifier])
+    #expect(await MainActor.run { viewModel.liveStatusError } != nil)
+
+    await gateway.setStatusShouldFail(false)
+    await viewModel.refreshLiveStatus()
+
+    #expect(await MainActor.run { viewModel.liveStatusError } == nil)
+  }
+
+  @Test
+  @MainActor
+  func controllersScreenRepublishesRuntimeStatusChanges() async {
+    let gateway = GatewayStub()
+    let runtime = RuntimeViewModel(gateway: gateway)
+    let controllers = ControllersViewModel(runtime: runtime)
+    var invalidations = 0
+    let observation = controllers.objectWillChange.sink { invalidations += 1 }
+
+    await runtime.refresh()
+
+    #expect(invalidations > 0)
+    withExtendedLifetime(observation) {}
   }
 
   @Test

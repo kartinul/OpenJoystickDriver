@@ -41,6 +41,9 @@ final class RuntimeViewModel: ObservableObject {
   var supportLogsState: RuntimeSupportLogsState = .idle
   @Published
   var lastError: String?
+  /// Why the latest background status read failed while the last controller list stays visible.
+  @Published
+  var liveStatusError: String?
   @Published
   var activeMutationOperation: RuntimeMutationOperation?
   @Published
@@ -130,6 +133,7 @@ final class RuntimeViewModel: ObservableObject {
     permissionState = .loading
     postEventAccessState = .loading
     lastError = nil
+    liveStatusError = nil
     var loadedAny = false
 
     do {

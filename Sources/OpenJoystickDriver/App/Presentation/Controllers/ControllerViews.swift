@@ -98,7 +98,18 @@
             message: message,
             retry: refresh
           ).padding(.horizontal, 14)
-        case .available: if devices.isEmpty { EmptyView() } else { controllerListRows }
+        case .available:
+          if let liveStatusError = screen.liveStatusError {
+            ServiceFailureStateView(
+              title: OJDLocalized.string(
+                "controllers.loadError",
+                fallback: "Could not load controllers"
+              ),
+              message: liveStatusError,
+              retry: refresh
+            ).padding(.horizontal, 14)
+          }
+          if devices.isEmpty { EmptyView() } else { controllerListRows }
         }
         Spacer(minLength: 0)
       }.background(Color(NSColor.controlBackgroundColor))

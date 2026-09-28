@@ -127,13 +127,17 @@ extension RuntimeViewModel {
       }
       if loadState != .available { loadState = .available }
       if lastError != nil { lastError = nil }
+      if liveStatusError != nil { liveStatusError = nil }
     } catch {
       guard generation == liveStatusGeneration else { return }
+      let message = RuntimePresentation.userFacingError(error)
       if case .loading = statusState {
-        let message = RuntimePresentation.userFacingError(error)
         statusState =
           RuntimePresentation.isUnavailable(error) ? .unavailable(message) : .error(message)
         lastError = message
+      } else if liveStatusError != message {
+        // The last list stays visible, but must not pass for current while reads keep failing.
+        liveStatusError = message
       }
     }
   }
