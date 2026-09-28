@@ -262,7 +262,7 @@ enum RuntimeStatusText {
 
     var lines = ["Devices (\(status.descriptions.count)):"]
     for device in status.descriptions {
-      let serialNumber = device.serialNumber ?? "none"
+      let serialNumber = device.serialNumber == nil ? "none" : "present"
       lines.append(
         "  \(device.name) (VID:\(device.vendorID) PID:\(device.productID) "
           + "[\(device.connection)] SN:\(serialNumber))"

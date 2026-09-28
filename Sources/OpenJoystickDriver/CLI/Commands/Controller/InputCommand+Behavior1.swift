@@ -106,11 +106,19 @@ extension InputCommand {
     json: Bool,
     service: ControllerInputDiagnosticService
   ) async throws {
-    let entries = try await service.packetLog(
-      vendorID: device.vendorID,
-      productID: device.productID,
-      runtimeIdentifier: device.runtimeIdentifier
-    )
+    func read() async throws -> [PacketLogEntry] {
+      try await service.packetLog(
+        vendorID: device.vendorID,
+        productID: device.productID,
+        runtimeIdentifier: device.runtimeIdentifier
+      )
+    }
+    // Reading arms capture; an empty first read (usually no reader held it) samples one second.
+    var entries = try await read()
+    if entries.isEmpty {
+      try await Task.sleep(nanoseconds: Self.nanosecondsPerSecond)
+      entries = try await read()
+    }
     let selected = Array(entries.suffix(limit))
     warnAboutRawPackets()
 

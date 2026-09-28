@@ -2,9 +2,10 @@ import Foundation
 
 /// Bounded raw packet ring that defers expensive hexadecimal formatting until read.
 ///
-/// The input path stores only timestamp, direction, and raw bytes. This avoids
-/// formatting and duplicating packet strings for controllers that may report
-/// hundreds of times per second while no diagnostic consumer is visible.
+/// Capture is opt-in: packets are recorded only while a diagnostic reader holds a capture lease,
+/// which each ``armCapture()`` renews. Once the lease lapses, recording stops and an expiry timer
+/// discards what was captured, so no input history outlives the diagnostic session.
+/// The input path stores only timestamp, direction, and raw bytes; hex formatting waits for a read.
 final class PacketLogBuffer: @unchecked Sendable {
   private struct BufferedPacket: Sendable {
     let timestamp: TimeInterval
@@ -12,16 +13,60 @@ final class PacketLogBuffer: @unchecked Sendable {
     let bytes: [UInt8]
   }
 
-  // The lock guards the bounded raw entry array. Formatting uses a copied snapshot.
+  // The lock guards the bounded raw entry array and the lease. Formatting uses a copied snapshot.
   private let lock = NSLock()
   private let maxEntries: Int
+  private let captureLeaseNanoseconds: UInt64
+  private let uptimeNanoseconds: @Sendable () -> UInt64
   private var bufferedPackets: [BufferedPacket?]
   private var nextWriteIndex = 0
   private var entryCount = 0
+  private var captureDeadline: UInt64 = 0
+  private var expiryScheduled = false
 
-  init(maxEntries: Int) {
+  init(
+    maxEntries: Int,
+    captureLeaseNanoseconds: UInt64 = 5_000_000_000,
+    uptimeNanoseconds: @escaping @Sendable () -> UInt64 = { DispatchTime.now().uptimeNanoseconds }
+  ) {
     self.maxEntries = max(0, maxEntries)
+    self.captureLeaseNanoseconds = captureLeaseNanoseconds
+    self.uptimeNanoseconds = uptimeNanoseconds
     self.bufferedPackets = Array(repeating: nil, count: self.maxEntries)
+  }
+
+  /// Starts or extends capture for one lease period. A lapsed lease starts from an empty ring.
+  func armCapture() {
+    let now = uptimeNanoseconds()
+    let schedule = lock.withLock {
+      if now >= captureDeadline { clearLocked() }
+      captureDeadline = now + captureLeaseNanoseconds
+      defer { expiryScheduled = true }
+      return !expiryScheduled
+    }
+    if schedule { scheduleExpiry(afterNanoseconds: captureLeaseNanoseconds) }
+  }
+
+  /// Discards captured packets once the lease has lapsed; otherwise checks again at its deadline.
+  func expireIfLapsed() {
+    let now = uptimeNanoseconds()
+    let remaining: UInt64? = lock.withLock {
+      guard now < captureDeadline else {
+        clearLocked()
+        expiryScheduled = false
+        return nil
+      }
+      return captureDeadline - now
+    }
+    if let remaining { scheduleExpiry(afterNanoseconds: remaining) }
+  }
+
+  private func scheduleExpiry(afterNanoseconds delay: UInt64) {
+    // A floor keeps a renewed lease from rescheduling in a tight loop near its deadline.
+    let nanoseconds = Int(clamping: max(delay, 100_000_000))
+    DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + .nanoseconds(nanoseconds)) {
+      [weak self] in self?.expireIfLapsed()
+    }
   }
 
   func append(
@@ -30,9 +75,17 @@ final class PacketLogBuffer: @unchecked Sendable {
     timestamp: TimeInterval = Date().timeIntervalSince1970
   ) {
     guard maxEntries > 0 else { return }
-    let entry = BufferedPacket(timestamp: timestamp, direction: direction, bytes: bytes)
+    let now = uptimeNanoseconds()
     lock.withLock {
-      bufferedPackets[nextWriteIndex] = entry
+      guard now < captureDeadline else {
+        if entryCount > 0 { clearLocked() }
+        return
+      }
+      bufferedPackets[nextWriteIndex] = BufferedPacket(
+        timestamp: timestamp,
+        direction: direction,
+        bytes: bytes
+      )
       nextWriteIndex = (nextWriteIndex + 1) % maxEntries
       entryCount = min(entryCount + 1, maxEntries)
     }
@@ -52,6 +105,12 @@ final class PacketLogBuffer: @unchecked Sendable {
         length: $0.bytes.count
       )
     }
+  }
+
+  private func clearLocked() {
+    for index in bufferedPackets.indices { bufferedPackets[index] = nil }
+    nextWriteIndex = 0
+    entryCount = 0
   }
 
   private static func hexString(for bytes: [UInt8]) -> String {

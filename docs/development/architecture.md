@@ -150,8 +150,10 @@ connects after the native one is reported under `passThroughDevices`, as is a na
 driver binds; one rejected earlier stays under `unboundDevices`. Location 0 identifies no
 controller and is never shared. On macOS 10.15 the API is unavailable and no device is native.
 
-Devices that do not bind are recorded with their backend, reason and candidate families in the
-application-service payload's `unboundDevices`. `status` prints them under
+Devices that do not bind are recorded in the application-service payload's `unboundDevices` with
+their backend, reason, interface summaries, and rejected candidates. Each bound controller carries
+the matching binding result: its rule, matched predicates, and catalog record ID. Support reports
+include both. `status` prints them under
 `Unbound devices` and pass-through devices under `Left to macOS`; `status --json` carries both
 arrays. OJD holds its input claim on a rejected HID connection only while a bound pipeline shares
 the same physical controller or routing location, which prevents duplicate input, and otherwise

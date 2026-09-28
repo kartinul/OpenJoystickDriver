@@ -97,6 +97,11 @@ and a source-built record probe are different test subjects:
   This exercises the packaged Developer ID-signed app and its embedded DEXT; it
   does not use the Swift sources in a checkout. The notarized, stapled community tester package
   can replace the DriverKit extension with SIP enabled.
+  The report's `controllers[].binding` and `unboundDevices[]` show how each
+  connection was classified: outcome, reason, rule, matched predicates, catalog
+  record ID, access backend, interface summaries, and rejected candidates. It
+  records only whether a serial number is present, never its value, and no
+  packet payloads.
 - **Source-built record probe:** report the checkout commit and working-tree
   state, the record path, and the complete `./Scripts/ojd diagnose record ...`
   command and output. This route builds/runs the probe from the current source

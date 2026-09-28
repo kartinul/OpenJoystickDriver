@@ -5,6 +5,20 @@ import Testing
 
 struct DeviceIdentifierTests {
   @Test
+  func logDescriptionNotesASerialWithoutRevealingIt() {
+    let identifier = DeviceIdentifier(
+      vendorID: 0x054C,
+      productID: 0x09CC,
+      serialNumber: "SERIAL-SECRET-123",
+      locationID: 7
+    )
+    #expect(
+      identifier.description == "DeviceIdentifier(VID:0x054C PID:0x09CC serial=present loc=7)"
+    )
+    #expect(!DeviceIdentifier(vendorID: 1, productID: 2).description.contains("serial"))
+  }
+
+  @Test
   func modelMatchesIgnoresSerialAndRejectsDifferentIdentities() {
     let first = DeviceIdentifier(vendorID: 1, productID: 2, serialNumber: "ABC123")
     let second = DeviceIdentifier(vendorID: 1, productID: 2, serialNumber: "XYZ789")

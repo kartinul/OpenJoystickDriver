@@ -14,7 +14,7 @@ extension ApplicationServiceServer {
   }
 
   static func deviceDescriptionLine(_ device: ApplicationServiceDeviceDescription) -> String {
-    let serialNumber = device.serialNumber ?? "none"
+    let serialNumber = device.serialNumber == nil ? "none" : "present"
     let quirks = device.quirks.isEmpty ? "none" : device.quirks.joined(separator: ",")
     let backends =
       device.preferredBackends.isEmpty ? "none" : device.preferredBackends.joined(separator: ",")

@@ -6,7 +6,7 @@ import Testing
 struct PacketLogBufferTests {
   @Test
   func classifiesGIPAnnounceAndStatusAsHousekeepingInEitherDirection() {
-    let buffer = PacketLogBuffer(maxEntries: 4)
+    let buffer = armedBuffer(maxEntries: 4)
     buffer.append(bytes: [0x02, 0x20], direction: "rx", timestamp: 1)
     buffer.append(bytes: [0x03, 0x20], direction: "tx", timestamp: 2)
     buffer.append(bytes: [0x20, 0x00], direction: "rx", timestamp: 3)
@@ -21,7 +21,7 @@ struct PacketLogBufferTests {
 
   @Test
   func materializesTheExistingPacketLogContractOnRead() {
-    let buffer = PacketLogBuffer(maxEntries: 3)
+    let buffer = armedBuffer(maxEntries: 3)
     buffer.append(bytes: [0x00, 0x0A, 0xFF], direction: "rx", timestamp: 10)
     buffer.append(bytes: [], direction: "tx", timestamp: 11)
 
@@ -39,7 +39,7 @@ struct PacketLogBufferTests {
 
   @Test
   func keepsOnlyTheNewestBoundedEntries() {
-    let buffer = PacketLogBuffer(maxEntries: 2)
+    let buffer = armedBuffer(maxEntries: 2)
     buffer.append(bytes: [1], direction: "rx", timestamp: 1)
     buffer.append(bytes: [2], direction: "rx", timestamp: 2)
     buffer.append(bytes: [3], direction: "rx", timestamp: 3)
@@ -51,7 +51,7 @@ struct PacketLogBufferTests {
 
   @Test
   func concurrentInputNeverExceedsTheRingLimit() {
-    let buffer = PacketLogBuffer(maxEntries: 200)
+    let buffer = armedBuffer(maxEntries: 200)
     DispatchQueue.concurrentPerform(iterations: 1_000) { value in
       buffer.append(
         bytes: [UInt8(truncatingIfNeeded: value)],
@@ -61,5 +61,78 @@ struct PacketLogBufferTests {
     }
 
     #expect(buffer.entries().count == 200)
+  }
+
+  @Test
+  func recordsNothingUntilADiagnosticReaderArmsCapture() {
+    let buffer = PacketLogBuffer(maxEntries: 4) { 1 }
+    buffer.append(bytes: [0x01], direction: "rx", timestamp: 1)
+    #expect(buffer.entries().isEmpty)
+
+    buffer.armCapture()
+    buffer.append(bytes: [0x02], direction: "rx", timestamp: 2)
+    #expect(buffer.entries().map(\.hex) == ["02"])
+  }
+
+  @Test
+  func aLapsedLeaseStopsCaptureAndDiscardsWhatWasCaptured() {
+    let clock = PacketLogClock()
+    let buffer = PacketLogBuffer(maxEntries: 4, captureLeaseNanoseconds: 10) { clock.now }
+    buffer.armCapture()
+    buffer.append(bytes: [0x01], direction: "rx", timestamp: 1)
+    clock.now = 5
+    buffer.armCapture()  // Renewing within the lease keeps the ring.
+    buffer.append(bytes: [0x02], direction: "rx", timestamp: 2)
+    #expect(buffer.entries().map(\.hex) == ["01", "02"])
+
+    clock.now = 15
+    buffer.append(bytes: [0x03], direction: "rx", timestamp: 3)
+    #expect(buffer.entries().isEmpty)
+
+    buffer.append(bytes: [0x04], direction: "rx", timestamp: 4)
+    buffer.armCapture()
+    #expect(buffer.entries().isEmpty)
+  }
+
+  @Test
+  func rearmingAfterALapseStartsFromAnEmptyRingWithoutAnInterveningPacket() {
+    let clock = PacketLogClock()
+    let buffer = PacketLogBuffer(maxEntries: 4, captureLeaseNanoseconds: 10) { clock.now }
+    buffer.armCapture()
+    buffer.append(bytes: [0x01], direction: "rx", timestamp: 1)
+    clock.now = 20
+    buffer.armCapture()
+    #expect(buffer.entries().isEmpty)
+  }
+
+  @Test
+  func theExpiryCheckDiscardsCapturedPacketsOnlyAfterTheLeaseLapses() {
+    let clock = PacketLogClock()
+    let buffer = PacketLogBuffer(maxEntries: 4, captureLeaseNanoseconds: 10) { clock.now }
+    buffer.armCapture()
+    buffer.append(bytes: [0x01], direction: "rx", timestamp: 1)
+
+    clock.now = 9
+    buffer.expireIfLapsed()
+    #expect(buffer.entries().map(\.hex) == ["01"])
+
+    clock.now = 10
+    buffer.expireIfLapsed()
+    #expect(buffer.entries().isEmpty)
+  }
+
+  private func armedBuffer(maxEntries: Int) -> PacketLogBuffer {
+    let buffer = PacketLogBuffer(maxEntries: maxEntries) { 0 }
+    buffer.armCapture()
+    return buffer
+  }
+}
+
+private final class PacketLogClock: @unchecked Sendable {
+  private let lock = NSLock()
+  private var value: UInt64 = 0
+  var now: UInt64 {
+    get { lock.withLock { value } }
+    set { lock.withLock { value = newValue } }
   }
 }

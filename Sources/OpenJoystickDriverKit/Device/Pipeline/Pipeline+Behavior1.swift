@@ -186,7 +186,11 @@ extension DevicePipeline {
     )
   }
   func startupCommandStatus() -> String? { startupOutputStatus }
-  func getPacketLog() -> [PacketLogEntry] { packetLog.entries() }
+  /// Returns captured packets and renews the capture lease; reading is what enables capture.
+  func getPacketLog() -> [PacketLogEntry] {
+    packetLog.armCapture()
+    return packetLog.entries()
+  }
 
   func inputHealth() -> ControllerInputHealth {
     let now = uptimeNanoseconds()

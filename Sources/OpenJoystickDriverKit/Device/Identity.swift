@@ -124,11 +124,12 @@ public struct DeviceIdentifier: Hashable, Sendable {
 }
 
 extension DeviceIdentifier: CustomStringConvertible {
-  /// Returns a human-readable representation of the device identifier.
+  /// Returns a human-readable representation of the device identifier for logs. It never
+  /// includes the serial number, only whether one is present.
   public var description: String {
     let vid = String(format: "0x%04X", controllerIdentity.vendorID)
     let pid = String(format: "0x%04X", controllerIdentity.productID)
-    let serial = controllerIdentity.serialNumber.map { " serial=\($0)" } ?? ""
+    let serial = controllerIdentity.serialNumber == nil ? "" : " serial=present"
     let loc = locationID.map { " loc=\($0)" } ?? ""
     let interface = interfaceNumber.map { " if=\($0)" } ?? ""
     return "DeviceIdentifier(VID:\(vid) PID:\(pid)\(serial)\(loc)\(interface))"

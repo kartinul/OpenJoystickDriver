@@ -80,6 +80,14 @@ operations retain opaque `--device` selection and ambiguity rejection.
 Machine-readable output uses `--json` where supported. Stream commands use
 their documented JSONL mode.
 
+Packet capture is opt-in. The service records a controller's raw packets only while
+a reader holds a five-second capture lease, which each packet-log read renews:
+opening Developer Tools or selecting a controller there, its Live capture,
+`controller trace`, or `controller packets`, which samples for one second when its
+first read is empty. When the lease lapses, recording stops and the captured
+packets are discarded. Service logs, `status`, and `controller list` note only
+whether a controller has a serial number, never its value.
+
 Keep raw packets, runtime soaking, catalog inspection, permission audits, and
 virtual-device self-tests in the CLI: their output is diagnostic, verbose, or
 unsuitable for an always-present consumer interface.
