@@ -28,6 +28,13 @@ next_dext_bundle_version() {
     ${installed[@]+"${installed[@]}"}
 }
 
+# True when systemextensionsctl lists the DEXT at this version, in any state.
+sysext_listed() {
+  local listing
+  listing="$(systemextensionsctl list 2>&1 || true)"
+  [[ "$listing" == *"com.openjoystickdriver.XboxUSBDevice ($1/$2)"* ]]
+}
+
 # App-only install. Not a TCC or permission probe: the copy-then-re-sign of the
 # host always rewrites the code signature. If that designated requirement is
 # cdhash-pinned or leaf-pinned, Input Monitoring and Accessibility rows go
@@ -108,10 +115,27 @@ install_full() {
     --retire-driverkit \
     "$PROJECT_DIR/.build/debug/OpenJoystickDriver.app"
 
+  local INSTALLED_DEXT_INFO
+  INSTALLED_DEXT_INFO="/Applications/OpenJoystickDriver.app/Contents/Library/SystemExtensions/com.openjoystickdriver.XboxUSBDevice.dext/Info.plist"
+  local NEW_SHORT_VERSION NEW_BUILD_VERSION
+  NEW_SHORT_VERSION=$(plutil -extract CFBundleShortVersionString raw "$INSTALLED_DEXT_INFO" 2>/dev/null || echo "")
+  NEW_BUILD_VERSION=$(plutil -extract CFBundleVersion raw "$INSTALLED_DEXT_INFO" 2>/dev/null || echo "")
+
   echo ""
   echo "=== Step 5: Submit sysext activation ==="
+  # The launched app requests activation itself when its embedded DEXT differs
+  # from the installed one. sysextd rejects a second request for the same
+  # extension while the first is in progress (OSSystemExtensionErrorDomain 4),
+  # so submit one only when the app's request does not appear.
   local APP_BIN="/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver"
-  if "$APP_BIN" --headless extension enable; then
+  local REQUEST_WAIT=0
+  until sysext_listed "$NEW_SHORT_VERSION" "$NEW_BUILD_VERSION" || (( REQUEST_WAIT >= 10 )); do
+    sleep 1
+    REQUEST_WAIT=$(( REQUEST_WAIT + 1 ))
+  done
+  if sysext_listed "$NEW_SHORT_VERSION" "$NEW_BUILD_VERSION"; then
+    echo "  ✓ The app requested activation of ${NEW_SHORT_VERSION} (${NEW_BUILD_VERSION})"
+  elif "$APP_BIN" --headless extension enable; then
     echo "  ✓ Sysext activation request submitted"
   else
     echo "  ✗ Sysext activation request failed"
@@ -122,11 +146,6 @@ install_full() {
   echo "=== Step 6: Wait for sysext activation ==="
   echo ""
 
-  local INSTALLED_DEXT_INFO
-  INSTALLED_DEXT_INFO="/Applications/OpenJoystickDriver.app/Contents/Library/SystemExtensions/com.openjoystickdriver.XboxUSBDevice.dext/Info.plist"
-  local NEW_SHORT_VERSION NEW_BUILD_VERSION
-  NEW_SHORT_VERSION=$(plutil -extract CFBundleShortVersionString raw "$INSTALLED_DEXT_INFO" 2>/dev/null || echo "")
-  NEW_BUILD_VERSION=$(plutil -extract CFBundleVersion raw "$INSTALLED_DEXT_INFO" 2>/dev/null || echo "")
   local SYSEXT_TIMEOUT=30 SYSEXT_ELAPSED=0
   while (( SYSEXT_ELAPSED < SYSEXT_TIMEOUT )); do
     sleep 2
