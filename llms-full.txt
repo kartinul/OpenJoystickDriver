@@ -33,7 +33,6 @@ Parser/protocol: `./Scripts/ojd test parsers-macos14`. Cache: `./Scripts/ojd rep
 - [Contributing](CONTRIBUTING.md): setup, adding controllers, code rules
 - [Localization](LOCALIZATION.md): GUI and CLI string catalogs
 - [Documentation map](docs/README.md): user, testing, and development pages
-- [Documentation instructions](docs/AGENTS.md): docs vs schemas vs evidence
 - [Agent instructions](AGENTS.md): generated-file rules and validation commands
 - [Changelog](CHANGELOG.md): Keep a Changelog 1.1.0 history
 - [License](LICENSE): MIT

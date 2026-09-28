@@ -9,6 +9,7 @@ CONTEXT.md
 
 /GOAL.md
 /goals/
+/docs/AGENTS.md
 # Regenerate with `./Scripts/ojd docs export-external-issues`.
 /docs/external/
 
