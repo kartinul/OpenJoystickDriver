@@ -56,7 +56,8 @@ def main(argv: list[str]) -> int:
     info = app / "Contents/Info.plist"
     binary = app / "Contents/MacOS/OpenJoystickDriver"
     icon = app / "Contents/Resources/OpenJoystickDriver.icns"
-    for path in (info, binary, icon):
+    concurrency = app / "Contents/Frameworks/libswift_Concurrency.dylib"
+    for path in (info, binary, icon, concurrency):
         check_file(path, failures)
     try:
         minimum = plistlib.loads(info.read_bytes()).get("LSMinimumSystemVersion", "")

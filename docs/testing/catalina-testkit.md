@@ -8,11 +8,12 @@ Copy the signed universal app to Catalina, then run:
 ./Scripts/ojd diagnose catalina /Applications/OpenJoystickDriver.app
 ```
 
-The check verifies:
+The check needs `python3`, `otool` and `lipo`, which Catalina provides only with the
+Command Line Tools (`xcode-select --install`). It verifies:
 
 - `LSMinimumSystemVersion` and the executable deployment target are 10.15;
 - the application contains an x86_64 slice;
-- the icon and main executable exist;
+- the icon, main executable and bundled Swift Concurrency runtime exist;
 - no LaunchAgent or helper daemon is packaged;
 - the headless CLI starts.
 

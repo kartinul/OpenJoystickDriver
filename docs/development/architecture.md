@@ -259,6 +259,9 @@ the next presence reply reconnects the slot.
 
 The package deployment floor remains macOS 10.15. HID uses IOKit on every
 supported macOS, so no HID path selects an implementation by OS version.
+macOS 10.15 and 11 have no Swift Concurrency runtime, so the app bundle
+carries the toolchain's back-deployment `libswift_Concurrency.dylib` in
+`Contents/Frameworks`.
 
 | Capability | macOS 10.15+ |
 | --- | --- |
