@@ -6,10 +6,7 @@ import os
 import sys
 from pathlib import Path
 
-from .bundle_version import (
-    current_commit_bundle_version,
-    dext_bundle_version_from_semver,
-)
+from .bundle_version import current_commit_bundle_version, release_version
 from .package_common import (
     CommandFailure,
     cleanup_workdirs,
@@ -62,6 +59,7 @@ def main(argv: list[str]) -> int:
         or release_ref.removeprefix("v")
         or default_bundle_short_version(PROJECT_DIR)
     )
+    release_version(version)
     safe = safe_version(version)
     build_dir = PROJECT_DIR / ".build"
     artifact_dir = build_dir / "release-artifacts"
@@ -77,7 +75,6 @@ def main(argv: list[str]) -> int:
     env["OJD_BUNDLE_VERSION"] = current_commit_bundle_version(PROJECT_DIR)
     env["OJD_SOURCE_COMMIT"] = commit
     env["OJD_SOURCE_STATE"] = "clean"
-    dext_version = dext_bundle_version_from_semver(version)
     artifact_dir.mkdir(parents=True, exist_ok=True)
 
     try:
@@ -93,7 +90,6 @@ def main(argv: list[str]) -> int:
             env=env,
         )
         print("\n=== Build and embed DriverKit extension ===")
-        dext_env = env | {"DEXT_BUNDLE_VERSION": dext_version}
         run(
             [
                 "/usr/bin/env",
@@ -102,7 +98,7 @@ def main(argv: list[str]) -> int:
                 "build",
                 "dext",
             ],
-            env=dext_env,
+            env=env,
         )
         if not app_path.is_dir():
             die(f"App bundle not found: {app_path}")
@@ -114,7 +110,6 @@ def main(argv: list[str]) -> int:
             app_path / "Contents/Info.plist",
             dext_info,
             env["OJD_BUNDLE_VERSION"],
-            dext_version,
             version,
             commit,
             "clean",

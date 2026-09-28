@@ -58,9 +58,9 @@ just package-tester
 The command performs these operations:
 
 1. It builds the Developer ID app.
-2. It builds and embeds the DriverKit extension.
-3. It checks versions, signatures, entitlements, notarization, stapling, and Gatekeeper acceptance.
-4. It creates and checks the tester DMG.
+1. It builds and embeds the DriverKit extension.
+1. It checks versions, signatures, entitlements, notarization, stapling, and Gatekeeper acceptance.
+1. It creates and checks the tester DMG.
 
 Notarization time depends on Apple. A repeated submission usually takes minutes. A first submission
 can take hours.
@@ -72,16 +72,17 @@ The final file is in:
 ```
 
 The DMG also contains `OpenJoystickDriver-TESTER-BUILD.txt`. This file identifies the source commit,
-app version, DriverKit version, signing type, and notarization result.
+version, bundle build number, signing type, and notarization result. The version is the release
+SemVer with build metadata, such as `0.5.0-beta.5+build.1.14.89.sha.0123456789ab`.
 
 ## 4. Send The Build
 
 Send the DMG without changing its contents. Ask the tester to:
 
 1. Open the DMG and drag `OpenJoystickDriver.app` to `/Applications`.
-2. Open the app and approve its requested macOS permissions and system extension.
-3. Reproduce the controller problem with the packaged app.
-4. Create a support report with the installed CLI.
+1. Open the app and approve its requested macOS permissions and system extension.
+1. Reproduce the controller problem with the packaged app.
+1. Create a support report with the installed CLI.
 
 ```bash
 /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver \

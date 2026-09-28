@@ -86,8 +86,8 @@ GUI_DEBUG="$PROJECT_DIR/.build/debug/OpenJoystickDriver"
 GUI_RELEASE="$PROJECT_DIR/.build/apple/Products/Release/OpenJoystickDriver"
 OJD_APP_INFO_PLIST="$PROJECT_DIR/Sources/OpenJoystickDriver/App/Info.plist"
 OJD_DEFAULT_BUNDLE_SHORT_VERSION="$(/usr/bin/plutil -extract CFBundleShortVersionString raw -o - "$OJD_APP_INFO_PLIST" 2>/dev/null)"
-if [[ ! "$OJD_DEFAULT_BUNDLE_SHORT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?([+][0-9A-Za-z.-]+)?$ ]]; then
-  die "Invalid or missing CFBundleShortVersionString in $OJD_APP_INFO_PLIST"
+if [[ ! "$OJD_DEFAULT_BUNDLE_SHORT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+  die "CFBundleShortVersionString in $OJD_APP_INFO_PLIST must be SemVer without build metadata"
 fi
 
 # Active binary paths (selected by OJD_ENV)

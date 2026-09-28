@@ -23,6 +23,20 @@ struct BuildIdentityTests {
   }
 
   @Test
+  func displayCarriesProvenanceAsSemVerBuildMetadata() throws {
+    let identity = BuildIdentity(
+      semanticVersion: "0.5.0-beta.4",
+      appBundleVersion: "1.4.89",
+      sourceCommit: "0123456789abcdef0123456789abcdef01234567",
+      sourceState: .dirty
+    )
+
+    #expect(identity.display == "0.5.0-beta.4+build.1.4.89.sha.0123456789ab.dirty")
+    let parsed = try #require(SemanticVersion(identity.display))
+    #expect(parsed == SemanticVersion("0.5.0-beta.4"))
+  }
+
+  @Test
   func statusJSONExposesBuildIdentityAtTheTopLevel() throws {
     let identity = BuildIdentity(
       semanticVersion: "0.5.0-beta.4",

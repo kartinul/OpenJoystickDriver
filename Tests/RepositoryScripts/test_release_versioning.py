@@ -13,12 +13,12 @@ from pathlib import Path
 
 from Scripts.Release import package_tester
 from Scripts.Release.bundle_version import (
-    advance_tester_sequence,
-    dext_bundle_version_from_semver,
-    resolve_dext_bundle_version,
-    tester_bundle_version,
-    tester_short_version,
-    validate_dext_bundle_version,
+    build_metadata,
+    bundle_version_from_commit_count,
+    next_development_bundle_version,
+    release_version,
+    validate_bundle_version,
+    version_with_metadata,
 )
 from Scripts.Release.package_common import (
     require_clean_source,
@@ -67,14 +67,13 @@ def validate_tester_packaging_flow(*, fail_after_dmg: bool) -> None:
         project = Path(directory)
         events: list[str] = []
         captured_build_info = ""
+        captured_env: dict[str, str] = {}
         original_environment = os.environ.copy()
         overrides = {
             "PROJECT_DIR": project,
             "default_bundle_short_version": lambda _: "0.5.0-beta.4",
             "require_clean_source": lambda *_: "a" * 40,
-            "advance_tester_sequence": lambda *_: 7,
-            "current_commit_bundle_version": lambda _: "42",
-            "dext_bundle_version_from_semver": lambda _: "0.5.0b4",
+            "current_commit_bundle_version": lambda _: "1.0.42",
             "command_output": lambda _: "aaaaaaaaaaaa",
             "release_environment": lambda: os.environ.copy(),
             "verify_bundle_versions": lambda *_: None,
@@ -85,6 +84,8 @@ def validate_tester_packaging_flow(*, fail_after_dmg: bool) -> None:
 
         def fake_run(command: list[str], *, env: dict[str, str] | None = None) -> None:
             if command[-2:] == ["build", "release"]:
+                assert env is not None
+                captured_env.update(env)
                 dext = (
                     project
                     / ".build/debug/OpenJoystickDriver.app/Contents/Library/SystemExtensions"
@@ -134,6 +135,16 @@ def validate_tester_packaging_flow(*, fail_after_dmg: bool) -> None:
             assert result == 0
             assert len(artifacts) == 1
             assert events == ["notarize", "stapler", "gatekeeper", "dmg"]
+            assert artifacts[0].name == (
+                "OpenJoystickDriver-0.5.0-beta.4-tester-1.0.42-aaaaaaaaaaaa-macOS.dmg"
+            )
+            assert captured_env["OJD_BUNDLE_SHORT_VERSION"] == "0.5.0-beta.4"
+            assert captured_env["OJD_BUNDLE_VERSION"] == "1.0.42"
+            assert "DEXT_BUNDLE_VERSION" not in captured_env
+            assert (
+                "version: 0.5.0-beta.4+build.1.0.42.sha.aaaaaaaaaaaa\n"
+                in captured_build_info
+            )
             for line in (
                 "notarization: accepted",
                 "stapling: validated",
@@ -149,104 +160,66 @@ def validate_tester_packaging_flow(*, fail_after_dmg: bool) -> None:
 
 
 def main() -> int:
-    assert dext_bundle_version_from_semver("0.5.0-beta.3") == "0.5.0b3"
-    assert dext_bundle_version_from_semver("1.2.3-alpha.1") == "1.2.3a1"
-    assert dext_bundle_version_from_semver("1.2.3-rc.2") == "1.2.3fc2"
-    for value in ("0.5.0", "0.5.0a1", "0.5.0b3", "0.5.0fc2"):
-        assert validate_dext_bundle_version(value) == value
-    assert (
-        resolve_dext_bundle_version("0.5.0-beta.3", "0.5.0b3", release=True)
-        == "0.5.0b3"
+    for value in ("0.5.0", "0.5.0-beta.5", "1.0.0-rc.1.2", "1.0.0-x-y.0a"):
+        assert release_version(value) == value
+    for value in ("v1.0.0", "1.0", "01.0.0", "1.0.0-01", "1.0.0+sha.1", "1.0.0-"):
+        expect_failure(release_version, value)
+    assert build_metadata("1.4.89", "0123456789abcdef", dirty=False) == (
+        "build.1.4.89.sha.0123456789ab"
     )
     assert (
-        resolve_dext_bundle_version("0.5.0-beta.3-next.1", "0.5.0b3", release=True)
-        == "0.5.0b3"
+        version_with_metadata("0.5.0-beta.5", "1.4.89", "0" * 40, dirty=True)
+        == "0.5.0-beta.5+build.1.4.89.sha.000000000000.dirty"
     )
-    expect_failure(resolve_dext_bundle_version, "0.5.0-beta.3", "0.5.0b2", release=True)
-    expect_failure(
-        resolve_dext_bundle_version,
-        "0.5.0-beta.3-next.1",
-        "0.5.0b2",
-        release=True,
-    )
-    expect_failure(
-        resolve_dext_bundle_version,
-        "0.5.0-beta.3-next.256",
-        "0.5.0b3",
-        release=True,
-    )
-    for value in ("500003", "0.5.0b0", "0.5.0b256", "0.5.0beta3", "1.100.0"):
-        expect_failure(validate_dext_bundle_version, value)
+    expect_failure(version_with_metadata, "0.5.0+x", "1.4.89", "a" * 40, dirty=False)
+    assert bundle_version_from_commit_count("0") == "1.0.0"
+    assert bundle_version_from_commit_count("1489") == "1.14.89"
+    assert bundle_version_from_commit_count("20001") == "3.0.1"
+    for value in ("1.0.0", "1.14.89", "7", "1.14.89d1", "0.5.0b3", "0.5.0fc2"):
+        assert validate_bundle_version(value) == value
+    for value in ("500003", "1.0.0d0", "1.0.0d256", "0.5.0beta3", "1.100.0", "1+x"):
+        expect_failure(validate_bundle_version, value)
+    assert next_development_bundle_version("1.14.89", []) == "1.14.89d1"
     assert (
-        executable_version("--resolve-dext", "0.5.0-beta.3", "0.5.0b3", "--release")
-        == "0.5.0b3"
+        next_development_bundle_version(
+            "1.14.89", ["1.14.89d2", "1.14.88d9", "1.14.89", "7", "garbage"]
+        )
+        == "1.14.89d3"
     )
-    assert executable_version("--resolve-dext", "0.5.0-beta.3", "0.5.0b2") == "0.5.0b2"
-    expect_executable_failure("--resolve-dext", "0.5.0-beta.3", "0.5.0b2", "--release")
-    for value in ("1.2.3-beta.1.2", "1.2.3-beta.0", "1.2.3-beta", "1.2.3+meta"):
-        expect_failure(dext_bundle_version_from_semver, value)
-    for value in ("65536.0.0", "1.100.0", "1.2.100", "1.2.3-beta.256"):
-        expect_failure(dext_bundle_version_from_semver, value)
+    expect_failure(next_development_bundle_version, "1.14.89d1", [])
+    expect_failure(next_development_bundle_version, "1.14.89", ["1.14.89d255"])
+    assert executable_version("--check-release", "0.5.0-beta.5") == "0.5.0-beta.5"
+    expect_executable_failure("--check-release", "0.5.0-beta.5+build.1")
+    assert executable_version("--validate", "1.14.89") == "1.14.89"
+    expect_executable_failure("--validate", "0.5.0-beta.5")
+    assert executable_version("--next-dev", "1.14.89", "1.14.89d4") == "1.14.89d5"
+    expect_executable_failure("--resolve-dext", "0.5.0-beta.5")
 
     with tempfile.TemporaryDirectory() as directory:
-        state = Path(directory) / "tester-state"
-        assert tester_bundle_version("1.2.3", state).endswith("d1")
-        assert tester_bundle_version("1.2.3", state).endswith("d2")
-        assert tester_bundle_version("1.2.4", state).endswith("d1")
-
-        next_state = Path(directory) / "tester-next-state"
-        assert advance_tester_sequence("0.5.0-beta.4", next_state) == 1
-        assert advance_tester_sequence("0.5.0-beta.4", next_state) == 2
-        assert advance_tester_sequence("0.5.0-beta.5", next_state) == 1
-        nested_state = Path(directory) / "missing" / "tester-state"
-        assert advance_tester_sequence("0.5.0-beta.4", nested_state) == 1
-        assert nested_state.is_file()
-        assert tester_short_version("0.5.0-beta.4", 1) == "0.5.0-beta.4-next.1"
-        assert tester_short_version("0.5.0", 2) == "0.5.0-next.2"
-        expect_failure(tester_short_version, "0.5.0-beta.4-next.1", 1)
-        expect_failure(tester_short_version, "0.5.0-beta.4", 0)
-        expect_failure(advance_tester_sequence, "0.5.0-beta.4-next.1", next_state)
-
         app = Path(directory) / "app.plist"
         dext = Path(directory) / "dext.plist"
-        for path, build in ((app, "1.2.3d1"), (dext, "0.5.0b3")):
+        for path, build in ((app, "1.2.3"), (dext, "1.2.3")):
             path.write_bytes(
                 plistlib.dumps(
                     {
-                        "CFBundleShortVersionString": "0.5.0-beta.3-next.1",
+                        "CFBundleShortVersionString": "0.5.0-beta.3",
                         "CFBundleVersion": build,
                         "OJDSourceCommit": "a" * 40,
                         "OJDSourceState": "clean",
                     }
                 )
             )
-        verify_bundle_versions(
-            app,
-            dext,
-            "1.2.3d1",
-            "0.5.0b3",
-            "0.5.0-beta.3-next.1",
-            "a" * 40,
-            "clean",
-        )
-        expect_failure(
-            verify_bundle_versions,
-            app,
-            dext,
-            "wrong",
-            "0.5.0b3",
-            "0.5.0-beta.3-next.1",
-            "a" * 40,
-            "clean",
-        )
-        metadata = package_tester.tester_metadata(
-            "tester.dmg", "0.5.0-beta.3-next.1", "1.2.3d1", "0.5.0b3"
-        )
+        verify_bundle_versions(app, dext, "1.2.3", "0.5.0-beta.3", "a" * 40, "clean")
+        for build, short in (("wrong", "0.5.0-beta.3"), ("1.2.3", "0.5.0-beta.4")):
+            expect_failure(
+                verify_bundle_versions, app, dext, build, short, "a" * 40, "clean"
+            )
+        version = "0.5.0-beta.3+build.1.2.3.sha.aaaaaaaaaaaa"
+        metadata = package_tester.tester_metadata("tester.dmg", version, "1.2.3")
         assert metadata == {
             "artifact": "tester.dmg",
-            "version": "0.5.0-beta.3-next.1",
-            "app_bundle_build_version": "1.2.3d1",
-            "dext_bundle_version": "0.5.0b3",
+            "version": version,
+            "bundle_version": "1.2.3",
             "notarization": "accepted",
             "stapling": "validated",
             "gatekeeper": "accepted",

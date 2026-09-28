@@ -97,12 +97,10 @@ enum ExtensionProbe {
     )
   }
 
+  /// Accepts a SemVer short version or a kext-grammar build version.
   private static func isVersionComponent(_ value: String) -> Bool {
-    if !value.isEmpty && value.allSatisfy({ $0.isNumber }) { return true }
-    let pattern =
-      value.contains("-")
-      ? "[0-9]+\\.[0-9]+\\.[0-9]+-(?:alpha|beta|rc)\\.[1-9][0-9]*"
-      : "[0-9]+\\.[0-9]+\\.[0-9]+(?:(?:d|a|b|fc)[1-9][0-9]*)?"
+    if value.first?.isNumber == true, SemanticVersion(value) != nil { return true }
+    let pattern = "[0-9]+(?:\\.[0-9]+){0,2}(?:(?:d|a|b|fc)[1-9][0-9]*)?"
     guard let expression = try? NSRegularExpression(pattern: "^\(pattern)$") else { return false }
     let range = NSRange(location: 0, length: value.utf16.count)
     return expression.firstMatch(in: value, range: range)?.range == range

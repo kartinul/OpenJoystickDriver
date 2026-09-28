@@ -1,4 +1,13 @@
-"""Generate the shared app and DriverKit bundle build versions."""
+"""Release versions, build numbers, and build metadata for the app and DEXT.
+
+The release version is SemVer 2.0.0 without build metadata; it lives in the
+app Info.plist and in tags, without a `v`. Build provenance goes in SemVer
+build metadata (`+build.<number>.sha.<commit>[.dirty]`), which never orders
+anything. Apple's `CFBundleVersion` orders builds: the app and the DEXT share
+one number derived from the commit count, in the kext grammar that DriverKit
+requires. Local DEXT installs may append a development stage (`d<level>`) so
+a rebuilt tree replaces the active extension.
+"""
 
 from __future__ import annotations
 
@@ -8,19 +17,48 @@ import sys
 from pathlib import Path
 from typing import NoReturn
 
-SEMANTIC_VERSION = re.compile(
-    r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
-    r"(?:-(alpha|beta|rc)\.([1-9][0-9]*))?$"
+# Official SemVer 2.0.0 regex (https://semver.org), anchored.
+SEMVER = re.compile(
+    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
+    r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+    r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+    r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
 )
-DEXT_VERSION = re.compile(
-    r"((?:0|[1-9][0-9]*)(?:\.(?:0|[1-9][0-9]*)){0,2})"
-    r"(?:(?:d|a|b|fc)([0-9]+))?"
+# Apple kext version grammar: up to three numbers, optional stage and level.
+BUNDLE_VERSION = re.compile(
+    r"((?:0|[1-9][0-9]*)(?:\.(?:0|[1-9][0-9]*)){0,2})(?:(d|a|b|fc)([0-9]+))?"
 )
 
 
 def die(message: str) -> NoReturn:
     print(f"ERROR: {message}", file=sys.stderr)
     raise SystemExit(2)
+
+
+def release_version(version: str) -> str:
+    """Return `version` if it is SemVer without build metadata."""
+    match = SEMVER.fullmatch(version)
+    if match is None:
+        die(f"Release version is not SemVer 2.0.0: {version}")
+    if match.group(5) is not None:
+        die(f"Release version must not carry build metadata: {version}")
+    return version
+
+
+def build_metadata(bundle_version: str, commit: str, dirty: bool) -> str:
+    identifiers = ["build", bundle_version, "sha", commit[:12]]
+    if dirty:
+        identifiers.append("dirty")
+    return ".".join(identifiers)
+
+
+def version_with_metadata(
+    version: str, bundle_version: str, commit: str, dirty: bool
+) -> str:
+    full = f"{release_version(version)}+{build_metadata(bundle_version, commit, dirty)}"
+    if SEMVER.fullmatch(full) is None:
+        die(f"Build metadata is not valid SemVer: {full}")
+    return full
 
 
 def bundle_version_from_commit_count(commit_count: str) -> str:
@@ -48,123 +86,54 @@ def current_commit_bundle_version(project_dir: Path) -> str:
     return bundle_version_from_commit_count(result.stdout.strip())
 
 
-def advance_tester_sequence(release_version: str, state_file: Path) -> int:
-    if SEMANTIC_VERSION.fullmatch(release_version) is None:
-        die(
-            "Tester short version base must be MAJOR.MINOR.PATCH, -alpha.N, "
-            "-beta.N, or -rc.N with positive prerelease level"
-        )
-    previous_base, sequence = "", 0
-    if state_file.is_file():
-        values = {}
-        for line in state_file.read_text().splitlines():
-            if "=" in line:
-                key, value = line.split("=", 1)
-                values.setdefault(key, value)
-        previous_base = values.get("base", "")
-        try:
-            sequence = int(values.get("sequence", "0"))
-        except ValueError:
-            sequence = 0
-    sequence = sequence + 1 if previous_base == release_version else 1
-    if not 1 <= sequence <= 255:
-        die(f"Tester build sequence exceeded 255 for {release_version}")
-    state_file.parent.mkdir(parents=True, exist_ok=True)
-    state_file.write_text(f"base={release_version}\nsequence={sequence}\n")
-    return sequence
-
-
-def tester_short_version(release_version: str, sequence: int) -> str:
-    if SEMANTIC_VERSION.fullmatch(release_version) is None:
-        die(
-            "Tester short version base must be MAJOR.MINOR.PATCH, -alpha.N, "
-            "-beta.N, or -rc.N with positive prerelease level"
-        )
-    if not 1 <= sequence <= 255:
-        die(f"Tester short version sequence must be 1...255, got {sequence}")
-    return f"{release_version}-next.{sequence}"
-
-
-def tester_bundle_version(base_version: str, state_file: Path) -> str:
-    sequence = advance_tester_sequence(base_version, state_file)
-    return f"{base_version}d{sequence}"
-
-
-def dext_bundle_version_from_semver(version: str) -> str:
-    """Map the release SemVer grammar to Apple's kext version grammar."""
-    match = SEMANTIC_VERSION.fullmatch(version)
+def validate_bundle_version(version: str) -> str:
+    match = BUNDLE_VERSION.fullmatch(version)
     if match is None:
-        die(
-            "Version must be MAJOR.MINOR.PATCH, -alpha.N, -beta.N, or -rc.N "
-            "with positive prerelease level"
-        )
-    major, minor, revision = (int(match.group(index)) for index in range(1, 4))
-    if major > 65535 or minor > 99 or revision > 99:
-        die("DriverKit version components exceed the kext version range")
-    stage, level_text = match.group(4), match.group(5)
-    if stage is None:
-        return f"{major}.{minor}.{revision}"
-    level = int(level_text)
-    if level > 255:
-        die("DriverKit prerelease level must be 1...255")
-    stage_suffix = {"alpha": "a", "beta": "b", "rc": "fc"}[stage]
-    return f"{major}.{minor}.{revision}{stage_suffix}{level}"
-
-
-def validate_dext_bundle_version(version: str) -> str:
-    match = DEXT_VERSION.fullmatch(version)
-    if match is None:
-        die("DriverKit CFBundleVersion has invalid grammar")
+        die(f"CFBundleVersion has invalid grammar: {version}")
     components = [int(part) for part in match.group(1).split(".")]
     major, minor, revision = (components + [0, 0, 0])[:3]
-    level = int(match.group(2)) if match.group(2) else None
+    level = int(match.group(3)) if match.group(3) else None
     if (
         major > 65535
         or minor > 99
         or revision > 99
         or (level is not None and not 1 <= level <= 255)
     ):
-        die("DriverKit CFBundleVersion components exceed supported bounds")
+        die(f"CFBundleVersion components exceed supported bounds: {version}")
     return version
 
 
-def resolve_dext_bundle_version(
-    short_version: str, override: str | None = None, *, release: bool = False
-) -> str:
-    semantic_version = short_version
-    base_version, separator, sequence = short_version.rpartition("-next.")
-    if separator:
-        if (
-            SEMANTIC_VERSION.fullmatch(base_version) is None
-            or not sequence.isdecimal()
-            or not 1 <= int(sequence) <= 255
-        ):
-            die("Tester short version has invalid release base or sequence")
-        semantic_version = base_version
-    expected = dext_bundle_version_from_semver(semantic_version)
-    if override is None:
-        return expected
-    explicit = validate_dext_bundle_version(override)
-    if release and explicit != expected:
-        die("Explicit DriverKit version conflicts with the release semantic version")
-    return explicit
+def next_development_bundle_version(base: str, installed: list[str]) -> str:
+    """Development stage of `base` above any installed development build of it."""
+    base_match = BUNDLE_VERSION.fullmatch(validate_bundle_version(base))
+    if base_match is None or base_match.group(2):
+        die(f"Base CFBundleVersion already has a stage: {base}")
+    level = 0
+    for candidate in installed:
+        match = BUNDLE_VERSION.fullmatch(candidate)
+        if match and match.group(1) == base and match.group(2) == "d":
+            level = max(level, int(match.group(3)))
+    return validate_bundle_version(f"{base}d{level + 1}")
+
+
+def usage() -> NoReturn:
+    raise SystemExit(
+        f"usage: {Path(sys.argv[0]).name} <project-dir>\n"
+        "       | --check-release <version>\n"
+        "       | --validate <bundle-version>\n"
+        "       | --next-dev <base-bundle-version> [installed-bundle-version...]"
+    )
 
 
 if __name__ == "__main__":
     match sys.argv[1:]:
-        case ["--dext", version]:
-            print(dext_bundle_version_from_semver(version))
-        case ["--validate-dext", version]:
-            print(validate_dext_bundle_version(version))
-        case ["--resolve-dext", short_version]:
-            print(resolve_dext_bundle_version(short_version))
-        case ["--resolve-dext", short_version, override]:
-            print(resolve_dext_bundle_version(short_version, override))
-        case ["--resolve-dext", short_version, override, "--release"]:
-            print(resolve_dext_bundle_version(short_version, override, release=True))
-        case [project_dir]:
+        case ["--check-release", version]:
+            print(release_version(version))
+        case ["--validate", version]:
+            print(validate_bundle_version(version))
+        case ["--next-dev", base, *installed]:
+            print(next_development_bundle_version(base, installed))
+        case [project_dir] if not project_dir.startswith("-"):
             print(current_commit_bundle_version(Path(project_dir)))
         case _:
-            raise SystemExit(
-                f"usage: {Path(sys.argv[0]).name} <project-dir> | --dext <version>"
-            )
+            usage()

@@ -5,27 +5,27 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/build.sh"
 
+# The commit's build number with a development stage one above any installed
+# development build of it, so reinstalling the same commit replaces the DEXT.
 next_dext_bundle_version() {
-  local max_version=0
+  local installed=()
   local candidate
 
   candidate=$(plutil -extract CFBundleVersion raw \
     /Applications/OpenJoystickDriver.app/Contents/Library/SystemExtensions/com.openjoystickdriver.XboxUSBDevice.dext/Info.plist \
     2>/dev/null || echo "")
-  if [[ "$candidate" =~ ^[0-9]+$ && "$candidate" -gt "$max_version" ]]; then
-    max_version="$candidate"
-  fi
+  [[ -n "$candidate" ]] && installed+=("$candidate")
 
   while IFS= read -r candidate; do
-    if [[ "$candidate" =~ ^[0-9]+$ && "$candidate" -gt "$max_version" ]]; then
-      max_version="$candidate"
-    fi
+    installed+=("$candidate")
   done < <(
     systemextensionsctl list 2>/dev/null \
-      | sed -n 's/.*com\.openjoystickdriver\.XboxUSBDevice ([^/][^/]*\/\([0-9][0-9]*\)).*/\1/p'
+      | sed -n 's/.*com\.openjoystickdriver\.XboxUSBDevice ([^/][^/]*\/\([^)]*\)).*/\1/p'
   )
 
-  echo $((max_version + 1))
+  python3 "$PROJECT_DIR/Scripts/Release/bundle_version.py" --next-dev \
+    "$(python3 "$PROJECT_DIR/Scripts/Release/bundle_version.py" "$PROJECT_DIR")" \
+    ${installed[@]+"${installed[@]}"}
 }
 
 # App-only install. Not a TCC or permission probe: the copy-then-re-sign of the

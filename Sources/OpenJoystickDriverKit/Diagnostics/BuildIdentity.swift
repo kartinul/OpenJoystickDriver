@@ -34,10 +34,13 @@ public struct BuildIdentity: Codable, Equatable, Sendable {
     )
   }
 
+  /// The release version with SemVer build metadata for provenance, such as
+  /// `0.5.0+build.1.4.89.sha.0123456789ab.dirty`. Metadata never orders versions.
   public var display: String {
     let shortCommit = sourceCommit.count == 40 ? String(sourceCommit.prefix(12)) : sourceCommit
-    let dirtySuffix = sourceState == .dirty ? "-dirty" : ""
-    return "\(semanticVersion) (build \(appBundleVersion), \(shortCommit)\(dirtySuffix))"
+    var metadata = ["build", appBundleVersion, "sha", shortCommit]
+    if sourceState == .dirty { metadata.append("dirty") }
+    return "\(semanticVersion)+\(metadata.joined(separator: "."))"
   }
 
   private enum CodingKeys: String, CodingKey {

@@ -9,10 +9,9 @@ import sys
 from pathlib import Path
 
 from .bundle_version import (
-    advance_tester_sequence,
     current_commit_bundle_version,
-    dext_bundle_version_from_semver,
-    tester_short_version,
+    release_version,
+    version_with_metadata,
 )
 from .package_common import (
     CommandFailure,
@@ -44,21 +43,20 @@ def usage() -> None:
 
 Builds and packages the locally configured Developer ID app and its embedded
 DriverKit extension into a notarized, shareable DMG without installing or
-publishing it. The app short version is the package SemVer plus a unique
-`-next.N` identifier. The DMG includes source and bundle-build metadata.""")
+publishing it. The bundles carry the release SemVer and the commit's build
+number; the DMG name and build-info file carry the SemVer with build metadata
+(`+build.<number>.sha.<commit>`).""")
 
 
 def tester_metadata(
     artifact_name: str,
     version: str,
-    app_build_version: str,
-    dext_bundle_version: str,
+    bundle_version: str,
 ) -> dict[str, str]:
     return {
         "artifact": artifact_name,
         "version": version,
-        "app_bundle_build_version": app_build_version,
-        "dext_bundle_version": dext_bundle_version,
+        "bundle_version": bundle_version,
         "notarization": "accepted",
         "stapling": "validated",
         "gatekeeper": "accepted",
@@ -80,14 +78,11 @@ def main(argv: list[str]) -> int:
     if os.environ.get("OJD_ENV") != "release":
         die("package tester requires OJD_ENV=release")
 
-    release_version = default_bundle_short_version(PROJECT_DIR)
+    short_version = release_version(default_bundle_short_version(PROJECT_DIR))
     build_dir = PROJECT_DIR / ".build"
     commit = require_clean_source(PROJECT_DIR, "Tester")
-    state_file = build_dir / "tester-build-version"
-    sequence = advance_tester_sequence(release_version, state_file)
-    version = tester_short_version(release_version, sequence)
-    build_version = f"{current_commit_bundle_version(PROJECT_DIR)}d{sequence}"
-    dext_version = dext_bundle_version_from_semver(release_version)
+    build_version = current_commit_bundle_version(PROJECT_DIR)
+    version = version_with_metadata(short_version, build_version, commit, dirty=False)
     try:
         short_commit = command_output(
             ["git", "-C", str(PROJECT_DIR), "rev-parse", "--short=12", "HEAD"]
@@ -95,7 +90,7 @@ def main(argv: list[str]) -> int:
     except CommandFailure as error:
         return error.returncode
     tree_state = "clean"
-    safe = safe_version(version)
+    safe = safe_version(short_version)
     artifact_dir = build_dir / "tester-artifacts"
     artifact = (
         artifact_dir
@@ -111,9 +106,8 @@ def main(argv: list[str]) -> int:
         / "Contents/Library/SystemExtensions/com.openjoystickdriver.XboxUSBDevice.dext"
     )
     env = release_environment() | {
-        "OJD_BUNDLE_SHORT_VERSION": version,
+        "OJD_BUNDLE_SHORT_VERSION": short_version,
         "OJD_BUNDLE_VERSION": build_version,
-        "DEXT_BUNDLE_VERSION": dext_version,
         "OJD_SOURCE_COMMIT": commit,
         "OJD_SOURCE_STATE": tree_state,
     }
@@ -152,8 +146,7 @@ def main(argv: list[str]) -> int:
             app_path / "Contents/Info.plist",
             dext_path / "Info.plist",
             build_version,
-            dext_version,
-            version,
+            short_version,
             commit,
             tree_state,
         )
@@ -209,14 +202,13 @@ def main(argv: list[str]) -> int:
         dext_identity = os.environ.get(
             "DEXT_BUILD_IDENTITY", os.environ.get("CODESIGN_IDENTITY", "-")
         )
-        metadata = tester_metadata(artifact.name, version, build_version, dext_version)
+        metadata = tester_metadata(artifact.name, version, build_version)
         build_info.write_text(f"""OpenJoystickDriver local tester artifact
 
 artifact: {metadata["artifact"]}
 version: {metadata["version"]}
-release_version: {release_version}
-app_bundle_build_version: {metadata["app_bundle_build_version"]}
-dext_bundle_version: {metadata["dext_bundle_version"]}
+release_version: {short_version}
+bundle_version: {metadata["bundle_version"]}
 commit: {commit}
 working_tree: {tree_state}
 built_at_utc: {dt.datetime.now(dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ")}

@@ -108,15 +108,14 @@ def cleanup_workdirs(paths: tuple[Path, ...], mount_dir: Path) -> None:
 def verify_bundle_versions(
     app_info: Path,
     dext_info: Path,
-    app_build_version: str,
-    dext_build_version: str,
+    bundle_version: str,
     short_version: str,
     source_commit: str,
     source_state: str,
 ) -> None:
     for label, path, expected in (
-        ("App", app_info, app_build_version),
-        ("DEXT", dext_info, dext_build_version),
+        ("App", app_info, bundle_version),
+        ("DEXT", dext_info, bundle_version),
     ):
         value: object | None = None
         try:

@@ -7,10 +7,8 @@ import sys
 from pathlib import Path
 from typing import NoReturn
 
-VERSION = re.compile(
-    r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
-    r"(?:-(?:alpha|beta|rc)\.[1-9][0-9]*)?$"
-)
+from .bundle_version import release_version
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -29,6 +27,7 @@ Examples:
 
 Updates:
   - Sources/OpenJoystickDriver/App/Info.plist canonical app/package version
+    (SemVer 2.0.0 without build metadata; tags use the same string, no v)
   - Scripts/README.md release examples
 
     The target version must already have a Keep a Changelog heading:
@@ -54,8 +53,9 @@ def main(argv: list[str]) -> int:
     if version in {"", "-h", "--help", "help"}:
         usage()
         return 0
-    if len(argv) != 1 or VERSION.fullmatch(version) is None:
+    if len(argv) != 1:
         die("Version must be SemVer, for example 0.1.0-rc.2")
+    release_version(version)
 
     app_info = ROOT / "Sources/OpenJoystickDriver/App/Info.plist"
     scripts_readme = ROOT / "Scripts/README.md"

@@ -117,7 +117,7 @@ Attach the complete command, output, and these details to the controller's GitHu
 - controller name and connection mode
 - exact OJD commit
 - shared tester DMG filename and build-info file when testing an installed artifact
-- tester short version (`N.N.N[-ident.N]-next.N`) and bundle build version from the build-info file when testing an installed artifact
+- tester `version` (SemVer with `+build.<number>.sha.<commit>` metadata) and `bundle_version` from the build-info file when testing an installed artifact
 - exact record JSON
 - selected USB route; include DriverKit extension version and activation state when applicable
 - whether the controller stayed powered on
