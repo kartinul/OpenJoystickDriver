@@ -46,7 +46,7 @@ Open tasks: [issues](https://github.com/xsyetopz/OpenJoystickDriver/issues).
 
 1. `system_profiler SPUSBDataType`. `bDeviceClass` `0xff` is vendor-specific
    (often GIP); `0x03` is HID.
-2. Do not hand-edit generated records. Update the pinned importer, or add
+1. Do not hand-edit generated records. Update the pinned importer, or add
    `Resources/ControllerOverrides/<vid>/<vid>-<pid>.json`. Decimal JSON, no
    display names, no protocol defaults. Then:
 
@@ -56,10 +56,10 @@ Open tasks: [issues](https://github.com/xsyetopz/OpenJoystickDriver/issues).
    ```
 
    Source rules: `docs/development/xpad-import.md`.
-3. New protocol only: parser in
-   `Sources/OpenJoystickDriverKit/Protocol/Parsers/`, `InputParser`, tests
+1. New protocol only: driver in
+   `Sources/OpenJoystickDriverKit/Protocol/Drivers/`, `PhysicalProtocolDriver`, tests
    under `Tests/OpenJoystickDriverKitTests/`.
-4. Check:
+1. Check:
 
    ```bash
    ./Scripts/ojd check profiles

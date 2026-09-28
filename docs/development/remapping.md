@@ -4,7 +4,7 @@ Use this overview for profile actions and chord timing. Open the focused page fo
 
 - [Input samples and controller pairing](remapping-input-samples.md)
 - [Calibration and fusion foundations](remapping-calibration.md)
-- [Motion processing and virtual output](remapping-motion.md)
+- [Motion processing](remapping-motion.md)
 - [Advanced stick, trigger, and physical-output controls](remapping-advanced-controls.md)
 
 ## `0.5.0-beta.4` Design
@@ -19,11 +19,11 @@ JSM configuration interpreter, SDL dependency, or third-party state-injection en
 
 | Capability | Existing foundation | Extension |
 | --- | --- | --- |
-| Output | Exclusive selection of compatibility or system-event remapping | Mixed output, virtual destinations, per-control consumption and passthrough |
+| Output | Exclusive selection of virtual-gamepad or system-event remapping | Mixed output, virtual destinations, per-control consumption and passthrough |
 | Bindings | Long hold, double tap, turbo, sequences | Separate activation actions, toggles, pulses, explicit release, multiple actions |
 | Combinations | Simultaneous active-source chords and layers | Timed combinations, modifier chords, buffered consumption, binding and tuning overrides |
 | Physical input | Buttons, D-pad, sticks, triggers | Timestamped motion, touch contacts, distinct extra buttons |
-| Motion | No normalized motion event | Calibration, fusion, coordinate spaces, gyro mouse/stick, supported virtual motion |
+| Motion | No normalized motion event | Calibration, fusion, coordinate spaces, gyro mouse/stick |
 | Stick and trigger processing | Scalar deadzone, gain, inversion, curves, digital threshold | Aim, flick, hybrid, area/ring, scroll, steering, lean, dual-stage triggers |
 | Touch | Touchpad click button | Touch/click, grids, pointer, touch sticks, swipe directions |
 | Multiple controllers | Exact runtime device identity | Explicit paired Joy-Con sessions and gyro selection |
@@ -37,10 +37,9 @@ actions. A failed mapping must not silently restore consumed input.
 
 Filtering OJD's virtual reports does not hide the physical controller from another application.
 Isolation-dependent profiles require exclusive physical ownership, with acquisition failure
-reported separately from permissions and virtual publication. CoreHID ownership must be acquired
-before monitoring or report requests; destroying the owning client releases it. The older IOKit
-backend uses its existing device-seizure mechanism. See Apple's
-[seizeDevice contract](https://developer.apple.com/documentation/corehid/hiddeviceclient/seizedevice()).
+reported separately from permissions and virtual publication. The IOKit HID
+backend requests ownership by opening each matched device with
+`kIOHIDOptionsTypeSeizeDevice`; closing it with the same option releases it.
 
 ## Native Action Collections
 
@@ -98,7 +97,6 @@ Upstream reports guide regression tests, not automatic feature additions or acce
 - [Simultaneous presses, #157](https://github.com/Electronicks/JoyShockMapper/issues/157).
 - [Held output after a stick-mode change, #89](https://github.com/Electronicks/JoyShockMapper/issues/89).
 - [Paired Joy-Con stick input, #188](https://github.com/Electronicks/JoyShockMapper/issues/188).
-- [Virtual motion timestamps, #177](https://github.com/Electronicks/JoyShockMapper/issues/177).
 - [Motion deadzone units, PR #194](https://github.com/Electronicks/JoyShockMapper/pull/194).
 - [Edge extra buttons and touch grids, PR #187](https://github.com/Electronicks/JoyShockMapper/pull/187).
 

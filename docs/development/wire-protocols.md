@@ -6,18 +6,20 @@ device.
 
 | Family | Official name | USB identity | Linux | Windows | macOS 10.15+ without SIP |
 | --- | --- | --- | --- | --- | --- |
-| XID | Xbox Input Device | class `'X'/'B'/0` | `xpad` `XTYPE_XBOX` | no inbox driver | IOUSBHost if the kernel leaves the interface; userspace XID parser; virtual Generic HID |
-| XUSB | [MS-XUSBI](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-xusbi/c0beb1e6-054f-4e2c-b6c3-7b5dff1299a5) | `FF/5D/01` wired (Krypton), `FF/5D/81` wireless adapter (Argon) | `XTYPE_XBOX360` / `XTYPE_XBOX360W` | `XUSB22.sys` | IOUSBHost userspace; virtual first-party `045E:028E` |
-| GIP | [MS-GIPUSB](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gipusb/e7c90904-5e21-426e-b9ad-d82adeee0dbc) | `FF/47/D0` | `XTYPE_XBOXONE` | `xboxgip.sys` | IOUSBHost, or entitled DEXT for Apple-approved Microsoft pairs; virtual first-party `045E:0B13` |
-| HID | USB/Bluetooth HID | class `03` | `hid-sony`, `hid-playstation`, `hid-nintendo`, `hid-steam`, hid-generic | `hidclass.sys` | `IOHIDManager` / CoreHID; DualShock 4 / DualSense / Switch Pro first-party USB packers when the physical dialect matches; otherwise Generic HID |
+| XID | Xbox Input Device | class `'X'/'B'/0` | `xpad` `XTYPE_XBOX` | no inbox driver | IOUSBHost if the kernel leaves the interface; userspace XID parser; virtual HID |
+| XUSB | [MS-XUSBI](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-xusbi/c0beb1e6-054f-4e2c-b6c3-7b5dff1299a5) | `FF/5D/01` wired (Krypton), `FF/5D/81` wireless adapter (Argon) | `XTYPE_XBOX360` / `XTYPE_XBOX360W` | `XUSB22.sys` | IOUSBHost userspace; virtual HID |
+| GIP | [MS-GIPUSB](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-gipusb/e7c90904-5e21-426e-b9ad-d82adeee0dbc) | `FF/47/D0` | `XTYPE_XBOXONE` | `xboxgip.sys` | IOUSBHost, or entitled DEXT for Apple-approved Microsoft pairs; virtual HID |
+| HID | USB/Bluetooth HID | class `03` | `hid-sony`, `hid-playstation`, `hid-nintendo`, `hid-steam`, hid-generic | `hidclass.sys` | `IOHIDManager` / `IOHIDDevice`; virtual HID |
 
 Xbox One S 1708+ Bluetooth is HID, not USB GIP. DualShock 1/2 used the
 PlayStation controller-port serial bus, not USB HID.
 
-Automatic compatibility has one publishable identity per family that can
-spoof today: XUSB → `sdl2-3`, GIP → `apple-gamecontroller`. HID DualShock 4,
-DualSense, and Switch Pro physical pads publish their first-party USB identities.
-Other HID and XID stay Generic HID. Catalog membership still comes from pinned Linux sources, HID
+Every family publishes through `VirtualHIDProfileSelector`, which picks one of
+exactly two virtual profiles per controller: `hid-xbox-one-s-bt` (`045E:02FD`,
+the Bluetooth-style Xbox One S layout) when the controller's primary controls
+fit it, else `hid-generic` (`4F4A:4449`). A per-model Advanced override can
+pin either profile; selection falls back to automatic when the controller
+can't satisfy the override. Catalog membership still comes from pinned Linux sources, HID
 tables, and local overrides. Apple GameController MobileAsset is diagnostic
 evidence, not the support catalog.
 
@@ -31,7 +33,7 @@ the report ID at byte zero; unnumbered reports contain only data. The internal
 request type also accepts explicitly marked ID-less payloads, never guessing
 framing from contents. GetReport returns a complete report bounded
 by the caller's positive capacity. Unsupported type/ID combinations and malformed
-requests fail with native CoreHID/IOKit errors.
+requests fail with native IOKit errors.
 
 Sony USB sessions provide virtual identity and calibration feature reports
 (DualShock 4 `12`/`02`; DualSense `09`/`05`), plus DualSense firmware report `20`.
@@ -48,7 +50,8 @@ drivers. Report IDs in this paragraph are hexadecimal.
 
 Codec and concurrency tests cover these contracts. They do not establish signed
 SDL/GameController binding, TCC reopen behavior, or physical output delivery.
-Sony/Nintendo automatic identities remain selected as described above. Virtual
+Sony and Nintendo physical sessions keep these feature-report and command
+paths regardless of which virtual profile the controller publishes. Virtual
 calibration and session addresses are generated values, not hardware captures;
 touchpad button state is supported, while touch contacts and motion remain inactive.
 

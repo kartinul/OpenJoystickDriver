@@ -37,7 +37,7 @@ signing use the same Apple-issued restricted USB value:
 ```
 
 These are `045E:02D1`, `045E:02DD`, `045E:02E3`, `045E:02EA`, `045E:0B00`,
-`045E:0B0A`, and `045E:0B12`. The USB DEXT must not contain CoreHID's virtual-device entitlement or
+`045E:0B0A`, and `045E:0B12`. The USB DEXT must not contain the HID virtual-device entitlement or
 any HIDDriverKit family/transport entitlement.
 
 The canonical authored DEXT entitlement input is
@@ -52,9 +52,10 @@ Use Apple Development signing and separate profiles for the app and DEXT. Defaul
 ~/Library/MobileDevice/Provisioning Profiles/OpenJoystickDriver_XboxUSBDevice.provisionprofile
 ```
 
-The host development profile's device list must include this Mac. On macOS 15+ AMFI will
-otherwise ignore `com.apple.developer.hid.virtual.device` and `HIDVirtualDevice` returns
-nil. Regenerate the profile after adding the Mac, then `./Scripts/ojd signing install-profiles`.
+The host development profile's device list must include this Mac. Otherwise
+AMFI ignores `com.apple.developer.hid.virtual.device` and virtual
+`IOHIDUserDevice` creation fails. Regenerate the profile after adding the Mac,
+then `./Scripts/ojd signing install-profiles`.
 
 Regenerate profiles after changing capabilities. Xcode may otherwise reuse a stale profile. The
 development DEXT profile must contain exactly the seven approved Microsoft pairs; a wildcard or a
@@ -93,15 +94,15 @@ USB and PCI DEXT distribution export is the exception to Xcode's normal automati
 distribution environment:
 
 1. Build the final DEXT.
-2. Generate and download separate app and DEXT profiles for that environment.
-3. Rename the DEXT profile to `embedded.provisionprofile` and replace the profile inside the built
+1. Generate and download separate app and DEXT profiles for that environment.
+1. Rename the DEXT profile to `embedded.provisionprofile` and replace the profile inside the built
    DEXT.
-4. Re-sign the DEXT with the distribution identity, timestamp, hardened runtime, and the production
+1. Re-sign the DEXT with the distribution identity, timestamp, hardened runtime, and the production
    canonical entitlement plist.
-5. Configure the app archive for manual signing with its separate app profile.
-6. Embed the already signed DEXT using the System Extensions copy phase.
-7. Archive and export for the same environment.
-8. Compare the signed entitlements of both code items with their decoded profiles exactly.
+1. Configure the app archive for manual signing with its separate app profile.
+1. Embed the already signed DEXT using the System Extensions copy phase.
+1. Archive and export for the same environment.
+1. Compare the signed entitlements of both code items with their decoded profiles exactly.
 
 Representative DEXT signing command:
 

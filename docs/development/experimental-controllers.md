@@ -85,7 +85,7 @@ Run [the receiver request](../testing/xbox-360-wireless-receiver.md) with real r
 
 ## Razer Wolverine V3 Tournament Edition
 
-The bundled GIP record replaces the ineffective Generic HID fallback for `1532:0A43`. Endpoint, handshake, input, and output behavior still need the [Razer hardware test](../testing/razer/v3-te.md).
+The bundled GIP record binds `1532:0A43` to `xbox.gip`; Generic HID could not run its handshake. Endpoint, handshake, input, and output behavior still need the [Razer hardware test](../testing/razer/v3-te.md).
 
 ## Microsoft Xbox One Controller (Model 1537)
 
@@ -101,7 +101,7 @@ The source-backed GIP record for `1532:0A29` has a local-hardware patch for the 
 
 ## Nacon Revolution X Pro
 
-The local `3285:0634` override selects GIP/xboxOne on interface 0 with the
+The local `3285:0634` override selects `xbox.gip` on interface 0 with the
 captured interrupt endpoints `0x87`/`0x07`. The profile disables OJD's periodic
 host-side GIP `0x03` transmission because the issue's working WebUSB trace
 shows the device emitting `0x03` status frames and remaining stable without a
@@ -121,9 +121,8 @@ acceptance record for input, continuous-read, reconnect, and no-host-keep-alive 
 The Linux xpad XUSB record for `413D:2104` stays. A local-hardware patch pins
 interrupt endpoints `0x81`/`0x02` because rumble and player-indicator writes to
 the Xbox 360 default OUT `0x01` fail with `notFound`. Input on IN `0x81` was
-already working. Consumer identity (Generic HID vs `sdl2-3` vs Apple
-GameController) is separate; XUSB automatic routing selects `sdl2-3`,
-which publishes first-party Microsoft `045E:028E`. See
+already working. The published virtual profile is separate; the automatic selector publishes
+`hid-xbox-one-s-bt`. See
 [issue #22](https://github.com/xsyetopz/OpenJoystickDriver/issues/22).
 
 ## Xbox Adaptive Joystick
@@ -132,7 +131,7 @@ No parser claim exists. Product descriptions do not provide a packet layout. Cap
 
 ## Flydigi Vader 4 Pro (Bluetooth)
 
-The bundled HID record for `D7D7:0041` selects `FlydigiParser` instead of the Generic HID fallback. Input is packet-backed from captured 15-byte BLE reports. Consumer-visible virtual input, reconnect, rumble, and the 2.4 GHz/wired identities still need the [Vader 4 Pro hardware test](../testing/flydigi-vader-4-pro.md). See also [pull request #30](https://github.com/xsyetopz/OpenJoystickDriver/pull/30).
+The bundled HID record for `D7D7:0041` binds `vendor.flydigi` instead of `hid.descriptor`. Input is packet-backed from captured 15-byte BLE reports. Consumer-visible virtual input, reconnect, rumble, and the 2.4 GHz/wired identities still need the [Vader 4 Pro hardware test](../testing/flydigi-vader-4-pro.md). See also [pull request #30](https://github.com/xsyetopz/OpenJoystickDriver/pull/30).
 
 ## WR-007 USB HID Receiver
 

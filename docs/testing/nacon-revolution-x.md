@@ -2,7 +2,7 @@
 
 Test USB device `12933:1588` (`3285:0634` in hexadecimal) for [OpenJoystickDriver issue #21](https://github.com/xsyetopz/OpenJoystickDriver/issues/21).
 
-The bundled record selects GIP/xboxOne on interface 0 with interrupt IN `0x87`
+The bundled record selects `xbox.gip` on interface 0 with interrupt IN `0x87`
 and OUT `0x07`. It disables the periodic host-side `0x03` packet reported to
 destabilize native sessions. The record remains unverified. The issue's WebUSB
 result is independent evidence, not an OJD USBDriverKit acceptance result.

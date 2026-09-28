@@ -14,19 +14,19 @@ Run from the repository root:
 ./Scripts/ojd diagnose record \
   Sources/OpenJoystickDriverKit/Resources/Controllers/2e95/2e95-434d.json \
   --validate-only
-swift test --filter 'SCUFEnvisionParserTests|CoreHIDAccessBackendTests'
+swift test --filter SCUFEnvisionParserTests
 ```
 
 The record validation must report `RECORD_VALIDATION result=valid`. The tests
-cover report-ID filtering, both physical HID backend conversions, the exact
+cover report-ID filtering, the exact
 axis layout, button limit, hat diagonals and neutral, and the unaffected
 descriptor-driven fallback for other controllers.
 
 ## Verify Hardware
 
-Connect by wire and capture the controller's runtime identity. Test on both a
-macOS 15-or-newer CoreHID system and, when available, a macOS 14 legacy IOHID
-system. Confirm that only report 6 changes normalized state. Exercise both
+Connect by wire and capture the controller's runtime identity. Test on the
+IOHID physical HID path and record the macOS version. Confirm that only
+report 6 changes normalized state. Exercise both
 sticks to every edge, each trigger independently, buttons 1–10, all D-pad
 directions, neutral, disconnect, and reconnect.
 

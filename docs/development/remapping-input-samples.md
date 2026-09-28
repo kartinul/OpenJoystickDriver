@@ -4,49 +4,70 @@ This page defines motion, touch, extra-control, and paired-controller input. Sta
 
 ## Motion And Touch Sample Transport
 
-DS4 and DualSense parsers append typed raw gyroscope, accelerometer, and touch frames to
-control events. Normalization preserves repeated samples and their relative order while retaining
+DS4 and DualSense parsers append typed motion samples and touch frames to control events.
+Normalization preserves repeated samples and their relative order while retaining
 control-state coalescing. Snapshot control state retains the latest complete frame for each
 explicit surface so native capture can detect a new contact; payloads without that field decode
 to no touch samples. Compatibility output continues to ignore sample variants.
 
 The packet layout and touch dimensions follow
 [Linux hid-playstation at the reviewed revision](https://github.com/torvalds/linux/blob/893e11787f78e43b534e252249ac3fff4d1333f8/drivers/hid/hid-playstation.c).
-Sensor vectors retain signed ADC values; they are not calibrated degrees per second or gravity
-units. Timestamps retain the raw device counter, rational nanoseconds per tick, elapsed time from
-the first report, and a parser-session sequence index. DS4 uses a 16-bit counter at 16000/3 ns;
-DualSense uses a 32-bit counter at 1000/3 ns. Fractional remainders carry between samples.
+Motion samples carry acceleration in m/s² and angular velocity in rad/s in the canonical
+controller frame: right-handed, +X to the controller's right,
++Y away from the player along the face, +Z up through the face. Each producer applies factory
+calibration where available, otherwise the nominal device scale, and records which in
+`calibrationSource`. Timestamps retain the raw device counter, rational nanoseconds per tick, and
+a sequence index. Their time is receipt-anchored sensor time: the `MonotonicTimestamp` receipt
+time of the parser session's first sample plus the device ticks elapsed since it.
+DS4 uses a 16-bit counter at 16000/3 ns; DualSense uses a 32-bit counter at 1000/3 ns.
+Fractional remainders carry between samples. Ticks count at that nominal rate with no rate
+correction, so sample time can drift from the receipt time in `ControllerEvent.timestamp`.
 A counter decrease denotes one wrap. This assumes ordered reports; a device reset or multiple
-wraps during a gap cannot be distinguished from the counter alone. Reconnection needs a fresh
-parser session, and fusion must handle discontinuities before these clocks drive motion output.
+wraps during a gap cannot be distinguished from the counter alone, so a gap of a whole counter
+period or more (about 350 ms on DS4) is not recovered. A transport session reset (`resetProtocolState`) re-anchors time at the next
+report and keeps the sequence index counting, so the remapping engine sees a gap, not a reversal.
 
-Touch frames retain two contacts, active flags, contact IDs, and raw coordinates. DS4 retains
-up to three USB or four Bluetooth history frames in packet order, including each raw touch
-counter. That counter has no assigned time unit. Its containing-report timestamp does not date
-individual historical frames. Malformed history counts omit touch history while preserving
-valid motion data. Short DS4 control-only reports emit no synthetic sensor samples.
+Touch frames follow the spec's contact contract. Each contact has a slot, an active flag,
+normalized unsigned 16-bit X and Y, and optional `UnipolarValue` pressure; no current producer
+reports pressure. Each frame has a surface and a `MonotonicTimestamp`.
+
+- The slot is the contact's index in the report, as in hid-playstation's `input_mt_slot` loop.
+  The seven-bit per-finger tracking counter is not published.
+- X and Y span the whole surface. 0 is the left or top edge and 65535 the right or bottom edge
+  on every surface. Each producer declares its raw origin and span once
+  (`ControllerTouchGeometry`): DS4 1920x942, DualSense 1920x1080.
+- Normalization clamps the raw offset to `0...span-1`, then computes
+  `(offset * 65535 + (span - 1) / 2) / (span - 1)` in integer arithmetic, rounding half up.
+- Sony raw Y already grows downward, so it is not flipped.
+- Sony frames carry the report's sensor-clock time, the same `monotonic` value as its motion
+  sample.
+
+DS4 keeps up to three USB or four Bluetooth history frames in packet order. The raw touch
+counter has no time unit and is dropped, so every history frame of a report carries that
+report's time. A malformed history count omits touch history but keeps the valid motion data.
+Short DS4 control-only reports emit no synthetic sensor samples.
 
 Focused tests cover signed decoding, counter wrap and fractional ticks, repeated sample delivery,
 touch history, short reports, and DualSense Bluetooth CRC rejection before sensor-clock updates.
-The active parser exposes `physicalInputCapabilities` through the existing connected-device
-payload: raw motion support and maximum contacts per touch frame. This describes decoding, not
-calibrated motion or hardware validation. Payloads from an older service default to
-no sample capability. Tests exercise both DS4 revisions, DualSense, and DualSense Edge through
-the device manager and the encoded payload, preserving the runtime device identifier.
+The active parser exposes `capabilities` through the connected-device payload: motion support
+and maximum contacts per touch frame. This describes decoding, not hardware validation. The
+payload requires the `capabilities` key; a payload without it fails to decode. Tests exercise both DS4 revisions, DualSense, and DualSense Edge through the device
+manager and the encoded payload, preserving the runtime device identifier.
 
 Factory calibration for the supported families is applied before remapping. Other controller
 families do not advertise calibrated motion; physical validation remains external. Nintendo timing
 uses explicit estimation:
 [Linux hid-nintendo](https://github.com/torvalds/linux/blob/893e11787f78e43b534e252249ac3fff4d1333f8/drivers/hid/hid-nintendo.c)
 documents that reports lack a reliable sample timestamp and contain three IMU samples.
-The Switch Pro parser decodes all three signed raw samples in wire order and requests IMU
-enablement (`0x40`, value `1`) during HID startup. It advertises raw motion decoding through the
-same capability contract. Short control-only reports do not advance its sensor clock.
+The Switch Pro parser converts all three samples in wire order to SI units in the canonical frame
+and requests IMU enablement (`0x40`, value `1`) during HID startup. It advertises motion decoding
+through the same capability contract. Short control-only reports do not advance its sensor clock.
 
 The pipeline captures host receipt time before parsing and supplies it through the shared parser
 hook. Nintendo timestamps have `hostEstimate` basis, retain the raw report counter as metadata,
-and leave device tick units absent. The first report uses nominal 5 ms sample spacing; subsequent
-spacing follows a bounded moving average of host report intervals. Backward receipt times clamp,
+and leave device tick units absent. Sample time is the first report's receipt time plus the
+estimated elapsed time, so each report's newest sample is dated up to 10 ms after its receipt.
+The first report uses nominal 5 ms sample spacing; subsequent spacing follows a bounded moving average of host report intervals. Backward receipt times clamp,
 and gaps above 30 ms preserve elapsed gaps rather than stretching three samples across the gap.
 This estimates rather than measures hardware sample timing. Device-counter timestamps retain their distinct
 `deviceCounter` basis. Tests cover both parser dispatch paths, sample order, signed values,
@@ -54,31 +75,38 @@ backward receipt time, long gaps, short reports, and the IMU startup command.
 
 ### Steam Controller Full-State Motion
 
-The Steam Controller parser decodes raw accelerometer and gyro vectors from full state messages
-(type `0x01`), following the packet fields used by
+The Steam Controller parser converts accelerometer and gyro vectors from full state messages
+(type `0x01`) to SI units at the nominal device scale, following the packet fields used by
 [SDL's Steam HID parser](https://github.com/libsdl-org/SDL/blob/634dff3725b8419902b832d1c84363da211a3596/src/joystick/hidapi/SDL_hidapi_steam.c)
 and the layout documented in
 [Linux hid-steam](https://github.com/torvalds/linux/blob/893e11787f78e43b534e252249ac3fff4d1333f8/drivers/hid/hid-steam.c).
 Startup settings request raw accelerometer and gyro output with IMU mode `0x18`; shutdown retains
-the existing default-settings restoration. Raw motion is exposed in parser capabilities.
+the existing default-settings restoration. Motion is exposed in parser capabilities. Its axis
+mapping follows SDL; gyro and accelerometer mappings differ by a reflection, so handedness remains
+unverified until a hardware capture settles it.
 
-Packet sequence numbers remain metadata. Motion timestamps use host receipt time relative to the
-first accepted motion report, clamp backward receipt times, and have no device tick units.
+Packet sequence numbers remain metadata. Motion timestamps use host receipt time: the first
+accepted motion report's receipt anchors the session, backward receipt times clamp, and there are
+no device tick units.
 An immediately repeated sequence number does not emit another motion sample. Counter wrap accepts
-the next report. Receiver disconnect/connect transitions reset timing and duplicate tracking;
-reports received while disconnected do not advance motion state.
+the next report. Receiver disconnect/connect transitions and transport session resets re-anchor
+timing and reset duplicate tracking; reports received while disconnected do not advance motion
+state.
 
 This covers full-state packets on the supported wired/receiver path. BLE chunked packets are not
 advertised as supported input; hardware delivery validation remains external. Tests establish
-raw decoding and lifecycle behavior, not calibrated physical units or wireless firmware delivery.
+decoding, nominal scaling, and lifecycle behavior, not physical accuracy or wireless firmware
+delivery.
 
 ### Steam Trackpad Samples
 
-Full state packets emit separate `left` and `right` touch surfaces. The shared contact
-coordinates are signed 32-bit values. Each frame describes its coordinate origin and dimensions:
-Steam pads retain raw signed 16-bit coordinates with origin -32768 and span 65536; Sony frames
-retain their zero origin and existing pixel dimensions on the `primary` surface. Contacts use
-surface-local IDs, so matching ID zero on two pads does not merge them.
+Full state packets emit separate `left` and `right` touch surfaces, each with one contact in
+slot 0. The raw pad coordinates are signed 16-bit values: origin -32768, span 65536. X maps
+through unchanged (`raw + 32768`). Raw Y grows upward, like the stick Y that shares the
+right-pad fields (the driver negates it for sticks), so normalization flips it:
+`y = 65535 - (raw + 32768)`. The pads have no touch clock. Frames carry the receipt-anchored
+time of the report's motion sample, and touch is emitted only in reports that yield one. Slots
+are surface-local, so slot zero on two pads does not merge.
 
 The left axis pair alternates between pad and stick when both are active. Pad packets retain the
 last stick value, and interleaved stick packets retain the last pad coordinates. Ending stick
@@ -105,14 +133,16 @@ surface span. A touch-stick radius is a normalized surface fraction; its radial 
 output are normalized to 0...1 and -1...1 respectively. Continuous mappings are configurable in
 the CLI and native profile editor. Touch-stick modes require virtual output policy.
 
-Runtime state is owned by an exact controller and surface. Contact IDs are never compared across
-those boundaries. The lowest active contact starts as the primary contact and remains primary
-until it ends; changing contact, geometry, profile, or controller session resets the pointer and
-stick baseline. A complete inactive frame releases contact/grid bindings and neutralizes touch
+Runtime state is owned by an exact controller and surface. Contact slots are never compared
+across those boundaries. The engine reads each normalized axis as a fraction of its own span
+(`value / 65535`), with no aspect correction, so it needs no surface geometry. The lowest active
+slot starts as the primary contact and remains primary until it ends. A new finger in the same
+slot with no inactive frame between is read as the same contact. Changing contact, profile, or
+controller session resets the pointer and stick baseline. A complete inactive frame releases contact/grid bindings and neutralizes touch
 stick output. Swipes fire once when their primary contact ends. Profile replacement, disconnect,
 permission suspension, shutdown, and failed delivery use the engine's ordinary drain path, which
 releases touch-owned buttons and virtual contributions. Tests cover surface and device isolation,
-origin-aware geometry, grid transitions, swipes, pointer reset, virtual neutralization, capture,
+slot identity, grid transitions, swipes, pointer reset, virtual neutralization, capture,
 CLI parsing, profile validation, persistence, and RPC transport.
 
 ### Steam Grips And Pad Clicks
@@ -137,12 +167,12 @@ Physical isolation and delivery still require hardware validation.
 
 The canonical HID catalog selects left and right Joy-Con layouts for Nintendo
 `057e:2006` and `057e:2007`. Each layout ignores the absent stick and the other half's
-button bits, exposes its one rumble motor, and uses Nintendo's three-sample raw IMU path.
+button bits, exposes its one rumble motor, and uses Nintendo's three-sample IMU path.
 Startup requests full input reports and enables IMU and rumble without the Pro Controller's
 USB handshake prefix. Both the schema and runtime decoder reject conflicting side selections.
 
 Catalog records were generated from the locked Linux source. Constructed packet tests cover
-selection, side filtering, raw sample delivery, startup, and rumble isolation. See
+selection, side filtering, motion sample delivery, startup, and rumble isolation. See
 [Joy-Con validation](../testing/joy-con.md) for the exact source and hardware acceptance steps.
 
 ### Paired Joy-Con Sessions
@@ -155,14 +185,15 @@ opaque and process-local, so pairing is an explicit in-memory session rather tha
 hardware identity.
 
 Both halves feed one remapping state and one virtual output identity, using the left half as the
-session output key. Nintendo's parser normalizes left and right IMU readings into the stable
+session output key. Each half is diffed against its own last snapshot, so one half's report never
+releases a control the other half holds. Nintendo's parser normalizes left and right IMU readings into the stable
 combined-controller frame before the configured half reaches calibration and gyro routing. The
 unselected half's motion samples are discarded; buttons, the left and right sticks, and rail
 controls remain side-owned inputs. Existing Nintendo output reports retain per-half rumble bytes.
 
 Disconnecting either exact member, unpairing, or starting a profile-library transaction drains the
 combined output, retires the virtual controller, and cancels the session. A still-connected half
-returns to its independent compatibility route. Reconnection requires a new explicit pair, and an
+returns to its independent virtual-gamepad route. Reconnection requires a new explicit pair, and an
 old session UUID cannot unpair its replacement. Constructed routing tests cover partial
 availability, combined controls, gyro selection, disconnect, replacement-session isolation, and
 profile transaction cleanup. Bluetooth hardware acquisition, physical orientation accuracy,
@@ -175,8 +206,9 @@ to supported gamepad buttons or system actions; they have no direct virtual butt
 
 ### DualSense Edge Controls And Extra-Button Capabilities
 
-The generated Edge record (`054c:0df2`) selects `edgeButtons` for both registry construction
-and live HID discovery. Standard DualSense (`054c:0ce6`) keeps its original system-button map.
+The generated Edge record (`054c:0df2`) declares `paddle-left-1`, `paddle-right-1`,
+`auxiliary-1`, and `auxiliary-2` in `capabilities.present`, which selects the Edge layout for
+both registry construction and live HID discovery. Standard DualSense (`054c:0ce6`) keeps its original system-button map.
 Edge function buttons and paddles expose `button:left_function`, `button:right_function`,
 `button:left_paddle`, and `button:right_paddle` in schema-3 profiles and native capture/editor
 controls. They map to existing output destinations; they are not virtual button destinations.
@@ -187,15 +219,18 @@ Constructed USB/Bluetooth reports test each source through gamepad press/release
 report suppression for digital edges, ordinary-model exclusion, and CRC rejection before
 button-state mutation. These tests do not establish Edge firmware or hardware delivery.
 
-`physicalInputCapabilities.additionalButtons` carries the parser's extra physical button
-identifiers through the connected-device payload. Sony touchpad/mute, Steam grips/pad clicks,
-Joy-Con rail controls, and Edge function/paddle controls are reported by their selected parsers.
-An older capability payload without the list decodes as an empty list. Base gamepad controls
-remain implicit. The list describes decoding, not physical verification or virtual output identities.
+`capabilities.controls` lists the normalized control IDs the selected parser declares, in
+`ControlID` declaration order, including base gamepad controls. Sony touchpad/mute, Steam
+grips/pad clicks, Joy-Con rail controls, and Edge function/paddle controls use their slot IDs.
+A record's `capabilities.absent` removes controls (xpad trigger-as-button rows drop the analog
+triggers, stick-less rows drop the stick axes) and `capabilities.present` adds controls the
+configured parser emits. An unknown control ID or a missing key fails to decode. The
+list describes decoding, not physical verification or virtual output identities.
 
-`physicalInputCapabilities.touchSurfaces` enumerates the identifiers emitted by touch frames:
-Sony exposes `primary`, and Steam exposes `left` and `right`. Nintendo exposes no touch surfaces.
-An older payload without this list decodes as unspecified (an empty list), even if it has a
-nonzero contact count; clients must not invent a surface identity from that count. Frame geometry
-continues to carry coordinate origins and dimensions. Tests compare capabilities with actual
-parser-produced frames and preserve the metadata through device-payload serialization.
+Touch surfaces are derived rather than encoded. A zero `touchContactCount` means no surface.
+Otherwise each declared `left-trackpad-touch` or `right-trackpad-touch` control yields its
+`left` or `right` surface, and a controller without trackpad-touch controls has one `primary`
+surface. Sony therefore exposes `primary`, Steam exposes `left` and `right`, and Nintendo exposes
+no touch surfaces. Raw geometry stays inside each producer; frames carry normalized coordinates. Tests
+compare capabilities with actual parser-produced frames and preserve the metadata through
+device-payload serialization.

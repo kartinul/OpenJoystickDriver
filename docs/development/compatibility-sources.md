@@ -1,8 +1,71 @@
 # Compatibility Source Notes
 
 External projects provide design or protocol evidence, not runtime dependencies
-or proof of macOS hardware support. Relevant archived SDL discussions live
-under `docs/external/sdl/`.
+or proof of macOS hardware support. Relevant SDL discussions:
+[#11002](https://github.com/libsdl-org/SDL/issues/11002),
+[#15663](https://github.com/libsdl-org/SDL/issues/15663),
+[#15790](https://github.com/libsdl-org/SDL/issues/15790), and
+[#15183](https://github.com/libsdl-org/SDL/pull/15183).
+
+## Source, License, and Capture Boundaries
+
+The approved compatibility break is an owner decision, not a conclusion that
+external users are absent. The sources below provide only the stated evidence;
+they do not authorize additional OJD output profiles or prove a Mac ABI.
+
+- **Official:** Microsoft's [GameInput device-type documentation
+  (GDK 2604)](https://learn.microsoft.com/en-us/gaming/gdk/docs/features/common/input/hardware/input-hardware-interfaces?view=gdk-2604)
+  distinguishes generic HID from XUSB, XInputHID, and GIP. The versioned page
+  was last updated 2026-04-22. Apple's [controller backward-compatibility
+  documentation](https://developer.apple.com/documentation/gamecontroller/understanding-game-controller-backward-compatibility)
+  describes a framework compatibility feature. Neither page specifies the
+  exact `045e:02fd` descriptor/report ABI used by OJD's proposed profile. These
+  are factual documentation references; no source code is copied.
+- **Upstream:** SDL's [`controller_list.h` at
+  `fa2c02bb6e21974a89ea9824bc53c9932abe5f9c`](https://github.com/libsdl-org/SDL/blob/fa2c02bb6e21974a89ea9824bc53c9932abe5f9c/src/joystick/controller_list.h)
+  lists `045e:02fd` as an Xbox One S Bluetooth controller. SDL's
+  [`LICENSE.txt` at the same commit](https://github.com/libsdl-org/SDL/blob/fa2c02bb6e21974a89ea9824bc53c9932abe5f9c/LICENSE.txt)
+  contains SDL's three-condition permissive license. The identity row supports
+  consumer classification only; it is not descriptor or packet evidence. No
+  SDL code is copied.
+- **Upstream:** The repository source lock pins Linux
+  [`drivers/input/joystick/xpad.c` at
+  `44696aa3a489d2baf58efa61b37833f100072bee`](https://github.com/torvalds/linux/blob/44696aa3a489d2baf58efa61b37833f100072bee/drivers/input/joystick/xpad.c)
+  (SHA-256 `c24c86cbb74e74eba751e50899f3137ef0439e0d2a2c391a2e7c7d7556e87278`,
+  recorded in [ControllerSources.lock.json](../../ControllerSources.lock.json)).
+  Its file header gives `GPL-2.0-or-later`. This is protocol-family context,
+  not macOS publication evidence. No Linux code is copied. The other mutable
+  consumer and community references were
+  not used to support this API-retirement decision and are not represented here
+  as commit-pinned or license-reviewed evidence. Their protocol claims remain
+  outside this source record; review them before relying on those claims for
+  protocol implementation.
+- **Captured:** No committed genuine `045e:02fd` descriptor/report capture was
+  found. `docs/testing/consumer-binding.md` and
+  `docs/testing/haptics-backends.md` preserve historical/user-reported consumer
+  observations, including failed `02fd` input, but do not record the complete
+  hardware revision, firmware, descriptor, and report transaction set required
+  for a canonical fixture. Current `XboxOneBluetoothHIDDescriptor.seriesDescriptor`
+  is explicitly labelled an Xbox Series descriptor; tests comparing that
+  constant are not a captured `02fd` fixture. The repository's
+  `Tests/ProtocolPacketFixtures/ProtocolPacketFixtures.swift` has no `02fd`
+  capture. Do not relabel any of these as captured ABI evidence.
+- **Community:** Community reverse-engineering repositories are classified as community evidence. Their
+  current revisions, licenses, exact source symbols, and fixture corroboration
+  were not reviewed in this source record because none is needed to establish
+  the owner's direct API-break decision. No claim from them supports that decision, and no
+  community code or report bytes were copied. Pin and review any such source
+  before using its protocol claims in implementation; this remains a later
+  protocol-evidence task, not evidence that the sources or licenses are clear.
+
+The evidence classes used for this decision are official documentation,
+upstream source, community sources not relied upon, and an explicitly absent
+captured fixture. Repository search, synthetic packer tests, and old published
+names do not establish captured device behavior. A new source fact copied into
+code or a fixture still needs an exact revision, license review, symbol/capture
+origin, and a fixture that reproduces the claimed behavior. The pending Xbox
+profile requires a real `045e:02fd` fixture before its descriptor or reports
+may be claimed as supported.
 
 ## Admission Policy
 
@@ -46,9 +109,13 @@ under `docs/external/sdl/`.
 
 ## Current Evidence Boundaries
 
-- Pinned Linux `xpad.c`, `hid-playstation.c`, `hid-sony.c`,
-  `hid-nintendo.c`, and `hid-steam.c` establish protocol or identity facts, not
-  macOS descriptors, endpoints, TCC behavior, or hardware success.
+- [ControllerSources.lock.json](../../ControllerSources.lock.json) pins Linux commit
+  `44696aa3a489d2baf58efa61b37833f100072bee` and per-file hashes for `xpad.c`,
+  `hid-playstation.c`, `hid-sony.c`, `hid-nintendo.c`, and `hid-steam.c`.
+  These upstream references establish protocol or identity context, not macOS
+  descriptors, endpoints, TCC behavior, or hardware success. This record
+  reviews the `xpad.c` SPDX identifier only; the other files support separate
+  physical protocol work and were not license-reviewed here.
 - GameSir `3537` records combine exact Linux identities with
   [`gamesir-linux-tools`](https://github.com/broroeror/gamesir-linux-tools/blob/main/RESEARCH.md)
   packet research. Shared Microsoft Bluetooth IDs are not attributed to GameSir

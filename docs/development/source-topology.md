@@ -55,8 +55,9 @@ Tests mirror their owners under `Tests/OpenJoystickDriverKitTests/`,
 - Give each capability one canonical owner; retain no aliases, forwarding files, or old entry points.
 - Keep `OpenJoystickDriverKit` independent of SwifterKit and app/platform composition.
 - Put IOUSBHost/DriverKit adaptation in `OpenJoystickDriverUSB`; keep parsing in Kit.
-- Keep CoreHID calls behind macOS 15 availability and IOKit HID calls behind the macOS 10.15–14
-  implementation boundary.
+- Use IOKit HID (`IOHIDManager`, `IOHIDDevice`, `IOHIDUserDevice`) on every
+  supported macOS; HID has no OS-version branch and the package does not link
+  CoreHID.
 - Never edit or commit `.build/driverkit/generated/`; regenerate with
   `./Scripts/ojd driverkit generate` and validate with `./Scripts/ojd check driverkit`.
 - Add source behavior tests, not source-text substring tests.

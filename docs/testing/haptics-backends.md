@@ -11,9 +11,10 @@ a time and record physical behavior before changing identities:
 ./Scripts/ojd diagnose rumble-motors 13623 4112
 ```
 
-The final example uses the GameSir G7 SE decimal VID/PID; substitute the exact decimal identifiers reported for the connected device. The SDL route can exercise OJD's first-party Microsoft Xbox 360 Wired
-`045E:028E` with the Xbox 360 HIDAPI descriptor/report format. OJD publishes it through CoreHID on macOS 15 and later and through
-`IOHIDUserDevice` on macOS 10.15 through 14. The probe uses the installed OJD
+The final example uses the GameSir G7 SE decimal VID/PID; substitute the exact decimal identifiers reported for the connected device. It drives `controller output rumble`, which sends one `sendControllerOutput` command per step; the app ends each bounded rumble itself, so the script waits out the duration before its explicit stop. The SDL route can exercise OJD's first-party Microsoft Xbox 360 Wired
+`045E:028E` with the Xbox 360 HIDAPI descriptor/report format. OJD publishes it
+through `IOHIDUserDevice` on every supported macOS. The probe uses the
+installed OJD
 CLI to change identities so its application-service protocol always matches
 the running installed app.
 
@@ -22,8 +23,15 @@ dated observations remain below as evidence, but that unsupported executable is
 no longer a live route. A nonzero HID output-report size is only a raw-report
 candidate; it does not imply Force Feedback compatibility or physical rumble.
 
+Rumble that an application writes to a virtual controller reaches the physical
+controller as one output command: a bounded set-rumble, with the main motors
+mirrored onto the Steam Controller trackpad haptics, or a stop-rumble. A stop
+writes the physical controller once, and an active remapping rumble claim keeps
+running through it. Other consumer reports, such as a DualSense lightbar, do not
+drive physical output.
+
 The GameController diagnostic checks the supported public controller and
-haptics path. CoreHID virtual-device access alone does not synthesize a public
+haptics path. `IOHIDUserDevice` publication alone does not synthesize a public
 `GCController.haptics` engine.
 
 ## GameSir G7 SE Observations
@@ -80,7 +88,7 @@ apply to the SDL identity.
 OJD now cancels a superseded delayed stop before scheduling a replacement command, so an older accepted request cannot silence a newer
 rumble request after 250 milliseconds. That scheduling hardening does not make
 an application emit reports for an identity whose output protocol it does not
-support. Current `sdl2-3` publishes first-party Microsoft `045E:028E`; the ASTRO
-`9886:0024` probe remains historical evidence only. The input-only GameStop implementation, the redundant `x360-hid`
+support. The `sdl2-3` identity and its ASTRO `9886:0024` probe are historical
+evidence only; OJD now publishes only `hid-xbox-one-s-bt` or `hid-generic`. The input-only GameStop implementation, the redundant `x360-hid`
 selection, and the two failed Microsoft Bluetooth probe variants were removed
 from live code; these observations remain as historical evidence.

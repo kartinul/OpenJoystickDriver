@@ -78,7 +78,7 @@ lifecycle only.
 | Controller details and identity | `App/Presentation/Controllers/{ControllerViews,OutputViews}.swift` | Connected devices, identity selection, loading, failure, and retry |
 | Profiles and editor | `App/Presentation/Profiles/{MappingViews,ProfileEditorViews}.swift` | Selection, drafts, assignments, save/conflict flow, and profile actions |
 | Mapping capture | `App/Presentation/Profiles/MappingCaptureViews.swift`, `App/Presentation/InputCapture/KeyboardCaptureViews.swift` | Controller and keyboard capture plus axis adjustment |
-| Presentation state | `App/Presentation/Runtime/{State,SupportState}.swift` | Loading, permission, input, compatibility, mutation, diagnostics, and conflict state |
+| Presentation state | `App/Presentation/Runtime/{State,SupportState}.swift` | Loading, permission, input, virtual HID profile override, mutation, diagnostics, and conflict state |
 | Service adapter | `App/Presentation/Runtime/Gateway.swift` | Typed `ApplicationServiceClient` calls and stable presentation errors |
 
 Add files only for focused, independently testable capabilities. Group related helpers rather than
@@ -105,10 +105,10 @@ persist across launches. Dirty profile edits intercept pane changes and offer Ca
 
 1. **Overview:** readiness, controller count, and the Access & readiness summary. Input Monitoring,
    controller publication, and Keyboard & pointer each have an explicit request action.
-2. **Controllers:** friendly names, connection state, selected profile, controller identity, and
+1. **Controllers:** friendly names, connection state, selected profile, controller identity, and
    technical identifiers in the selected-device detail.
-3. **Profiles:** profile list and the selected profile's Assignments editor.
-4. **Debug:** typed runtime/controller details, diagnostics collection, Save report, and Save logs.
+1. **Profiles:** profile list and the selected profile's Assignments editor.
+1. **Debug:** typed runtime/controller details, diagnostics collection, Save report, and Save logs.
    Raw packet, watch, and catalog workflows remain CLI-only.
 
 The resizable window opens at its initial size and reuses one controller.
@@ -135,16 +135,16 @@ status()
 virtualDeviceDiagnostics()
 requestPermissions()
 requestPermission(requirement)
-deviceInputState(selector)
+controllerState(selector)
 packetLog(selector)
-sendRumble/setPlayerIndicator/previewColor/releaseColorPreview/setBrightness
+sendControllerOutput(command, selector)/previewColor/releaseColorPreview
 motionCalibration(selector, command)
 remappingSnapshot()
 remappingProfile(id)
 create/update(expectedCurrent)/import/delete profile
 activate/deactivate profile
 remappingPostEventAccess()/requestRemappingPostEventAccess()
-compatibilityIdentity()/setCompatibilityIdentity(identity)
+setVirtualHIDProfileOverride(profile, for: selector)/resetVirtualHIDProfileOverride(for: selector)
 ```
 
 The adapter connects the existing client, returns typed payloads, and maps transport failures to
@@ -153,7 +153,7 @@ stable presentation errors. It does not expose socket paths, CLI text, or raw RP
 ## State And Permission Rules
 
 - Loading, unavailable, empty, denied, requesting, saving, conflict, and failed states are explicit.
-- A stale async response cannot replace newer permission, post-event, compatibility, or input state.
+- A stale async response cannot replace newer permission, post-event, virtual HID profile, or input state.
 - A superseded permission request does not open a Privacy & Security pane.
 - A denied result opens the matching native recovery destination. Only the authoritative
   follow-up read establishes a grant.

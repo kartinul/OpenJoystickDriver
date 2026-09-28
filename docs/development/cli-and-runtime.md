@@ -52,7 +52,7 @@ map ...
 app status|login enable|disable|logs ...
 extension status|enable|disable
 permissions ...
-compat show|set <identity>|reset
+controller virtual set|reset
 test [positive-seconds]
 diagnose [runtime|catalog|report]
 update check ...
@@ -69,7 +69,7 @@ update check ...
 | `controller packets` | Developer Tools packet capture |
 | `map` profile authoring and activation | Profiles |
 | `permissions` | Overview access cards |
-| `compat show/set/reset` | Controllers → Controller identity |
+| `controller virtual set/reset` | Controllers → Virtual HID profile (Advanced) |
 | `app logs` and `diagnose report` | Console and Developer Tools report actions |
 | `extension status/enable/disable` | Overview driver setup, repair, and uninstall |
 | `update check` | Settings → Updates |
@@ -84,12 +84,15 @@ Keep raw packets, runtime soaking, catalog inspection, permission audits, and
 virtual-device self-tests in the CLI: their output is diagnostic, verbose, or
 unsuitable for an always-present consumer interface.
 
-## Controller Sessions and Compatibility
+## Controller Sessions and Virtual HID Profiles
 
 `controller disconnect` suspends a controller from OpenJoystickDriver without terminating its
 physical Bluetooth or USB link. Suspension neutralizes input and physical effects, removes OJD
 virtual output, and keeps the controller visible. `controller resume` repeats required startup
-output and re-enables input; a physical reconnect creates a new active session.
+output and re-enables input; a physical reconnect creates a new active session. System sleep is not
+a physical disconnect: a controller suspended before sleep returns suspended after wake. A Bluetooth
+disconnect that reaches OJD before the sleep notification is a physical disconnect and ends the
+suspension.
 
 `controller disconnect-wireless` is Bluetooth-only. It neutralizes and suspends the selected OJD
 session before making a bounded request to macOS to close that physical connection. A failed or
@@ -105,7 +108,19 @@ control is not guessed to be accidental. Native HID pass-through may still be vi
 another app, so stale health remains a Needs attention condition even after OJD retires its own
 publication.
 
-The additive detailed compatibility RPC reports the requested, live, and retained identities plus
-a typed failure phase and cause. The legacy Boolean RPC remains available. Automatic mode passes
-HID controllers through to macOS without publishing an OJD virtual gamepad. Selecting an explicit
-identity intentionally overrides pass-through.
+Each controller model (vendor/product) has a virtual HID profile: `hid-xbox-one-s-bt`
+(`045E:02FD`, selected automatically when the controller's declared controls fit) or
+`hid-generic`. Automatic selection runs unless the model has a stored override.
+`controller virtual set <hid-xbox-one-s-bt|hid-generic> [--vid N] [--pid N] [--device ID]`
+stores an override for the selected controller's model; `controller virtual reset
+[--vid N|--pid N|--device ID | --all]` clears it (`--all` clears every model's override and
+cannot combine with a selector). Both commands print the resulting live profile line, then
+print a failure to stderr and exit 1 if the request did not fully take effect (for example
+`controller-not-found`, `override-rejected-by-controller`, or `activation-failed`).
+
+`ApplicationServiceVirtualHIDProfileStatus` reports each connected controller's selected
+profile, its source (`automatic`, `override`, or `automatic-after-rejecting`), its stored
+override, and whether no profile is available for its declared controls. A previously stored
+`CompatibilityIdentity` default (from before this profile system) is detected and rejected
+rather than applied; `status` surfaces it as `legacyCompatibilityIdentityRejected`, and
+`controller virtual reset --all` clears it.

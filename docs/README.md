@@ -47,6 +47,7 @@ Choose the shortest path for your task.
 - [Responsiveness](development/application-responsiveness.md)
 - [Environment files](development/environment.md)
 - [Signing](development/signing.md)
+- [USB entitlement candidates](development/usb-entitlement-candidates.md)
 - [Local tester builds](development/tester-builds.md)
 - [Implementation status](development/implementation-status.md)
 - [Issue audit](development/issue-audit.md)
@@ -59,5 +60,3 @@ Choose the shortest path for your task.
 - DriverKit: `./Scripts/ojd driverkit generate` / `./Scripts/ojd check driverkit`
 - Native tools: `./Scripts/ojd check tools`
 - Commands: `./Scripts/ojd help`
-
-Evidence, not instructions: `docs/external/`.

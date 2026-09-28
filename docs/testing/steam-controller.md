@@ -83,6 +83,7 @@ If you get `REPORT` or `USB_REPORT` lines, collect one neutral packet and one pa
 - right trigger idle, half if possible, full
 - left pad touch, click, and release if visible
 - right pad touch, click, and release if visible
+- motion: at rest face up, then roll the right edge down and hold; this settles the unverified gyro and accelerometer handedness
 
 One action per capture is enough. Return to neutral between captures.
 
@@ -98,11 +99,11 @@ swift run OpenJoystickDriverHIDTool --monitor --vid 0x28de --pid 0x1142 --second
 During the 60 second monitor run:
 
 1. Leave the controller off for a few seconds.
-2. Turn it on and wait for connection.
-3. Press and release A once.
-4. Turn the controller off or disconnect it.
-5. Wait 10 seconds.
-6. Turn it back on without restarting the monitor.
+1. Turn it on and wait for connection.
+1. Press and release A once.
+1. Turn the controller off or disconnect it.
+1. Wait 10 seconds.
+1. Turn it back on without restarting the monitor.
 
 Paste all `REPORT ... bytes=...` lines around connect and disconnect. Check these source-backed cases:
 
@@ -112,7 +113,30 @@ Paste all `REPORT ... bytes=...` lines around connect and disconnect. Check thes
 
 Also say whether Controller Settings lists the controller only after connect, clears it after disconnect, and resumes after reconnect.
 
-## 5. Lizard Mode
+## 5. Per-Interface Roles
+
+OJD runs one controller per Steam interface whose HID report descriptor has a Feature item, as
+Linux `hid-steam.c` does; other interfaces are not controllers. Per `hid-steam.c`, the wired
+controller exposes mouse 0, keyboard 1 and gamepad 2, and the dongle exposes keyboard 0 and slots
+1–4. None of this has been verified on macOS hardware yet.
+
+1. For each path, run `ioreg -r -c IOHIDDevice -l -w0` and paste, for every `28de` entry, the
+   parent `IOUSBHostInterface` `bInterfaceNumber` and the `ReportDescriptor` bytes. Say which
+   descriptors contain a Feature item (item prefix byte `0xB0`–`0xB3`).
+1. Start OJD and run:
+
+   ```bash
+   /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver \
+     --headless controller list
+   ```
+
+   Expect one `protocol=valve.steam-controller` entry per Feature interface with `if=N`: wired
+   `if=2`; dongle up to four entries for `if=1`–`if=4`. Paste the lines and any interfaces
+   listed as unbound.
+1. Dongle only: pair controllers one at a time and record which `if=N` entry receives input.
+   Power one off and confirm only its entry reports disconnected.
+
+## 6. Lizard Mode
 
 Linux turns off the Steam Controller's mouse/keyboard lizard mappings while the driver owns the controller, then restores them on close. OJD sends the same feature-report sequence; confirm its effect on macOS hardware.
 
@@ -130,6 +154,10 @@ OJD version/commit:
 macOS version:
 Steam running: yes/no
 Path tested: wired / wireless / both
+
+Per-interface roles:
+- Feature interfaces (bInterfaceNumber):
+- controller list if= values:
 
 macOS native:
 - system_profiler sees device: yes/no, entry:

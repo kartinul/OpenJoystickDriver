@@ -18,8 +18,8 @@ Use this record to interpret compatibility claims. It preserves exact physical m
 - Generic HID maps descriptor-defined controls but cannot infer vendor protocols.
 - Raw and vendor-specific USB controllers use direct IOUSBHost when macOS permits app ownership.
   Entitlement-restricted models require OJD's signed USB DriverKit extension.
-- Automatic GIP and the explicit `apple-gamecontroller` route publish Xbox Series
-  `045E:0B13` "Xbox Wireless Controller". GameController.framework bound that
+- The former explicit `apple-gamecontroller` route and former Automatic GIP published Xbox
+  Series `045E:0B13` "Xbox Wireless Controller". GameController.framework bound that
   identity on GameSir G7 SE USB GIP. A custom SDL 3.4.16 HIDAPI+IOKit build
   (no GameController.framework) bound the same identity as HIDAPI xboxone over
   Bluetooth (`bus_type` 2) and took the 17-byte BLE path, not USB GIP.
@@ -52,14 +52,16 @@ Use this record to interpret compatibility claims. It preserves exact physical m
   keepalives is not a failed handshake; the 48-entry log ages out that rest
   `0x20`. A 20s `controller trace` with no physical press saw only status.
   Steam `hid_init` still hangs. Automatic GIP was restored to Series.
-- Blink, WebKit, and unknown Automatic consumers retain the hardware-verified
-  Xbox Series `045E:0B13` contract. Gecko Automatic uses `045E:02E0` with the
-  same stick/trigger ordering, hat-only D-pad, and standard B0–B16 mapping.
-  Firefox's native remapper does not expose Xbox Share as B17. The explicit
-  `apple-gamecontroller` profile always remains `045E:0B13`.
+- Automatic no longer routes by consumer. It formerly kept Xbox Series `045E:0B13`
+  for Blink, WebKit, and unknown consumers and used `045E:02E0` for Gecko, with
+  the same stick/trigger ordering, hat-only D-pad, and standard B0–B16 mapping;
+  Firefox's native remapper does not expose Xbox Share as B17. The former
+  `apple-gamecontroller` profile always stayed `045E:0B13`.
 - Earlier Xbox One Bluetooth `045E:02FD` spoof experiments reported no usable
   SDL HIDAPI input and are gone from selectable identities; unknown persisted
-  identity strings sanitize to `automatic` on load.
+  identity strings sanitize to `automatic` on load. Automatic's
+  `hid-xbox-one-s-bt` profile now publishes `045E:02FD` with an approximated
+  descriptor and has no consumer-bind result yet.
 - ASTRO C40 `9886:0024` is not a spoof target. It is a DualShock-style
   third-party pad; SDL HIDAPI's Xbox 360 driver special-cases it, but OJD does
   not impersonate it.

@@ -27,10 +27,6 @@ The sampler records:
 
 A window shorter than 60 seconds is `insufficientData` unless a configured high-water limit is exceeded. A stable run is evidence for the exercised workload, not proof that every path is leak-free.
 
-## Foreground-Consumer Monitor
-
-The foreground-consumer monitor owns one locked, process-lifetime `IOHIDManager`. Each scan refreshes `IOHIDManagerCopyDevices` without constructing another manager. Include controller activity and foreground application changes in runtime soak tests to exercise this path.
-
 ## Validation
 
 Run the diagnostic against the signed installed build, not only `.build/debug`.

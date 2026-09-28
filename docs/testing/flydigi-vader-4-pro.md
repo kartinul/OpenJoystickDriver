@@ -67,7 +67,7 @@ record rather than the generic fallback:
   --headless controller list
 ```
 
-The entry should report `protocol=flydigi`. Then check each control:
+The entry should report `protocol=vendor.flydigi`. Then check each control:
 
 ```bash
 /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver \

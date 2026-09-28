@@ -3,7 +3,7 @@
 The catalog imports left Joy-Con `057e:2006` and right Joy-Con `057e:2007` from the
 Nintendo HID registrations and HID IDs pinned in `ControllerSources.lock.json`
 (Linux revision `44696aa3a489d2baf58efa61b37833f100072bee`). The importer produces
-HID records with `joyConLeft` or `joyConRight` layout selection. No local override
+HID records with the `joy-con-left` or `joy-con-right` layout quirk. No local override
 or manually authored generated record is used.
 
 ## Current Evidence

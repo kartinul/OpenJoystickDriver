@@ -6,8 +6,8 @@ USB transport can reach a particular physical interface.
 
 ## Current Transport Rule
 
-- Standard HID input uses the OS-generation HID wrapper: IOHID on macOS 10.15–14 and CoreHID on
-  macOS 15 and later.
+- Standard HID input uses IOHID (`IOHIDManager` / `IOHIDDevice`) on every
+  supported macOS.
 - Accessible raw or vendor-specific USB interfaces use the app-side
   [IOUSBHost framework](https://developer.apple.com/documentation/iousbhost?language=objc), available
   since macOS 10.15.
@@ -57,7 +57,7 @@ catalog, and hardware evidence.
 
 The host allowlist contains only `com.openjoystickdriver.XboxUSBDevice`; allow-any DriverKit
 user-client access is forbidden. The DEXT's USB entitlement contains exact device
-dictionaries and no CoreHID virtual-device or HIDDriverKit entitlement. No route disables SIP,
+dictionaries and no HID virtual-device or HIDDriverKit entitlement. No route disables SIP,
 installs a kernel extension, or restores the removed libusb/IOUSBFamily shim path.
 
 Signed activation, the production provisioning profile, exclusive ownership transfer, and physical

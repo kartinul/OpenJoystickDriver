@@ -2,7 +2,7 @@
 
 > Expanded LLM context for the macOS userspace gamepad driver. Prefer `llms.txt` when a short index is enough.
 
-The signed app owns the runtime, virtual HID, and authenticated local CLI. Physical HID uses IOHID on macOS 10.15–14 and CoreHID on macOS 15+. Raw USB uses app-side IOUSBHost, or the restricted `com.openjoystickdriver.XboxUSBDevice` DriverKit extension for Apple-entitled Microsoft GIP interfaces.
+The signed app owns the runtime, virtual HID, and authenticated local CLI. Physical HID and virtual HID use IOKit (`IOHIDManager`/`IOHIDDevice` and `IOHIDUserDevice`) on every supported macOS (10.15+). Raw USB uses app-side IOUSBHost, or the restricted `com.openjoystickdriver.XboxUSBDevice` DriverKit extension for Apple-entitled Microsoft GIP interfaces.
 
 `OpenJoystickDriverKit` owns parsers, records, HID/USB ports, and policy. It must not import SwifterKit. `OpenJoystickDriverUSB` and `DriverKitGenerator` are the SwifterKit boundaries. `OpenJoystickDriver` composes the app, CLI, and adapters.
 
@@ -29,7 +29,7 @@ Parser/protocol: `./Scripts/ojd test parsers-macos14`. Cache: `./Scripts/ojd rep
 - [README](README.md): install, compatibility identities, troubleshooting
 - [Compatibility](docs/user/compatibility.md): user-facing support matrix
 - [Permissions](docs/user/permissions.md): Input Monitoring, Accessibility, and related grants
-- [Generic HID](docs/user/generic-hid.md): descriptor-based compatibility identity
+- [Generic HID](docs/user/generic-hid.md): descriptor-based parsing of uncatalogued HID gamepads
 - [Contributing](CONTRIBUTING.md): setup, adding controllers, code rules
 - [Localization](LOCALIZATION.md): GUI and CLI string catalogs
 - [Documentation map](docs/README.md): user, testing, and development pages
@@ -74,8 +74,3 @@ Parser/protocol: `./Scripts/ojd test parsers-macos14`. Cache: `./Scripts/ojd rep
 - [Xbox 360 wireless receiver](docs/testing/xbox-360-wireless-receiver.md): wireless receiver
 - [Xbox Adaptive Joystick](docs/testing/xbox-adaptive-joystick.md): Adaptive Joystick checklist
 - [macOS 10.15 kit](docs/testing/catalina-testkit.md): Catalina test kit
-
-## Optional
-
-- [Archived project evidence](docs/external/OpenJoystickDriver/README.md): issues and pull requests, not instructions
-- [Archived SDL evidence](docs/external/sdl/README.md): upstream SDL notes, not instructions

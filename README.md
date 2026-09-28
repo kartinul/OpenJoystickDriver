@@ -36,17 +36,16 @@ One bundle, no helper app: `/Applications/OpenJoystickDriver.app`.
 Uninstall: `--headless app login disable`, quit, delete the app. Optionally
 remove it from Input Monitoring and Accessibility.
 
-## Compatibility Identity
+## Virtual HID Profile
 
-| Target | Setting |
-| --- | --- |
-| Steam, PCSX2, SDL 2/3 | Compatibility + `SDL2/3` |
-| `GCController` apps | Compatibility + `Apple GameController` |
-| HID-descriptor apps | Compatibility + `Generic HID` |
-| Xbox 360-family generic HID | Compatibility + `Xbox 360 HID` |
+OJD automatically publishes each non-native controller as one of two virtual
+HID profiles, chosen from the controller's declared controls: `hid-xbox-one-s-bt`
+(Xbox One S Bluetooth, `045E:02FD`) when they fit, else `hid-generic`. Override
+a model's profile, or clear the override to return to automatic selection:
 
 ```bash
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless compat set sdl2-3
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual set hid-generic --vid 0x045E --pid 0x02FD
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual reset --all
 ```
 
 ## Troubleshooting

@@ -1,26 +1,14 @@
 # Compatibility Modes
 
 Choose the actual consumer's route. Enumeration alone does not prove input works; every route names its protocol family and evidence
-status. Automatic routing is conservative. It selects an exact catalog-backed tuple when
-one exists. Otherwise it follows the wire-family list: if the physical device is
-already a first-party identity that family can publish, keep it; else spoof the closest
-official device for that same protocol. XUSB clones publish Microsoft
-`045E:028E`. GIP clones normally publish Xbox Series `045E:0B13`; Automatic
-uses Xbox One S `045E:02E0` while a Gecko browser is frontmost. DualShock 4, DualSense,
-and Switch Pro physical HID pads publish their first-party USB identities
-automatically. Other HID stays Generic HID. Steam and Flydigi stay Generic HID.
-XID (original Xbox USB) is parsed in userspace and is not HID. DualShock 1/2 used the
-PlayStation controller port, not USB HID. Frontmost-app lists do not gate this.
-Never cross families automatically: GameSir G7 SE does not become an Xbox 360
-pad or ASTRO C40. Explicit picker/CLI may publish a first-party packer
-identity for live consumer-bind, then return to automatic.
-
-Automatic identifies browser engines from browser-role metadata and bundled
-engine files. It does not use browser names or bundle identifiers. Unknown or
-ambiguous browser fingerprints use the canonical Blink-verified Xbox Series
-variant. SDL routing is detected separately from bundled Mach-O dependencies.
-Compatibility reports continue while the device is active; foreground changes
-only trigger transactional Automatic variant transitions.
+status. Automatic leaves HID controllers to macOS. For every other controller it
+publishes one virtual profile chosen only from the controller's declared controls: Xbox
+One S Bluetooth (`hid-xbox-one-s-bt`, `045E:02FD`) when its primary controls fit, else
+`hid-generic`. Protocol family, the frontmost app, and browser engines do not affect the
+choice. Both profiles carry every primary control today, so Automatic always picks Xbox
+One S. XID (original Xbox USB) is parsed in userspace and is not HID. DualShock 1/2 used
+the PlayStation controller port, not USB HID. A per-controller-model override can pin
+either profile regardless of the automatic rule; see below.
 
 Status marks appear only in the support lists below:
 
@@ -30,90 +18,50 @@ Status marks appear only in the support lists below:
 - 🔬 research-only; no production spoof
 - ❌ unavailable
 
-## Choose An Identity
+## The Two Profiles And Per-Model Overrides
 
-### SDL2-3
+OJD recognizes exactly two virtual HID profiles. Automatic selection (above) picks
+between them from a controller's declared controls; a per-controller-model override
+can pin either one instead.
 
-Use for applications that consume SDL 2 or SDL 3 HIDAPI. Stock Steam-bundled
-and Homebrew SDL `hid_init` still hang if an Apple `AppleGCSyntheticDevice`
-`GamePad-1` leftover is already wedged: SDL matches all HID devices, then
-`IOHIDDeviceCreate` `IOServiceOpen`s the GameController plugin. OJD no longer
-opens that node. A leftover shim outlives OJD and is not removed without
-reboot or `gamecontrollerd` restart. This is not a Steam bind result. The virtual device publishes Microsoft
-Xbox 360 Wired `045E:028E` with Xbox 360 HID reports. XUSB clones that are
-missing from SDL HIDAPI's device list use this first-party identity. ASTRO C40 `9886:0024` is a DualShock-style
-third-party pad and is not a spoof target. Automatic routing does not select
-this identity for GIP; use `apple-gamecontroller` for Series. Explicit
-picker/CLI may publish `045E:028E` from GIP for live bind.
+### `hid-xbox-one-s-bt`
 
-### Apple GameController
+Publishes Microsoft's Xbox One S Bluetooth identity `045E:02FD` over a hand-authored
+approximation of its report format (Xbox Series Bluetooth-shaped, including the
+Consumer Record field and report 2). It is not yet verified byte-exact against genuine
+hardware, and whether ordinary HID clients see Guide through it is unconfirmed.
 
-Use only to test native applications that read `GCController`. This selectable
-route uses the Xbox Series Bluetooth tuple `045E:0B13`. Its primary input report
-includes the Consumer Record usage that GameController.framework exposes as
-`GCXboxGamepad.buttonShare`. View and Share remain separate inputs. Selecting
-it does not republish the foreground identity or create a second virtual device.
+### `hid-generic`
 
-GameController clients control macOS controller gestures. If an app leaves a
-gesture enabled, macOS may delay View or reserve Guide and Share. The OJD probe
-can disable those gestures for its own test, but OJD cannot change another
-app's gesture settings.
-`GCController.supportsHIDDevice`, connect, extended-profile, input, and
-reconnect results are diagnostic evidence, not guarantees. Do not claim
-haptics without a physical/runtime observation.
+Publishes the OJD generic gamepad `4F4A:4449` "OpenJoystickDriver Generic HID Gamepad":
+16 buttons, four stick axes, and two trigger axes, plus a vendor rumble output report.
+It is a device-neutral, lossless raw layout; it does not guarantee browser
+`mapping: "standard"`.
 
-### DualShock 4
+### Per-model overrides
 
-Use to test SDL HIDAPI PS4 and Apple GameController DualShock 4 consumers.
-Publishes Sony `054C:09CC` "Wireless Controller" with USB report `0x01`.
-Automatic when the physical pad is DualShock 4. Explicit picker may publish
-this identity from another family for live bind.
-
-### DualSense
-
-Use to test SDL HIDAPI PS5 and `GCDualSenseGamepad` consumers. Publishes Sony
-`054C:0CE6` "Wireless Controller" with USB report `0x01`. Automatic when the
-physical pad is DualSense. Explicit picker may publish this identity from
-another family for live bind. macOS 11.3+ for native DualSense GameController.
-
-### Switch Pro
-
-Use to test SDL HIDAPI Nintendo and Apple GameController Switch Pro consumers.
-Publishes Nintendo `057E:2009` "Pro Controller" with USB report `0x30` and the
-USB `0x80`/`0x81` handshake. Automatic when the physical pad is Switch Pro.
-Explicit picker may publish this identity from another family for live bind.
-
-### Generic HID
-
-Use for unknown or unsupported consumers that fit none of the specialized
-profiles. The descriptor exposes a plain, non-spoof gamepad as `4F4A:4449`
-`OpenJoystickDriver Generic HID Gamepad`. This identity provides device-neutral,
-lossless raw input; it does not guarantee browser `mapping: "standard"`.
-Sticks occupy axes 0–3, LT/RT occupy the positive halves of axes 4–5, and
-digital controls use B0–B5/B8–B17 without duplicated trigger buttons or a
-D-pad axis. Vendor-specific controls may be absent. This layout and identity are
-stable; an incompatible future layout requires a new PID.
-
-### Xbox 360 HID
-
-Use only for a consumer that needs the OJD Xbox 360-family HID descriptor and
-report shape. This is a generic HID compatibility profile, not Windows XUSB22.sys
-or XInput. It uses the OJD Xbox 360 HID report format and remains
-research-only until a named consumer is tested.
-
-Set an explicit identity from the installed CLI:
+Pin one of the two profiles for every controller of a given vendor/product ID, or for
+one connected device, from the installed CLI:
 
 ```bash
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless compat set sdl2-3
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless compat set apple-gamecontroller
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless compat set dualshock4
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual set hid-xbox-one-s-bt --vid 0x054C --pid 0x09CC
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual set hid-generic --device <id>
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual reset --vid 0x054C --pid 0x09CC
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual reset --all
 ```
 
-Only explicit identities guarantee persistence: successful selections are stored
-and rebuilt on service startup. With `automatic`, the persisted value is
-the automatic intent, not a fixed identity. Foreground-consumer routing may
-replace or retire the per-controller user-space backend at runtime and does not
-persist the detected engine, VID/PID variant, or other temporary choice.
+`reset --all` cannot be combined with a `--vid`/`--pid`/`--device` selector; it clears
+every stored override at once. An override is stored per vendor/product ID, not per
+connected device, and is rebuilt on service startup; `reset` (without `--all`) returns
+that model to automatic selection.
+
+`status` reports each controller's live profile, how it was chosen (`automatic`,
+`override`, or `automatic-after-rejecting`), and any stored override, for example:
+
+```
+virtual: hid-xbox-one-s-bt (automatic)
+override: hid-generic
+```
 
 ## Controller Support
 
@@ -145,7 +93,7 @@ persist the detected engine, VID/PID variant, or other temporary choice.
 
 - Generic HID maps descriptor-defined controls but cannot infer vendor protocols.
 - Restricted raw-USB models require the signed DriverKit extension; accessible vendor-specific devices use direct IOUSBHost.
-- Automatic routing never crosses protocol families. When no verified adjacent identity exists, OJD uses Generic HID.
+- Automatic ignores protocol family; `hid-generic` is used only when Xbox One S cannot carry a controller's primary controls.
 - Browser engines may map the same identity differently. Enumeration, input, reconnect, and output are separate claims.
 - Exact consumer-bind observations, failures, and hardware limits are in [consumer-binding evidence](../testing/consumer-binding.md).
 
@@ -172,36 +120,37 @@ mode `9886:0025` is experimental research only: the repository lacks a
 complete descriptor, feature/calibration, input, and output contract, so it is
 not a supported spoof route.
 
-Compatibility selection is keyed by **physical protocol family × target
-consumer × evidence**. XUSB and GIP inputs may use an Xbox-adjacent
-identity only when that consumer evidence exists; the OJD `xbox360-hid` route
-is generic HID and is not XUSB22.sys or XInput. Nintendo and PlayStation
-inputs require their own adjacent supported identity. Automatic `sdl2-3`
-publishes first-party Microsoft `045E:028E` for XUSB pads only. It does not
-cross into GIP, DualShock, or Nintendo merely because SDL HIDAPI also has
-drivers for those protocols. Explicit picker/CLI may publish a first-party
-packer identity on GIP for live bind. When no verified adjacent identity exists, OJD uses generic HID rather than guessing.
-Browser reports remain per-engine because Blink, WebKit, and Gecko can map
-the same family differently.
+OJD no longer publishes a per-family spoofed identity (a distinct Xbox 360, Switch
+Pro, or DualShock/DualSense virtual device chosen for a target consumer): only the
+two profiles above exist, picked by declared controls or a per-model override. The
+table below is kept as a historical record of consumer-bind results gathered while
+those per-family identities existed; it does not describe a selectable route today.
+Browser reports remain per-engine because Blink, WebKit, and Gecko can map the same
+family differently.
 
-| Physical family/mode | SDL/HIDAPI | Apple GameController | Automatic result |
-| --- | --- | --- | --- |
-| Xbox GIP, exact GameSir G7 SE mode | ⚠️ Series `045E:0B13`; custom HIDAPI xboxone BLE idle rest `0x8000`→0; no physical button; not Steam | ✅ Xbox Series `045E:0B13` | `apple-gamecontroller` |
-| Xbox GIP, other modes | ⚠️ first-party Series unless a reported failure tuple exists | ⚠️ Xbox Series profile | first-party Series |
-| Xbox 360 physical family | ⚠️ `sdl2-3` (Microsoft `045E:028E`) | 🔬 Series BT not used for 360 | `sdl2-3` |
-| XInputHID/XUSB wire protocol | ❌ no macOS emulation claim | ❌ no macOS emulation claim | Generic HID |
-| Xbox One Bluetooth `045E:02FD` | 🧪 BT1/BT2 reported no SDL input; route retired | 🔬 use `apple-gamecontroller` or `generic-hid` | Generic HID |
-| Nintendo Switch Pro | ⚠️ automatic `switchpro` USB packer; explicit G7 SE publish: custom HIDAPI switchpro `SDL_OpenGamepad` ok, not Steam | ⚠️ automatic `switchpro`; explicit G7 SE `supportsHIDDevice` yes | `switchpro` |
-| PlayStation DS4/DS5 | ⚠️ automatic `dualshock4` / `dualsense`; explicit G7 SE publish: custom HIDAPI ps4/ps5 `SDL_OpenGamepad` ok, not Steam | ⚠️ automatic packers; explicit G7 SE `supportsHIDDevice` yes | matching first-party HID |
-| Other | 🔬 no cross-family spoof | 🔬 no cross-family spoof | Generic HID |
+| Physical family/mode | SDL/HIDAPI | Apple GameController |
+| --- | --- | --- |
+| Xbox GIP, exact GameSir G7 SE mode | ⚠️ Series `045E:0B13`; custom HIDAPI xboxone BLE idle rest `0x8000`→0; no physical button; not Steam | ✅ Xbox Series `045E:0B13` |
+| Xbox GIP, other modes | ⚠️ first-party Series unless a reported failure tuple exists | ⚠️ Xbox Series profile |
+| Xbox 360 physical family | ⚠️ `sdl2-3` (Microsoft `045E:028E`) | 🔬 Series BT not used for 360 |
+| XInputHID/XUSB wire protocol | ❌ no macOS emulation claim | ❌ no macOS emulation claim |
+| Xbox One Bluetooth `045E:02FD` | 🧪 BT1/BT2 experiments reported no SDL input; Automatic now publishes this ID, consumer binding not yet hardware-verified | 🔬 not yet verified |
+| Nintendo Switch Pro | ⚠️ `switchpro` USB packer; explicit G7 SE publish: custom HIDAPI switchpro `SDL_OpenGamepad` ok, not Steam | ⚠️ `switchpro`; explicit G7 SE `supportsHIDDevice` yes |
+| PlayStation DS4/DS5 | ⚠️ `dualshock4` / `dualsense`; explicit G7 SE publish: custom HIDAPI ps4/ps5 `SDL_OpenGamepad` ok, not Steam | ⚠️ first-party packers; explicit G7 SE `supportsHIDDevice` yes |
+| Other | 🔬 no cross-family spoof | 🔬 no cross-family spoof |
+
+Automatic does not use this table; see the declared-controls rule at the top. The Xbox One S
+row records earlier spoof experiments, not the current `hid-xbox-one-s-bt` profile.
 
 ## Apple GameController Support
 
 Use live detection by `GCController.supportsHIDDevice` and a hardware test to
 determine whether the active virtual controller works with
-GameController.framework. The `apple-gamecontroller` profile publishes
-`045E:0B13`; the OJD probe confirms whether macOS created `GCXboxGamepad`,
-`buttonShare`, and any paddle inputs. Browser Gamepad API results are separate:
+GameController.framework. There is no separate identity to select for this test:
+the OJD probe checks whichever of the two profiles is currently published, and
+confirms whether macOS created `GCXboxGamepad`, `buttonShare`, and any paddle
+inputs. Whether `hid-xbox-one-s-bt`'s `045E:02FD` is itself recognized as an Xbox
+family device by GameController.framework is not yet hardware-verified. Browser Gamepad API results are separate:
 a browser may omit Share even when native GameController.framework exposes it.
 The private current-system mapping catalog is optional. A missing pair does not
 prove incompatibility. See
@@ -217,42 +166,41 @@ second controller. Development and production DEXT matching are both limited
 to the VID/PID pairs in OJD's Apple-issued entitlement. Accessible third-party
 controllers, including the GameSir G7 SE, use direct app-side IOUSBHost instead.
 
-Run the shared CLI self-test even while Compatibility mode is active:
+Run the shared CLI self-test even while a virtual controller is published:
 
 ```bash
 /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless test 5
 ```
 
-The self-test checks the current Compatibility virtual-HID backend. For an
-explicit identity, that backend is rebuilt from the persisted identity after
-service startup. In `automatic` mode, foreground routing may replace or retire
-the per-controller backend while the persisted value remains the automatic
-intent; the self-test therefore does not prove a universally persistent
-backend. On macOS 10.15–14 the active backend uses `IOHIDUserDevice`; on macOS
-15 and later it uses CoreHID `HIDVirtualDevice`. A self-test does not prove USB
+The self-test checks the current virtual-HID backend for the selected controller.
+For a controller with a stored override, that backend is rebuilt from the override
+after service startup. For a controller selected automatically, the backend follows
+declared controls at publication and is not persisted; the self-test therefore does
+not prove a universally persistent backend. The active backend uses
+`IOHIDUserDevice` on every supported macOS.
+A self-test does not prove USB
 system-extension approval, signing validity, or behavior on a different macOS
 version or hardware.
 
 ## App Rumble
 
-OJD forwards app rumble only when the virtual report and physical parser agree on an output format. Supported inputs are Xbox One report ID `3`, the eight-byte Xbox 360 packet, OJD compact report `0x4F`, and DualShock 4 Bluetooth report `0x11`.
+OJD forwards app rumble only when the virtual report and physical parser agree on an output format. `hid-xbox-one-s-bt` accepts Xbox One report ID `3`. `hid-generic` accepts OJD compact report `0x4F` and the short Xbox 360 `08` rumble packet.
 
-Xbox 360 and DualShock 4 use their two main motors. GIP controllers may also use trigger motors. DualShock 4 ignores trigger values.
+Xbox 360 and DualShock 4 controllers use their two main motors. GIP controllers may also use trigger motors. DualShock 4 ignores trigger values.
 
 ## Input Integrity
 
 Before a parsed packet reaches an output backend, OJD reduces its events to the packet's final net controller state. It drops duplicate transitions and contradictory press/release pulses that end unchanged. It also emits one canonical D-pad direction, rejects non-finite analog values by retaining the prior component, and clamps sticks to `-1...1` and triggers to `0...1`. This integrity gate does not add a timing delay or a new global deadzone. Protocol-specific deadzones remain in their parsers.
 
-For an explicit identity, the normalized batch is delivered to one persistent
-virtual-HID device per physical controller. Focusing or opening a consumer does
-not replace that device, so SDL hot-plug state remains stable. In `automatic`
-mode, foreground routing may replace or retire the per-controller backend;
-only the automatic intent is persisted, not that temporary consumer choice.
+The normalized batch is delivered to one persistent virtual-HID device per
+physical controller. Focusing or opening a consumer does not replace that
+device, so SDL hot-plug state remains stable. Automatic selection is not
+persisted; only a per-model override is.
 
 ## Manual Checks
 
 Before marking a mapping verified, check the exact app and mode:
 
 1. SDL2/3: `A2` and `A5` idle at zero, D-pad releases cleanly.
-2. Parsec macOS to Windows: D-pad and A/B/X/Y stay stable on the Windows host.
-3. Rumble: app output report reaches the physical controller if the controller supports rumble.
+1. Parsec macOS to Windows: D-pad and A/B/X/Y stay stable on the Windows host.
+1. Rumble: app output report reaches the physical controller if the controller supports rumble.

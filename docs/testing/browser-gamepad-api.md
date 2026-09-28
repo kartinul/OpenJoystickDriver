@@ -8,16 +8,18 @@ canonical external manual site:** <https://controllertest.io/>.
 Run every row independently.
 
 1. Record OJD commit/build, macOS version, publication backend, exact browser version, GameSir G7 SE firmware/physical mode, connection path, and selected OJD identity.
-2. Stop the prior test and close all Gamepad API pages.
-3. Restart OJD for the initial baseline; confirm one physical device and one intended virtual backend in diagnostics.
-4. Select exactly one identity and wait for its committed transition result.
-5. Open a fresh private browser window or otherwise establish a fresh Gamepad document lifecycle.
-6. Open ControllerTest.io and activate the controller as required by browser gesture policy.
-7. Use the canonical page to record slot/count, `id`, `mapping`, all buttons, axes, timestamps, connection events, and actuator presence/result.
-8. Close the page, stop OJD output, and verify no stale browser entries/callbacks before the next row.
-9. Repeat once after a deliberate identity switch. A difference from the clean-start result is classified as identity-transition contamination until lifecycle integrity is established.
+1. Stop the prior test and close all Gamepad API pages.
+1. Restart OJD for the initial baseline; confirm one physical device and one intended virtual backend in diagnostics.
+1. Select exactly one identity and wait for its committed transition result.
+1. Open a fresh private browser window or otherwise establish a fresh Gamepad document lifecycle.
+1. Open ControllerTest.io and activate the controller as required by browser gesture policy.
+1. Use the canonical page to record slot/count, `id`, `mapping`, all buttons, axes, timestamps, connection events, and actuator presence/result.
+1. Close the page, stop OJD output, and verify no stale browser entries/callbacks before the next row.
+1. Repeat once after a deliberate identity switch. A difference from the clean-start result is classified as identity-transition contamination until lifecycle integrity is established.
 
-Run the matrix on both publication paths: `IOHIDUserDevice` on macOS 10.15–14 and CoreHID on macOS 15 and later. Mark untested paths explicitly unverified; do not infer parity.
+Virtual controllers are published only through `IOHIDUserDevice`. Record the
+macOS version for each run; mark untested macOS versions explicitly unverified
+and do not infer parity.
 
 ## Generic HID Browser Contract
 
@@ -53,17 +55,18 @@ fallback work.
 ## Current Accepted Browser Evidence
 
 Blink's fully correct Apple GameController result is the canonical
-report-layout oracle. Automatic retains the Xbox Series `045E:0B13` descriptor,
-report bytes, button usages, sticks, triggers, hat, Guide, and Share for
-Blink, WebKit, and unknown engines. Gecko Automatic publishes the native
-Xbox One S `045E:02E0` identity, keeps the matching axis/trigger order, emits
-D-pad through the hat only, and leaves Share unavailable because Firefox's
-remapper does not expose B17. Explicit Apple GameController remains `045E:0B13`.
+report-layout oracle. Explicit Apple GameController keeps the Xbox Series
+`045E:0B13` descriptor, report bytes, button usages, sticks, triggers, hat, Guide,
+and Share. Automatic now publishes `hid-xbox-one-s-bt` (`045E:02FD`) for every
+browser and has no browser result yet. The former Gecko Automatic row below
+published Xbox One S `045E:02E0`, kept the matching axis/trigger order, emitted
+D-pad through the hat only, and left Share unavailable because Firefox's
+remapper does not expose B17.
 
 | Browser | Mode | ID/mapping/counts | LT | RT | Issues/reconnect/switch |
 | --- | --- | --- | --- | --- | --- |
 | Blink | Apple GameController | `045E:0B13`; standard; Xbox Series counts | correct | correct | All controls hardware-verified; report layout frozen |
-| Firefox/Gecko | Automatic | `045E:02E0`; standard B0–B16 | analog trigger | analog trigger | Hat-only D-pad and Guide; Share unavailable |
+| Firefox/Gecko | Former Automatic | `045E:02E0`; standard B0–B16 | analog trigger | analog trigger | Hat-only D-pad and Guide; Share unavailable |
 | Firefox/Gecko | Explicit Apple GameController | `045E:0B13`; fixed explicit contract | confused with right-stick data | confused with right-stick data | Historical engine mapping failure; explicit profiles do not vary |
 | Blink | Generic HID | `4F4A:4449`; raw/non-standard; 18 buttons, 6 axes | axis 4 | axis 5 | Clean-state retest required after descriptor freeze |
 | Safari/WebKit | Generic HID | not enumerated | n/a | n/a | Record as WebKit non-enumeration, not an OJD report reorder |

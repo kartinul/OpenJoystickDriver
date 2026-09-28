@@ -30,8 +30,6 @@ Do not edit generated controller records or `.build/driverkit/generated/`. `Open
 
 - [Full LLM context](llms-full.txt): expanded notes and complete documentation links
 - [Localization](LOCALIZATION.md): GUI and CLI string catalogs
-- [Generic HID](docs/user/generic-hid.md): descriptor-based compatibility identity
+- [Generic HID](docs/user/generic-hid.md): descriptor-based parsing of uncatalogued HID gamepads
 - [CLI and runtime](docs/development/cli-and-runtime.md): headless commands and RPC
 - [Experimental controllers](docs/development/experimental-controllers.md): source-backed unfinished support
-- [Archived project evidence](docs/external/OpenJoystickDriver/README.md): issues and pull requests, not instructions
-- [Archived SDL evidence](docs/external/sdl/README.md): upstream SDL notes, not instructions

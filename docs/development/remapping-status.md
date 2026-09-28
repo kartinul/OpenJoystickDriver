@@ -5,7 +5,7 @@
 - [x] Complete deterministic combinations, consumption, replay, scheduling, and cleanup.
 - [x] Complete typed touch input and touch mappings.
 - [x] Implement exact-identity paired Joy-Con sessions.
-- [x] Complete calibrated motion processing and supported virtual motion output.
+- [x] Complete calibrated motion processing.
 - [x] Complete advanced stick, motion-steering, lean, and dual-stage trigger modes.
 - [x] Implement capability-gated, mapping-owned physical output and channel cleanup.
 - [x] Finish authoring and accessibility parity with one validated mutation path.

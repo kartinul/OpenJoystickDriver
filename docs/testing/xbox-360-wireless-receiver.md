@@ -33,6 +33,7 @@ Quit Steam, games, and other controller tools. Connect the receiver, pair one co
 
 Record:
 
+- `USB_TX` with the presence inquiry `08 00 0F C0 00…` at startup.
 - `CONTROLLER_CONNECTION state=connected` after pairing.
 - `USB_TX` with the receiver-wrapped Player 1 ring-light packet.
 - `USB_RX` followed by correct `EVENT` lines for every control.
@@ -46,5 +47,39 @@ Attach the complete command output to issue #9 with macOS version, Mac model,
 receiver VID/PID and branding, controller model, exact OJD commit, selected route,
 reconnect results, and any missing or incorrect inputs. Raw packet output is
 included; inspect it before publishing.
+
+## Capture Receiver Slots
+
+OJD runs one pipeline per receiver slot: each interface with triple FF/5D/81 and one interrupt IN
+and OUT endpoint, in interface order, at most four. Slot n (from 0) sends the presence inquiry at startup,
+ignores pad data until the slot reports a controller present, then lights player n+1. None of this
+has been verified on a real receiver yet; real slot interface numbers are unknown.
+
+1. Record the configuration descriptor and interface numbers with the receiver plugged in:
+
+   ```bash
+   ioreg -p IOUSB -l -w0
+   ioreg -r -c IOUSBHostInterface -l -w0
+   ```
+
+   Paste every `IOUSBHostInterface` under the receiver with its `bInterfaceNumber`,
+   `bInterfaceClass`, `bInterfaceSubClass` and `bInterfaceProtocol`, plus `kUSBCurrentConfiguration`
+   on the device before and after OJD starts.
+1. Start OJD and list controllers:
+
+   ```bash
+   /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver \
+     --headless controller list
+   ```
+
+   Expect four `protocol=xbox.xusb:receiver` entries, one per slot, each ending its identity with
+   `if=N` for a FF/5D/81 interface. Paste the lines.
+1. Pair one controller at a time. For each, record which `if=N` entry receives input and which
+   ring-light quadrant lights. Slot order is interface order: the lowest interface is player 1.
+1. With controllers paired on slot 0 and a later slot, restart OJD without unplugging the
+   receiver. The device is already configured, so no slot, including slot 0, should send
+   SET_CONFIGURATION. Confirm every paired slot resumes input. If slot 0 alone reconnects during a
+   run (for example after a transfer error), confirm the later slots keep their input.
+1. Power off one controller. Confirm only its slot reports disconnected.
 
 After input passes, use the app or application service-backed `physical-output plan` workflow to verify both rumble motors and all four ring-light player patterns. Mark records hardware-verified only after physical receiver presence, input, reconnect, rumble, and LED checks pass.

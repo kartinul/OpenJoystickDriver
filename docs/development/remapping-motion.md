@@ -1,6 +1,6 @@
 # Remapping Motion Processing
 
-This page defines per-device motion processing, coordinate projections, tuning, activation, layer overrides, and virtual output. Start with the [remapping overview](remapping.md).
+This page defines per-device motion processing, coordinate projections, tuning, activation, and layer overrides. Start with the [remapping overview](remapping.md).
 
 ## Per-Device Motion Processing
 
@@ -10,7 +10,9 @@ retains the latest corrected gyro, fused orientation, gravity, linear accelerati
 Duplicate/backward sequence indices and backward sample times do not advance state. A forward
 sequence with the same timestamp produces no second integration. Gaps above 100 ms, clock-basis
 or tick-unit changes, and calibration-provenance changes reset bias/orientation and establish a
-zero-duration baseline. Missing or numerically out-of-range physical readings clear estimates;
+zero-duration baseline. Samples arrive in SI units and the canonical controller frame; the
+processor converts them once to its degrees-per-second, g, Y-up space (see
+[Remapping Calibration](remapping-calibration.md)). Numerically out-of-range readings clear estimates;
 the next valid sample also establishes a fresh baseline. This prevents interpolation across
 missing motion and prevents extreme finite values from entering bias arithmetic.
 
@@ -121,8 +123,8 @@ suppression toggle to pass through an otherwise unmapped activation control. An 
 activator reserves its parent virtual axis, consistent with ordinary axis-direction mappings.
 
 Focused tests cover sample timing, timeout aggregation, activation, calibration-reset delivery
-failure, CLI persistence, locale-aware numeric entry, and native draft preservation. Trackball,
-layer tuning overrides, and supported virtual motion output are implemented as described below.
+failure, CLI persistence, locale-aware numeric entry, and native draft preservation. Trackball and
+layer tuning overrides are implemented as described below.
 The new gyro editor labels are present in all catalogs but await translation. Physical
 motion direction, rendered controls, keyboard navigation, and VoiceOver remain unverified.
 
@@ -157,29 +159,3 @@ combined with tuning options. Each native layer row has a Motion tuning button. 
 sheet offers
 Use profile tuning to remove the override. Native rendering, keyboard navigation, VoiceOver,
 and translation review remain pending.
-
-### Virtual Motion Output
-
-Set `gyro_output.virtual_motion` or use `--gyro-virtual-motion true` to forward the processor's
-runtime-bias-corrected gyroscope and calibrated accelerometer through a supported virtual
-controller report. This is independent of the mouse/stick gyro mode, so a profile may publish
-motion while also using gyro for a mapped destination. Virtual motion requires virtual-gamepad
-output. The native Motion sheet exposes the same setting and uses the existing validated save
-path.
-
-DualShock 4 USB, DualSense USB, and Switch Pro USB virtual identities encode their documented
-sensor fields. Other identities report motion as unavailable rather than adding vendor data to a
-descriptor that does not define it. Sony reports use their nominal 1/16 degree/second and 1/8192 g
-scales. Switch Pro reports use the advertised virtual calibration scale and repeat the latest
-sample in its three IMU slots with the inverse Pro-controller coordinate transform.
-
-The virtual-device session owns its report clock. Accepted sample intervals advance it
-monotonically; a source clock-basis, tick-unit, calibration-revision, or tuning discontinuity
-clears motion and requires a new baseline without resetting the published clock. Missing or
-invalid physical readings, a 100 ms sample timeout, calibration reset, layer tuning change,
-profile replacement, disconnect, suspension, shutdown, and output failure all clear the current
-sensor fields. Control-only report updates preserve both current sensor values and the virtual
-clock. Focused tests distinguish supported report layouts, timestamp units, Nintendo axes,
-timeout and discontinuity cleanup, profile persistence, CLI/native authoring, and fail-closed
-delivery. Consumer recognition, physical direction/scale, USB and Bluetooth behavior, and
-hardware latency remain external gates and are not established by constructed reports.

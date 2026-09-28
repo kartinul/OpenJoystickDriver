@@ -32,13 +32,13 @@ Save the proposed controller JSON outside the bundled record directory until you
 /tmp/controller-candidate.json
 ```
 
-Use decimal numbers in the JSON. Before probing, review `protocol.startupPackets`. The command sends only OJD-modeled startup behavior:
+Use decimal numbers in the JSON. Before probing, review `protocol.initialization`. The command sends only OJD-modeled startup behavior:
 
-- GIP: the named startup sequence; profiles may disable the default keep-alive
+- GIP: the named initialization actions (the driver default when omitted); profiles may disable the default keep-alive
   when hardware evidence requires it.
 - Xbox 360 wired: the steady Player 1 ring-light packet.
 - Xbox 360 wireless receiver: no output until a logical controller connects, then the receiver-wrapped steady Player 1 packet.
-- A record containing `rumbleBegin` and `rumbleEnd` sends those brief initialization packets because they are part of that record's declared startup sequence.
+- A record containing `xbox.gip/rumble-begin` and `xbox.gip/rumble-end` sends those brief initialization packets because they are part of that record's declared initialization.
 
 `protocol.keepAlive` is an optional boolean for GIP records. Omit it to keep
 the default-enabled behavior. Set it to `false` only when device evidence
@@ -69,8 +69,13 @@ development build, connect the controller directly by USB, then run:
 
 During the capture, press one control at a time and return it to neutral. The probe prints:
 
-- `RECORD`: the exact identity, endpoints, configuration behavior, and startup names.
+- `RECORD`: the exact identity, the endpoints and configuration resolved for the
+  matched device, and startup names. With `--validate-only` it shows the record's own values.
 - `USB_DEVICE` and `USB_CLAIM`: the matched physical USB path.
+- `RECORD_BINDING result=refused`: the observed interface violates the record's
+  interface contract, or (`reason=configuration-unobserved`) the device's
+  configuration descriptor could not be read; retry that case. The probe exits
+  with code 4 before it opens or writes to the device.
 - `RECORD_HANDSHAKE`: whether the protocol startup completed.
 - `USB_TX`: additional Xbox 360 startup output.
 - `USB_RX`: every received input packet.

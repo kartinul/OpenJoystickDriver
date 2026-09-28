@@ -7,16 +7,17 @@ endpoint. No helper daemon or LaunchAgent is packaged.
 The beta.4 retirement audit keeps only current consumers: the foreground app owns the runtime and
 login item, the authenticated Unix socket remains the typed GUI/CLI service boundary, and the
 installed-CLI forwarder prevents an unsigned or stale repository executable from impersonating the
-signed client. Historical profile versions are rejected rather than migrated. Current profile
-formats, RPC payloads, macOS 10.15 platform fallbacks, hardware/parser fallbacks, and virtual
-compatibility identities remain active contracts. Packaging and source searches confirm that no
-helper daemon, LaunchAgent plist, daemon launcher, obsolete GUI registration, or alternate RPC route
-is shipped, so there is no consumer-free daemon-era resource to remove.
+signed client. Historical profile versions and a stored legacy `CompatibilityIdentity` default are
+rejected rather than migrated. Current profile formats, RPC payloads, macOS 10.15 platform
+fallbacks, hardware/parser fallbacks, and virtual HID profile overrides remain active contracts.
+Packaging and source searches confirm that no helper daemon, LaunchAgent plist, daemon launcher,
+obsolete GUI registration, or alternate RPC route is shipped, so there is no consumer-free
+daemon-era resource to remove.
 
-Controller sessions distinguish physical connection from reversible OJD suspension. Compatibility
-transitions use bounded shutdown and retain the actual live identity after a failed replacement.
-Complete DualShock 4 Bluetooth reports require a valid CRC. Absolute report observations reconcile
-missed deltas, stale report progress retires non-neutral OJD output after one second, and recovery
+Controller sessions distinguish physical connection from reversible OJD suspension. Virtual HID
+profile transitions use bounded shutdown and retain the actual live profile after a failed
+replacement. Complete DualShock 4 Bluetooth reports require a valid CRC. Every driver decodes each report into a
+full controller snapshot, stale report progress retires non-neutral OJD output after one second, and recovery
 requires a fresh neutral report. Idle input is never consumed as a wake event. Explicit wireless
 disconnect neutralizes and suspends one selected session before a bounded Bluetooth close, without
 reconnecting or affecting other controllers. GameSir G7 SE startup keeps the mandatory
@@ -52,8 +53,8 @@ Issue-by-issue acceptance is recorded in the
 
 ## Platform Boundaries
 
-On macOS 10.15–14, physical HID access uses IOHID and consumer virtual output
-uses `IOHIDUserDevice`. On macOS 15 and later, those roles use CoreHID. Raw USB
-uses IOUSBHost/USBDriverKit across both ranges. `OpenJoystickDriverUSB` hides the
+On every supported macOS (10.15+), physical HID access uses IOHID and
+consumer virtual output uses `IOHIDUserDevice`. Raw USB uses
+IOUSBHost/USBDriverKit. `OpenJoystickDriverUSB` hides the
 USB host transport from parsers and application callers. OJD does not retain a
 libusb fallback.

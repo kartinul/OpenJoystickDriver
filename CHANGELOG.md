@@ -9,10 +9,126 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Automatic virtual output publishes one of two profiles chosen only from the controller's
+  declared controls: Xbox One S Bluetooth (`hid-xbox-one-s-bt`, `045E:02FD`) when they fit, OJD
+  generic HID (`hid-generic`) otherwise. Browser- and consumer-based routing and the automatic
+  DualShock 4, DualSense, Switch Pro, and Xbox Series (`045E:0B13`) identities are removed. A
+  per-model override can still pin either profile with `controller virtual set`. Consumer binding
+  of `045E:02FD` is not yet hardware-verified.
+- **BREAKING:** Remove the `compat` command family and compatibility identities. Choose between
+  the two virtual HID profiles per controller model with `controller virtual set
+  <hid-xbox-one-s-bt|hid-generic>` and `controller virtual reset`; `status` now reports each
+  controller's virtual profile and whether it came from an override or automatic selection.
+- **BREAKING:** Remove the old compatibility RPCs, client methods, and status identity fields.
+  Per-controller status now carries `profile`, `source` (`automatic`, `override`, or
+  `automatic-after-rejecting`), `override`, and `unavailable` instead.
+- **BREAKING:** Rename the remapping wire route `compatibility` to `virtual-gamepad` and the
+  status field `compatibility_output_suppressed` to `virtual_output_suppressed`.
+- **BREAKING:** Remove virtual motion (gyro relayed through the virtual controller) and the
+  Xbox 360 Mac/DirectInput, DS4/DualSense USB, and Switch Pro USB virtual formats and their host
+  protocols.
+- **BREAKING:** Remove the PlayStation, Nintendo, and Steam glyph families from `controller input
+  test`.
+- Send physical output through one application-service request, `sendControllerOutput`, which
+  carries one output command (`set-rumble`, `stop-rumble`, `set-player-indicator`, `set-rgb`,
+  `set-light-brightness`, or `set-adaptive-trigger`) and returns a `ControllerOutputResult`
+  (`outcome` plus `droppedRumbleChannels`). It replaces `sendPhysicalRumble`,
+  `setPhysicalPlayerIndicator`, `setPhysicalColor`, and `setPhysicalBrightness`; older clients
+  must be updated with the app.
+- `controller output rumble|player|color|brightness` no longer pre-check capabilities in the
+  CLI; the app decides support and the CLI reports its result. `rumble` no longer refuses a
+  request that names a trigger motor the controller lacks: it drives the channels the controller
+  has, warns about each missing trigger motor, and exits successfully; a request whose every
+  channel is missing fails. Through the application
+  service and the GUI such a request (for example a DualShock 4 trigger-only rumble) previously
+  reported success silently; the result now lists the dropped channels. `rumble --duration-ms`
+  returns once the app accepts the command, and the app stops the rumble when the duration ends
+  instead of the CLI sending a second stop.
+- A stop-rumble, including every all-zero rumble report an application writes to a virtual
+  controller, writes the physical controller once instead of twice and cancels a pending timed
+  stop.
 - Reuse canonical GIP, GameSir, DualShock 3, Steam Controller, and Switch Pro packet
   construction, and share test-only protocol fixtures with the macOS 14 compatibility harness.
 - Keep local commit and push hooks fast by reserving full lint, build, test, and
   network-backed catalog validation for explicit checks and CI.
+- Use IOKit HID on every supported macOS: physical controllers through `IOHIDManager` and
+  virtual controllers only through `IOHIDUserDevice`. CoreHID is no longer linked.
+- Tear every controller session down on system sleep and rediscover controllers through normal
+  hot-plug on wake. A controller suspended before sleep stays suspended after wake.
+- Expose one typed raw-USB transfer contract (bulk and interrupt endpoints plus control
+  transfers) on both the IOUSBHost and USBDriverKit backends.
+- Build scripts use the Xcode chosen with `xcode-select` instead of the newest installed Xcode.
+- Bind controllers through one protocol classifier and driver registry. A device no driver binds
+  is no longer driven as generic HID; `status` lists it with a typed reason, and OJD releases its
+  claim so macOS keeps the device.
+- Bind uncatalogued wired Xbox-protocol controllers by their USB protocol signature (for example
+  the Razer Wolverine Tournament Edition), and read each raw-USB controller's interface and
+  endpoints from its own configuration descriptor instead of assuming protocol defaults. This fixes
+  Razer controllers whose LED stayed off because OJD used the wrong endpoints.
+- Restart the Xbox One (GIP) startup sequence when a freshly plugged-in controller announces
+  itself before sending input, so controllers that were still booting no longer stay silent.
+- Recognize 218 more wired controllers from SDL's pinned controller list (Xbox One, Xbox 360,
+  DualShock 4-compatible and Switch Pro-compatible pads). Rows that SDL itself drives with a
+  different protocol or report layout are left out.
+- Apply DualShock 4 factory motion calibration only to Sony controllers; third-party pads keep
+  nominal scaling.
+- Fix memory corruption after a HID controller's input stream closed (for example on sleep or a
+  permission change): IOKit could write a late input report into a buffer OJD had already freed.
+- Each controller protocol is now one driver that owns its startup, keep-alive and output
+  encoding. Keep-alive packets no longer wait for controller input (idle Xbox One pads now get their
+  4-second status packet), and a failed startup report no longer stops the remaining ones.
+- Each Xbox 360 wireless receiver slot and each Steam Controller dongle slot is now its own
+  controller: it appears when a pad connects, disconnects on its own, and shows its slot's player
+  LED. Receivers now ask the receiver which pads are present instead of assuming one.
+- `controller list` and `status --json` show a controller's USB interface number (`if=N`).
+- Remove the extra 8% stick dead zone that six drivers applied on top of the remapping and
+  virtual-output dead zones, and report L2/R2-style trigger buttons from the controller's own
+  digital signal when it has one (otherwise from one shared threshold). Disconnecting now
+  releases every stick and trigger to exactly neutral.
+- Fix inverted vertical stick axes on the DualSense and DualShock 3 in remapping, and on generic HID
+  controllers.
+- Touch contacts report a slot, an active flag and X/Y from 0 to 65535 across the surface, with
+  the top edge at 0, and each touch frame carries one monotonic timestamp. This fixes inverted
+  up/down swipes, grid rows and pointer motion on the Steam Controller trackpads. The touch JSON
+  of `getControllerState` changes shape: it no longer has raw coordinates, a touch counter, a
+  history index or surface dimensions.
+- Read the Xbox Series X|S Share button from the correct report byte.
+- A remapping profile that binds a trigger no longer leaks that trigger's click to the virtual
+  controller, and remapping onto a trigger also sets the virtual controller's digital trigger button.
+- Controllers now report complete input snapshots instead of individual changes. `controller
+  input` prints the full state, the RPC method is `getControllerState`, and remapping compares each
+  controller's snapshot with the previous one. This fixes a button that shares a virtual-pad bit
+  with another (for example Start and Options) being released while the other is still held, a
+  remapped press lost after switching to passthrough and back, and a held Guide button reappearing
+  after the controller session resumes.
+- Battery and connection details are reported as the controller gives them: a DualShock 4 shows
+  its battery bucket (`0-9%`) instead of a made-up midpoint, `cable` becomes `wired-power`, and
+  `status --json` and support reports carry a `connectionState` with the controller-side link
+  (`usb`, `bluetooth-classic`, `proprietary-radio-receiver`, or none when unknown) instead of
+  `battery`.
+- Controllers that macOS supports natively (for example DualShock 4 and DualShock 3) stay
+  macOS gamepads: OJD reads them without taking exclusive access, runs remapping profiles on
+  them, and publishes no virtual pad. `status` marks them `native=macos virtual=none`. OJD
+  writes to them only where macOS leaves something undone (the DualShock 3 player LED).
+- Controller records name their protocol by family and stored variant (`"protocol": {"family":
+  "xbox.xusb", "variant": "receiver"}`) with no `transport` field; `status`, `list`, JSON output
+  and support reports show a `protocolBinding` such as `xbox.gip:usb` instead of `parser` and
+  `protocolVariant`.
+- Controller records use typed protocol-scoped quirks (`share-offset`, `joy-con-left`,
+  `joy-con-right`), capability data (`capabilities.absent`/`present`, `rumble: "absent"`) and named
+  GIP initialization actions (`xbox.gip/power-on`, ...) instead of quirk strings and
+  `startupPackets`; GameSir variants are `usb` and `enhanced-hid`, with the G7 Pro 8K and Cyclone 2
+  differences expressed as the quirks `inner-grips` and `lighting-slots`.
+  The `quirks=` field of `list`, `status` and support reports and the record probe's `startup=`
+  field print these new names.
+- Each controller reports the controls it provides (`capabilities` in `status --json`, replacing
+  `physicalInputCapabilities`); the profile editor offers only those controls.
+- Check a raw USB controller's interface class and endpoints against its protocol before the
+  first write; a mismatched device is listed as unbound instead of being written to.
+- Controller records reject vocabulary no runtime consumer reads: the `XboxAdaptiveJoystick`
+  driver, `unknown` protocol variants, `usb.interface`, and unconsumed per-driver quirks.
+- Controller-record validation rejects protocol-default USB endpoints for every driver, not only
+  GIP and Xbox 360, so such a record fails the catalog checks instead of the app at launch.
 
 ### Fixed
 
@@ -24,6 +140,24 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Report typed HID, Bluetooth, and disconnect-stage failures instead of reducing them to generic
   Boolean or unavailable results.
 - Restore the authenticated GitHub fallback when raw catalog source downloads are rate limited.
+- Neutralize rumble and lighting before a sleeping or stopping controller's session closes, and
+  keep a late output request from re-enabling them.
+- Roll back only the output channels a failed write changed, so one controller's rejected write no
+  longer undoes other outputs.
+- Keep the wireless-disconnect timeout on time when Swift's shared thread pool is busy.
+- Cut per-report CPU in output routing: eligibility checks describe only the reporting controller
+  instead of every connected one, runtime identity tokens are computed once per controller, and
+  remapping tracks the foreground app from activation notifications instead of querying it for
+  each report.
+- Publish virtual controller reports only when their state changes: the 8 ms idle keepalive is
+  gone, and input the virtual profile cannot carry no longer republishes an identical report.
+- Open each physical HID controller once: a DualShock 4 no longer delivers every report twice,
+  and OJD no longer opens its own virtual gamepads.
+- Keep DualShock 4 input live: a duplicated report could hide its sensor timestamp advance, so
+  OJD waited for a neutral report and dropped stick input and physical output.
+- Quit within a second on SIGTERM or SIGINT instead of hanging in AppKit's termination loop.
+- Send the full 49-byte DualShock 3 and Sixaxis output report so player LEDs change over USB.
+- Start the menu-bar app without an app bundle instead of crashing on notification setup.
 
 ## [0.5.0-beta.4] - 2026-09-15
 
