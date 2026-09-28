@@ -46,6 +46,10 @@ extension ApplicationServiceServer {
   }
 
   static func isTrustedClient(processIdentifier: Int32) -> Bool {
+    // The app's own UI calls this service over the socket. Security cannot resolve a running
+    // process's code once its bundle is replaced on disk (a rebuild or an update before relaunch),
+    // which would reject the app's own calls and freeze its controller list.
+    if processIdentifier == getpid() { return true }
     guard let expected = currentProcessSigningIdentity else { return false }
     let attributes = [kSecGuestAttributePid as String: processIdentifier] as CFDictionary
     var guestCode: SecCode?
