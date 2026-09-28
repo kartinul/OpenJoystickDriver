@@ -81,7 +81,7 @@ public enum ProtocolBindingReason: String, CaseIterable, Codable, Error, Sendabl
 }
 
 /// Observed facts that supported a binding.
-public enum ProtocolPredicate: String, Sendable {
+public enum ProtocolPredicate: String, Codable, Sendable {
   case catalogIdentity = "catalog-identity"
   case catalogAccessPath = "catalog-access-path"
   case hostTransport = "host-transport"
@@ -94,7 +94,7 @@ public enum ProtocolPredicate: String, Sendable {
 
 /// One selected protocol for one physical device.
 public struct ProtocolBinding: Equatable, Sendable {
-  public enum Rule: String, Sendable {
+  public enum Rule: String, Codable, Sendable {
     case catalogRecord = "catalog-record"
     case interfaceSignature = "interface-signature"
     case hidDescriptor = "hid-descriptor"
@@ -113,7 +113,8 @@ public struct ProtocolBinding: Equatable, Sendable {
 
 public enum ProtocolClassification: Equatable, Sendable {
   case bound(ProtocolBinding)
-  case unsupported(ProtocolBindingReason)
+  /// `rejected` names the family that matched and then failed its contract; nil when none matched.
+  case unsupported(ProtocolBindingReason, rejected: ProtocolBindingResult.RejectedCandidate? = nil)
   case conflict(ProtocolBindingReason, candidates: [PhysicalProtocolID])
 }
 
@@ -168,7 +169,17 @@ enum ProtocolClassifier {
     backend: DeviceAccessBackend
   ) -> ProtocolClassification {
     let isRawUSB = backend != .ioHID
-    guard record.usesRawUSB == isRawUSB else { return .unsupported(.unsupportedTransportVariant) }
+    func reject(_ reason: ProtocolBindingReason) -> ProtocolClassification {
+      .unsupported(
+        reason,
+        rejected: ProtocolBindingResult.RejectedCandidate(
+          protocolID: record.physicalProtocolID,
+          reason: reason,
+          catalogRecordID: record.recordID
+        )
+      )
+    }
+    guard record.usesRawUSB == isRawUSB else { return reject(.unsupportedTransportVariant) }
     var predicates: [ProtocolPredicate] = [.catalogIdentity, .catalogAccessPath]
     let variants = record.physicalProtocolID.variants
     let variant: PhysicalProtocolVariantID?
@@ -179,7 +190,7 @@ enum ProtocolClassifier {
     } else {
       let observed = isRawUSB ? .usb : hostTransportVariant(interfaces)
       guard let observed, variants.contains(observed) else {
-        return .unsupported(.unsupportedTransportVariant)
+        return reject(.unsupportedTransportVariant)
       }
       variant = observed
       predicates.append(.hostTransport)
@@ -191,7 +202,7 @@ enum ProtocolClassifier {
     // A catalog row adds identity to `hid.descriptor`; it never replaces validation.
     if record.physicalProtocolID == .hidDescriptor {
       guard let interface = descriptorInterface(interfaces) else {
-        return .unsupported(.descriptorContractMismatch)
+        return reject(.descriptorContractMismatch)
       }
       interfaceNumber = interface.interfaceNumber
       predicates.append(.hidDescriptorContract)
@@ -305,7 +316,15 @@ enum ProtocolClassifier {
     }
     // These are raw-USB variants; HID access cannot drive them and must not reach
     // `hid.descriptor`.
-    guard backend != .ioHID else { return .unsupported(.unsupportedTransportVariant) }
+    guard backend != .ioHID else {
+      return .unsupported(
+        .unsupportedTransportVariant,
+        rejected: ProtocolBindingResult.RejectedCandidate(
+          protocolID: signature.protocolID,
+          reason: .unsupportedTransportVariant
+        )
+      )
+    }
     guard
       let interface = interfaces.first(where: {
         signature.matches($0)
@@ -314,7 +333,15 @@ enum ProtocolClassifier {
           // Registry-only facts carry no endpoints; claimed-interface validation checks them.
           && ($0.endpoints == nil || hasInterruptPair($0))
       })
-    else { return .unsupported(.interfaceContractMismatch) }
+    else {
+      return .unsupported(
+        .interfaceContractMismatch,
+        rejected: ProtocolBindingResult.RejectedCandidate(
+          protocolID: signature.protocolID,
+          reason: .interfaceContractMismatch
+        )
+      )
+    }
     return .bound(
       ProtocolBinding(
         protocolID: signature.protocolID,

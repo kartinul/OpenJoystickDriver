@@ -301,12 +301,13 @@ extension DiagnoseCommand {
           "\(protocolName) (\(binding.rule.rawValue): \(predicates))"
         )
       )
-    case .unsupported(let reason):
+    case .unsupported(let reason, let rejected):
+      let candidate = rejected.map { " [\($0.protocolID.rawValue)]" } ?? ""
       CLIOutput.diagnostic(
         CLILocalized.format(
           "cli.diagnose.rejected_predicates",
           "      Rejected: %@",
-          reason.rawValue
+          reason.rawValue + candidate
         )
       )
     case .conflict(let reason, let candidates):

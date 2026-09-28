@@ -34,6 +34,17 @@ struct HIDRawUSBDuplicateTests {
     #expect(
       await manager.unboundDeviceDescriptions().map(\.reason) == [.unsupportedTransportVariant]
     )
+    // The catalog row that matched names the rejected family.
+    let rejected = await manager.unboundDeviceDescriptions().first?.bindingResult.rejectedCandidates
+    #expect(
+      rejected == [
+        .init(
+          protocolID: .xboxGIP,
+          reason: .unsupportedTransportVariant,
+          catalogRecordID: "045e-02d1"
+        )
+      ]
+    )
     #expect(await backend.releasedLocations().isEmpty)
     await manager.stop()
   }
@@ -92,7 +103,12 @@ struct HIDRawUSBDuplicateTests {
     #expect(await manager.connectedDeviceDescriptions().map(\.discoverySource) == [.rawUSB])
     let unbound = await manager.unboundDeviceDescriptions()
     #expect(unbound.map(\.reason) == [.ambiguousProtocolMatch])
-    #expect(unbound.map(\.candidates) == [[.xboxGIP, .hidDescriptor]])
+    // Only the HID-side family is rejected; the raw-USB family is bound on its own pipeline.
+    #expect(
+      unbound.first?.bindingResult.rejectedCandidates == [
+        .init(protocolID: .hidDescriptor, reason: .ambiguousProtocolMatch)
+      ]
+    )
     #expect(await backend.releasedLocations().isEmpty)
     await manager.stop()
   }

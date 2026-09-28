@@ -8,8 +8,11 @@ public struct ApplicationServiceUnboundDevice: Codable, Equatable, Sendable {
   public let connection: String
   public let accessBackend: DeviceAccessBackend
   public let reason: ProtocolBindingReason
-  /// Protocol families that competed or were rejected; empty when none matched.
-  public let candidates: [PhysicalProtocolID]
+  /// Protocol families that matched or competed and were rejected, each with its own reason;
+  /// empty when none matched.
+  public let rejectedCandidates: [ProtocolBindingResult.RejectedCandidate]
+  /// Class facts of the interfaces observed when the device was rejected.
+  public let interfaces: [ProtocolBindingResult.InterfaceSummary]
 
   public init(
     vendorID: UInt16,
@@ -17,14 +20,26 @@ public struct ApplicationServiceUnboundDevice: Codable, Equatable, Sendable {
     connection: String,
     accessBackend: DeviceAccessBackend,
     reason: ProtocolBindingReason,
-    candidates: [PhysicalProtocolID]
+    rejectedCandidates: [ProtocolBindingResult.RejectedCandidate],
+    interfaces: [ProtocolBindingResult.InterfaceSummary]
   ) {
     self.vendorID = vendorID
     self.productID = productID
     self.connection = connection
     self.accessBackend = accessBackend
     self.reason = reason
-    self.candidates = candidates
+    self.rejectedCandidates = rejectedCandidates
+    self.interfaces = interfaces
+  }
+
+  /// The structured, redacted binding decision for this device.
+  public var bindingResult: ProtocolBindingResult {
+    ProtocolBindingResult(
+      reason: reason,
+      rejectedCandidates: rejectedCandidates,
+      accessBackend: accessBackend,
+      interfaces: interfaces
+    )
   }
 }
 

@@ -222,6 +222,7 @@ struct ProfileCapabilityTests {
       protocolBinding: ProtocolBindingID(.sonyDualShock4, variant: .usb),
       connection: "HID",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       physicalOutputCapabilities: output,
       capabilities: input
     )

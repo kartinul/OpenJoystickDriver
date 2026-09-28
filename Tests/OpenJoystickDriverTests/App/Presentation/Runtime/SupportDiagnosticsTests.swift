@@ -104,6 +104,7 @@ struct SupportDiagnosticsTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: "private-serial",
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: "session-device-report"
     )
     let diagnostics = ApplicationServiceVirtualDeviceDiagnosticsPayload(

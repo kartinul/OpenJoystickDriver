@@ -165,6 +165,7 @@ struct DeviceIdentifierTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: identifier.runtimeIdentifier
     )
     let route = ApplicationServiceRemappingRoutePayload(
@@ -200,7 +201,8 @@ struct DeviceIdentifierTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       discoverySource: .hid,
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
 
     let decoded = try JSONDecoder().decode(
@@ -220,7 +222,8 @@ struct DeviceIdentifierTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       discoverySource: .rawUSB,
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
     let encoded = try JSONEncoder().encode(description)
     var object = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])

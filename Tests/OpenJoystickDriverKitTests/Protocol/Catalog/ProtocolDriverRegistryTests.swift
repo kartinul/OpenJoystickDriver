@@ -70,7 +70,14 @@ struct ProtocolDriverRegistryTests {
     for identifier in rows {
       #expect(
         registry.classify(hidDevice(identifier, hostHIDInterface(.usb)), backend: .ioHID)
-          == .unsupported(.descriptorContractMismatch),
+          == rejection(
+            .descriptorContractMismatch,
+            .hidDescriptor,
+            record: recordID(
+              identifier.controllerIdentity.vendorID,
+              identifier.controllerIdentity.productID
+            )
+          ),
         "\(identifier)"
       )
       let binding = try bound(hidDevice(identifier, gamepadHIDInterface(host: .usb)))
@@ -87,7 +94,7 @@ struct ProtocolDriverRegistryTests {
     let identifier = DeviceIdentifier(vendorID: 0x045E, productID: 0x02EA)
     #expect(
       registry.classify(hidDevice(identifier, gamepadHIDInterface(host: .usb)), backend: .ioHID)
-        == .unsupported(.unsupportedTransportVariant)
+        == rejection(.unsupportedTransportVariant, .xboxGIP, record: "045e-02ea")
     )
   }
 
@@ -98,7 +105,7 @@ struct ProtocolDriverRegistryTests {
       registry.classify(
         hidDevice(identifier, gamepadHIDInterface(host: .bluetoothLE)),
         backend: .ioHID
-      ) == .unsupported(.unsupportedTransportVariant)
+      ) == rejection(.unsupportedTransportVariant, .sonyDualShock4, record: "054c-09cc")
     )
   }
 

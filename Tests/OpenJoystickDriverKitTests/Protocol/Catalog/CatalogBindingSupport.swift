@@ -71,3 +71,44 @@ func catalogParser(
 }
 
 struct CatalogBindingFailure: Error {}
+
+/// The unsupported outcome that names the family which matched and failed, and the catalog row
+/// that named it, if any.
+func rejection(
+  _ reason: ProtocolBindingReason,
+  _ protocolID: PhysicalProtocolID,
+  record: String? = nil
+) -> ProtocolClassification {
+  .unsupported(
+    reason,
+    rejected: ProtocolBindingResult.RejectedCandidate(
+      protocolID: protocolID,
+      reason: reason,
+      catalogRecordID: record
+    )
+  )
+}
+
+/// The `vvvv-pppp` catalog record ID of an identity.
+func recordID(_ vendorID: UInt16, _ productID: UInt16) -> String {
+  String(format: "%04x-%04x", vendorID, productID)
+}
+
+extension DeviceRuntimeProfile {
+  /// This profile under another record ID; everything it runs with is unchanged.
+  func withRecordID(_ recordID: String?) -> DeviceRuntimeProfile {
+    DeviceRuntimeProfile(
+      recordID: recordID,
+      virtualProfile: virtualProfile,
+      transportProfile: transportProfile,
+      physicalProtocolID: physicalProtocolID,
+      physicalProtocolVariant: physicalProtocolVariant,
+      quirks: quirks,
+      capabilityDelta: capabilityDelta,
+      preferredBackends: preferredBackends,
+      gipStartupPackets: gipStartupPackets,
+      gipKeepAlivePolicy: gipKeepAlivePolicy,
+      assemblyPolicy: assemblyPolicy
+    )
+  }
+}

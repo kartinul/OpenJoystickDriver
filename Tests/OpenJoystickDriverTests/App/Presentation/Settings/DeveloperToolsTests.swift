@@ -272,6 +272,7 @@ struct DeveloperToolsTests {
       connection: "USB",
       discoverySource: .rawUSB,
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       inputEndpoint: 0x82,
       outputEndpoint: 0x02,
       runtimeIdentifier: runtimeIdentifier

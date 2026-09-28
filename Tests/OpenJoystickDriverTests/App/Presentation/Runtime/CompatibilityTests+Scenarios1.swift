@@ -17,6 +17,7 @@ extension CompatibilityTests {
       protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: id.runtimeIdentifier
     )
   }
@@ -32,6 +33,7 @@ extension CompatibilityTests {
       protocolBinding: binding,
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       capabilities: ControllerCapabilities(controls: ControlID.xboxLayout),
       runtimeIdentifier: id.runtimeIdentifier
     )

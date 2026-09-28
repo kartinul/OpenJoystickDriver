@@ -16,6 +16,7 @@ struct StatusTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: "session-device-7"
     )
     let gateway = GatewayStub(
@@ -48,6 +49,7 @@ struct StatusTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: "session-device-8"
     )
     let profile = makeProfile(name: "Mapped")
@@ -95,6 +97,7 @@ struct StatusTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: "session-device-live"
     )
     let connected = ApplicationServiceStatusPayload(
@@ -135,6 +138,7 @@ struct StatusTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: "session-device-retained"
     )
     let gateway = GatewayStub(
@@ -204,6 +208,7 @@ struct StatusTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "Bluetooth",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: "ds4-bluetooth"
     )
     await gateway.setStatusPayload(
@@ -315,6 +320,7 @@ struct StatusTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: "session-device-9"
     )
     let gateway = GatewayStub(

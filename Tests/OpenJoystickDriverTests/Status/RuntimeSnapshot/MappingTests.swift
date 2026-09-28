@@ -52,7 +52,8 @@ struct StatusMappingTests {
       productID: 0x5678,
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
     let snapshot = RuntimeStatusSnapshot(payload: payload(devices: [description]))
 
@@ -87,7 +88,8 @@ struct StatusMappingTests {
       protocolBinding: ProtocolBindingID(.sonyDualShock4, variant: .bluetoothClassic),
       connection: "Bluetooth",
       physicalOwnership: .nativeGamepad,
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
     let bound = ApplicationServiceDeviceDescription(
       name: "Test Controller",
@@ -96,7 +98,8 @@ struct StatusMappingTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       physicalOwnership: .exclusiveHID,
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
 
     let lines = RuntimeStatusText.payloadLines(
@@ -117,7 +120,8 @@ struct StatusMappingTests {
       productID: 0x5678,
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
     overridden.virtualHIDProfile = ApplicationServiceVirtualHIDProfileStatus(
       profile: .generic,

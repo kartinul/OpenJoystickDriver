@@ -228,6 +228,10 @@ extension DeviceManager {
       ).duplicateRisk,
       serialNumber: info.serialNumber,
       quirks: record?.quirks.map(\.rawValue) ?? [],
+      bindingResult: ProtocolBindingResult(
+        binding: info.binding,
+        interfaces: info.physicalDevice?.interfaces ?? []
+      ),
       inputEndpoint: transportProfile?.inputEndpoint ?? 0,
       outputEndpoint: transportProfile?.outputEndpoint ?? 0,
       needsSetConfiguration: transportProfile?.needsSetConfiguration ?? false,

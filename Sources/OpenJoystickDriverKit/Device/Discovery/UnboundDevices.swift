@@ -14,13 +14,24 @@ struct UnboundHIDClaim: Equatable {
 }
 
 extension DeviceManager {
-  /// Observed devices that no protocol driver bound, in a stable order.
+  /// Unbound devices in a total order: identity, connection, backend, first interface number,
+  /// then the connection lifetime that reported them.
   public func unboundDeviceDescriptions() -> [ApplicationServiceUnboundDevice] {
-    unboundDevices.values.sorted {
-      ($0.vendorID, $0.productID, $0.connection, $0.accessBackend.rawValue) < (
-        $1.vendorID, $1.productID, $1.connection, $1.accessBackend.rawValue
+    func order(
+      _ entry: (key: UnboundDeviceKey, value: ApplicationServiceUnboundDevice)
+    ) -> (UInt16, UInt16, String, String, Int, String) {
+      let device = entry.value
+      let lifetime =
+        switch entry.key {
+        case .usb(let service): "usb-\(service.route)-\(service.serviceID)"
+        case .hid(let connectionID): "hid-\(connectionID.uuidString)"
+        }
+      return (
+        device.vendorID, device.productID, device.connection, device.accessBackend.rawValue,
+        device.interfaces.first?.interfaceNumber.map(Int.init) ?? -1, lifetime
       )
     }
+    return unboundDevices.sorted { order($0) < order($1) }.map(\.value)
   }
 
   func recordUnboundDevice(
@@ -30,7 +41,8 @@ extension DeviceManager {
     connection: String,
     backend: DeviceAccessBackend,
     reason: ProtocolBindingReason,
-    candidates: [PhysicalProtocolID]
+    rejectedCandidates: [ProtocolBindingResult.RejectedCandidate],
+    interfaces: [PhysicalInterfaceSignature]
   ) {
     unboundDevices[key] = ApplicationServiceUnboundDevice(
       vendorID: vendorID,
@@ -38,7 +50,8 @@ extension DeviceManager {
       connection: connection,
       accessBackend: backend,
       reason: reason,
-      candidates: candidates
+      rejectedCandidates: rejectedCandidates,
+      interfaces: interfaces.map(ProtocolBindingResult.InterfaceSummary.init)
     )
     notifyControllerInventoryChanged()
     print(
@@ -69,7 +82,7 @@ extension DeviceManager {
     _ connection: HIDDeviceConnection,
     identifier: DeviceIdentifier,
     reason: ProtocolBindingReason,
-    candidates: [PhysicalProtocolID]
+    rejectedCandidates: [ProtocolBindingResult.RejectedCandidate]
   ) async {
     guard isCurrentHIDInitialization(connection) else { return }
     guard !connection.physicalDevice.nativePassThrough else {
@@ -87,7 +100,8 @@ extension DeviceManager {
       connection: connection.physicalDevice.transportProperty ?? "HID",
       backend: .ioHID,
       reason: reason,
-      candidates: candidates
+      rejectedCandidates: rejectedCandidates,
+      interfaces: connection.physicalDevice.interfaces ?? []
     )
     unboundHIDClaims[connection.connectionID] = UnboundHIDClaim(
       identifier: identifier,

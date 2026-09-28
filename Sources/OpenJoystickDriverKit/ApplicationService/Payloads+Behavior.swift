@@ -16,6 +16,7 @@ extension ApplicationServiceDeviceDescription {
     case duplicateExposureRisk
     case serialNumber
     case quirks
+    case bindingResult
     case inputEndpoint
     case outputEndpoint
     case needsSetConfiguration

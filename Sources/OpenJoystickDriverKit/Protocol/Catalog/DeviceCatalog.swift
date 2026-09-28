@@ -93,6 +93,7 @@ struct DeviceCatalog: Sendable {
       protocolInfo.keepAliveEnabled.map { $0 ? .enabled : .disabled } ?? .enabled
 
     return DeviceRuntimeProfile(
+      recordID: String(format: "%04x-%04x", record.vendorID, record.productID),
       virtualProfile: .default,
       transportProfile: DeviceTransportProfile(
         inputEndpoint: UInt8(inputEndpoint),
@@ -123,6 +124,7 @@ struct DeviceCatalog: Sendable {
   ) -> DeviceRuntimeProfile {
     let endpoints = defaultEndpoints(for: protocolID)
     return DeviceRuntimeProfile(
+      recordID: nil,
       virtualProfile: .default,
       transportProfile: DeviceTransportProfile(
         inputEndpoint: UInt8(endpoints.input),

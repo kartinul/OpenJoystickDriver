@@ -33,6 +33,9 @@ struct USBSignatureDiscoveryTests {
     let description = try #require(await manager.connectedDeviceDescriptions().first)
     #expect(description.protocolBinding.rawValue == "xbox.gip:usb")
     #expect((description.inputEndpoint, description.outputEndpoint) == (0x81, 0x01))
+    let result = try #require(description.bindingResult)
+    #expect((result.outcome, result.rule) == (.bound, .interfaceSignature))
+    #expect(result.catalogRecordID == nil)
     await manager.stop()
   }
 
@@ -57,7 +60,41 @@ struct USBSignatureDiscoveryTests {
     #expect(await provider.options?.configurationValue == 1)
     #expect(await provider.session.writes.first?.endpoint == 0x01)
     #expect(await provider.session.readEndpoints.first == 0x81)
+    let result = await manager.connectedDeviceDescriptions().first?.bindingResult
+    #expect(result?.rule == .catalogRecord)
+    #expect(result?.catalogRecordID == "1532-0a43")
     await manager.stop()
+  }
+
+  @Test
+  func rejectedCataloguedRowReportsItsResolvedInterfaces() async {
+    // A catalogued model classifies on identity alone; its interfaces come from resolution.
+    let device = usbDevice(vendorID: 0x1532, productID: 0x0A43, route: .ioUSBHost)
+    let wrongInterface = PhysicalDevice(
+      serviceIdentity: device.serviceIdentity,
+      vendorID: device.vendorID,
+      productID: device.productID,
+      interfaces: [descriptorInterface(0, 0xFF, 0x5D, 0x01, input: 0x81, output: 0x01)]
+    )
+    let provider = SignatureDiscoveryProvider(
+      device: device,
+      passive: unconfiguredGIP(device),
+      configured: wrongInterface
+    )
+    let manager = makeManager(provider)
+
+    #expect(await manager.handleUSBDeviceAdded(device, provider: provider) == .ignored)
+    let result = await manager.unboundDeviceDescriptions().first?.bindingResult
+    #expect(result?.interfaces.map(\.interfaceSubclass) == [0x5D])
+    #expect(
+      result?.rejectedCandidates == [
+        .init(
+          protocolID: .xboxGIP,
+          reason: .interfaceContractMismatch,
+          catalogRecordID: "1532-0a43"
+        )
+      ]
+    )
   }
 
   @Test
@@ -128,8 +165,14 @@ struct USBSignatureDiscoveryTests {
     #expect(await provider.session.writes.isEmpty)
     let unbound = await manager.unboundDeviceDescriptions()
     #expect(unbound.map(\.reason) == [.interfaceContractMismatch])
-    #expect(unbound.map(\.candidates) == [[.xboxGIP]])
+    #expect(
+      unbound.map(\.rejectedCandidates) == [
+        [.init(protocolID: .xboxGIP, reason: .interfaceContractMismatch)]
+      ]
+    )
     #expect(unbound.map(\.accessBackend) == [.ioUSBHost])
+    // The configured observation's interfaces are reported, not the passive device-class facts.
+    #expect(unbound.first?.interfaces.map(\.interfaceSubclass) == [0x5D])
   }
 
   @Test(arguments: [

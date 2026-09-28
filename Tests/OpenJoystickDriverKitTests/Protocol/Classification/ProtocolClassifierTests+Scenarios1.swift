@@ -44,7 +44,7 @@ extension ProtocolClassifierTests {
 
     #expect(
       classify(unknownDevice([usbInterface(1, 0xFF, 0x47, 0xD0)]), backend: .ioUSBHost)
-        == .unsupported(.interfaceContractMismatch)
+        == rejection(.interfaceContractMismatch, .xboxGIP)
     )
   }
 
@@ -60,7 +60,7 @@ extension ProtocolClassifierTests {
         classify(
           unknownDevice([usbInterface(0, 0xFF, 0x5D, 0x01, endpoints: endpoints)]),
           backend: .ioUSBHost
-        ) == .unsupported(.interfaceContractMismatch)
+        ) == rejection(.interfaceContractMismatch, .xboxXUSB)
       )
     }
   }
@@ -71,11 +71,11 @@ extension ProtocolClassifierTests {
     let hid = hidInterface(host: .usb, descriptor: gamepad)
     #expect(
       classify(unknownDevice([xusb, hid]), backend: .ioHID)
-        == .unsupported(.unsupportedTransportVariant)
+        == rejection(.unsupportedTransportVariant, .xboxXUSB)
     )
     #expect(
       classify(unknownDevice([xusb, hid]), backend: .ioUSBHost)
-        == .unsupported(.interfaceContractMismatch)
+        == rejection(.interfaceContractMismatch, .xboxXUSB)
     )
   }
 
@@ -86,7 +86,7 @@ extension ProtocolClassifierTests {
       classify(
         unknownDevice([xusb, hidInterface(host: .usb, descriptor: gamepad)]),
         backend: .ioHID
-      ) == .unsupported(.unsupportedTransportVariant)
+      ) == rejection(.unsupportedTransportVariant, .xboxXUSB)
     )
   }
 

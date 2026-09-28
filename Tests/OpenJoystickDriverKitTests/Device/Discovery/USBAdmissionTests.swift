@@ -76,7 +76,8 @@ struct USBDetectionAdmissionTests {
           connection: "USB",
           accessBackend: .ioUSBHost,
           reason: .noProtocolMatch,
-          candidates: []
+          rejectedCandidates: [],
+          interfaces: []
         )
       ]
     )

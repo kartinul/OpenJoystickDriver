@@ -12,6 +12,7 @@ struct PhysicalOutputValidationPlanTests {
       protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
       serialNumber: "SERIAL-SECRET",
+      bindingResult: .hidDescriptorFixture,
       physicalOutputCapabilities: PhysicalControllerOutputCapabilities(
         rumbleMotors: [.leftMain, .rightMain, .leftTrigger, .rightTrigger],
         lightingFeatures: [.playerIndicator, .programmableColor, .programmableBrightness]

@@ -84,7 +84,8 @@ struct InterfaceSignatureBindingTests {
     #expect(ProtocolDriverRegistry.carriesProtocolSignature(configured))
     let unconfigured = PhysicalDevice(deviceClass: 0xFF, deviceSubclass: 0x47, deviceProtocol: 0xD0)
     #expect(
-      registry.classify(unconfigured, backend: .ioHID) == .unsupported(.unsupportedTransportVariant)
+      registry.classify(unconfigured, backend: .ioHID)
+        == rejection(.unsupportedTransportVariant, .xboxGIP)
     )
   }
 
@@ -137,7 +138,8 @@ struct InterfaceSignatureBindingTests {
     let binding = try bound(observed(interfaces: [registryInterface(0, 0xFF, 0x47, 0xD0)]))
     // 3537:1010 (GameSir G7 SE) names only the GIP family and set-configuration-before-claim.
     let g7SE = registry.record(for: DeviceIdentifier(vendorID: 0x3537, productID: 0x1010))
-    #expect(registry.runtimeProfile(for: binding) == g7SE)
+    #expect(g7SE?.recordID == "3537-1010")
+    #expect(registry.runtimeProfile(for: binding) == g7SE?.withRecordID(nil))
     let xusb = try bound(observed(interfaces: [registryInterface(0, 0xFF, 0x5D, 0x01)]))
     let xusbProfile = try #require(registry.runtimeProfile(for: xusb))
     #expect(xusbProfile.physicalProtocolVariant == .wired)

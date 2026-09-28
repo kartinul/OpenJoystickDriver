@@ -95,6 +95,7 @@ struct ConnectedControllerSelectionTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "HID",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: id
     )
   }

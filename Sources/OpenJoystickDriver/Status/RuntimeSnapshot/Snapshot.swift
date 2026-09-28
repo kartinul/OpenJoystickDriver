@@ -208,7 +208,9 @@ enum RuntimeStatusText {
   private static func unboundLines(_ devices: [ApplicationServiceUnboundDevice]) -> [String] {
     var lines = ["Unbound devices (\(devices.count)):"]
     for device in devices {
-      let candidates = device.candidates.map(\.rawValue)
+      let candidates = device.rejectedCandidates.map {
+        "\($0.protocolID.rawValue):\($0.reason.rawValue)"
+      }
       lines.append(
         "  VID:\(device.vendorID) PID:\(device.productID) [\(device.connection)]"
           + " backend=\(device.accessBackend.rawValue) reason=\(device.reason.rawValue)"

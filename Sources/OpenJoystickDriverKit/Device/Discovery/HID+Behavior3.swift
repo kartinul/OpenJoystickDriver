@@ -39,7 +39,7 @@ extension DeviceManager {
         connection,
         identifier: identifier,
         reason: .interfaceContractMismatch,
-        candidates: []
+        rejectedCandidates: []
       )
       return
     }
@@ -89,15 +89,22 @@ extension DeviceManager {
     let binding: ProtocolBinding
     let driver: any PhysicalProtocolDriver
     switch classification {
-    case .unsupported(let reason):
-      await rejectHIDDevice(connection, identifier: identifier, reason: reason, candidates: [])
+    case .unsupported(let reason, let rejected):
+      await rejectHIDDevice(
+        connection,
+        identifier: identifier,
+        reason: reason,
+        rejectedCandidates: rejected.map { [$0] } ?? []
+      )
       return
     case .conflict(let reason, let candidates):
       await rejectHIDDevice(
         connection,
         identifier: identifier,
         reason: reason,
-        candidates: candidates
+        rejectedCandidates: candidates.map {
+          ProtocolBindingResult.RejectedCandidate(protocolID: $0, reason: reason)
+        }
       )
       return
     case .bound(let bound):
@@ -113,21 +120,34 @@ extension DeviceManager {
           connection,
           identifier: identifier,
           reason: reason,
-          candidates: [bound.protocolID]
+          rejectedCandidates: [
+            ProtocolBindingResult.RejectedCandidate(
+              protocolID: bound.protocolID,
+              reason: reason,
+              catalogRecordID: bound.record?.recordID
+            )
+          ]
         )
         return
       }
     }
     // A HID interface of a controller that a raw-USB pipeline already serves would expose it twice.
-    // The rejected connection's claim stays held while that pipeline runs.
+    // The rejected connection's claim stays held while that pipeline runs. Only this HID-side
+    // family is rejected; the raw-USB family stays bound on its own pipeline.
     if let rawUSBIdentifier = rawUSBIdentifier(servingSameControllerAs: identifier),
-      let rawUSBBinding = deviceInfos[rawUSBIdentifier]?.binding
+      deviceInfos[rawUSBIdentifier] != nil
     {
       await rejectHIDDevice(
         connection,
         identifier: identifier,
         reason: .ambiguousProtocolMatch,
-        candidates: [rawUSBBinding.protocolID, binding.protocolID]
+        rejectedCandidates: [
+          ProtocolBindingResult.RejectedCandidate(
+            protocolID: binding.protocolID,
+            reason: .ambiguousProtocolMatch,
+            catalogRecordID: binding.record?.recordID
+          )
+        ]
       )
       return
     }

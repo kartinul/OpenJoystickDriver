@@ -24,7 +24,8 @@ struct UnboundHIDDeviceTests {
           connection: "USB",
           accessBackend: .ioHID,
           reason: .descriptorContractMismatch,
-          candidates: []
+          rejectedCandidates: [],
+          interfaces: [ProtocolBindingResult.InterfaceSummary(hostHIDInterface(.usb))]
         )
       ]
     )
@@ -135,7 +136,14 @@ struct UnboundHIDDeviceTests {
       connection: "USB",
       accessBackend: .ioHID,
       reason: .ambiguousProtocolMatch,
-      candidates: [.xboxGIP, .hidDescriptor]
+      rejectedCandidates: [
+        .init(
+          protocolID: .hidDescriptor,
+          reason: .ambiguousProtocolMatch,
+          catalogRecordID: "045e-02ea"
+        )
+      ],
+      interfaces: [ProtocolBindingResult.InterfaceSummary(gamepadHIDInterface(host: .usb))]
     )
     let payload = ApplicationServiceStatusPayload(
       inputMonitoring: "granted",

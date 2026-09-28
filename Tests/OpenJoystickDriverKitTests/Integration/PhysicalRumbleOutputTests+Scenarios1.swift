@@ -55,7 +55,8 @@ extension PhysicalRumbleOutputTests {
       productID: 2,
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
 
     #expect(description.physicalOutputCapabilities == .none)
@@ -71,6 +72,10 @@ extension PhysicalRumbleOutputTests {
         "protocolBinding": "hid.descriptor",
         "connection": "USB",
         "serialNumber": null,
+        "bindingResult": {
+          "outcome": "bound", "accessBackend": "iohid", "interfaces": [], "rule": "hid-descriptor",
+          "matchedPredicates": ["hid-descriptor-contract"], "rejectedCandidates": []
+        },
         "runtimeIdentifier": "0001:0002:M"
       }
       """
@@ -89,6 +94,10 @@ extension PhysicalRumbleOutputTests {
         "protocolBinding": "hid.descriptor",
         "connection": "USB",
         "serialNumber": null,
+        "bindingResult": {
+          "outcome": "bound", "accessBackend": "iohid", "interfaces": [], "rule": "hid-descriptor",
+          "matchedPredicates": ["hid-descriptor-contract"], "rejectedCandidates": []
+        },
         "runtimeIdentifier": "0001:0002:M",
         "supportsPhysicalRumble": true
       }
@@ -111,6 +120,7 @@ extension PhysicalRumbleOutputTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       physicalOutputCapabilities: capabilities
     )
     let decoded = try JSONDecoder().decode(

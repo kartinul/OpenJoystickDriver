@@ -235,6 +235,7 @@ extension InputTestTests {
       connection: connection,
       discoverySource: discoverySource,
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       physicalOutputCapabilities: capabilities,
       runtimeIdentifier: runtimeIdentifier
     )

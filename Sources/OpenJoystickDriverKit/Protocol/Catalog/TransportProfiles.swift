@@ -143,6 +143,8 @@ public enum GIPKeepAlivePolicy: String, Codable, Sendable {
 
 /// Complete runtime profile for one physical controller model.
 public struct DeviceRuntimeProfile: Equatable, Sendable {
+  /// The catalog record's `vvvv-pppp` file stem; nil for a family profile, which has no record.
+  public let recordID: String?
   public let virtualProfile: VirtualDeviceProfile
   public let transportProfile: DeviceTransportProfile
   public let physicalProtocolID: PhysicalProtocolID

@@ -1,0 +1,148 @@
+{
+  "data" : {
+    "applicationService" : {
+      "connected" : true,
+      "installed" : true
+    },
+    "configuration" : {
+
+    },
+    "controllers" : [
+      {
+        "binding" : {
+          "accessBackend" : "iousbhost",
+          "interfaces" : [
+            {
+              "alternateSetting" : 0,
+              "interfaceClass" : 255,
+              "interfaceNumber" : 0,
+              "interfaceProtocol" : 208,
+              "interfaceSubclass" : 71
+            }
+          ],
+          "matchedPredicates" : [
+            "interface-signature"
+          ],
+          "outcome" : "bound",
+          "rejectedCandidates" : [
+
+          ],
+          "rule" : "interface-signature"
+        },
+        "connection" : "USB",
+        "connectionState" : {
+          "backend" : "iousbhost",
+          "isConnected" : true,
+          "power" : {
+            "battery" : {
+
+            },
+            "charging" : "unknown"
+          },
+          "transport" : "usb"
+        },
+        "inputEndpoint" : 129,
+        "inputHealth" : {
+          "recoveryCount" : 0,
+          "state" : "healthy"
+        },
+        "name" : "Controller 1234:5678",
+        "needsSetConfiguration" : true,
+        "outputEndpoint" : 1,
+        "physicalOutputCapabilities" : {
+          "adaptiveTriggers" : [
+
+          ],
+          "binaryRumbleMotors" : [
+
+          ],
+          "lightingFeatures" : [
+
+          ],
+          "rumbleMotors" : [
+            "leftMain",
+            "leftTrigger",
+            "rightMain",
+            "rightTrigger"
+          ]
+        },
+        "postHandshakeSettleMs" : 0,
+        "preferredBackends" : [
+          "userSpaceHID"
+        ],
+        "productID" : 22136,
+        "protocolBinding" : "xbox.gip:usb",
+        "quirks" : [
+
+        ],
+        "serialNumberPresent" : false,
+        "sessionState" : "active",
+        "vendorID" : 4660
+      }
+    ],
+    "hidGamepads" : [
+
+    ],
+    "notes" : [
+      "Review this file before sharing. Device product names are included.",
+      "Serial values, paths, packet payloads, HID locations, and discovery text are excluded.",
+      "Virtual-device diagnostics were unavailable.",
+      "Apple GameController catalog audit was unavailable."
+    ],
+    "permissions" : {
+      "accessibility" : "granted",
+      "inputMonitoring" : "granted"
+    },
+    "privacy" : {
+      "includesDeviceProductNames" : true,
+      "includesFilesystemPaths" : false,
+      "includesHIDLocationIDs" : false,
+      "includesPacketPayloads" : false,
+      "includesRawSerialNumbers" : false
+    },
+    "system" : {
+      "architecture" : "arm64",
+      "buildIdentity" : {
+        "appBundleVersion" : "1",
+        "semanticVersion" : "0.5.0",
+        "sourceCommit" : "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sourceState" : "clean"
+      },
+      "macOSVersion" : "26.0.0"
+    },
+    "unboundDevices" : [
+      {
+        "binding" : {
+          "accessBackend" : "iohid",
+          "interfaces" : [
+            {
+              "descriptorFingerprint" : "774117cf791f9c080371b96c07e05d51d2c9f6bf3213ff701f2efd225eaf5b11",
+              "hostTransport" : "usb"
+            }
+          ],
+          "matchedPredicates" : [
+
+          ],
+          "outcome" : "unsupported",
+          "reason" : "ambiguous-protocol-match",
+          "rejectedCandidates" : [
+            {
+              "protocolID" : "hid.descriptor",
+              "reason" : "ambiguous-protocol-match"
+            }
+          ]
+        },
+        "connection" : "USB",
+        "productID" : 22136,
+        "vendorID" : 4660
+      }
+    ]
+  },
+  "datacontenttype" : "application\/json",
+  "dataschema" : "https:\/\/raw.githubusercontent.com\/xsyetopz\/OpenJoystickDriver\/main\/Resources\/Schemas\/report.schema.json#\/$defs\/supportDiagnosticData",
+  "id" : "0DC52DF7-70D2-4CC0-8B39-7B8FA8E08731",
+  "source" : "urn:openjoystickdriver:support",
+  "specversion" : "1.0",
+  "time" : "1970-01-01T00:00:00Z",
+  "type" : "com.openjoystickdriver.support.diagnostic"
+}

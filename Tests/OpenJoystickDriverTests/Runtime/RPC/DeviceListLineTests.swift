@@ -39,7 +39,8 @@ struct DeviceListLineTests {
       protocolBinding: ProtocolBindingID(.sonyDualShock4, variant: .usb),
       connection: "USB",
       interfaceNumber: interfaceNumber,
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
   }
 }

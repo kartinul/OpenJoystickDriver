@@ -62,6 +62,7 @@ public struct SupportReport: Codable, Sendable {
     public let connection: String
     public let serialNumberPresent: Bool
     public let quirks: [String]
+    public let binding: ProtocolBindingResult
     public let inputEndpoint: UInt8
     public let outputEndpoint: UInt8
     public let needsSetConfiguration: Bool
@@ -72,6 +73,14 @@ public struct SupportReport: Codable, Sendable {
     public let sessionState: ControllerSessionState
     public let startupCommandStatus: String?
     public let inputHealth: ControllerInputHealth
+  }
+
+  /// An observed device that no protocol driver bound.
+  public struct UnboundDevice: Codable, Sendable {
+    public let vendorID: UInt16
+    public let productID: UInt16
+    public let connection: String
+    public let binding: ProtocolBindingResult
   }
 
   public struct HIDGamepad: Codable, Sendable {
@@ -92,6 +101,7 @@ public struct SupportReport: Codable, Sendable {
     public let applicationService: ApplicationService
     public let configuration: Configuration
     public let controllers: [Controller]
+    public let unboundDevices: [UnboundDevice]
     public let hidGamepads: [HIDGamepad]
     public let appleGameControllerAudit: AppleGameControllerSupportAudit?
     public let notes: [String]
@@ -166,6 +176,7 @@ public struct SupportReport: Codable, Sendable {
         connection: $0.connection,
         serialNumberPresent: $0.serialNumber?.isEmpty == false,
         quirks: $0.quirks.sorted(),
+        binding: $0.bindingResult,
         inputEndpoint: $0.inputEndpoint,
         outputEndpoint: $0.outputEndpoint,
         needsSetConfiguration: $0.needsSetConfiguration,
@@ -181,6 +192,15 @@ public struct SupportReport: Codable, Sendable {
       if $0.vendorID != $1.vendorID { return $0.vendorID < $1.vendorID }
       if $0.productID != $1.productID { return $0.productID < $1.productID }
       return $0.name < $1.name
+    }
+    // The service reports unbound devices in a total order; the report keeps it.
+    let unboundDevices = (status?.unboundDevices ?? []).map {
+      UnboundDevice(
+        vendorID: $0.vendorID,
+        productID: $0.productID,
+        connection: $0.connection,
+        binding: $0.bindingResult
+      )
     }
     let hidGamepads = (virtualDiagnostics?.hidGamepads ?? []).map {
       HIDGamepad(
@@ -216,6 +236,7 @@ public struct SupportReport: Codable, Sendable {
       applicationService: applicationService,
       configuration: configuration,
       controllers: controllers,
+      unboundDevices: unboundDevices,
       hidGamepads: hidGamepads,
       appleGameControllerAudit: appleGameControllerAudit,
       notes: reportNotes

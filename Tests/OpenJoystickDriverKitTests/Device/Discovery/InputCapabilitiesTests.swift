@@ -54,7 +54,8 @@ struct InputCapabilitiesTests {
       productID: 2,
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
-      serialNumber: nil
+      serialNumber: nil,
+      bindingResult: .hidDescriptorFixture
     )
     let data = try JSONEncoder().encode(description)
     var object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
@@ -93,6 +94,7 @@ struct InputCapabilitiesTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       connectionState: state
     )
 

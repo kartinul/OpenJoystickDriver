@@ -14,6 +14,7 @@ extension AutomaticDispatcherCoordinatorTests {
       protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: identifier.runtimeIdentifier
     )
   }

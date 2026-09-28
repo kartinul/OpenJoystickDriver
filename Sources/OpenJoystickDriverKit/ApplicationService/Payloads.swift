@@ -217,6 +217,8 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
   public let serialNumber: String?
   /// Driver-declared quirk IDs from the controller record.
   public let quirks: [String]
+  /// The structured, redacted decision that bound this controller.
+  public let bindingResult: ProtocolBindingResult
   /// Interrupt IN endpoint address used by USB transports.
   public let inputEndpoint: UInt8
   /// Interrupt OUT endpoint address used by USB transports.
@@ -256,6 +258,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     duplicateExposureRisk: DuplicateExposureRisk = .unknownOwnership,
     serialNumber: String?,
     quirks: [String] = [],
+    bindingResult: ProtocolBindingResult,
     inputEndpoint: UInt8 = 0,
     outputEndpoint: UInt8 = 0,
     needsSetConfiguration: Bool = false,
@@ -282,6 +285,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
     self.duplicateExposureRisk = duplicateExposureRisk
     self.serialNumber = serialNumber
     self.quirks = quirks
+    self.bindingResult = bindingResult
     self.inputEndpoint = inputEndpoint
     self.outputEndpoint = outputEndpoint
     self.needsSetConfiguration = needsSetConfiguration
@@ -318,6 +322,7 @@ public struct ApplicationServiceDeviceDescription: Codable, Sendable {
       ?? .unknownOwnership
     self.serialNumber = try container.decodeIfPresent(String.self, forKey: .serialNumber)
     self.quirks = try container.decodeIfPresent([String].self, forKey: .quirks) ?? []
+    self.bindingResult = try container.decode(ProtocolBindingResult.self, forKey: .bindingResult)
     self.inputEndpoint = try container.decodeIfPresent(UInt8.self, forKey: .inputEndpoint) ?? 0
     self.outputEndpoint = try container.decodeIfPresent(UInt8.self, forKey: .outputEndpoint) ?? 0
     self.needsSetConfiguration =

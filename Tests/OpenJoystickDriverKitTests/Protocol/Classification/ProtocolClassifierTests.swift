@@ -120,23 +120,31 @@ struct ProtocolClassifierTests {
 
   /// Sixaxis, DS4, DualSense and Switch drivers are built for one transport variant, so no
   /// driver exists for an unknown or unimplemented host transport.
-  @Test(arguments: [(0x054C, 0x0268), (0x054C, 0x09CC), (0x054C, 0x0CE6), (0x057E, 0x2009)])
+  @Test(
+    arguments: [
+      (0x054C, 0x0268, .sonySixaxis), (0x054C, 0x09CC, .sonyDualShock4),
+      (0x054C, 0x0CE6, .sonyDualSense), (0x057E, 0x2009, .nintendoSwitch1),
+    ] as [(UInt16, UInt16, PhysicalProtocolID)]
+  )
   func hidRecordWithUnknownOrUnimplementedHostTransportIsUnsupported(
     vendorID: UInt16,
-    productID: UInt16
+    productID: UInt16,
+    family: PhysicalProtocolID
   ) {
+    let expected = rejection(
+      .unsupportedTransportVariant,
+      family,
+      record: recordID(vendorID, productID)
+    )
     for host in [nil, PhysicalTransport.bluetoothLE, .proprietaryRadioReceiver] {
       #expect(
         classify(
           device(vendorID, productID, interfaces: [hidInterface(host: host)]),
           backend: .ioHID
-        ) == .unsupported(.unsupportedTransportVariant)
+        ) == expected
       )
     }
-    #expect(
-      classify(device(vendorID, productID, interfaces: []), backend: .ioHID)
-        == .unsupported(.unsupportedTransportVariant)
-    )
+    #expect(classify(device(vendorID, productID, interfaces: []), backend: .ioHID) == expected)
   }
 
   @Test(arguments: [(0x3537, 0x100A), (0x11C1, 0x5600), (0x2E95, 0x434D)] as [(UInt16, UInt16)])
@@ -166,7 +174,11 @@ struct ProtocolClassifierTests {
     ] {
       #expect(
         classify(device(identity.0, identity.1, interfaces: interfaces), backend: .ioHID)
-          == .unsupported(.descriptorContractMismatch)
+          == rejection(
+            .descriptorContractMismatch,
+            .hidDescriptor,
+            record: recordID(identity.0, identity.1)
+          )
       )
     }
   }
@@ -178,13 +190,13 @@ struct ProtocolClassifierTests {
       classify(
         device(0x045E, 0x028E, interfaces: [hidInterface(host: .usb, descriptor: gamepad)]),
         backend: .ioHID
-      ) == .unsupported(.unsupportedTransportVariant)
+      ) == rejection(.unsupportedTransportVariant, .xboxXUSB, record: "045e-028e")
     )
     // A HID record observed through raw USB.
     for backend in [DeviceAccessBackend.ioUSBHost, .usbDriverKit] {
       #expect(
         classify(device(0x054C, 0x09CC, interfaces: []), backend: backend)
-          == .unsupported(.unsupportedTransportVariant)
+          == rejection(.unsupportedTransportVariant, .sonyDualShock4, record: "054c-09cc")
       )
     }
   }

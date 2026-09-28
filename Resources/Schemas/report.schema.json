@@ -50,6 +50,7 @@
 				"applicationService",
 				"configuration",
 				"controllers",
+				"unboundDevices",
 				"hidGamepads",
 				"notes"
 			],
@@ -74,6 +75,12 @@
 					"type": "array",
 					"items": {
 						"$ref": "#/$defs/controller"
+					}
+				},
+				"unboundDevices": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/unboundDevice"
 					}
 				},
 				"hidGamepads": {
@@ -212,6 +219,7 @@
 				"connection",
 				"serialNumberPresent",
 				"quirks",
+				"binding",
 				"inputEndpoint",
 				"outputEndpoint",
 				"needsSetConfiguration",
@@ -251,6 +259,12 @@
 					"items": {
 						"type": "string"
 					}
+				},
+				"binding": {
+					"allOf": [
+						{ "$ref": "#/$defs/bindingResult" },
+						{ "properties": { "outcome": { "const": "bound" } } }
+					]
 				},
 				"inputEndpoint": {
 					"type": "integer",
@@ -322,7 +336,12 @@
 			"additionalProperties": false,
 			"properties": {
 				"transport": {
-					"enum": ["usb", "bluetooth-classic", "bluetooth-le", "proprietary-radio-receiver"]
+					"enum": [
+						"usb",
+						"bluetooth-classic",
+						"bluetooth-le",
+						"proprietary-radio-receiver"
+					]
 				},
 				"backend": {
 					"enum": ["iohid", "iousbhost", "usb-driverkit"]
@@ -336,7 +355,13 @@
 					"additionalProperties": false,
 					"properties": {
 						"charging": {
-							"enum": ["unknown", "discharging", "charging", "full", "not-chargeable"]
+							"enum": [
+								"unknown",
+								"discharging",
+								"charging",
+								"full",
+								"not-chargeable"
+							]
 						},
 						"battery": {
 							"type": "object",
@@ -416,6 +441,163 @@
 				"rightTrigger",
 				"leftHaptic",
 				"rightHaptic"
+			]
+		},
+		"unboundDevice": {
+			"type": "object",
+			"required": ["vendorID", "productID", "connection", "binding"],
+			"additionalProperties": false,
+			"properties": {
+				"vendorID": { "type": "integer", "minimum": 0, "maximum": 65535 },
+				"productID": { "type": "integer", "minimum": 0, "maximum": 65535 },
+				"connection": { "type": "string" },
+				"binding": {
+					"allOf": [
+						{ "$ref": "#/$defs/bindingResult" },
+						{ "properties": { "outcome": { "const": "unsupported" } } }
+					]
+				}
+			}
+		},
+		"bindingResult": {
+			"type": "object",
+			"required": [
+				"outcome",
+				"accessBackend",
+				"interfaces",
+				"matchedPredicates",
+				"rejectedCandidates"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"outcome": { "enum": ["bound", "unsupported"] },
+				"reason": { "$ref": "#/$defs/bindingReason" },
+				"accessBackend": { "enum": ["iohid", "iousbhost", "usb-driverkit"] },
+				"interfaces": {
+					"type": "array",
+					"items": { "$ref": "#/$defs/bindingInterface" }
+				},
+				"rule": {
+					"enum": ["catalog-record", "interface-signature", "hid-descriptor"]
+				},
+				"matchedPredicates": {
+					"type": "array",
+					"items": {
+						"enum": [
+							"catalog-identity",
+							"catalog-access-path",
+							"host-transport",
+							"interface-signature",
+							"device-class-signature",
+							"interrupt-endpoint-pair",
+							"hid-descriptor-contract"
+						]
+					}
+				},
+				"catalogRecordID": { "$ref": "#/$defs/catalogRecordID" },
+				"rejectedCandidates": {
+					"type": "array",
+					"items": { "$ref": "#/$defs/rejectedCandidate" }
+				}
+			},
+			"if": { "properties": { "outcome": { "const": "bound" } } },
+			"then": {
+				"required": ["rule"],
+				"properties": { "rejectedCandidates": { "maxItems": 0 } },
+				"not": { "required": ["reason"] }
+			},
+			"else": {
+				"required": ["reason"],
+				"properties": { "matchedPredicates": { "maxItems": 0 } },
+				"not": {
+					"anyOf": [
+						{ "required": ["rule"] },
+						{ "required": ["catalogRecordID"] }
+					]
+				}
+			}
+		},
+		"bindingInterface": {
+			"type": "object",
+			"additionalProperties": false,
+			"properties": {
+				"interfaceNumber": { "type": "integer", "minimum": 0, "maximum": 255 },
+				"alternateSetting": { "type": "integer", "minimum": 0, "maximum": 255 },
+				"interfaceClass": { "type": "integer", "minimum": 0, "maximum": 255 },
+				"interfaceSubclass": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 255
+				},
+				"interfaceProtocol": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 255
+				},
+				"hostTransport": {
+					"enum": [
+						"usb",
+						"bluetooth-classic",
+						"bluetooth-le",
+						"proprietary-radio-receiver"
+					]
+				},
+				"primaryUsage": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"usagePage": {
+							"type": "integer",
+							"minimum": 0,
+							"maximum": 4294967295
+						},
+						"usage": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+					}
+				},
+				"hasGamePadOrJoystickCollection": { "type": "boolean" },
+				"descriptorFingerprint": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+			}
+		},
+		"rejectedCandidate": {
+			"type": "object",
+			"required": ["protocolID", "reason"],
+			"additionalProperties": false,
+			"properties": {
+				"protocolID": {
+					"enum": [
+						"hid.descriptor",
+						"xbox.xid",
+						"xbox.xusb",
+						"xbox.gip",
+						"sony.sixaxis",
+						"sony.dualshock4",
+						"sony.dualsense",
+						"nintendo.switch1",
+						"valve.steam-controller",
+						"vendor.flydigi",
+						"vendor.gamesir"
+					]
+				},
+				"reason": { "$ref": "#/$defs/bindingReason" },
+				"catalogRecordID": { "$ref": "#/$defs/catalogRecordID" }
+			}
+		},
+		"catalogRecordID": {
+			"type": "string",
+			"pattern": "^[0-9a-f]{4}-[0-9a-f]{4}$"
+		},
+		"bindingReason": {
+			"enum": [
+				"no-protocol-match",
+				"ambiguous-protocol-match",
+				"interface-contract-mismatch",
+				"descriptor-contract-mismatch",
+				"packet-contract-mismatch",
+				"unsupported-protocol-variant",
+				"unsupported-transport-variant",
+				"required-initialization-failed",
+				"catalog-conflict",
+				"virtual-profile-unavailable"
 			]
 		},
 		"hidGamepad": {

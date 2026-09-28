@@ -19,6 +19,7 @@ struct VirtualHIDProfileOverrideTests {
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
       serialNumber: nil,
+      bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: runtimeIdentifier
     )
     device.virtualHIDProfile = profile

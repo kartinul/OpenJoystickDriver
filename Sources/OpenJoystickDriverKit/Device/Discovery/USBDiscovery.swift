@@ -161,22 +161,47 @@ extension DeviceManager {
   ) async -> USBDeviceHandlingOutcome {
     let generation = expectedLifecycleGeneration ?? lifecycleGeneration
     guard isCurrentUSBDetection(generation) else { return .retry }
-    let classification = await classifyUSBDevice(device, provider: provider)
+    let (classification, observed) = await classifyUSBDevice(device, provider: provider)
     guard isCurrentUSBDetection(generation) else { return .retry }
+    let interfaces = observed.interfaces ?? []
     let binding: ProtocolBinding
     switch classification {
-    case .unsupported(let reason):
-      recordUnboundUSBDevice(device, reason: reason, candidates: [])
+    case .unsupported(let reason, let rejected):
+      recordUnboundUSBDevice(
+        device,
+        reason: reason,
+        rejectedCandidates: rejected.map { [$0] } ?? [],
+        interfaces: interfaces
+      )
       return .ignored
     case .conflict(let reason, let candidates):
-      recordUnboundUSBDevice(device, reason: reason, candidates: candidates)
+      recordUnboundUSBDevice(
+        device,
+        reason: reason,
+        rejectedCandidates: candidates.map {
+          ProtocolBindingResult.RejectedCandidate(protocolID: $0, reason: reason)
+        },
+        interfaces: interfaces
+      )
       return .ignored
     case .bound(let bound): binding = bound
     }
     guard
       let configuredProfile = protocolDriverRegistry.runtimeProfile(for: binding)?.transportProfile
     else {
-      recordUnboundUSBDevice(device, reason: .noProtocolMatch, candidates: [binding.protocolID])
+      // Only a record-less `hid.descriptor` binding has no runtime profile; that family is driven
+      // through IOHID, never raw USB.
+      recordUnboundUSBDevice(
+        device,
+        reason: .unsupportedTransportVariant,
+        rejectedCandidates: [
+          ProtocolBindingResult.RejectedCandidate(
+            protocolID: binding.protocolID,
+            reason: .unsupportedTransportVariant
+          )
+        ],
+        interfaces: interfaces
+      )
       return .ignored
     }
 
@@ -242,7 +267,19 @@ extension DeviceManager {
           USBRoleAdmission(identifier: identifier, resolution: role, slotOrdinal: slotOrdinal)
         )
       case .failure(let reason):
-        recordUnboundUSBDevice(device, reason: reason, candidates: [binding.protocolID])
+        recordUnboundUSBDevice(
+          device,
+          reason: reason,
+          rejectedCandidates: [
+            ProtocolBindingResult.RejectedCandidate(
+              protocolID: binding.protocolID,
+              reason: reason,
+              catalogRecordID: binding.record?.recordID
+            )
+          ],
+          // A catalogued model classified on identity alone; resolution observed its interfaces.
+          interfaces: resolution.physicalDevice?.interfaces ?? interfaces
+        )
         return .ignored
       }
     }
@@ -257,24 +294,26 @@ extension DeviceManager {
 
   /// A catalogued model classifies on its identity, which is all its raw-USB row reads. An
   /// uncatalogued model classifies on its passive facts, so an interface signature can bind it.
+  /// Returns the classification with the observation it read.
   private func classifyUSBDevice(
     _ device: USBTransportDevice,
     provider: any USBTransportProvider
-  ) async -> ProtocolClassification {
+  ) async -> (ProtocolClassification, PhysicalDevice) {
     let backend = DeviceAccessBackend(route: device.route)
     let identity = PhysicalDevice(vendorID: device.vendorID, productID: device.productID)
     guard
       protocolDriverRegistry.record(
         for: DeviceIdentifier(vendorID: device.vendorID, productID: device.productID)
       ) == nil, let observed = await provider.physicalDeviceObservation(for: device)
-    else { return protocolDriverRegistry.classify(identity, backend: backend) }
-    return protocolDriverRegistry.classify(observed, backend: backend)
+    else { return (protocolDriverRegistry.classify(identity, backend: backend), identity) }
+    return (protocolDriverRegistry.classify(observed, backend: backend), observed)
   }
 
   private func recordUnboundUSBDevice(
     _ device: USBTransportDevice,
     reason: ProtocolBindingReason,
-    candidates: [PhysicalProtocolID]
+    rejectedCandidates: [ProtocolBindingResult.RejectedCandidate],
+    interfaces: [PhysicalInterfaceSignature]
   ) {
     recordUnboundDevice(
       .usb(device.serviceIdentity),
@@ -283,7 +322,8 @@ extension DeviceManager {
       connection: "USB",
       backend: DeviceAccessBackend(route: device.route),
       reason: reason,
-      candidates: candidates
+      rejectedCandidates: rejectedCandidates,
+      interfaces: interfaces
     )
   }
 }

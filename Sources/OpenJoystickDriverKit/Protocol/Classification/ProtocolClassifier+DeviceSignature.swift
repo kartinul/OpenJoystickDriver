@@ -32,7 +32,15 @@ extension ProtocolClassifier {
     guard hasDeviceSignature(device), (device.interfaces ?? []).isEmpty,
       (device.configurationValue ?? 0) == 0
     else { return nil }
-    guard backend != .ioHID else { return .unsupported(.unsupportedTransportVariant) }
+    guard backend != .ioHID else {
+      return .unsupported(
+        .unsupportedTransportVariant,
+        rejected: ProtocolBindingResult.RejectedCandidate(
+          protocolID: deviceSignature.protocolID,
+          reason: .unsupportedTransportVariant
+        )
+      )
+    }
     return .bound(
       ProtocolBinding(
         protocolID: deviceSignature.protocolID,
