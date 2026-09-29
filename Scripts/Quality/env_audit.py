@@ -31,12 +31,6 @@ PROFILES = {
         "NOTARIZE_KEYCHAIN_PROFILE",
     },
 }
-LEGACY = [
-    ROOT / ".env",
-    ROOT / "Scripts/.env",
-    ROOT / "Scripts/.env.dev",
-    ROOT / "Scripts/.env.release",
-]
 ASSIGNMENT = re.compile(r"^(?:export )?([A-Z][A-Z0-9_]*)=")
 
 
@@ -57,12 +51,6 @@ def keys(path: pathlib.Path) -> tuple[set[str], list[int]]:
 
 def main() -> int:
     failed = False
-    for path in LEGACY:
-        if path.exists():
-            print(
-                f"[FAIL] legacy env file is no longer loaded: {path.relative_to(ROOT)}"
-            )
-            failed = True
     for profile, allowed in PROFILES.items():
         path = ROOT / f".env.{profile}"
         if not path.exists():

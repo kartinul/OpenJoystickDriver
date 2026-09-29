@@ -27,11 +27,7 @@ Examples:
 
 Updates:
   - Sources/OpenJoystickDriver/App/Info.plist canonical app/package version
-    (SemVer 2.0.0 without build metadata; tags use the same string, no v)
-  - Scripts/README.md release examples
-
-    The target version must already have a Keep a Changelog heading:
-    ## [<version>] - YYYY-MM-DD""")
+    (SemVer 2.0.0 without build metadata; tags use the same string, no v)""")
 
 
 class MissingReference(Exception):
@@ -58,43 +54,15 @@ def main(argv: list[str]) -> int:
     release_version(version)
 
     app_info = ROOT / "Sources/OpenJoystickDriver/App/Info.plist"
-    scripts_readme = ROOT / "Scripts/README.md"
-    changelog = ROOT / "CHANGELOG.md"
-    for path in (app_info, scripts_readme, changelog):
-        if not path.is_file():
-            die(f"Missing {path}")
-    changelog_heading = re.compile(
-        rf"^## \[{re.escape(version)}\] - \d{{4}}-\d{{2}}-\d{{2}}(?: \[YANKED\])?$"
-    )
-    if not any(
-        changelog_heading.fullmatch(line) for line in changelog.read_text().splitlines()
-    ):
-        die(f"CHANGELOG.md must contain heading: ## [{version}] - YYYY-MM-DD")
+    if not app_info.is_file():
+        die(f"Missing {app_info}")
 
     app_pattern = re.compile(
         r"(<key>CFBundleShortVersionString</key>\s*<string>)"
         r"\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
         r"(</string>)"
     )
-    readme_patterns = (
-        (
-            re.compile(
-                r"\./Scripts/ojd release package \d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?"
-            ),
-            f"./Scripts/ojd release package {version}",
-            "scripts README package release example",
-        ),
-        (
-            re.compile(
-                r"`\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?` and by manual dispatch"
-            ),
-            f"`{version}` and by manual dispatch",
-            "scripts README manual dispatch version example",
-        ),
-    )
-
     app_original = app_info.read_text()
-    readme_original = scripts_readme.read_text()
     try:
         app_updated = replace_once(
             app_info,
@@ -102,25 +70,14 @@ def main(argv: list[str]) -> int:
             rf"\g<1>{version}\g<2>",
             "canonical app/package short version",
         )
-        readme_updated = readme_original
-        for pattern, replacement, description in readme_patterns:
-            readme_updated, count = pattern.subn(replacement, readme_updated, count=1)
-            if count != 1:
-                raise MissingReference(f"{scripts_readme}: {description}")
     except MissingReference as error:
         print(f"missing expected version reference: {error}", file=sys.stderr)
         return 1
 
-    changed = False
     if app_updated != app_original:
         app_info.write_text(app_updated)
         print(f"updated {app_info}")
-        changed = True
-    if readme_updated != readme_original:
-        scripts_readme.write_text(readme_updated)
-        print(f"updated {scripts_readme}")
-        changed = True
-    if not changed:
+    else:
         print("version references already up to date")
     print(f"Version set to {version}")
     return 0

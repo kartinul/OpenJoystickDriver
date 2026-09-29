@@ -20,7 +20,9 @@ or use the equivalent `just lint`, `just check-fast`, and `just check` recipes:
 ruff format --check Scripts Tests/RepositoryScripts
 ruff check Scripts Tests/RepositoryScripts
 pyright
-find Scripts -type f \( -name '*.sh' -o -name ojd \) -print0 | xargs -0 shellcheck --external-sources --source-path=SCRIPTDIR
+find Scripts -type f \( -name '*.sh' -o -name ojd \) -print0 | xargs -0 shellcheck \
+  --external-sources --source-path=SCRIPTDIR
+git ls-files -z -co --exclude-standard '*.md' | xargs -0 markdownlint-cli2
 swift-format lint --recursive --strict Package.swift Sources Tests
 swiftlint lint --no-cache --strict
 python3 -m unittest discover -s Tests/RepositoryScripts

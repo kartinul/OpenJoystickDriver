@@ -68,6 +68,7 @@ lint:
     ruff check Scripts Tests/RepositoryScripts
     pyright
     find Scripts -type f \( -name '*.sh' -o -name ojd \) -print0 | xargs -0 shellcheck --external-sources --source-path=SCRIPTDIR
+    git ls-files -z -co --exclude-standard '*.md' | xargs -0 markdownlint-cli2
     swift-format lint --recursive --strict Package.swift Sources Tests
     xcode="${DEVELOPER_DIR:-$(find /Applications -maxdepth 1 -type d -name 'Xcode*.app' -exec test -x '{}/Contents/Developer/usr/bin/xcodebuild' ';' -print | sort -r | head -n1)/Contents/Developer}"; DEVELOPER_DIR="$xcode" swiftlint lint --no-cache --strict
 
@@ -106,7 +107,7 @@ check-fast: lint
     python3 -m unittest discover -s Tests/RepositoryScripts
     git diff --check
 
-# Enforce the 350-code-line limit for tracked Swift source and test files
+# Enforce the code-line limits for tracked Swift files (500 in Sources, 1000 in Tests)
 check-swift-file-length:
     python3 Scripts/Quality/check_swift_file_length.py
 
@@ -262,7 +263,7 @@ package-tester-check:
 package-tester:
     ./Scripts/ojd package tester
 
-# Update release version references (changelog heading must exist)
+# Set the app release version in Info.plist (SemVer, no build metadata)
 release-bump-version version:
     ./Scripts/ojd release bump-version {{ version }}
 

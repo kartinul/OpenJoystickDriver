@@ -263,7 +263,7 @@ def main() -> int:
         print(
             "  [OK] host and DriverKit profiles share an installed Apple Development identity"
         )
-        print("  [OK] host Compatibility and system-extension entitlements are present")
+        print("  [OK] host virtual HID and system-extension entitlements are present")
         print("  [OK] required DriverKit profile entitlements are present")
         print()
 

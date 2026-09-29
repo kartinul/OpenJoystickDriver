@@ -42,7 +42,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          for dependency in pkg-config pyright ruff sdl3 shellcheck swift-format swiftlint xmake; do
+          for dependency in markdownlint-cli2 pkg-config pyright ruff sdl3 shellcheck swift-format swiftlint xmake; do
             brew list --versions "$dependency" >/dev/null 2>&1 || brew install "$dependency"
           done
           python3 -m venv .build/schema-validator
@@ -68,6 +68,9 @@ jobs:
       - name: Check shell
         run: find Scripts -type f \( -name '*.sh' -o -name ojd \) -print0 | xargs -0 shellcheck --external-sources --source-path=SCRIPTDIR
 
+      - name: Check Markdown
+        run: git ls-files -z -co --exclude-standard '*.md' | xargs -0 markdownlint-cli2
+
       - name: Check native tools
         run: ./Scripts/ojd check tools
 
@@ -86,6 +89,7 @@ jobs:
         run: |
           swift-format lint --recursive --strict Package.swift Sources Tests
           swiftlint lint --no-cache --strict
+          python3 Scripts/Quality/check_swift_file_length.py
 
       - name: Build package
         run: |

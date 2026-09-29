@@ -165,7 +165,7 @@ build_app_bundle() {
     "$GUI_APP" \
     "com.apple.developer.hid.virtual.device" \
     "true" \
-    "GUI app Compatibility backend" \
+    "GUI app virtual HID output" \
     "Fix: enable com.apple.developer.hid.virtual.device on the GUI profile, then rebuild."
   _require_signed_host_access "$GUI_APP" "$GUI_PROFILE"
   if [[ "$OJD_ENV" == "release" ]]; then

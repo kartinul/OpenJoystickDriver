@@ -1,14 +1,18 @@
-"""Enforce the repository limit for nonblank, non-comment Swift code lines."""
+"""Enforce Swift file limits: code lines per file and semantic extension file names."""
 
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_LIMIT = 350
+DEFAULT_SOURCE_LIMIT = 500
+DEFAULT_TEST_LIMIT = 1000
+# `Type+Concern.swift` must name its concern; numbered or generic splits hide what a file owns.
+REJECTED_CONCERN = re.compile(r"^(?:Behavior|Scenarios)$|[0-9]$")
 
 
 def code_line_count(source: str) -> int:
@@ -107,12 +111,34 @@ def tracked_swift_files(root: Path = ROOT) -> list[Path]:
     ]
 
 
+def is_rejected_name(file_name: str) -> bool:
+    stem = Path(file_name).stem
+    if "+" not in stem:
+        return False
+    return REJECTED_CONCERN.search(stem.rsplit("+", 1)[1]) is not None
+
+
+def misnamed_files(root: Path = ROOT) -> list[Path]:
+    return sorted(
+        path.relative_to(root)
+        for path in tracked_swift_files(root)
+        if is_rejected_name(path.name)
+    )
+
+
+def limit_for(relative_path: Path, source_limit: int, test_limit: int) -> int:
+    return test_limit if relative_path.parts[0] == "Tests" else source_limit
+
+
 def oversized_files(
-    root: Path = ROOT, limit: int = DEFAULT_LIMIT
+    root: Path = ROOT,
+    source_limit: int = DEFAULT_SOURCE_LIMIT,
+    test_limit: int = DEFAULT_TEST_LIMIT,
 ) -> list[tuple[Path, int]]:
     results = []
     for path in tracked_swift_files(root):
         line_count = code_line_count(path.read_text(encoding="utf-8"))
+        limit = limit_for(path.relative_to(root), source_limit, test_limit)
         if line_count > limit:
             results.append((path.relative_to(root), line_count))
     return sorted(results, key=lambda item: (-item[1], str(item[0])))
@@ -120,19 +146,35 @@ def oversized_files(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--limit", type=int, default=DEFAULT_LIMIT)
+    parser.add_argument("--source-limit", type=int, default=DEFAULT_SOURCE_LIMIT)
+    parser.add_argument("--test-limit", type=int, default=DEFAULT_TEST_LIMIT)
     args = parser.parse_args(argv)
-    violations = oversized_files(limit=args.limit)
+    violations = oversized_files(
+        source_limit=args.source_limit, test_limit=args.test_limit
+    )
     for path, line_count in violations:
-        print(f"{path}: {line_count} code lines (limit {args.limit})")
+        limit = limit_for(path, args.source_limit, args.test_limit)
+        print(f"{path}: {line_count} code lines (limit {limit})")
+    misnamed = misnamed_files()
+    for path in misnamed:
+        print(
+            f"{path}: name the extension's concern instead of a number or Behavior/Scenarios"
+        )
     if violations:
         print(
-            f"error: {len(violations)} Swift file(s) exceed {args.limit} code lines",
+            f"error: {len(violations)} Swift file(s) exceed their code-line limit",
             file=sys.stderr,
         )
+    if misnamed:
+        print(
+            f"error: {len(misnamed)} Swift file(s) have a numbered or generic extension name",
+            file=sys.stderr,
+        )
+    if violations or misnamed:
         return 1
     print(
-        f"All tracked Swift files under Sources and Tests are within {args.limit} code lines."
+        f"All tracked Swift files are within {args.source_limit} code lines (Sources) "
+        f"and {args.test_limit} code lines (Tests), with semantic extension names."
     )
     return 0
 

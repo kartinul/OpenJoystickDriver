@@ -62,8 +62,8 @@ if [[ -n "${DEVELOPER_DIR:-}" ]]; then
   XCODE_SELECT_PATH="$DEVELOPER_DIR"
 fi
 
-# Workaround: xcrun --sdk hangs on macOS 26.3.1 (Xcode 26.3).
-# Export SDKROOT so swift build, xcodebuild, and clang skip the xcrun lookup.
+# Export SDKROOT so swift build, xcodebuild, and clang skip the xcrun lookup, which can hang, and
+# so swiftly-installed toolchains use the selected Xcode SDK instead of the CommandLineTools SDK.
 _DEFAULT_SDKROOT="$XCODE_SELECT_PATH/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk"
 if [[ ! -d "$_DEFAULT_SDKROOT" && -d "$XCODE_SELECT_PATH/SDKs/MacOSX.sdk" ]]; then
   _DEFAULT_SDKROOT="$XCODE_SELECT_PATH/SDKs/MacOSX.sdk"
