@@ -3,8 +3,7 @@
 ## GamepadMotionHelpers
 
 The player-space and world-space gyro projection in `MotionProjection.swift` is adapted from
-[GamepadMotionHelpers](https://github.com/JibbSmart/GamepadMotionHelpers/tree/39b578aacf34c3a1c584d8f7f194adc776f88055),
-revision `39b578aacf34c3a1c584d8f7f194adc776f88055`.
+[GamepadMotionHelpers][1], revision `39b578aacf34c3a1c584d8f7f194adc776f88055`.
 
 MIT License
 
@@ -27,3 +26,5 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+[1]: https://github.com/JibbSmart/GamepadMotionHelpers/tree/39b578aacf34c3a1c584d8f7f194adc776f88055

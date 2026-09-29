@@ -10,7 +10,9 @@ action; do not infer permission to publish from this procedure.
 - The release version is SemVer 2.0.0 without build metadata. It lives in
   `CFBundleShortVersionString` of `Sources/OpenJoystickDriver/App/Info.plist`
   and in the tag, without a `v`. Set it with
-  `./Scripts/ojd release bump-version <version>`.
+  `./Scripts/ojd release bump-version <version>` (`just release-bump-version`)
+  at the start of each cycle, before its first tester build. It needs no
+  CHANGELOG heading.
 - The app and the DriverKit extension share one `CFBundleVersion`, derived
   from the commit count (`1.14.89` for 1489 commits). It orders builds and
   follows the kext version grammar that DriverKit requires. Local DEXT

@@ -1,6 +1,7 @@
 # Test The Nacon Revolution X Pro
 
-Test USB device `12933:1588` (`3285:0634` in hexadecimal) for [OpenJoystickDriver issue #21](https://github.com/xsyetopz/OpenJoystickDriver/issues/21).
+Test USB device `12933:1588` (`3285:0634` in hexadecimal) for
+[OpenJoystickDriver issue #21](https://github.com/xsyetopz/OpenJoystickDriver/issues/21).
 
 The bundled record selects `xbox.gip` on interface 0 with interrupt IN `0x87`
 and OUT `0x07`. It disables the periodic host-side `0x03` packet reported to
@@ -55,12 +56,14 @@ stable and that the controls reach the installed virtual-gamepad output path.
 
 ## Check Physical Output With An Installed App
 
-Check LED and rumble with a separately installed current OpenJoystickDriver app. Use the [physical-output procedure](physical-output.md) to generate a
-device-specific plan:
+Check LED and rumble with a separately installed current OpenJoystickDriver app. Use the
+[physical-output procedure](physical-output.md) to generate a device-specific plan:
 
 ```bash
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller output list
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller output plan 12933 1588
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller \
+  output list
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller \
+  output plan 12933 1588
 ```
 
 Attach the probe and output results to issue #21. Include the macOS version,

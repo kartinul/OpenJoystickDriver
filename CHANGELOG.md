@@ -9,6 +9,10 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **BREAKING:** Saved remapping profiles now decode strictly at every level. A profile with an
+  unknown field anywhere, such as the removed `gyroOutput.virtualMotion`, or a field that belongs
+  to another source, destination, output, or scope type, loads as a damaged profile that can be
+  recovered or removed in the Profiles UI instead of being silently accepted.
 - Automatic virtual output publishes one of two profiles chosen only from the controller's
   declared controls: Xbox One S Bluetooth (`hid-xbox-one-s-bt`, `045E:02FD`) when they fit, OJD
   generic HID (`hid-generic`) otherwise. Browser- and consumer-based routing and the automatic
@@ -24,6 +28,9 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `automatic-after-rejecting`), `override`, and `unavailable` instead.
 - **BREAKING:** Rename the remapping wire route `compatibility` to `virtual-gamepad` and the
   status field `compatibility_output_suppressed` to `virtual_output_suppressed`.
+- **BREAKING:** `hid-generic` is input-only and publishes as `4F4A:4447`. Its descriptor no
+  longer declares the vendor rumble output report, so apps cannot rumble a controller through it,
+  and the new product ID keeps hosts from reusing a descriptor cached for `4F4A:4449`.
 - **BREAKING:** Remove virtual motion (gyro relayed through the virtual controller) and the
   Xbox 360 Mac/DirectInput, DS4/DualSense USB, and Switch Pro USB virtual formats and their host
   protocols.
@@ -94,7 +101,8 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   history index or surface dimensions.
 - Read the Xbox Series X|S Share button from the correct report byte.
 - A remapping profile that binds a trigger no longer leaks that trigger's click to the virtual
-  controller, and remapping onto a trigger also sets the virtual controller's digital trigger button.
+  controller, and remapping onto a trigger also sets the virtual controller's digital trigger
+  button.
 - Controllers now report complete input snapshots instead of individual changes. `controller
   input` prints the full state, the RPC method is `getControllerState`, and remapping compares each
   controller's snapshot with the previous one. This fixes a button that shares a virtual-pad bit
@@ -129,12 +137,24 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   driver, `unknown` protocol variants, `usb.interface`, and unconsumed per-driver quirks.
 - Controller-record validation rejects protocol-default USB endpoints for every driver, not only
   GIP and Xbox 360, so such a record fails the catalog checks instead of the app at launch.
+- Replace the repository agent skills with `ojd-controller-catalog`, `ojd-hardware-evidence`,
+  `ojd-swift-change`, `ojd-app-ui`, `ojd-repo-tooling`, and `ojd-build-sign-release`, also
+  exposed to Claude Code through `.claude/skills`. The retired skills are
+  `add-controller-openjoystickdriver`, `debug-controller-openjoystickdriver`,
+  `design-openjoystickdriver`, `maintain-openjoystickdriver`, `organize-openjoystickdriver`, and
+  `test-openjoystickdriver`.
 
 ### Fixed
 
+- `./Scripts/ojd release bump-version` (`just release-bump-version`) no longer fails looking for
+  README version patterns that were removed, and no longer requires a dated `CHANGELOG.md`
+  heading, so the app `Info.plist` version can be bumped at the start of a cycle. The missing
+  heading had left beta.5 development builds reporting `0.5.0-beta.4`.
 - Restore prompt controller inventory updates, cancel stale HID initialization after removal,
   keep suspended controllers out of compatibility identity transitions, and preserve backend
   failure details when an identity change rolls back.
+- Show why disconnecting, resuming, or wirelessly disconnecting a controller failed in that
+  controller's details. The failure was recorded but never displayed.
 - Release a Bluetooth controller's HID claim before disconnecting it, confirm the physical link
   closed, and restore the prior active session when disconnection fails or times out.
 - Report typed HID, Bluetooth, and disconnect-stage failures instead of reducing them to generic
@@ -172,33 +192,57 @@ The project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   as analog triggers. Apple GameController identity is available so
   `GameController.framework` consumers can see the virtual device. Physical
   rumble is not claimed.
-- Run Ruff, Pyright, ShellCheck, swift-format, SwiftLint, Python unittest, and SwiftPM directly from Just and CI. Keep `./Scripts/ojd` for repository-specific operations.
-- Add source-backed XID input and independent 16-bit motor output for cataloged original-Xbox controllers. Physical rumble remains unverified; virtual output remains Generic HID because XID is not HID.
-- Add GameSir G7 Pro, Cyclone 2, and G7 Pro 8K PC input, heartbeats, extra controls, telemetry, and model-specific lighting. G7 Pro `3537:100A` and `3537:1022` stay input-only until a configuration-ready mode is hardware-verified.
-- Add wired SCUF Envision Pro `2E95:434D` Generic HID input from report 6. Existing `2E95:0504` GIP behavior is unchanged.
-- Add selectable DualShock 4 (`dualshock4`, `054C:09CC`), DualSense (`dualsense`, `054C:0CE6`), and Switch Pro (`switchpro`, `057E:2009`) USB HID packers and captured-layout descriptors. Switch Pro reports are padded to 64 bytes.
-- Let the picker and CLI publish those first-party identities from a GIP pad for consumer testing; automatic GIP routing remains Xbox Series.
-- On macOS 15+, correlate CoreHID and IOHID snapshots for `GCController.supportsHIDDevice` diagnostics, and report provisioning profiles that exclude the current Mac.
+- Run Ruff, Pyright, ShellCheck, swift-format, SwiftLint, Python unittest, and SwiftPM directly from
+  Just and CI. Keep `./Scripts/ojd` for repository-specific operations.
+- Add source-backed XID input and independent 16-bit motor output for cataloged original-Xbox
+  controllers. Physical rumble remains unverified; virtual output remains Generic HID because XID is
+  not HID.
+- Add GameSir G7 Pro, Cyclone 2, and G7 Pro 8K PC input, heartbeats, extra controls, telemetry, and
+  model-specific lighting. G7 Pro `3537:100A` and `3537:1022` stay input-only until a
+  configuration-ready mode is hardware-verified.
+- Add wired SCUF Envision Pro `2E95:434D` Generic HID input from report 6. Existing `2E95:0504` GIP
+  behavior is unchanged.
+- Add selectable DualShock 4 (`dualshock4`, `054C:09CC`), DualSense (`dualsense`, `054C:0CE6`), and
+  Switch Pro (`switchpro`, `057E:2009`) USB HID packers and captured-layout descriptors. Switch Pro
+  reports are padded to 64 bytes.
+- Let the picker and CLI publish those first-party identities from a GIP pad for consumer testing;
+  automatic GIP routing remains Xbox Series.
+- On macOS 15+, correlate CoreHID and IOHID snapshots for `GCController.supportsHIDDevice`
+  diagnostics, and report provisioning profiles that exclude the current Mac.
 
 ### Changed
 
 - Consult device-level compatibility availability when exposing a virtual
   identity, rather than the physical-family overload alone.
-- **BREAKING:** Repository automation now uses `Scripts/` and `Tools/`. `./Scripts/ojd` is the only supported script entry point; lowercase aliases were removed.
-- **BREAKING:** OpenJoystickDriver JSON now has one unversioned lowerCamelCase contract. Profiles and remapping libraries reject schema-version tags and legacy snake-case names.
-- Name wire families XID, XUSB, GIP, and HID; rename catalog driver `Xbox360` to `XUSB`. Automatic publishing is family-specific: XUSB uses Xbox 360, GIP uses Xbox Series, matching HID dialects use their first-party identity, and other HID or XID devices use Generic HID.
-- Show the published identity's official product name, VID/PID, symbol, and glyphs throughout the UI. Consumer-bind results, report details, and evidence limits are recorded in [consumer-binding evidence](docs/testing/consumer-binding.md), [wire protocols](docs/development/wire-protocols.md), and the [GameSir record](docs/testing/gamesir-family.md). Automatic GIP routing remains Xbox Series.
+- **BREAKING:** Repository automation now uses `Scripts/` and `Tools/`. `./Scripts/ojd` is the only
+  supported script entry point; lowercase aliases were removed.
+- **BREAKING:** OpenJoystickDriver JSON now has one unversioned lowerCamelCase contract. Profiles
+  and remapping libraries reject schema-version tags and legacy snake-case names.
+- Name wire families XID, XUSB, GIP, and HID; rename catalog driver `Xbox360` to `XUSB`. Automatic
+  publishing is family-specific: XUSB uses Xbox 360, GIP uses Xbox Series, matching HID dialects use
+  their first-party identity, and other HID or XID devices use Generic HID.
+- Show the published identity's official product name, VID/PID, symbol, and glyphs throughout the
+  UI. Consumer-bind results, report details, and evidence limits are recorded in [consumer-binding
+  evidence](docs/testing/consumer-binding.md), [wire protocols](docs/development/wire-protocols.md),
+  and the [GameSir record](docs/testing/gamesir-family.md). Automatic GIP routing remains Xbox
+  Series.
 
 ### Removed
 
-- Remove standalone HID set-report, haptics-backend, and DMG-background probes, plus the undispatched build `nuke` route. Supported diagnostics remain under `./Scripts/ojd diagnose`.
-- Remove repository-local source-layout, source-size, script-prose, and SwiftLint-wrapper checks, plus generic dispatcher lint, format, aggregate-check, capability-test, and Swift-test routes.
+- Remove standalone HID set-report, haptics-backend, and DMG-background probes, plus the
+  undispatched build `nuke` route. Supported diagnostics remain under `./Scripts/ojd diagnose`.
+- Remove repository-local source-layout, source-size, script-prose, and SwiftLint-wrapper checks,
+  plus generic dispatcher lint, format, aggregate-check, capability-test, and Swift-test routes.
 
 ### Fixed
 
-- Exclude Apple GameController synthetic HID nodes before opening them. This avoids creating new wedged `GamePad-1` clients; existing stuck clients still require a reboot. See [Apple controller ownership](docs/development/apple-controller-ownership.md).
-- Keep Input Monitoring across development rebuilds by signing the host with a stable team and bundle-ID requirement.
-- Complete TCC Quit & Reopen through Launch Services after the old process exits. Normal Quit and SIGTERM do not relaunch the app.
+- Exclude Apple GameController synthetic HID nodes before opening them. This avoids creating new
+  wedged `GamePad-1` clients; existing stuck clients still require a reboot. See [Apple controller
+  ownership](docs/development/apple-controller-ownership.md).
+- Keep Input Monitoring across development rebuilds by signing the host with a stable team and
+  bundle-ID requirement.
+- Complete TCC Quit & Reopen through Launch Services after the old process exits. Normal Quit and
+  SIGTERM do not relaunch the app.
 - Write rumble and player-indicator packets for ZD Ultimate Legend
   (`413D:2104`) to interrupt OUT `0x02`. The Xbox 360 default OUT `0x01` is
   absent on this pad, so those writes failed with `notFound`.

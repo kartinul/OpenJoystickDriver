@@ -12,7 +12,8 @@ OJD publishes exactly two virtual HID profiles, `hid-xbox-one-s-bt` and `hid-gen
 fit it, otherwise `hid-generic`. See [CLI And Application Runtime](cli-and-runtime.md) for the
 selection and override contract.
 
-Linux `xpad.c` identifies physical devices for Linux. It does not prove that a macOS virtual HID device can impersonate them.
+Linux `xpad.c` identifies physical devices for Linux. It does not prove that a macOS virtual HID
+device can impersonate them.
 
 ## Evidence: hid-xbox-one-s-bt
 
@@ -35,10 +36,13 @@ distinct virtual profile beyond `hid-xbox-one-s-bt` and `hid-generic`.
 
 ## Apple Audit
 
-The GameController MobileAsset version `10.5.2` downloaded on 2026-07-12 had no exact entry for `045e:028e`, `045e:02ea`, or `9886:0024`. This applies only to that system and asset version. Check again after macOS or MobileAsset updates:
+The GameController MobileAsset version `10.5.2` downloaded on 2026-07-12 had no exact entry for
+`045e:028e`, `045e:02ea`, or `9886:0024`. This applies only to that system and asset version. Check
+again after macOS or MobileAsset updates:
 
 ```bash
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless diagnose catalog --json
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless diagnose catalog \
+  --json
 ```
 
 The developer CLI and support report use the same audit.
@@ -49,8 +53,7 @@ The developer CLI and support report use the same audit.
 controller's model (vendor/product) has a stored override. Automatic selection carries no
 regard for protocol family or foreground consumer; today both profiles carry every primary
 control, so automatic selection always picks `hid-xbox-one-s-bt` when it fits, else
-`hid-generic`. A default stored under the retired `CompatibilityIdentity` key is detected and
-rejected rather than applied; see [CLI And Application Runtime](cli-and-runtime.md).
+`hid-generic`.
 
 ## Promotion Checks
 

@@ -90,7 +90,8 @@ Send the DMG without changing its contents. Ask the tester to:
 ```
 
 The tester must attach the support report and `OpenJoystickDriver-TESTER-BUILD.txt` to the issue.
-For controller-record tests, also follow [Test A Controller Record](../testing/controller-record.md).
+For controller-record tests, also follow [Test A Controller
+Record](../testing/controller-record.md).
 
 ## Failures
 

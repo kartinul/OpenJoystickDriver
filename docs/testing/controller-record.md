@@ -4,7 +4,8 @@ Validate candidate OJD JSON records without Apple Developer Program membership. 
 USB probe uses direct IOUSBHost when macOS permits app ownership. A device claimed by OJD's
 restricted USBDriverKit route also requires the signed application and extension.
 
-The probe supports raw-USB `GIP` records and wired or wireless-receiver `XUSB` records. HID, Bluetooth, and unknown protocols need their own tools.
+The probe supports raw-USB `GIP` records and wired or wireless-receiver `XUSB` records. HID,
+Bluetooth, and unknown protocols need their own tools.
 
 ## Prerequisites
 
@@ -26,19 +27,23 @@ not use libusb.
 
 ## 1. Save The Candidate Record
 
-Save the proposed controller JSON outside the bundled record directory until you verify its VID, PID, interface, endpoints, and startup behavior. For example:
+Save the proposed controller JSON outside the bundled record directory until you verify its VID,
+PID, interface, endpoints, and startup behavior. For example:
 
 ```text
 /tmp/controller-candidate.json
 ```
 
-Use decimal numbers in the JSON. Before probing, review `protocol.initialization`. The command sends only OJD-modeled startup behavior:
+Use decimal numbers in the JSON. Before probing, review `protocol.initialization`. The command sends
+only OJD-modeled startup behavior:
 
-- GIP: the named initialization actions (the driver default when omitted); profiles may disable the default keep-alive
-  when hardware evidence requires it.
+- GIP: the named initialization actions (the driver default when omitted); profiles may disable the
+  default keep-alive when hardware evidence requires it.
 - Xbox 360 wired: the steady Player 1 ring-light packet.
-- Xbox 360 wireless receiver: no output until a logical controller connects, then the receiver-wrapped steady Player 1 packet.
-- A record containing `xbox.gip/rumble-begin` and `xbox.gip/rumble-end` sends those brief initialization packets because they are part of that record's declared initialization.
+- Xbox 360 wireless receiver: no output until a logical controller connects, then the
+  receiver-wrapped steady Player 1 packet.
+- A record containing `xbox.gip/rumble-begin` and `xbox.gip/rumble-end` sends those brief
+  initialization packets because they are part of that record's declared initialization.
 
 `protocol.keepAlive` is an optional boolean for GIP records. Omit it to keep
 the default-enabled behavior. Set it to `false` only when device evidence
@@ -56,7 +61,8 @@ Expected output ends with:
 RECORD_VALIDATION result=valid
 ```
 
-Validation rejects unsupported protocol drivers, HID transports, invalid endpoint directions, invalid variants, and unknown startup packet names before opening a device.
+Validation rejects unsupported protocol drivers, HID transports, invalid endpoint directions,
+invalid variants, and unknown startup packet names before opening a device.
 
 ## 3. Probe The Physical Controller
 
@@ -92,16 +98,18 @@ Identify the distribution path that produced the behavior. An installed app
 and a source-built record probe are different test subjects:
 
 - **Installed app / shared DMG:** report the exact DMG filename and attach
-  `OpenJoystickDriver-TESTER-BUILD.txt` from the DMG. For an installed copy,
-  also run `/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless diagnose report`.
-  This exercises the packaged Developer ID-signed app and its embedded DEXT; it
-  does not use the Swift sources in a checkout. The notarized, stapled community tester package
-  can replace the DriverKit extension with SIP enabled.
-  The report's `controllers[].binding` and `unboundDevices[]` show how each
-  connection was classified: outcome, reason, rule, matched predicates, catalog
-  record ID, access backend, interface summaries, and rejected candidates. It
-  records only whether a serial number is present, never its value, and no
-  packet payloads.
+  `OpenJoystickDriver-TESTER-BUILD.txt` from the DMG. For an installed copy, also run:
+
+  ```bash
+  /Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless diagnose report
+  ```
+
+  This exercises the packaged Developer ID-signed app and its embedded DEXT; it does not use the
+  Swift sources in a checkout. The notarized, stapled community tester package can replace the
+  DriverKit extension with SIP enabled. The report's `controllers[].binding` and `unboundDevices[]`
+  show how each connection was classified: outcome, reason, rule, matched predicates, catalog record
+  ID, access backend, interface summaries, and rejected candidates. It records only whether a serial
+  number is present, never its value, and no packet payloads.
 - **Source-built record probe:** report the checkout commit and working-tree
   state, the record path, and the complete `./Scripts/ojd diagnose record ...`
   command and output. This route builds/runs the probe from the current source
@@ -117,7 +125,8 @@ Attach the complete command, output, and these details to the controller's GitHu
 - controller name and connection mode
 - exact OJD commit
 - shared tester DMG filename and build-info file when testing an installed artifact
-- tester `version` (SemVer with `+build.<number>.sha.<commit>` metadata) and `bundle_version` from the build-info file when testing an installed artifact
+- tester `version` (SemVer with `+build.<number>.sha.<commit>` metadata) and `bundle_version` from
+  the build-info file when testing an installed artifact
 - exact record JSON
 - selected USB route; include DriverKit extension version and activation state when applicable
 - whether the controller stayed powered on

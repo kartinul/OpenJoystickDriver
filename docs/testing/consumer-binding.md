@@ -1,6 +1,8 @@
 # Consumer-Binding Evidence
 
-Use this record to interpret compatibility claims. It preserves exact physical modes, consumer versions, observed results, and missing evidence. For choosing a mode, return to [compatibility](../user/compatibility.md).
+Use this record to interpret compatibility claims. It preserves exact physical modes, consumer
+versions, observed results, and missing evidence. For choosing a mode, return to
+[compatibility](../user/compatibility.md).
 
 ## Recorded Fallback And Consumer Limits
 

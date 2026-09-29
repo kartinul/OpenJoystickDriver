@@ -8,7 +8,7 @@ Do not edit generated controller records or `.build/driverkit/generated/`. `Open
 
 ## Docs
 
-- [README](README.md): install, compatibility identities, troubleshooting
+- [README](README.md): install, virtual HID profiles, troubleshooting
 - [Compatibility](docs/user/compatibility.md): user-facing support matrix
 - [Permissions](docs/user/permissions.md): Input Monitoring, Accessibility, and related grants
 - [Contributing](CONTRIBUTING.md): setup, adding controllers, code rules

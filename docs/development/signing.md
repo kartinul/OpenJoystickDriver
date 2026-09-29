@@ -122,10 +122,11 @@ profile. Inspect Organizer's distribution log and the archived signing configura
 ./Scripts/ojd check driverkit
 ./Scripts/ojd signing doctor
 codesign -d --entitlements - --xml /path/to/OpenJoystickDriver.app
-codesign -d --entitlements - --xml \
-  /path/to/OpenJoystickDriver.app/Contents/Library/SystemExtensions/com.openjoystickdriver.XboxUSBDevice.dext
+extensions=/path/to/OpenJoystickDriver.app/Contents/Library/SystemExtensions
+codesign -d --entitlements - --xml "$extensions/com.openjoystickdriver.XboxUSBDevice.dext"
 security cms -D -i /path/to/profile.provisionprofile
 ```
 
-For development and production artifacts, verify the seven Microsoft product IDs and no wildcard. Verify the host allowlist contains only
-`com.openjoystickdriver.XboxUSBDevice` and the DEXT has no virtual-HID entitlement.
+For development and production artifacts, verify the seven Microsoft product IDs and no wildcard.
+Verify the host allowlist contains only `com.openjoystickdriver.XboxUSBDevice` and the DEXT has no
+virtual-HID entitlement.

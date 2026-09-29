@@ -11,12 +11,14 @@ a time and record physical behavior before changing identities:
 ./Scripts/ojd diagnose rumble-motors 13623 4112
 ```
 
-The final example uses the GameSir G7 SE decimal VID/PID; substitute the exact decimal identifiers reported for the connected device. It drives `controller output rumble`, which sends one `sendControllerOutput` command per step; the app ends each bounded rumble itself, so the script waits out the duration before its explicit stop. The SDL route can exercise OJD's first-party Microsoft Xbox 360 Wired
-`045E:028E` with the Xbox 360 HIDAPI descriptor/report format. OJD publishes it
-through `IOHIDUserDevice` on every supported macOS. The probe uses the
-installed OJD
-CLI to change identities so its application-service protocol always matches
-the running installed app.
+The final example uses the GameSir G7 SE decimal VID/PID; substitute the exact decimal identifiers
+reported for the connected device. It drives `controller output rumble`, which sends one
+`sendControllerOutput` command per step; the app ends each bounded rumble itself, so the script
+waits out the duration before its explicit stop. The SDL route can exercise OJD's first-party
+Microsoft Xbox 360 Wired `045E:028E` with the Xbox 360 HIDAPI descriptor/report format. OJD
+publishes it through `IOHIDUserDevice` on every supported macOS. The probe uses the installed OJD
+CLI to change identities so its application-service protocol always matches the running installed
+app.
 
 The retired isolated probe also tested Apple's legacy Force Feedback API. Its
 dated observations remain below as evidence, but that unsupported executable is
@@ -75,8 +77,8 @@ this setup. They do not establish that every application accepts the spoofed
 identity or that PID and GameController haptics are unavailable for every real
 controller.
 
-The controller LED reflects the physical GIP session, not a proven haptics backend. It remained on while OJD owned the controller and went off
-after OJD was quit and the session ended.
+The controller LED reflects the physical GIP session, not a proven haptics backend. It remained on
+while OJD owned the controller and went off after OJD was quit and the session ended.
 
 In a dedicated SDL `1BAD:F901` run, the installed OJD app logged virtual-device
 creation but no virtual-output callback. The physical report above therefore
@@ -85,10 +87,10 @@ another consumer path and must not be treated as successful rumble. Earlier
 output-report lines were captured during an Xbox 360 identity run and do not
 apply to the SDL identity.
 
-OJD now cancels a superseded delayed stop before scheduling a replacement command, so an older accepted request cannot silence a newer
-rumble request after 250 milliseconds. That scheduling hardening does not make
-an application emit reports for an identity whose output protocol it does not
-support. The `sdl2-3` identity and its ASTRO `9886:0024` probe are historical
-evidence only; OJD now publishes only `hid-xbox-one-s-bt` or `hid-generic`. The input-only GameStop implementation, the redundant `x360-hid`
-selection, and the two failed Microsoft Bluetooth probe variants were removed
+OJD now cancels a superseded delayed stop before scheduling a replacement command, so an older
+accepted request cannot silence a newer rumble request after 250 milliseconds. That scheduling
+hardening does not make an application emit reports for an identity whose output protocol it does
+not support. The `sdl2-3` identity and its ASTRO `9886:0024` probe are historical evidence only; OJD
+now publishes only `hid-xbox-one-s-bt` or `hid-generic`. The input-only GameStop implementation, the
+redundant `x360-hid` selection, and the two failed Microsoft Bluetooth probe variants were removed
 from live code; these observations remain as historical evidence.

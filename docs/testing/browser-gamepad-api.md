@@ -7,15 +7,20 @@ canonical external manual site:** <https://controllertest.io/>.
 
 Run every row independently.
 
-1. Record OJD commit/build, macOS version, publication backend, exact browser version, GameSir G7 SE firmware/physical mode, connection path, and selected OJD identity.
+1. Record OJD commit/build, macOS version, publication backend, exact browser version, GameSir G7 SE
+   firmware/physical mode, connection path, and selected OJD identity.
 1. Stop the prior test and close all Gamepad API pages.
-1. Restart OJD for the initial baseline; confirm one physical device and one intended virtual backend in diagnostics.
+1. Restart OJD for the initial baseline; confirm one physical device and one intended virtual
+   backend in diagnostics.
 1. Select exactly one identity and wait for its committed transition result.
 1. Open a fresh private browser window or otherwise establish a fresh Gamepad document lifecycle.
 1. Open ControllerTest.io and activate the controller as required by browser gesture policy.
-1. Use the canonical page to record slot/count, `id`, `mapping`, all buttons, axes, timestamps, connection events, and actuator presence/result.
-1. Close the page, stop OJD output, and verify no stale browser entries/callbacks before the next row.
-1. Repeat once after a deliberate identity switch. A difference from the clean-start result is classified as identity-transition contamination until lifecycle integrity is established.
+1. Use the canonical page to record slot/count, `id`, `mapping`, all buttons, axes, timestamps,
+   connection events, and actuator presence/result.
+1. Close the page, stop OJD output, and verify no stale browser entries/callbacks before the next
+   row.
+1. Repeat once after a deliberate identity switch. A difference from the clean-start result is
+   classified as identity-transition contamination until lifecycle integrity is established.
 
 Virtual controllers are published only through `IOHIDUserDevice`. Record the
 macOS version for each run; mark untested macOS versions explicitly unverified
@@ -23,10 +28,11 @@ and do not infer parity.
 
 ## Generic HID Browser Contract
 
-Generic HID publishes the stable OJD identity `4F4A:4449`, product name
-`OpenJoystickDriver Generic HID Gamepad`, and a device-neutral HID Game Pad
-descriptor. It does not impersonate a retail controller and does not guarantee
-Gamepad API `mapping: "standard"`. For this PID, the frozen raw layout is:
+Generic HID publishes the stable OJD identity `4F4A:4447`, product name
+`OpenJoystickDriver Generic HID Gamepad`, and a device-neutral, input-only HID Game Pad descriptor.
+`4F4A:4449` was the earlier layout with a vendor rumble output report; its input layout is
+unchanged. It does not impersonate a retail controller and does not guarantee Gamepad API
+`mapping: "standard"`. For this PID, the frozen raw layout is:
 
 - axes 0–3: left X/Y, then right X/Y;
 - axes 4–5: LT/RT on the positive half of signed axes, with idle `0`, partial
@@ -40,7 +46,7 @@ standard trigger widgets remain empty. Record non-enumeration as an engine
 limitation rather than changing OJD to spoof a recognized controller.
 
 Browsers remain unmodified by this work. A future engine contribution should
-apply the following mapping only after recognizing `4F4A:4449`:
+apply the following mapping only after recognizing `4F4A:4447`:
 
 - **Blink:** retain B0–B5/B8–B17, convert the positive halves of axes 4/5 to
   standard B6/B7, and expose axes 0–3.
@@ -68,7 +74,7 @@ remapper does not expose B17.
 | Blink | Apple GameController | `045E:0B13`; standard; Xbox Series counts | correct | correct | All controls hardware-verified; report layout frozen |
 | Firefox/Gecko | Former Automatic | `045E:02E0`; standard B0–B16 | analog trigger | analog trigger | Hat-only D-pad and Guide; Share unavailable |
 | Firefox/Gecko | Explicit Apple GameController | `045E:0B13`; fixed explicit contract | confused with right-stick data | confused with right-stick data | Historical engine mapping failure; explicit profiles do not vary |
-| Blink | Generic HID | `4F4A:4449`; raw/non-standard; 18 buttons, 6 axes | axis 4 | axis 5 | Clean-state retest required after descriptor freeze |
+| Blink | Generic HID | `4F4A:4449` (former); raw/non-standard; 18 buttons, 6 axes | axis 4 | axis 5 | Retest required on input-only `4F4A:4447` |
 | Safari/WebKit | Generic HID | not enumerated | n/a | n/a | Record as WebKit non-enumeration, not an OJD report reorder |
 
 Re-test each row in a fresh document after reconnect and after compatibility
@@ -89,20 +95,23 @@ above was not followed:
   requires the clean-state retest below.
 - DualShock 4 and DualSense stick Y directions were correct after the report
   encoding fix.
-- Apple GameController and Sony system controls could still be delayed,
-  reserved, or omitted: View was delayed and Guide or Share did not always reach
-  the page. This is controlled by the receiving application's GameController
-  system-gesture policy rather than by OJD's encoded input report. Blink uses
-  [GameController.framework on macOS](https://chromium.googlesource.com/chromium/src/%2B/HEAD/device/gamepad/game_controller_data_fetcher_mac.mm),
-  and applications control gesture delivery through Apple's
-  [`preferredSystemGestureState`](https://developer.apple.com/documentation/gamecontroller/gccontrollerelement/preferredsystemgesturestate).
+- Apple GameController and Sony system controls could still be delayed, reserved, or omitted: View
+  was delayed and Guide or Share did not always reach the page. This is controlled by the receiving
+  application's GameController system-gesture policy rather than by OJD's encoded input report.
+  Blink uses [GameController.framework on macOS][1], and applications control gesture delivery
+  through Apple's [`preferredSystemGestureState`][2].
 
 Repeat these observations with the complete protocol before treating them as
 clean-state verification.
 
+[1]: https://chromium.googlesource.com/chromium/src/%2B/HEAD/device/gamepad/game_controller_data_fetcher_mac.mm
+[2]: https://developer.apple.com/documentation/gamecontroller/gccontrollerelement/preferredsystemgesturestate
+
 ## Exact `0.5.0-beta.3` Matrix
 
-These nine rows are **user-reported observations**, not verified facts. Repeat each row from clean state, then repeat after a deliberate post-switch identity change. Keep browser name and exact version with each row.
+These nine rows are **user-reported observations**, not verified facts. Repeat each row from clean
+state, then repeat after a deliberate post-switch identity change. Keep browser name and exact
+version with each row.
 
 | Row | Engine | Virtual identity | User-reported beta.3 observation | Required manual disposition |
 | --- | --- | --- | --- | --- |
@@ -116,7 +125,9 @@ These nine rows are **user-reported observations**, not verified facts. Repeat e
 | 8 | Safari/WebKit | Apple GameController | Otherwise functional, but four system/stick-click bindings are inverted as in Blink | Check B8/B9/B10/B11 semantics and Guide behavior |
 | 9 | Firefox/Gecko | Apple GameController, Generic HID, X360 HID, SDL2/3 | No recognition for all four identities | Run each identity independently; separate OJD, Gecko, permission, and harness causes |
 
-Do not merge rows into a generic browser-support result. Enumeration alone, rumble alone, or a contaminated post-switch result does not verify a row. Label each record **user-reported** until a clean-state manual observation exists; then describe only the observation and exact environment.
+Do not merge rows into a generic browser-support result. Enumeration alone, rumble alone, or a
+contaminated post-switch result does not verify a row. Label each record **user-reported** until a
+clean-state manual observation exists; then describe only the observation and exact environment.
 
 The Apple GameController profile can expose Share to native apps as
 `GCXboxGamepad.buttonShare` while the browser Gamepad API omits it. Treat those
@@ -125,4 +136,7 @@ settings or standard-layout mapping.
 
 ## Evidence Boundary
 
-Browser engines may enumerate or map the same virtual HID differently. The matrix is closed only by complete control input, relevant release/neutral behavior, reconnect behavior, and actuator observations from the named browser/version and publication backend. No result here establishes universal browser support.
+Browser engines may enumerate or map the same virtual HID differently. The matrix is closed only by
+complete control input, relevant release/neutral behavior, reconnect behavior, and actuator
+observations from the named browser/version and publication backend. No result here establishes
+universal browser support.

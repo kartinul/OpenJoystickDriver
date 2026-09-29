@@ -8,9 +8,9 @@ USB transport can reach a particular physical interface.
 
 - Standard HID input uses IOHID (`IOHIDManager` / `IOHIDDevice`) on every
   supported macOS.
-- Accessible raw or vendor-specific USB interfaces use the app-side
-  [IOUSBHost framework](https://developer.apple.com/documentation/iousbhost?language=objc), available
-  since macOS 10.15.
+- Accessible raw or vendor-specific USB interfaces use the app-side [IOUSBHost
+  framework](https://developer.apple.com/documentation/iousbhost?language=objc), available since
+  macOS 10.15.
 - A raw interface owned through OJD's restricted USBDriverKit configuration uses
   `com.openjoystickdriver.XboxUSBDevice` and its exact user-client allowlist.
 - Consumer virtual HID is app-owned. `com.apple.developer.hid.virtual.device` is not a DriverKit
@@ -18,8 +18,8 @@ USB transport can reach a particular physical interface.
 
 `OpenJoystickDriverUSB` records the selected route with each discovered service. It does not infer
 transport from a brand name and does not retry an open failure through a different backend. The
-Apple-entitled Microsoft models are always reserved for the DEXT, even when unavailable: direct claims would bypass the established ownership and provisioning
-boundary.
+Apple-entitled Microsoft models are always reserved for the DEXT, even when unavailable: direct
+claims would bypass the established ownership and provisioning boundary.
 
 ## Apple-Issued OJD Scope
 
@@ -49,9 +49,9 @@ Local macOS 26.6.1 observations, not a public compatibility contract:
 - the installed `AppleGameControllerPersonality.kext` contains selected Sony, Nintendo, Amazon,
   and generic HID recognition personalities.
 
-Those plists explain why macOS can report an exclusive owner for some controllers. Apple can change this
-implementation snapshot; absence does not prove a controller is unsupported. OJD must still use live registry ownership, its signed entitlement scope, its
-catalog, and hardware evidence.
+Those plists explain why macOS can report an exclusive owner for some controllers. Apple can change
+this implementation snapshot; absence does not prove a controller is unsupported. OJD must still use
+live registry ownership, its signed entitlement scope, its catalog, and hardware evidence.
 
 ## Security Boundary
 

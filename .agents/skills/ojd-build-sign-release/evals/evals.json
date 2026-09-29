@@ -1,0 +1,48 @@
+{
+	"skill_name": "ojd-build-sign-release",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "build install dev fails with an entitlement mismatch for the DEXT.",
+			"expected_output": "Follows audit, configure, doctor order and inspects codesign output; never edits the profile or broadens entitlements.",
+			"assertions": [
+				"Runs ./Scripts/ojd signing doctor",
+				"Does not add a wildcard or allow-any-userclient-access"
+			]
+		},
+		{
+			"id": 2,
+			"prompt": "Virtual HID device creation fails on my dev build only.",
+			"expected_output": "Identifies the host profile device list missing this Mac.",
+			"assertions": [
+				"Mentions the provisioning profile device list",
+				"Suggests signing install-profiles after regeneration"
+			]
+		},
+		{
+			"id": 3,
+			"prompt": "Make a DMG for a tester from my current branch.",
+			"expected_output": "Requires a clean worktree, runs package-tester-check then package-tester, and asks before notarizing.",
+			"assertions": [
+				"Checks git status is clean",
+				"Runs just package-tester-check before just package-tester",
+				"Does not send an Apple Development build"
+			]
+		},
+		{
+			"id": 4,
+			"prompt": "Bump the version to 0.5.0-beta.6.",
+			"expected_output": "Runs just release-bump-version 0.5.0-beta.6 and checks that git diff touches only Info.plist.",
+			"assertions": [
+				"Runs release bump-version without adding a dated CHANGELOG heading first",
+				"Does not hand-edit CFBundleVersion"
+			]
+		},
+		{
+			"id": 5,
+			"prompt": "add a new just recipe for notarization history.",
+			"expected_output": "Near miss. Routes to ojd-repo-tooling.",
+			"assertions": ["Names ojd-repo-tooling"]
+		}
+	]
+}

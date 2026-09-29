@@ -1,0 +1,47 @@
+{
+	"skill_name": "ojd-swift-change",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "Add a thread-safe counter of dropped packets to the USB transport.",
+			"expected_output": "Uses Locked from Kit in OpenJoystickDriverUSB, with a behavior test that fails first.",
+			"assertions": [
+				"Uses Locked or an actor, not a new NSLock box or Mutex",
+				"Adds a test under Tests/OpenJoystickDriverUSBTests mirroring the source path"
+			]
+		},
+		{
+			"id": 2,
+			"prompt": "ProfileEditor.swift is 620 lines; split it.",
+			"expected_output": "Splits by cohesive concern into Type+Concern.swift files, runs the length checker.",
+			"assertions": [
+				"No file named +Behavior, +Scenarios, or ending in a digit",
+				"Runs python3 Scripts/Quality/check_swift_file_length.py"
+			]
+		},
+		{
+			"id": 3,
+			"prompt": "Profiles with an old 'virtualMotion' key should still load; add a fallback.",
+			"expected_output": "Declines the fallback per strict decoding and explains the damaged-profile path.",
+			"assertions": [
+				"Does not add an upcaster, fallback decoder, or legacy key",
+				"Cites strict decoding or Resources/Schemas/AGENTS.md"
+			]
+		},
+		{
+			"id": 4,
+			"prompt": "The settings view needs the live packet count from the runtime server.",
+			"expected_output": "Adds the RPC in Kit and Service and exposes it through ApplicationServiceGateway; Presentation imports Kit only.",
+			"assertions": [
+				"Does not import OpenJoystickDriverService in Presentation",
+				"Adds the call through ApplicationServiceGateway"
+			]
+		},
+		{
+			"id": 5,
+			"prompt": "redesign the Overview pane's empty state.",
+			"expected_output": "Near miss. Routes to ojd-app-ui.",
+			"assertions": ["Names ojd-app-ui"]
+		}
+	]
+}

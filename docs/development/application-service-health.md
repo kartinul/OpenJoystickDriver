@@ -25,7 +25,9 @@ The sampler records:
 - thread count and growth
 - configurable high-water limits
 
-A window shorter than 60 seconds is `insufficientData` unless a configured high-water limit is exceeded. A stable run is evidence for the exercised workload, not proof that every path is leak-free.
+A window shorter than 60 seconds is `insufficientData` unless a configured high-water limit is
+exceeded. A stable run is evidence for the exercised workload, not proof that every path is
+leak-free.
 
 ## Validation
 

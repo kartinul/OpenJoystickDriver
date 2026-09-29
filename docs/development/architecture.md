@@ -25,9 +25,9 @@ flowchart LR
 
 `DeviceManager` is the inventory actor and the only owner of physical discovery and exact-device
 selection. Each protocol role of a connected device has one `DevicePipeline` actor, created,
-replaced, and stopped by the manager; see [Composite devices and roles](#composite-devices-and-roles).
-The pipeline exclusively owns its mutable protocol driver, normalized input/output state, transport
-coordination, and retained run and idle tasks.
+replaced, and stopped by the manager; see [Composite devices and
+roles](#composite-devices-and-roles). The pipeline exclusively owns its mutable protocol driver,
+normalized input/output state, transport coordination, and retained run and idle tasks.
 
 ```mermaid
 flowchart LR
@@ -185,7 +185,7 @@ key: a `ControllerIdentity` plus `locationID` and `interfaceNumber`. The interfa
 equality, the runtime token and `description` (`if=N`). Raw USB keys carry the claimed interface;
 HID keys carry one only for a HID role; Bluetooth keys carry none.
 
-`UserSpaceVirtualDeviceConstants.stableKey` (`Output/Profiles/VirtualDevice.swift`) hashes
+`UserSpaceVirtualDeviceConstants.stableKey` (`HID/PhysicalHIDTrackingStateMachine.swift`) hashes
 `VID:PID:serial:location:interface` with FNV-1a to derive the virtual serial and OJD-namespace
 LocationID, so each role gets its own virtual identity without exposing the hardware serial.
 
@@ -311,77 +311,82 @@ IOUSBHost currently has no `DeviceAccessBackend` value, while an observed DEXT r
 `IOUSBHostPassiveUSBRegistrySource` reads the SDK-defined `bcdDevice` registry property when the
 matched device node exposes it as an unsigned 16-bit value. The SDK header defines
 `kUSBHostMatchingPropertyDeviceReleaseNumber` as `bcdDevice`; Apple documents
-[`IOUSBHostMatchingPropertyKeyDeviceReleaseNumber`](https://developer.apple.com/documentation/iousbhost/iousbhostmatchingpropertykey/devicereleasenumber)
-as the device-release matching property. `PassiveUSBRegistryFactParser` carries that raw value as
-`PassiveUSBObservedUSBFacts.deviceRelease`, and passive observation forwards it to
-`PhysicalDevice.deviceRelease`; a missing or out-of-range value remains nil. This code-level path
-does not establish property availability on any physical device.
+[`IOUSBHostMatchingPropertyKeyDeviceReleaseNumber`][1] as the device-release matching property.
+`PassiveUSBRegistryFactParser` carries that raw value as `PassiveUSBObservedUSBFacts.deviceRelease`,
+and passive observation forwards it to `PhysicalDevice.deviceRelease`; a missing or out-of-range
+value remains nil. This code-level path does not establish property availability on any physical
+device.
 
-Raw-USB enumeration admits catalog rows that declare raw USB access. `TransportFacade` also
-admits an uncatalogued IOUSBHost device when its passive facts carry a known Xbox interface or
-device signature (`ProtocolDriverRegistry.carriesProtocolSignature`), so classification can bind
-or report it. After admission, `USBTransportProvider.resolveTransport` returns the
-catalog-derived endpoint profile together with an optional `PhysicalDevice`. The IOUSBHost facade
-uses the same single best-effort passive observation to derive the profile and facts; an absent or
-failed observation preserves the configured profile and returns no snapshot. USBDriverKit retains
-that same configured profile and can additionally provide a limited snapshot from its cached
-`DriverService`: exact `service.id`, VID/PID, available product/serial properties, and the physical
-location property only when present. `USBTransportDevice.locationID` remains a routing value and
-may fall back to low service-ID bits; the separate observed physical location remains nil in that
-case. The snapshot marks host transport `.usb`, access backend `.usbDriverKit`, and route
-`.usbDriverKit`; device release/class, configuration, interface numbers, endpoints, and other
-unobserved facts remain nil. The facade correlates the snapshot by exact service identity and
-matching observed device properties, returns it for DEXT diagnostics/resolution, and does not call
-the direct IOUSBHost passive probe for that route. Providers using the default implementation still
-retain the configured profile without synthesizing facts. `USBDiscovery` accepts a snapshot only when
-its `serviceIdentity` exactly matches the
-enumerated route/service, then revalidates that identity and the enumerated device facts after the
-await before it stores the snapshot in `DeviceInfo`. `DeviceInfo` retains the exact
-`USBTransportDevice` enumeration snapshot separately from the optional descriptor-derived
-`PhysicalDevice`; service identity is route ownership, not fabricated descriptor evidence. The
-post-start claim is acknowledged only while the current record still belongs to that exact raw USB
-snapshot. Detach consumes its old service mapping but removes a pipeline/info only if the current
-record still has that same raw USB snapshot, so a same-identifier HID takeover survives the old USB
-detach. `USBResolutionRuntimeTests.oldUSBDetachDoesNotRemoveHIDThatTookOverTheSameIdentifier`
-exercises USB admission, real HID takeover, and later provider detach with a fake provider. This is
-software behavior evidence only. Unsupported catalog identities never invoke per-service resolution, and the existing
-endpoint profile is still used for parser construction and session open. Acknowledged services are
-not resolved again on every enumeration poll; a service whose handling returns `.retry` is resolved
-again on its next attempt. The passive registry source now carries each node's
+Raw-USB enumeration admits catalog rows that declare raw USB access. `TransportFacade` also admits
+an uncatalogued IOUSBHost device when its passive facts carry a known Xbox interface or device
+signature (`ProtocolDriverRegistry.carriesProtocolSignature`), so classification can bind or report
+it. After admission, `USBTransportProvider.resolveTransport` returns the catalog-derived endpoint
+profile together with an optional `PhysicalDevice`. The IOUSBHost facade uses the same single
+best-effort passive observation to derive the profile and facts; an absent or failed observation
+preserves the configured profile and returns no snapshot. USBDriverKit retains that same configured
+profile and can additionally provide a limited snapshot from its cached `DriverService`: exact
+`service.id`, VID/PID, available product/serial properties, and the physical location property only
+when present. `USBTransportDevice.locationID` remains a routing value and may fall back to low
+service-ID bits; the separate observed physical location remains nil in that case. The snapshot
+marks host transport `.usb`, access backend `.usbDriverKit`, and route `.usbDriverKit`; device
+release/class, configuration, interface numbers, endpoints, and other unobserved facts remain nil.
+The facade correlates the snapshot by exact service identity and matching observed device
+properties, returns it for DEXT diagnostics/resolution, and does not call the direct IOUSBHost
+passive probe for that route. Providers using the default implementation still retain the configured
+profile without synthesizing facts. `USBDiscovery` accepts a snapshot only when its
+`serviceIdentity` exactly matches the enumerated route/service, then revalidates that identity and
+the enumerated device facts after the await before it stores the snapshot in `DeviceInfo`.
+`DeviceInfo` retains the exact `USBTransportDevice` enumeration snapshot separately from the
+optional descriptor-derived `PhysicalDevice`; service identity is route ownership, not fabricated
+descriptor evidence. The post-start claim is acknowledged only while the current record still
+belongs to that exact raw USB snapshot. Detach consumes its old service mapping but removes a
+pipeline/info only if the current record still has that same raw USB snapshot, so a same-identifier
+HID takeover survives the old USB detach.
+`USBResolutionRuntimeTests.oldUSBDetachDoesNotRemoveHIDThatTookOverTheSameIdentifier` exercises USB
+admission, real HID takeover, and later provider detach with a fake provider. This is software
+behavior evidence only. Unsupported catalog identities never invoke per-service resolution, and the
+existing endpoint profile is still used for parser construction and session open. Acknowledged
+services are not resolved again on every enumeration poll; a service whose handling returns `.retry`
+is resolved again on its next attempt. The passive registry source now carries each node's
 `IORegistryEntryGetRegistryEntryID`; runtime observation requires a unique root with the exact
 enumerated service ID and matching VID/PID/location, with no location-only fallback. Missing or
 mismatched IDs produce no physical snapshot, while tuple-only contributor diagnostics keep their
 existing matching and ambiguity behavior. Software tests cover same-tuple/location duplicate roots,
 missing/mismatched IDs, profile delivery, snapshot retention, and clearing on detach; they do not
-validate live registry correspondence on hardware. At the poll-to-manager boundary, `USBEnumerationTracker` emits typed attach, detach, and
-access-failure deltas over exact service snapshots. A provider failure preserves acknowledged
-services without synthesizing detach; a later successful poll reconciles state. Changed facts
-under the same service identity produce old detach before replacement attach, while `.retry`
-remains eligible on the existing 500 ms cadence. `USBDetectionAdmissionTests` exercise failure,
-recovery and event order with a fake provider; `USBResolutionRuntimeTests` verify retained
-manager state through enumeration failure and re-resolution after changed facts. These are
-software checks only. USB admission captures the manager lifecycle generation and checks it
-with cancellation before event processing and after awaited poll, resolution, revalidation, and
-pipeline startup work. `stop()` does not await a noncooperative USB provider; a stale admitted
-candidate returns without inserting state. `USBResolutionRuntimeTests.stopInvalidatesUSBAdmissionHeldInNoncooperativeResolution` verifies stop completion while resolution is gated, then releases the provider and asserts no info, pipeline, or open occurs. Removal clears state synchronously before awaiting the captured old pipeline stop and does no later state deletion; both the exact raw-service snapshot and HID source gate prevent an old USB detach from removing a replacement route. Per-interface access-failure recovery, suspend/resume and hardware validation remain open.
+validate live registry correspondence on hardware. At the poll-to-manager boundary,
+`USBEnumerationTracker` emits typed attach, detach, and access-failure deltas over exact service
+snapshots. A provider failure preserves acknowledged services without synthesizing detach; a later
+successful poll reconciles state. Changed facts under the same service identity produce old detach
+before replacement attach, while `.retry` remains eligible on the existing 500 ms cadence.
+`USBDetectionAdmissionTests` exercise failure, recovery and event order with a fake provider;
+`USBResolutionRuntimeTests` verify retained manager state through enumeration failure and
+re-resolution after changed facts. These are software checks only. USB admission captures the
+manager lifecycle generation and checks it with cancellation before event processing and after
+awaited poll, resolution, revalidation, and pipeline startup work. `stop()` does not await a
+noncooperative USB provider; a stale admitted candidate returns without inserting state.
+`USBResolutionRuntimeTests.stopInvalidatesUSBAdmissionHeldInNoncooperativeResolution` verifies stop
+completion while resolution is gated, then releases the provider and asserts no info, pipeline, or
+open occurs. Removal clears state synchronously before awaiting the captured old pipeline stop and
+does no later state deletion; both the exact raw-service snapshot and HID source gate prevent an old
+USB detach from removing a replacement route. Per-interface access-failure recovery, suspend/resume
+and hardware validation remain open.
 
-The IORegistry publishes interface class triples but no endpoint descriptors, and an
-unconfigured device publishes no interfaces. When the passive facts of an IOUSBHost device,
-pinned or not, cannot resolve an interface with endpoints, `USBTransportProvider.resolveUSBConfiguration`
-reads the descriptor of configuration 1 through
-`IOUSBHostTransportProvider.cachedConfigurationDescriptor` without SET_CONFIGURATION or an
-interface claim. `ProtocolDriverRegistry.makeDriver` then checks the claimed interface number,
-alternate setting, class triple and interrupt endpoint pair before it builds the driver and before
-the pipeline opens, so before SET_CONFIGURATION and any protocol write. A failure is reported as
-unbound with `interface-contract-mismatch`. Catalog endpoint pins stay authoritative, but a pinned
-device's descriptor is read too, so the check confirms its class triple, alternate setting, and
-that the pinned endpoints are interrupt IN/OUT endpoints of the claimed interface; an unreadable
-descriptor is retried. The DriverKit route reports no interface facts, so a catalog row claimed
-there is not checked and runs on its record alone; a signature binding fails closed on it. The
-HIDTool record probe resolves and validates the same way before it opens the device, and refuses
-a device that fails. A signature binding fails closed when the
-interface was not observed; an unreadable descriptor is retried on a later poll rather than run on
-family-default endpoints.
+The IORegistry publishes interface class triples but no endpoint descriptors, and an unconfigured
+device publishes no interfaces. When the passive facts of an IOUSBHost device, pinned or not, cannot
+resolve an interface with endpoints, `USBTransportProvider.resolveUSBConfiguration` reads the
+descriptor of configuration 1 through `IOUSBHostTransportProvider.cachedConfigurationDescriptor`
+without SET_CONFIGURATION or an interface claim. `ProtocolDriverRegistry.makeDriver` then checks the
+claimed interface number, alternate setting, class triple and interrupt endpoint pair before it
+builds the driver and before the pipeline opens, so before SET_CONFIGURATION and any protocol write.
+A failure is reported as unbound with `interface-contract-mismatch`. Catalog endpoint pins stay
+authoritative, but a pinned device's descriptor is read too, so the check confirms its class triple,
+alternate setting, and that the pinned endpoints are interrupt IN/OUT endpoints of the claimed
+interface; an unreadable descriptor is retried. The DriverKit route reports no interface facts, so a
+catalog row claimed there is not checked and runs on its record alone; a signature binding fails
+closed on it. The HIDTool record probe resolves and validates the same way before it opens the
+device, and refuses a device that fails. A signature binding fails closed when the interface was not
+observed; an unreadable descriptor is retried on a later poll rather than run on family-default
+endpoints.
 
 The GIP parser resends its startup sequence when the controller announces before its first input:
 on the first announce and every fourth after it, at most eight times.
@@ -394,64 +399,62 @@ restricted DEXT match/entitlement does not provide broad coverage for the other 
 identities. The access-route and entitlement decision remains unresolved; no target
 or entitlement scope has been widened.
 
-The USB diagnostic scanner retains a route-only DEXT snapshot but leaves protocol classification
-of a catalogued model unavailable until the observed facts needed by the predicates are
-complete: interface number, alternate setting, class/subclass/protocol, and endpoints whose address,
+The USB diagnostic scanner retains a route-only DEXT snapshot but leaves protocol classification of
+a catalogued model unavailable until the observed facts needed by the predicates are complete:
+interface number, alternate setting, class/subclass/protocol, and endpoints whose address,
 direction, and transfer type are all known; HID interfaces also need nonnil collection and element
 availability facts in the HID layout. A partial snapshot does not become a negative `unsupported`
 result. An empty interface list is distinct: the passive probe represents a successfully parsed
 configuration with no interfaces as `[]`, while unavailable configuration facts remain nil, so this
-specific empty list is complete negative evidence. An uncatalogued model is classified from
-the passive facts that admitted it, as runtime binding does. The IOUSBHost device-service adapter also carries its actual `locationID` into
-`observedPhysicalLocationIdentifier`; its existing routing location and other direct observation
-behavior are unchanged.
+specific empty list is complete negative evidence. An uncatalogued model is classified from the
+passive facts that admitted it, as runtime binding does. The IOUSBHost device-service adapter also
+carries its actual `locationID` into `observedPhysicalLocationIdentifier`; its existing routing
+location and other direct observation behavior are unchanged.
 
-HID `.connected` events also carry immutable `PhysicalDevice` facts from IOHID,
-with the backend's runtime routing location kept separate from the optional
-physical location. IOHID records descriptor bytes/hash, usage pairs, report IDs
-and the framework's per-kind maximum report sizes when exposed. The collector
-preserves the reported `kIOHIDManufacturerKey` string, leaves it nil when
-unavailable, and never infers it from VID. It leaves USB interface
-number/class/configuration and unavailable identity fields nil.
-Only explicit USB and Bluetooth Low Energy values map to typed host transport; generic Bluetooth
-remains a property value and is not split into classic/BLE. `physicalTransport` is not inferred.
-`DeviceInfo` retains the snapshot through HID ownership reacquisition, and each HID disconnect event
-now carries the same immutable `PhysicalDevice` and per-connection token as its
-connect event. IOHID retains that connection until removal; `DeviceManager`
-clears state only when the
-detach token and snapshot match the current connection. Full manager stop clears retained snapshots.
-It cancels and awaits the permission watcher and HID detector before it waits for pending HID
-initialization, so those tasks cannot restart discovery during shutdown.
-HID startup feature/output/status operations, recovery sends and periodic-output scheduling also
-revalidate the active pipeline, connection token and immutable snapshot after awaited work. Resume
-reuses the exact token in the current `DeviceInfo`. Serialized physical HID writes recheck pipeline
-identity after the awaited output-rate limiter. A gated software test verifies that stale startup
-cannot cancel a replacement GameSir heartbeat; this does not verify a physical HID send.
-`DeviceAccessBackend` keeps the exact target values `iohid` and
-`usb-driverkit`; IOHID connections set `accessBackend = .ioHID`. The active
-direct IOUSBHost route remains outside the target backend enum.
-`HIDDeviceEvent.accessFailure` distinguishes failed access from physical detach.
-IOHID reports a non-success `IOHIDManagerOpen` result as its `IOReturn` before
-cleanup. Cancellation is not an access failure. `DeviceManager` clears
-HID pipelines/snapshots and awaits pending initialization on this event. It snapshots the exact HID
-connection token, physical facts, and pipeline before that await, then removes only matching state;
-a delayed access-failure or denied-state cleanup cannot remove a newer granted-session connection.
-Detection completion clears only its matching session task, allowing the existing one-second permission
-watcher to retry later; there is no immediate restart loop. Scripted
-`StartupLifetimeTests` cover stale-state teardown, retry cadence, stale
-completion ownership, and gated access-failure/denied teardown interleavings. A gated same-route replacement regression also verifies that an aborted replacement cannot leave the old snapshot behind; teardown and canceled-init completion remove only matching orphan state when no newer route is active. These are software tests only. System sleep tears every controller down through the same path as
-`DeviceManager.stop()`: physical outputs and HID shutdown reports are sent while the HID session is
-still open, then pipelines, detection, and timers stop and the inventory clears. Wake calls the
-ordinary `start()`, so controllers return through normal hot-plug. Once teardown starts, output
-guards accept only writes made inside the `ControllerTeardownOutput` task-local scope, so a request
-already in flight cannot re-enable an output. Manual suspension is user intent kept by
+HID `.connected` events also carry immutable `PhysicalDevice` facts from IOHID, with the backend's
+runtime routing location kept separate from the optional physical location. IOHID records descriptor
+bytes/hash, usage pairs, report IDs and the framework's per-kind maximum report sizes when exposed.
+The collector preserves the reported `kIOHIDManufacturerKey` string, leaves it nil when unavailable,
+and never infers it from VID. It leaves USB interface number/class/configuration and unavailable
+identity fields nil. Only explicit USB and Bluetooth Low Energy values map to typed host transport;
+generic Bluetooth remains a property value and is not split into classic/BLE. `physicalTransport` is
+not inferred. `DeviceInfo` retains the snapshot through HID ownership reacquisition, and each HID
+disconnect event now carries the same immutable `PhysicalDevice` and per-connection token as its
+connect event. IOHID retains that connection until removal; `DeviceManager` clears state only when
+the detach token and snapshot match the current connection. Full manager stop clears retained
+snapshots. It cancels and awaits the permission watcher and HID detector before it waits for pending
+HID initialization, so those tasks cannot restart discovery during shutdown. HID startup
+feature/output/status operations, recovery sends and periodic-output scheduling also revalidate the
+active pipeline, connection token and immutable snapshot after awaited work. Resume reuses the exact
+token in the current `DeviceInfo`. Serialized physical HID writes recheck pipeline identity after
+the awaited output-rate limiter. A gated software test verifies that stale startup cannot cancel a
+replacement GameSir heartbeat; this does not verify a physical HID send. `DeviceAccessBackend` keeps
+the exact target values `iohid` and `usb-driverkit`; IOHID connections set `accessBackend = .ioHID`.
+The active direct IOUSBHost route remains outside the target backend enum.
+`HIDDeviceEvent.accessFailure` distinguishes failed access from physical detach. IOHID reports a
+non-success `IOHIDManagerOpen` result as its `IOReturn` before cleanup. Cancellation is not an
+access failure. `DeviceManager` clears HID pipelines/snapshots and awaits pending initialization on
+this event. It snapshots the exact HID connection token, physical facts, and pipeline before that
+await, then removes only matching state; a delayed access-failure or denied-state cleanup cannot
+remove a newer granted-session connection. Detection completion clears only its matching session
+task, allowing the existing one-second permission watcher to retry later; there is no immediate
+restart loop. Scripted `StartupLifetimeTests` cover stale-state teardown, retry cadence, stale
+completion ownership, and gated access-failure/denied teardown interleavings. A gated same-route
+replacement regression also verifies that an aborted replacement cannot leave the old snapshot
+behind; teardown and canceled-init completion remove only matching orphan state when no newer route
+is active. These are software tests only. System sleep tears every controller down through the same
+path as `DeviceManager.stop()`: physical outputs and HID shutdown reports are sent while the HID
+session is still open, then pipelines, detection, and timers stop and the inventory clears. Wake
+calls the ordinary `start()`, so controllers return through normal hot-plug. Once teardown starts,
+output guards accept only writes made inside the `ControllerTeardownOutput` task-local scope, so a
+request already in flight cannot re-enable an output. Manual suspension is user intent kept by
 `DeviceManager` for the exact controller identity until `controller resume`, a physical disconnect,
-or `stop()`; a pipeline for a suspended identity starts suspended, so the choice survives sleep. `SystemPowerNotificationObserver` delivers the macOS
-sleep and wake notifications in order, and a revoked `DeviceManagerSystemPowerEventSession` keeps a
-late event from a stopped runtime out of a restarted manager. Lifecycle remains incomplete: repeated retries while permission remains granted have no cap/backoff
-(policy remains open). USB access-failure/recovery, both route mappings, and hardware
-qualification remain open. No hardware observation is
-implied.
+or `stop()`; a pipeline for a suspended identity starts suspended, so the choice survives sleep.
+`SystemPowerNotificationObserver` delivers the macOS sleep and wake notifications in order, and a
+revoked `DeviceManagerSystemPowerEventSession` keeps a late event from a stopped runtime out of a
+restarted manager. Lifecycle remains incomplete: repeated retries while permission remains granted
+have no cap/backoff (policy remains open). USB access-failure/recovery, both route mappings, and
+hardware qualification remain open. No hardware observation is implied.
 
 `DriverKitGenerator` consumes the sole `USBDriverKitExtensionConfiguration`. Development and
 production generation both match only Apple's approved Microsoft pairs:
@@ -476,6 +479,8 @@ builds under `.build/driverkit/derived-data/`. Generated output is ephemeral; ne
 commit it. `./Scripts/ojd check driverkit` checks the entitlement, personality, determinism,
 dependency direction, and an unsigned universal build.
 
+[1]: https://developer.apple.com/documentation/iousbhost/iousbhostmatchingpropertykey/devicereleasenumber
+
 ## Process And Command Lifecycle
 
 Launching the signed app starts the runtime, one status item, and one reusable settings window.
@@ -484,9 +489,9 @@ cleanly. Headless commands invoke the same executable and reach live state throu
 Unix-domain socket at `/tmp/com.openjoystickdriver.<uid>.rpc`. The socket is mode `0600`; the server
 requires the same user, signing identifier, and team identifier. Frames and deadlines are bounded.
 Repository-built CLI commands use the installed signed executable when available. This keeps
-`swift run` and direct `.build` commands within the same RPC authentication boundary without trusting
-unsigned development clients. Forwarding stops when the installed executable is
-older than the repository sources, so validation cannot silently run stale CLI code.
+`swift run` and direct `.build` commands within the same RPC authentication boundary without
+trusting unsigned development clients. Forwarding stops when the installed executable is older than
+the repository sources, so validation cannot silently run stale CLI code.
 
 ## Permissions
 

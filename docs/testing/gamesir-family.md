@@ -206,8 +206,8 @@ OJD cannot get on macOS:
 
 It should settle these open questions:
 
-- Motion layout and byte order: OJD publishes no GameSir motion. Its former
-  decoder read gyro at offset 14 and accel at offset 20 as little-endian. SDL's GameSir driver reads accel at 14 and gyro
+- Motion layout and byte order: OJD publishes no GameSir motion. Its former decoder read gyro at
+  offset 14 and accel at offset 20 as little-endian. SDL's GameSir driver reads accel at 14 and gyro
   at 20 as big-endian, for different PIDs, with a `0xA1 0xC8` header.
 - Motion scale and axis signs.
 - The IMU sample counter.

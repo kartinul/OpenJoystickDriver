@@ -1,14 +1,14 @@
 # Compatibility Modes
 
-Choose the actual consumer's route. Enumeration alone does not prove input works; every route names its protocol family and evidence
-status. Automatic leaves HID controllers to macOS. For every other controller it
-publishes one virtual profile chosen only from the controller's declared controls: Xbox
-One S Bluetooth (`hid-xbox-one-s-bt`, `045E:02FD`) when its primary controls fit, else
-`hid-generic`. Protocol family, the frontmost app, and browser engines do not affect the
-choice. Both profiles carry every primary control today, so Automatic always picks Xbox
-One S. XID (original Xbox USB) is parsed in userspace and is not HID. DualShock 1/2 used
-the PlayStation controller port, not USB HID. A per-controller-model override can pin
-either profile regardless of the automatic rule; see below.
+Choose the actual consumer's route. Enumeration alone does not prove input works; every route names
+its protocol family and evidence status. Automatic leaves HID controllers to macOS. For every other
+controller it publishes one virtual profile chosen only from the controller's declared controls:
+Xbox One S Bluetooth (`hid-xbox-one-s-bt`, `045E:02FD`) when its primary controls fit, else
+`hid-generic`. Protocol family, the frontmost app, and browser engines do not affect the choice.
+Both profiles carry every primary control today, so Automatic always picks Xbox One S. XID (original
+Xbox USB) is parsed in userspace and is not HID. DualShock 1/2 used the PlayStation controller port,
+not USB HID. A per-controller-model override can pin either profile regardless of the automatic
+rule; see below.
 
 Status marks appear only in the support lists below:
 
@@ -33,8 +33,9 @@ hardware, and whether ordinary HID clients see Guide through it is unconfirmed.
 
 ### `hid-generic`
 
-Publishes the OJD generic gamepad `4F4A:4449` "OpenJoystickDriver Generic HID Gamepad":
-16 buttons, four stick axes, and two trigger axes, plus a vendor rumble output report.
+Publishes the OJD generic gamepad `4F4A:4447` "OpenJoystickDriver Generic HID Gamepad":
+16 buttons, four stick axes, and two trigger axes. It is input-only: the descriptor declares
+no output report, so apps cannot rumble a controller through it.
 It is a device-neutral, lossless raw layout; it does not guarantee browser
 `mapping: "standard"`.
 
@@ -44,10 +45,14 @@ Pin one of the two profiles for every controller of a given vendor/product ID, o
 one connected device, from the installed CLI:
 
 ```bash
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual set hid-xbox-one-s-bt --vid 0x054C --pid 0x09CC
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual set hid-generic --device <id>
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual reset --vid 0x054C --pid 0x09CC
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual reset --all
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller \
+  virtual set hid-xbox-one-s-bt --vid 0x054C --pid 0x09CC
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller \
+  virtual set hid-generic --device <id>
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller \
+  virtual reset --vid 0x054C --pid 0x09CC
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller \
+  virtual reset --all
 ```
 
 `reset --all` cannot be combined with a `--vid`/`--pid`/`--device` selector; it clears
@@ -58,7 +63,7 @@ that model to automatic selection.
 `status` reports each controller's live profile, how it was chosen (`automatic`,
 `override`, or `automatic-after-rejecting`), and any stored override, for example:
 
-```
+```text
 virtual: hid-xbox-one-s-bt (automatic)
 override: hid-generic
 ```
@@ -92,10 +97,14 @@ override: hid-generic
 ### ⚠️ Fallback And Consumer Limits
 
 - Generic HID maps descriptor-defined controls but cannot infer vendor protocols.
-- Restricted raw-USB models require the signed DriverKit extension; accessible vendor-specific devices use direct IOUSBHost.
-- Automatic ignores protocol family; `hid-generic` is used only when Xbox One S cannot carry a controller's primary controls.
-- Browser engines may map the same identity differently. Enumeration, input, reconnect, and output are separate claims.
-- Exact consumer-bind observations, failures, and hardware limits are in [consumer-binding evidence](../testing/consumer-binding.md).
+- Restricted raw-USB models require the signed DriverKit extension; accessible vendor-specific
+  devices use direct IOUSBHost.
+- Automatic ignores protocol family; `hid-generic` is used only when Xbox One S cannot carry a
+  controller's primary controls.
+- Browser engines may map the same identity differently. Enumeration, input, reconnect, and output
+  are separate claims.
+- Exact consumer-bind observations, failures, and hardware limits are in [consumer-binding
+  evidence](../testing/consumer-binding.md).
 
 ## Browser Gamepad API Testing
 
@@ -103,15 +112,14 @@ override: hid-generic
 
 **<https://controllertest.io/>**
 
-Run each matrix row from a clean browser document and record the exact browser
-version, Gamepad `id`, mapping, slot/count, every button and axis, timestamps,
-disconnect/reconnect behavior, and exposed actuator fields. One browser's result does not establish another's support;
-neither enumeration nor rumble alone proves support.
-Generic HID is expected to use `mapping: n/a`, with sticks on axes 0–3,
-analog LT/RT pressure on axes 4–5, and digital controls on B0–B5 and B8–B17.
-Digital-only trigger sources use full-scale values on axes 4–5. It intentionally
-does not expose B6/B7 or a D-pad axis.
-See the [browser test protocol and reported observations](../testing/browser-gamepad-api.md).
+Run each matrix row from a clean browser document and record the exact browser version, Gamepad
+`id`, mapping, slot/count, every button and axis, timestamps, disconnect/reconnect behavior, and
+exposed actuator fields. One browser's result does not establish another's support; neither
+enumeration nor rumble alone proves support. Generic HID is expected to use `mapping: n/a`, with
+sticks on axes 0–3, analog LT/RT pressure on axes 4–5, and digital controls on B0–B5 and B8–B17.
+Digital-only trigger sources use full-scale values on axes 4–5. It intentionally does not expose
+B6/B7 or a D-pad axis. See the [browser test protocol and reported
+observations](../testing/browser-gamepad-api.md).
 
 ### ❌ Not Implemented
 
@@ -144,17 +152,15 @@ row records earlier spoof experiments, not the current `hid-xbox-one-s-bt` profi
 
 ## Apple GameController Support
 
-Use live detection by `GCController.supportsHIDDevice` and a hardware test to
-determine whether the active virtual controller works with
-GameController.framework. There is no separate identity to select for this test:
-the OJD probe checks whichever of the two profiles is currently published, and
-confirms whether macOS created `GCXboxGamepad`, `buttonShare`, and any paddle
-inputs. Whether `hid-xbox-one-s-bt`'s `045E:02FD` is itself recognized as an Xbox
-family device by GameController.framework is not yet hardware-verified. Browser Gamepad API results are separate:
-a browser may omit Share even when native GameController.framework exposes it.
-The private current-system mapping catalog is optional. A missing pair does not
-prove incompatibility. See
-[Xbox fallback identity evidence](../development/xbox-identities.md).
+Use live detection by `GCController.supportsHIDDevice` and a hardware test to determine whether the
+active virtual controller works with GameController.framework. There is no separate identity to
+select for this test: the OJD probe checks whichever of the two profiles is currently published, and
+confirms whether macOS created `GCXboxGamepad`, `buttonShare`, and any paddle inputs. Whether
+`hid-xbox-one-s-bt`'s `045E:02FD` is itself recognized as an Xbox family device by
+GameController.framework is not yet hardware-verified. Browser Gamepad API results are separate: a
+browser may omit Share even when native GameController.framework exposes it. The private
+current-system mapping catalog is optional. A missing pair does not prove incompatibility. See [Xbox
+fallback identity evidence](../development/xbox-identities.md).
 
 ## USB DriverKit Extension
 
@@ -184,13 +190,21 @@ version or hardware.
 
 ## App Rumble
 
-OJD forwards app rumble only when the virtual report and physical parser agree on an output format. `hid-xbox-one-s-bt` accepts Xbox One report ID `3`. `hid-generic` accepts OJD compact report `0x4F` and the short Xbox 360 `08` rumble packet.
+OJD forwards app rumble only when the virtual report and physical parser agree on an output format.
+`hid-xbox-one-s-bt` accepts Xbox One report ID `3`. `hid-generic` is input-only and forwards no app
+rumble.
 
-Xbox 360 and DualShock 4 controllers use their two main motors. GIP controllers may also use trigger motors. DualShock 4 ignores trigger values.
+Xbox 360 and DualShock 4 controllers use their two main motors. GIP controllers may also use trigger
+motors. DualShock 4 ignores trigger values.
 
 ## Input Integrity
 
-Before a parsed packet reaches an output backend, OJD reduces its events to the packet's final net controller state. It drops duplicate transitions and contradictory press/release pulses that end unchanged. It also emits one canonical D-pad direction, rejects non-finite analog values by retaining the prior component, and clamps sticks to `-1...1` and triggers to `0...1`. This integrity gate does not add a timing delay or a new global deadzone. Protocol-specific deadzones remain in their parsers.
+Before a parsed packet reaches an output backend, OJD reduces its events to the packet's final net
+controller state. It drops duplicate transitions and contradictory press/release pulses that end
+unchanged. It also emits one canonical D-pad direction, rejects non-finite analog values by
+retaining the prior component, and clamps sticks to `-1...1` and triggers to `0...1`. This integrity
+gate does not add a timing delay or a new global deadzone. Protocol-specific deadzones remain in
+their parsers.
 
 The normalized batch is delivered to one persistent virtual-HID device per
 physical controller. Focusing or opening a consumer does not replace that

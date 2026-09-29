@@ -1,15 +1,16 @@
 # Remapping Calibration
 
-This page defines physical motion conversion, factory calibration, retry lifetimes, runtime bias, and fusion. Start with the [remapping overview](remapping.md).
+This page defines physical motion conversion, factory calibration, retry lifetimes, runtime bias,
+and fusion. Start with the [remapping overview](remapping.md).
 
 ## Physical Motion Conversion
 
-`ControllerMotionSample` carries SI values only: `acceleration` in metres per second squared
-and `angularVelocity` in radians per second, in the canonical controller frame: right-handed, +X to the controller's right, +Y away from the
-player along the face, +Z upward through the face. A controller lying face up at rest reads about
-+9.81 m/s² on Z. Raw sensor counts stay inside the drivers. Each sample also carries its
-calibration provenance and revision. Nonfinite vectors are rejected during construction and
-decoding. Samples do not imply fusion.
+`ControllerMotionSample` carries SI values only: `acceleration` in metres per second squared and
+`angularVelocity` in radians per second, in the canonical controller frame: right-handed, +X to the
+controller's right, +Y away from the player along the face, +Z upward through the face. A controller
+lying face up at rest reads about +9.81 m/s² on Z. Raw sensor counts stay inside the drivers. Each
+sample also carries its calibration provenance and revision. Nonfinite vectors are rejected during
+construction and decoding. Samples do not imply fusion.
 
 Each producer applies raw counts, then factory (or nominal) calibration, then SI scaling
 (standard gravity 9.80665 m/s², SDL's `SDL_STANDARD_GRAVITY`), then its axis permutation and
@@ -18,13 +19,11 @@ signs. The permutations are derived from the SDL sensor frame (X right, Y up, Z 
 reads as (x, -z, y). Each producer's `sample` function documents its mapping and sources, and
 `MotionFrameTests` pins each raw axis's canonical component and sign.
 
-The remapping engine converts each sample back once, at `RemappingMotionReading`, into degrees
-per second and g in the
-[GamepadMotion input contract](https://github.com/JibbSmart/GamepadMotionHelpers/blob/39b578aacf34c3a1c584d8f7f194adc776f88055/GamepadMotion.hpp)
-frame (X right, Y up, Z toward the player). Its tuning, pointer scales, and calibration offsets
-are expressed there, so effective sensitivity is unchanged. There, a level controller's measured
-acceleration points approximately +Y; fusion's physical gravity estimate points in the opposite
-direction.
+The remapping engine converts each sample back once, at `RemappingMotionReading`, into degrees per
+second and g in the [GamepadMotion input contract][1] frame (X right, Y up, Z toward the player).
+Its tuning, pointer scales, and calibration offsets are expressed there, so effective sensitivity is
+unchanged. There, a level controller's measured acceleration points approximately +Y; fusion's
+physical gravity estimate points in the opposite direction.
 
 DualSense and Edge emit immediate nominal readings: gyro ADC / 16 degrees per second,
 acceleration ADC / 8192 g, marked `nominalDeviceScale`. Startup requests feature report `0x05`
@@ -49,19 +48,20 @@ axis signs.
 Calibration acquisition recovery, runtime bias estimation, fusion, calibration controls, and
 motion output follow below.
 
+[1]: https://github.com/JibbSmart/GamepadMotionHelpers/blob/39b578aacf34c3a1c584d8f7f194adc776f88055/GamepadMotion.hpp
+
 ### Nominal Conversion For DS4, Nintendo, And Steam
 
 DS4 defaults to Sony's nominal /16 gyro and /8192 accelerometer scales. Sony raw axes are SDL's
-sensor frame, so both sensors map to the canonical frame as `(X, -Z, Y)`.
-The [reviewed SDL DS4 parser](https://github.com/libsdl-org/SDL/blob/f9abf9e843cb1b9c18aa2401ceb9cfbd7a0d4c74/src/joystick/hidapi/SDL_hidapi_ps4.c)
-documents these fallback scales. Its factory-report transport differences remain separate work.
+sensor frame, so both sensors map to the canonical frame as `(X, -Z, Y)`. The [reviewed SDL DS4
+parser][2] documents these fallback scales. Its factory-report transport differences remain separate
+work.
 
-Nintendo uses 14.2842 counts per degree/second and 4096 counts per g, following the
-[reviewed SDL Switch parser](https://github.com/libsdl-org/SDL/blob/f9abf9e843cb1b9c18aa2401ceb9cfbd7a0d4c74/src/joystick/hidapi/SDL_hidapi_switch.c).
-Both sensors map to the canonical frame as `(-Y, X, Z)` on Pro/left and `(Y, X, -Z)` on right
-Joy-Con (SDL's `(-Y, Z, -X)` and `(Y, -Z, -X)` read in the canonical frame). The parser preserves
-this stable hardware frame without silently applying standalone horizontal-use orientation.
-Every IMU sample keeps its own timestamp.
+Nintendo uses 14.2842 counts per degree/second and 4096 counts per g, following the [reviewed SDL
+Switch parser][3]. Both sensors map to the canonical frame as `(-Y, X, Z)` on Pro/left and
+`(Y, X, -Z)` on right Joy-Con (SDL's `(-Y, Z, -X)` and `(Y, -Z, -X)` read in the canonical frame).
+The parser preserves this stable hardware frame without silently applying standalone horizontal-use
+orientation. Every IMU sample keeps its own timestamp.
 
 Steam uses nominal gyro scaling of 2000/32768 degrees/second per count, mapped canonical as
 `(X, -Y, Z)`. Its accelerometer uses 2/32768 g per count, mapped canonical as `(X, Y, Z)`. These
@@ -73,6 +73,9 @@ GameSir enhanced HID reports carry IMU bytes, but no source verifies their scale
 order, so the GameSir driver publishes no motion samples and does not declare motion.
 These readings are marked `nominalDeviceScale`; none claims factory calibration. Tests exercise
 signed extrema, per-family axis signs, units, all three Nintendo samples, and duplicate suppression.
+
+[2]: https://github.com/libsdl-org/SDL/blob/f9abf9e843cb1b9c18aa2401ceb9cfbd7a0d4c74/src/joystick/hidapi/SDL_hidapi_ps4.c
+[3]: https://github.com/libsdl-org/SDL/blob/f9abf9e843cb1b9c18aa2401ceb9cfbd7a0d4c74/src/joystick/hidapi/SDL_hidapi_switch.c
 
 ## Acceptance Boundary
 
@@ -155,16 +158,17 @@ output/reply acquisition uses the separate recovery path below.
 
 ### Nintendo SPI Recovery And Expiry
 
-After the initial startup sequence, the manager schedules two recovery rounds, each following a
-200 ms reply window. Each round asks the active pipeline actor for only its still-pending SPI
-reads; generated packets use the parser's current output sequence and rumble state. Reports in
-a round retain the transport startup interval. A final 200 ms window then expires unanswered
-requests. Each calibration address receives at most three transmissions, including startup.
-Every delayed send checks the original pipeline lifetime. Pipeline stop also expires pending
-requests immediately. Accepted calibration remains installed after expiry, while late replies
-cannot change it. A new explicit acquisition clears the temporary factory/user blocks before
-collecting new replies. Tests cover partial success, packet sequence advancement, late-reply
-rejection, fresh acquisition, and stop/restart without reopening old requests. This bounded software recovery policy does not verify physical loss or timing behavior.
+After the initial startup sequence, the manager schedules two recovery rounds, each following a 200
+ms reply window. Each round asks the active pipeline actor for only its still-pending SPI reads;
+generated packets use the parser's current output sequence and rumble state. Reports in a round
+retain the transport startup interval. A final 200 ms window then expires unanswered requests. Each
+calibration address receives at most three transmissions, including startup. Every delayed send
+checks the original pipeline lifetime. Pipeline stop also expires pending requests immediately.
+Accepted calibration remains installed after expiry, while late replies cannot change it. A new
+explicit acquisition clears the temporary factory/user blocks before collecting new replies. Tests
+cover partial success, packet sequence advancement, late-reply rejection, fresh acquisition, and
+stop/restart without reopening old requests. This bounded software recovery policy does not verify
+physical loss or timing behavior.
 
 ### Runtime Bias Foundation
 
@@ -181,8 +185,8 @@ This is an independent implementation of the calibration capability, not numeric
 GamepadMotionHelpers' adaptive stillness/sensor-fusion estimator. The pinned reference defines
 manual and automatic modes and remains the behavioral comparison source. Sensor-fusion bias
 correction, orientation processing, profile tuning, and live remapping use this component through
-the processing path below. Tests cover stationary bias, changing motion, acceleration, timing gaps, time-weighted
-manual collection, pause/reset, and invalid offset rejection.
+the processing path below. Tests cover stationary bias, changing motion, acceleration, timing gaps,
+time-weighted manual collection, pause/reset, and invalid offset rejection.
 
 ### Fusion Foundation
 

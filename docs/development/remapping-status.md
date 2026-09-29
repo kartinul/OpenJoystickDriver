@@ -1,4 +1,4 @@
-# `0.5.0-beta.4` Remapping Status
+# `0.5.0-beta.5` Remapping Status
 
 - [x] Reconcile the existing worktree and establish a green validation baseline.
 - [x] Finalize the schema-3 profile and action contract.

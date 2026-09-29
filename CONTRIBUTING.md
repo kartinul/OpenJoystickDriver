@@ -21,12 +21,14 @@ The pre-push hook checks the outgoing tree diff for whitespace errors without
 repeating lint, builds, tests, or network-backed catalog generation. Run
 `just check` before opening a pull request; CI repeats the complete validation.
 
-Signing, DriverKit, and packaging: `Scripts/README.md`. Dev install:
+Signing: `docs/development/signing.md`. Releases and packaging:
+`docs/development/releases.md`. Script routes: `Scripts/README.md`. Dev install:
 `./Scripts/ojd build install dev`. Do not edit `.build/driverkit/generated/`.
 SwifterKit comes from `Package.resolved`. `OJD_USE_LOCAL_SWIFTERKIT=1` is
 local-only.
 
-Create a private, notarized DMG with the [local tester-build guide](docs/development/tester-builds.md).
+Create a private, notarized DMG with the [local tester-build
+guide](docs/development/tester-builds.md).
 
 ```bash
 ./Scripts/ojd diagnose record /tmp/controller-candidate.json --validate-only
@@ -99,5 +101,5 @@ Submit one logical change. List checks run and whether you tested on your own ha
 
 Layout: `docs/development/source-topology.md`. RPC payloads:
 `Sources/OpenJoystickDriverKit/ApplicationService/`. CLI help:
-`Sources/OpenJoystickDriver/CLI/Catalog/CommandCatalog.swift`.
+`Sources/OpenJoystickDriverCLI/Catalog/CommandCatalog.swift`.
 `OpenJoystickDriverHIDTool` is internal.

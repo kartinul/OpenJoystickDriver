@@ -1,21 +1,22 @@
 # Remapping
 
-Use this overview for profile actions and chord timing. Open the focused page for the input or processing feature you are changing.
+Use this overview for profile actions and chord timing. Open the focused page for the input or
+processing feature you are changing.
 
 - [Input samples and controller pairing](remapping-input-samples.md)
 - [Calibration and fusion foundations](remapping-calibration.md)
 - [Motion processing](remapping-motion.md)
 - [Advanced stick, trigger, and physical-output controls](remapping-advanced-controls.md)
 
-## `0.5.0-beta.4` Design
+## `0.5.0-beta.5` Design
 
 Advanced remapping extends the existing OJD profile library, deterministic Kit engine, app output
 router, and profile editor. The software scope below is implemented;
 external runtime and hardware validation are not claimed.
 
-Physical input flows through normalization and remapping to virtual-controller and/or keyboard, pointer,
-and scroll output. OJD owns the complete session. There is no JSM process,
-JSM configuration interpreter, SDL dependency, or third-party state-injection endpoint.
+Physical input flows through normalization and remapping to virtual-controller and/or keyboard,
+pointer, and scroll output. OJD owns the complete session. There is no JSM process, JSM
+configuration interpreter, SDL dependency, or third-party state-injection endpoint.
 
 | Capability | Existing foundation | Extension |
 | --- | --- | --- |
@@ -76,9 +77,8 @@ gamepad aggregator. Combination, motion, touch, and paired-controller behavior f
 
 ## Reference Sources
 
-The behavioral reference is
-[JoyShockMapper at bb69784488937e0a5e21988b966eccd9f04d504e](https://github.com/Electronicks/JoyShockMapper/tree/bb69784488937e0a5e21988b966eccd9f04d504e)
-and the contributor's `JoyShockMapper-macos.zip`, SHA-256
+The behavioral reference is [JoyShockMapper at bb69784488937e0a5e21988b966eccd9f04d504e][1] and the
+contributor's `JoyShockMapper-macos.zip`, SHA-256
 `5f56191598774fa907f1b22aacc85bf46967a6159ed1b1933de258c2d816fb33`.
 
 The archive differs from that revision in platform/build adaptations: macOS input
@@ -87,18 +87,22 @@ include, and an atomic quit flag with a main-thread AppKit loop. The digital-but
 and SDL input implementations are unchanged. The port's virtual-gamepad and device-whitelisting
 factories return null. Its build artifacts and handoff notes are not OJD hardware evidence.
 
-The port pins
-[GamepadMotionHelpers at 39b578aacf34c3a1c584d8f7f194adc776f88055](https://github.com/JibbSmart/GamepadMotionHelpers/tree/39b578aacf34c3a1c584d8f7f194adc776f88055).
-Adapted code must retain the applicable copyright and license notices. JSM's license credits
-Julian "Jibb" Smart and Nicolas Lessard; dependent algorithms retain their own attribution.
+The port pins [GamepadMotionHelpers at 39b578aacf34c3a1c584d8f7f194adc776f88055][2]. Adapted code
+must retain the applicable copyright and license notices. JSM's license credits Julian "Jibb" Smart
+and Nicolas Lessard; dependent algorithms retain their own attribution.
 
 Upstream reports guide regression tests, not automatic feature additions or accepted patches:
 
 - [Simultaneous presses, #157](https://github.com/Electronicks/JoyShockMapper/issues/157).
-- [Held output after a stick-mode change, #89](https://github.com/Electronicks/JoyShockMapper/issues/89).
+- [Held output after a stick-mode change,
+  #89](https://github.com/Electronicks/JoyShockMapper/issues/89).
 - [Paired Joy-Con stick input, #188](https://github.com/Electronicks/JoyShockMapper/issues/188).
 - [Motion deadzone units, PR #194](https://github.com/Electronicks/JoyShockMapper/pull/194).
-- [Edge extra buttons and touch grids, PR #187](https://github.com/Electronicks/JoyShockMapper/pull/187).
+- [Edge extra buttons and touch grids, PR
+  #187](https://github.com/Electronicks/JoyShockMapper/pull/187).
+
+[1]: https://github.com/Electronicks/JoyShockMapper/tree/bb69784488937e0a5e21988b966eccd9f04d504e
+[2]: https://github.com/JibbSmart/GamepadMotionHelpers/tree/39b578aacf34c3a1c584d8f7f194adc776f88055
 
 ## Chord Timing
 

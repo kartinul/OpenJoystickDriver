@@ -37,7 +37,7 @@ Choose the shortest path for your task.
 - [Remapping calibration](development/remapping-calibration.md)
 - [Remapping motion processing](development/remapping-motion.md)
 - [Advanced remapping controls](development/remapping-advanced-controls.md)
-- [`0.5.0-beta.4` remapping status](development/remapping-status.md)
+- [`0.5.0-beta.5` remapping status](development/remapping-status.md)
 - [Localization](../LOCALIZATION.md)
 - [Apple controller ownership](development/apple-controller-ownership.md)
 - [Source topology](development/source-topology.md)

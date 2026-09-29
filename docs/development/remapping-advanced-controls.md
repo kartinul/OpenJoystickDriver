@@ -1,6 +1,7 @@
 # Advanced Remapping Controls
 
-This page defines angular, area, ring, scroll, steering, lean, and trigger modes plus mapping-owned physical output and release evidence. Start with the [remapping overview](remapping.md).
+This page defines angular, area, ring, scroll, steering, lean, and trigger modes plus mapping-owned
+physical output and release evidence. Start with the [remapping overview](remapping.md).
 
 ## Angular Stick Modes
 
@@ -17,11 +18,14 @@ profile replacement cancel pending travel. Aim stops at center and caps delayed 
 Create or update one stick per CLI command:
 
 ```sh
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless map update Desktop --stick-source right --stick-mode flick \
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless map update \
+  Desktop --stick-source right --stick-mode flick \
   --stick-pointer-points-per-degree 4 --stick-flick-duration-ms 100
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless map update Desktop --stick-source left --stick-mode aim \
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless map update \
+  Desktop --stick-source left --stick-mode aim \
   --stick-aim-degrees-per-second 360 --stick-inner-deadzone 0.1
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless map update Desktop --stick-source right --stick-mode none
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless map update \
+  Desktop --stick-source right --stick-mode none
 ```
 
 Unspecified fields retain their current values, and edits preserve the other stick. `none`
@@ -31,11 +35,11 @@ deadzones must sum to less than one; response exponent shapes normalized radial 
 control engagement and rearming; hysteresis must be smaller than the threshold.
 
 A mapped stick suppresses its original virtual axes. Explicit axis bindings still run, allowing
-additional destinations; this does not hide the physical controller from other processes.
-Angular stick modes require system-input access. The profile editor’s Stick modes sheet edits
-both sticks, preserves hidden mode settings, and validates both drafts before applying them.
-Reset disables the selected stick mapping; Cancel discards sheet edits. Rendered layout, keyboard
-navigation, VoiceOver, translated labels/help, and physical feel/direction validation remain pending.
+additional destinations; this does not hide the physical controller from other processes. Angular
+stick modes require system-input access. The profile editor’s Stick modes sheet edits both sticks,
+preserves hidden mode settings, and validates both drafts before applying them. Reset disables the
+selected stick mapping; Cancel discards sheet edits. Rendered layout, keyboard navigation,
+VoiceOver, translated labels/help, and physical feel/direction validation remain pending.
 
 ### Area, Ring, Scroll, And Steering Stick Modes
 
@@ -88,10 +92,10 @@ virtual output; lean-only bindings do not. CLI uses `--motion-lean*` and
 ### Dual-Stage Triggers
 
 `trigger_mappings` configures each physical trigger once and exposes typed `trigger:left:soft`,
-`trigger:left:full`, `trigger:right:soft`, and `trigger:right:full` sources. Thresholds are normalized
-trigger values. `soft_threshold` must be below `full_threshold`; `hysteresis` is subtracted on
-release and must be below the soft threshold. The engine evaluates release transitions before
-press transitions so exclusive full pulls cannot overlap the soft action accidentally.
+`trigger:left:full`, `trigger:right:soft`, and `trigger:right:full` sources. Thresholds are
+normalized trigger values. `soft_threshold` must be below `full_threshold`; `hysteresis` is
+subtracted on release and must be below the soft threshold. The engine evaluates release transitions
+before press transitions so exclusive full pulls cannot overlap the soft action accidentally.
 
 Interaction modes:
 
@@ -188,10 +192,9 @@ output arbitration. These tests establish deterministic ownership and storage bo
 establish hard real-time guarantees, physical latency, actuator response, or consumer recognition.
 
 The software release gate is the repository's catalog, profile, and schema contracts, direct
-standard-tool checks, DriverKit generation, macOS 14 parser, complete Swift test, and whitespace checks
-listed in `AGENTS.md`. Milestone state:
-[`0.5.0-beta.4` remapping status](remapping-status.md). Signed-runtime behavior, supported-controller USB
-and Bluetooth delivery, physical isolation, motion and touch feel, haptics and adaptive triggers,
-native visual and accessibility quality, translation review, consumer recognition, and end-to-end
-latency remain external gates and must be recorded as observations rather than inferred from
-constructed reports.
+standard-tool checks, DriverKit generation, macOS 14 parser, complete Swift test, and whitespace
+checks listed in `AGENTS.md`. Milestone state: [`0.5.0-beta.5` remapping
+status](remapping-status.md). Signed-runtime behavior, supported-controller USB and Bluetooth
+delivery, physical isolation, motion and touch feel, haptics and adaptive triggers, native visual
+and accessibility quality, translation review, consumer recognition, and end-to-end latency remain
+external gates and must be recorded as observations rather than inferred from constructed reports.

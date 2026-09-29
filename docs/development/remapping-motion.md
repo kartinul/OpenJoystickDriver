@@ -1,20 +1,21 @@
 # Remapping Motion Processing
 
-This page defines per-device motion processing, coordinate projections, tuning, activation, and layer overrides. Start with the [remapping overview](remapping.md).
+This page defines per-device motion processing, coordinate projections, tuning, activation, and
+layer overrides. Start with the [remapping overview](remapping.md).
 
 ## Per-Device Motion Processing
 
-The remapping engine feeds motion samples into each `RemappingDeviceState`'s processor. It
-uses sample-relative nanoseconds for integration, independent of report delivery uptime, and
-retains the latest corrected gyro, fused orientation, gravity, linear acceleration, and interval.
+The remapping engine feeds motion samples into each `RemappingDeviceState`'s processor. It uses
+sample-relative nanoseconds for integration, independent of report delivery uptime, and retains the
+latest corrected gyro, fused orientation, gravity, linear acceleration, and interval.
 Duplicate/backward sequence indices and backward sample times do not advance state. A forward
-sequence with the same timestamp produces no second integration. Gaps above 100 ms, clock-basis
-or tick-unit changes, and calibration-provenance changes reset bias/orientation and establish a
-zero-duration baseline. Samples arrive in SI units and the canonical controller frame; the
-processor converts them once to its degrees-per-second, g, Y-up space (see
-[Remapping Calibration](remapping-calibration.md)). Numerically out-of-range readings clear estimates;
-the next valid sample also establishes a fresh baseline. This prevents interpolation across
-missing motion and prevents extreme finite values from entering bias arithmetic.
+sequence with the same timestamp produces no second integration. Gaps above 100 ms, clock-basis or
+tick-unit changes, and calibration-provenance changes reset bias/orientation and establish a
+zero-duration baseline. Samples arrive in SI units and the canonical controller frame; the processor
+converts them once to its degrees-per-second, g, Y-up space (see [Remapping
+Calibration](remapping-calibration.md)). Numerically out-of-range readings clear estimates; the next
+valid sample also establishes a fresh baseline. This prevents interpolation across missing motion
+and prevents extreme finite values from entering bias arithmetic.
 
 The processor uses the active profile's motion tuning. Controller release, profile
 replacement, and engine drain discard its containing device state. Tests exercise the real engine
@@ -64,11 +65,11 @@ threshold suppresses unstable pitch near a sideways pose; exact side alignment r
 pitch. Gravity is normalized, so its magnitude does not scale output.
 
 Player/world formulas are adapted from the pinned MIT GamepadMotionHelpers reference. The full
-copyright and permission notice is retained in [THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md).
-Binary distribution of that notice remains part of candidate packaging. Tests distinguish flat,
-sideways, and tilted poses, enforce the player yaw cap, and reject zero gravity or invalid tuning.
-The projection produces degrees/second; the native motion-action layer applies pointer sign,
-sensitivity, smoothing, and output mapping.
+copyright and permission notice is retained in
+[THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md). Binary distribution of that notice remains
+part of candidate packaging. Tests distinguish flat, sideways, and tilted poses, enforce the player
+yaw cap, and reject zero gravity or invalid tuning. The projection produces degrees/second; the
+native motion-action layer applies pointer sign, sensitivity, smoothing, and output mapping.
 
 ### Motion Tuning Contract And Transform
 
@@ -81,23 +82,24 @@ and inversion. The processor feeds the same tuning into bias, fusion, and projec
 the tuned angular rates in its result. A configuration change resets processing/filter history.
 
 Profiles persist non-default tuning under `motion_tuning`; omitted tuning uses defaults within
-schema 3. The live engine passes the active profile's settings into the
-processor, and app/CLI profile reconstruction preserves them through metadata and binding edits.
-CLI create/update accepts `--motion-space local|player|world`, `--motion-pitch-sensitivity`,
-`--motion-yaw-sensitivity`, `--motion-smoothing-half-time-ms`,
-`--motion-threshold-degrees-per-second`, `--motion-yaw-relaxation`,
-`--motion-side-reduction-threshold`, and `--motion-gravity-correction-rate`.
-`--motion-invert-pitch`, `--motion-invert-yaw`, and `--motion-automatic-bias` take explicit
-`true|false` values. Omitted options preserve current settings on update. The profile editor
-has a Motion tuning sheet with all fields, reset, and cancel. Numeric fields accept typed
-values and synchronize valid edits with sliders. Invalid text remains visible and prevents saving;
-decimal-comma input is supported for locales that use it. Changes use the existing
-validated draft and profile save flow. Labels have English source and first-pass translations in 68 locale catalogs. Amharic and Northern Sámi still use English
-motion labels pending translation. Remaining translations,
-native-language review, and native visual/accessibility proof are pending. CLI help includes the option syntax in all shipped catalogs. Tests cover default/partial
-JSON, profile round trips, omitted schema-3 defaults, invalid decoding, editing preservation, live
-engine sensitivity/inversion, radial threshold, and identical smoothing after one 100 ms step or
-ten 10 ms steps. Gyro routing converts those angular rates to the configured destination.
+schema 3. The live engine passes the active profile's settings into the processor, and app/CLI
+profile reconstruction preserves them through metadata and binding edits. CLI create/update accepts
+`--motion-space local|player|world`, `--motion-pitch-sensitivity`, `--motion-yaw-sensitivity`,
+`--motion-smoothing-half-time-ms`, `--motion-threshold-degrees-per-second`,
+`--motion-yaw-relaxation`, `--motion-side-reduction-threshold`, and
+`--motion-gravity-correction-rate`. `--motion-invert-pitch`, `--motion-invert-yaw`, and
+`--motion-automatic-bias` take explicit `true|false` values. Omitted options preserve current
+settings on update. The profile editor has a Motion tuning sheet with all fields, reset, and cancel.
+Numeric fields accept typed values and synchronize valid edits with sliders. Invalid text remains
+visible and prevents saving; decimal-comma input is supported for locales that use it. Changes use
+the existing validated draft and profile save flow. Labels have English source and first-pass
+translations in 68 locale catalogs. Amharic and Northern Sámi still use English motion labels
+pending translation. Remaining translations, native-language review, and native visual/accessibility
+proof are pending. CLI help includes the option syntax in all shipped catalogs. Tests cover
+default/partial JSON, profile round trips, omitted schema-3 defaults, invalid decoding, editing
+preservation, live engine sensitivity/inversion, radial threshold, and identical smoothing after one
+100 ms step or ten 10 ms steps. Gyro routing converts those angular rates to the configured
+destination.
 
 ### Gyro Output And Activation
 
@@ -115,12 +117,13 @@ transaction; delivery failure follows the normal fail-closed recovery path.
 
 Activation modes are `always`, `while_held`, `while_released`, and `toggle`, configured with
 `--gyro-activation` and `--gyro-activation-source`. Sources may be buttons, D-pad directions, or
-axis directions. Continuous axes are rejected. Always-active mode has no activation source.
-Enabling starts with a fresh sample baseline; disabling immediately removes the gyro stick
-contribution. Activation controls retain their explicit bindings. Their original virtual contribution is suppressed
-by default when gyro output is enabled. Set `--gyro-consume-activation false` or turn off the native
-suppression toggle to pass through an otherwise unmapped activation control. An axis-direction
-activator reserves its parent virtual axis, consistent with ordinary axis-direction mappings.
+axis directions. Continuous axes are rejected. Always-active mode has no activation source. Enabling
+starts with a fresh sample baseline; disabling immediately removes the gyro stick contribution.
+Activation controls retain their explicit bindings. Their original virtual contribution is
+suppressed by default when gyro output is enabled. Set `--gyro-consume-activation false` or turn off
+the native suppression toggle to pass through an otherwise unmapped activation control. An
+axis-direction activator reserves its parent virtual axis, consistent with ordinary axis-direction
+mappings.
 
 Focused tests cover sample timing, timeout aggregation, activation, calibration-reset delivery
 failure, CLI persistence, locale-aware numeric entry, and native draft preservation. Trackball and
@@ -138,9 +141,10 @@ suppression of the source's original virtual contribution. Zero decay retains co
 While the source is held, selected axes use the last accepted angular velocity instead of new
 physical motion. Mouse travel uses the analytical decay integral; sticks use the current decayed
 velocity. Processing remains sample-driven, and gaps clear retained motion. This native algorithm
-uses the last velocity, not JSM's 125 ms sample average. The Motion sheet authors trackball enablement, control, axes, decay, and source consumption.
-Typed decimal values follow the current locale. Translation, native visual/accessibility review,
-and physical feel/direction validation remain pending.
+uses the last velocity, not JSM's 125 ms sample average. The Motion sheet authors trackball
+enablement, control, axes, decay, and source consumption. Typed decimal values follow the current
+locale. Translation, native visual/accessibility review, and physical feel/direction validation
+remain pending.
 
 ### Layer Motion Overrides
 

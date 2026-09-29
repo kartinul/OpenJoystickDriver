@@ -8,10 +8,10 @@ or manually authored generated record is used.
 
 ## Current Evidence
 
-Source-backed: numeric identities, Nintendo full-report layout, IMU enable request,
-side-specific primary and SL/SR controls, and the available side's rumble channel.
-Rail bits follow [Linux hid-nintendo](https://github.com/torvalds/linux/blob/893e11787f78e43b534e252249ac3fff4d1333f8/drivers/hid/hid-nintendo.c):
-left SR/SL use bits 20/21, and right SR/SL use bits 4/5 of the 24-bit button field.
+Source-backed: numeric identities, Nintendo full-report layout, IMU enable request, side-specific
+primary and SL/SR controls, and the available side's rumble channel. Rail bits follow [Linux
+hid-nintendo][1]: left SR/SL use bits 20/21, and right SR/SL use bits 4/5 of the 24-bit button
+field.
 
 Product tests cover registry selection, HID discovery identities, absent-stick filtering,
 opposite-half button filtering, three raw IMU samples, startup command shape, and neutral
@@ -23,6 +23,8 @@ and virtual-output state, configurable left/right/disabled gyro selection, calib
 stable side normalization, disconnect cleanup, and stale session-ID rejection. Pairing is
 process-local; recreate it explicitly after disconnect. Charging Grip USB identity and
 composite-controller behavior are not covered by these two Bluetooth identities.
+
+[1]: https://github.com/torvalds/linux/blob/893e11787f78e43b534e252249ac3fff4d1333f8/drivers/hid/hid-nintendo.c
 
 ## Physical Acceptance Still Required
 

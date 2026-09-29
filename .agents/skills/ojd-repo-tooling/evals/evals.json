@@ -1,0 +1,39 @@
+{
+	"skill_name": "ojd-repo-tooling",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "Add './Scripts/ojd check links' that validates Markdown links.",
+			"expected_output": "Adds a dispatch case, usage and die text, a test_dispatcher forwarding case, and syncs the gate lists.",
+			"assertions": [
+				"Edits Scripts/Command/dispatcher.py usage and dispatch",
+				"Adds a test in Tests/RepositoryScripts",
+				"Updates AGENTS.md, justfile, and CI together if it is a gate"
+			]
+		},
+		{
+			"id": 2,
+			"prompt": "The commit hook passed but CI failed on the length checker.",
+			"expected_output": "Explains the index-snapshot hook and gate sync; compares hook and CI commands.",
+			"assertions": [
+				"Reads lefthook.yml and Scripts/Quality/check-index-snapshot.sh",
+				"Does not edit .git/hooks directly"
+			]
+		},
+		{
+			"id": 3,
+			"prompt": "Raise the Swift source limit to 600 so the build passes.",
+			"expected_output": "Declines raising the limit to fit a file and routes the split to ojd-swift-change; notes it needs user approval.",
+			"assertions": [
+				"Does not change the limit without approval",
+				"Names ojd-swift-change for the split"
+			]
+		},
+		{
+			"id": 4,
+			"prompt": "notarization fails for the tester DMG.",
+			"expected_output": "Near miss. Routes to ojd-build-sign-release.",
+			"assertions": ["Names ojd-build-sign-release"]
+		}
+	]
+}

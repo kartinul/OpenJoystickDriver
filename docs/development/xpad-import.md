@@ -8,14 +8,20 @@ not runtime inputs.
 
 Verify committed output:
 
-    ./Scripts/ojd catalog regenerate --check
+```bash
+./Scripts/ojd catalog regenerate --check
+```
 
 Rewrite it after an intentional lock or override change:
 
-    ./Scripts/ojd catalog regenerate --write
-    ./Scripts/ojd check profiles
+```bash
+./Scripts/ojd catalog regenerate --write
+./Scripts/ojd check profiles
+```
 
-The generator downloads every locked Linux and SDL source and verifies each SHA-256. It parses the complete xpad device/initialization tables and supported HID registration tables, normalizes supported rows, applies explicit local overrides, and writes deterministic VID/PID paths.
+The generator downloads every locked Linux and SDL source and verifies each SHA-256. It parses the
+complete xpad device/initialization tables and supported HID registration tables, normalizes
+supported rows, applies explicit local overrides, and writes deterministic VID/PID paths.
 
 ## Translation
 
@@ -33,7 +39,10 @@ Supported Linux input mappings:
   clicks stay; no trigger buttons are added because the XID, XUSB and GIP parsers emit none.
 - `MAP_DPAD_TO_BUTTONS` is dropped: it changes only how Linux reports the D-pad, not the
   wire bits OJD parsers decode.
-- Supported PlayStation, Sony, Nintendo, and Steam HID registrations become IOHID records from their driver tables and hid-ids.h (`sony.sixaxis`, `sony.dualshock4`, `sony.dualsense`, `nintendo.switch1`, `valve.steam-controller:wired`, and `valve.steam-controller:dongle` for the Steam wireless receiver).
+- Supported PlayStation, Sony, Nintendo, and Steam HID registrations become IOHID records from their
+  driver tables and hid-ids.h (`sony.sixaxis`, `sony.dualshock4`, `sony.dualsense`,
+  `nintendo.switch1`, `valve.steam-controller:wired`, and `valve.steam-controller:dongle` for the
+  Steam wireless receiver).
 - Non-default `xboxone_init_packets` become ordered `protocol.initialization` action IDs
   (`xbox.gip/power-on`, `xbox.gip/s-init`, `xbox.gip/enable-extra-input`,
   `xbox.gip/hori-ack`, `xbox.gip/led-on`, `xbox.gip/auth-done`,
@@ -129,7 +138,9 @@ and every skip bucket.
 
 Override inputs live at:
 
-    Resources/ControllerOverrides/<vid>/<vid>-<pid>.json
+```text
+Resources/ControllerOverrides/<vid>/<vid>-<pid>.json
+```
 
 An add operation supplies a complete canonical record missing from the pinned
 source. A patch operation changes only selected top-level sections of an
@@ -149,8 +160,10 @@ and Git history. Do not copy it into runtime controller records.
 Use the lower-level importer to inspect another exact Linux revision without
 changing runtime data:
 
-    ./Scripts/ojd catalog xpad --github-ref 893e11787f78e43b534e252249ac3fff4d1333f8 \
-      --vid 0x1532 --pid 0x0a29 --output-dir /tmp/ojd-xpad
+```bash
+./Scripts/ojd catalog xpad --github-ref 893e11787f78e43b534e252249ac3fff4d1333f8 \
+  --vid 0x1532 --pid 0x0a29 --output-dir /tmp/ojd-xpad
+```
 
 Its manifest belongs only to the temporary inspection output. The runtime tree
 is reproduced from ControllerSources.lock.json.

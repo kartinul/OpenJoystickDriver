@@ -1,0 +1,6 @@
+interface:
+  display_name: "Controller Catalog"
+  short_description: "Add or patch controller records from pinned inputs"
+  default_prompt: "Use $ojd-controller-catalog to add or patch this controller identity through the lockfile or Resources/ControllerOverrides, regenerate the catalog, and report the evidence class."
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Swift Change"
+  short_description: "Change Swift behavior at its owner with a failing test"
+  default_prompt: "Use $ojd-swift-change to place this change in the right target and directory, write a failing behavior test, and run the gates."
+policy:
+  allow_implicit_invocation: false

@@ -1,10 +1,10 @@
 # OpenJoystickDriver
 
-[![GitHub Repo stars](https://img.shields.io/github/stars/xsyetopz/OpenJoystickDriver?style=social)](https://github.com/xsyetopz/OpenJoystickDriver/stargazers)
-[![License](https://img.shields.io/github/license/xsyetopz/OpenJoystickDriver)](LICENSE)
+[![GitHub Repo stars][1]](https://github.com/xsyetopz/OpenJoystickDriver/stargazers)
+[![License][2]](LICENSE)
 [![Swift](https://img.shields.io/badge/Swift-Package-orange)](Package.swift)
 
-![Github-sponsors](https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA)
+![Github-sponsors][3]
 
 A macOS userspace gamepad driver. The signed app binary hosts the runtime and CLI.
 Use it when a controller works here but not in a game, emulator, SDL app, or native macOS app.
@@ -16,6 +16,10 @@ project is not affiliated with either.
 [PlayStation](https://www.playstation.com/en-us/legal/copyright-and-trademark-notice/).
 
 Support matrix: [docs/user/compatibility.md](docs/user/compatibility.md).
+
+[1]: https://img.shields.io/github/stars/xsyetopz/OpenJoystickDriver?style=social
+[2]: https://img.shields.io/github/license/xsyetopz/OpenJoystickDriver
+[3]: https://img.shields.io/badge/sponsor-30363D?style=for-the-badge&logo=GitHub-Sponsors&logoColor=#EA4AAA
 
 ## Install
 
@@ -43,8 +47,10 @@ HID profiles, chosen from the controller's declared controls: `hid-xbox-one-s-bt
 a model's profile, or clear the override to return to automatic selection:
 
 ```bash
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual set hid-generic --vid 0x045E --pid 0x02FD
-/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller virtual reset --all
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller \
+  virtual set hid-generic --vid 0x045E --pid 0x02FD
+/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless controller \
+  virtual reset --all
 ```
 
 ## Troubleshooting
@@ -76,4 +82,7 @@ Bluetooth link, use `controller disconnect-wireless --device <id>`; this never r
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/chart?repos=xsyetopz/OpenJoystickDriver&type=date&legend=top-left&sealed_token=PjXIM3WljCuileJs_cIh3xVcAUk_S-XIvzSI-4YZXyrdXUDv_5yKL-bki0BDGSsz92-vhQ9_yqKPxyBC0RsY1Cd0C-e0YWUXePQkgLZcoXOiDCgazJpBqvW2rzdCZb8gK-1y7jncPZsFa8yqvijYWxA1UuP7Kw2Knvq2XnUuoMlTbtNobOEAx47QZF0U)](https://www.star-history.com/?repos=xsyetopz%2FOpenJoystickDriver&type=date&legend=top-left)
+[![Star History Chart][4]][5]
+
+[4]: https://api.star-history.com/chart?repos=xsyetopz/OpenJoystickDriver&type=date&legend=top-left&sealed_token=PjXIM3WljCuileJs_cIh3xVcAUk_S-XIvzSI-4YZXyrdXUDv_5yKL-bki0BDGSsz92-vhQ9_yqKPxyBC0RsY1Cd0C-e0YWUXePQkgLZcoXOiDCgazJpBqvW2rzdCZb8gK-1y7jncPZsFa8yqvijYWxA1UuP7Kw2Knvq2XnUuoMlTbtNobOEAx47QZF0U
+[5]: https://www.star-history.com/?repos=xsyetopz%2FOpenJoystickDriver&type=date&legend=top-left

@@ -15,23 +15,23 @@ Audit the file structure without exposing values:
 ./Scripts/ojd env audit
 ```
 
-Examples show annotated output; never source identities, profiles, Team IDs, or credentials from them.
-Read [Signing assets](signing.md) before
-creating either local file. Development configuration requires the two
-development profiles and an Apple Development identity; publisher-only
-Developer ID assets are optional and do not block `.env.dev` generation.
+Examples show annotated output; never source identities, profiles, Team IDs, or credentials from
+them. Read [Signing assets](signing.md) before creating either local file. Development configuration
+requires the two development profiles and an Apple Development identity; publisher-only Developer ID
+assets are optional and do not block `.env.dev` generation.
 
 Unsigned `swift build` and `./Scripts/ojd check driverkit` do not load
 `.env.dev`. Signed local development installs create or repair `.env.dev`
 before building. Notarization keys belong only in
 `.env.release`; they are not inputs to unsigned or Apple Development builds.
 
-The signing configurator updates recognized signing keys in the selected root
-file, preserving unrelated recognized publisher keys. Never commit actual `.env.dev` or `.env.release` files.
+The signing configurator updates recognized signing keys in the selected root file, preserving
+unrelated recognized publisher keys. Never commit actual `.env.dev` or `.env.release` files.
 
 ## GitHub Actions Secrets
 
-`.github/workflows/release.yml` remains the source of truth for GitHub Secret names. Only inputs used by the single-app release remain:
+`.github/workflows/release.yml` remains the source of truth for GitHub Secret names. Only inputs
+used by the single-app release remain:
 
 - `DEVELOPER_ID_APPLICATION_CERT_BASE64`
 - `CERTIFICATE_SECRET`

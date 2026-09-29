@@ -1,0 +1,42 @@
+{
+	"skill_name": "ojd-controller-catalog",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "Add support for the controller at 37d7:2802; it behaves like the 37d7:2801 record.",
+			"expected_output": "An add override in Resources/ControllerOverrides/37d7/ validated against controller-override.schema.json, then catalog regenerate --write and --check.",
+			"assertions": [
+				"Creates or edits a file under Resources/ControllerOverrides/, not Sources/OpenJoystickDriverKit/Resources/Controllers/",
+				"Runs ./Scripts/ojd catalog regenerate --write then --check",
+				"States the evidence class without claiming hardware verification"
+			]
+		},
+		{
+			"id": 2,
+			"prompt": "The Xbox 360 wired pad 045e:028e has the wrong name in the catalog; fix it.",
+			"expected_output": "Checks whether a Linux-derived record exists; uses a patch override with vendorID, productID, set rather than an add.",
+			"assertions": [
+				"Uses operation patch, not add, for a Linux-derived identity",
+				"Does not hand-edit generated controller JSON"
+			]
+		},
+		{
+			"id": 3,
+			"prompt": "Bump the pinned Linux xpad source to a newer commit.",
+			"expected_output": "Updates ControllerSources.lock.json at the repository root with commit and per-file sha256, regenerates, and reviews the diff.",
+			"assertions": [
+				"Edits ControllerSources.lock.json at the repository root",
+				"Records new sha256 values rather than disabling verification"
+			]
+		},
+		{
+			"id": 4,
+			"prompt": "the DualSense rumble feels weak in the app.",
+			"expected_output": "Near miss. Routes to ojd-hardware-evidence or ojd-swift-change; does not change catalog records.",
+			"assertions": [
+				"Does not edit catalog inputs",
+				"Names ojd-hardware-evidence or ojd-swift-change"
+			]
+		}
+	]
+}

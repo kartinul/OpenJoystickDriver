@@ -57,6 +57,6 @@ These approvals do not grant Input Monitoring, controller publication, or Keyboa
 
 ## Older Alpha Entries
 
-An older alpha may leave an `OpenJoystickDriverDaemon` entry or stale privacy row. Current builds use
-neither that helper nor its launchd registration. If System Settings offers a remove control for the
-stale entry, remove it manually. OpenJoystickDriver does not reset macOS privacy records.
+An older alpha may leave an `OpenJoystickDriverDaemon` entry or stale privacy row. Current builds
+use neither that helper nor its launchd registration. If System Settings offers a remove control for
+the stale entry, remove it manually. OpenJoystickDriver does not reset macOS privacy records.

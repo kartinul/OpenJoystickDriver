@@ -25,15 +25,14 @@ registration.
 
 ## CLI
 
-The installed `/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless` CLI remains the supported expert
-interface for automation, complete mapping operations, streaming input, and
-diagnostics. The menu-bar/settings facade is the supported consumer interface for
-readiness, permissions, connected controllers, profiles, and ordinary remapping.
-With CLI arguments, `swift run OpenJoystickDriver` or
-`.build/debug/OpenJoystickDriver` uses the installed signed executable when available. The
-server still checks the user, signing identifier, and team identifier. If the
-repository sources are newer than the installed executable, the command stops
-and asks for a new install instead of running stale code.
+The installed `/Applications/OpenJoystickDriver.app/Contents/MacOS/OpenJoystickDriver --headless`
+CLI remains the supported expert interface for automation, complete mapping operations, streaming
+input, and diagnostics. The menu-bar/settings facade is the supported consumer interface for
+readiness, permissions, connected controllers, profiles, and ordinary remapping. With CLI arguments,
+`swift run OpenJoystickDriver` or `.build/debug/OpenJoystickDriver` uses the installed signed
+executable when available. The server still checks the user, signing identifier, and team
+identifier. If the repository sources are newer than the installed executable, the command stops and
+asks for a new install instead of running stale code.
 
 Run `./Scripts/ojd build install-fast dev` after source changes. Set
 `OJD_RUN_REPOSITORY_CLI=1` only to run a local command that does not use the
@@ -128,7 +127,4 @@ print a failure to stderr and exit 1 if the request did not fully take effect (f
 
 `ApplicationServiceVirtualHIDProfileStatus` reports each connected controller's selected
 profile, its source (`automatic`, `override`, or `automatic-after-rejecting`), its stored
-override, and whether no profile is available for its declared controls. A previously stored
-`CompatibilityIdentity` default (from before this profile system) is detected and rejected
-rather than applied; `status` surfaces it as `legacyCompatibilityIdentityRejected`, and
-`controller virtual reset --all` clears it.
+override, and whether no profile is available for its declared controls.

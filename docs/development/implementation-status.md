@@ -7,7 +7,7 @@ endpoint. No helper daemon or LaunchAgent is packaged.
 The beta.4 retirement audit keeps only current consumers: the foreground app owns the runtime and
 login item, the authenticated Unix socket remains the typed GUI/CLI service boundary, and the
 installed-CLI forwarder prevents an unsigned or stale repository executable from impersonating the
-signed client. Historical profile versions and a stored legacy `CompatibilityIdentity` default are
+signed client. Historical profile versions are
 rejected rather than migrated. Current profile formats, RPC payloads, macOS 10.15 platform
 fallbacks, hardware/parser fallbacks, and virtual HID profile overrides remain active contracts.
 Packaging and source searches confirm that no helper daemon, LaunchAgent plist, daemon launcher,
@@ -16,19 +16,22 @@ daemon-era resource to remove.
 
 Controller sessions distinguish physical connection from reversible OJD suspension. Virtual HID
 profile transitions use bounded shutdown and retain the actual live profile after a failed
-replacement. Complete DualShock 4 Bluetooth reports require a valid CRC. Every driver decodes each report into a
-full controller snapshot, stale report progress retires non-neutral OJD output after one second, and recovery
-requires a fresh neutral report. Idle input is never consumed as a wake event. Explicit wireless
-disconnect neutralizes and suspends one selected session before a bounded Bluetooth close, without
-reconnecting or affecting other controllers. GameSir G7 SE startup keeps the mandatory
-GIP LED-on command on every USB open and resume, with the latest startup result in diagnostics.
+replacement. Complete DualShock 4 Bluetooth reports require a valid CRC. Every driver decodes each
+report into a full controller snapshot, stale report progress retires non-neutral OJD output after
+one second, and recovery requires a fresh neutral report. Idle input is never consumed as a wake
+event. Explicit wireless disconnect neutralizes and suspends one selected session before a bounded
+Bluetooth close, without reconnecting or affecting other controllers. GameSir G7 SE startup keeps
+the mandatory GIP LED-on command on every USB open and resume, with the latest startup result in
+diagnostics.
 
 Quit requests share one asynchronous teardown and leave the app stopped. TCC
 reopen remains a native system action. Profile-library versions other than the
 current schema return a typed unsupported-version error; loading an empty
 unsupported library does not rewrite its bytes or discard unknown fields.
 
-The CLI and signed application runtime report authoritative Input Monitoring and Accessibility states for `OpenJoystickDriver.app`. Input Monitoring gates physical controller reads. Accessibility gates virtual-HID publication. OJD never resets TCC.
+The CLI and signed application runtime report authoritative Input Monitoring and Accessibility
+states for `OpenJoystickDriver.app`. Input Monitoring gates physical controller reads. Accessibility
+gates virtual-HID publication. OJD never resets TCC.
 
 Controller records remain generated data, while shared protocol behavior remains
 in code. Event normalization removes duplicate and contradictory input, and

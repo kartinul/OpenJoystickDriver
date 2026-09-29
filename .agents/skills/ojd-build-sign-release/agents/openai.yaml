@@ -1,0 +1,6 @@
+interface:
+  display_name: "Build, Sign, Release"
+  short_description: "Build, sign, install, and package the app and DEXT"
+  default_prompt: "Use $ojd-build-sign-release to diagnose this signing failure with the doctor sequence, or package a tester DMG from a clean commit."
+policy:
+  allow_implicit_invocation: false

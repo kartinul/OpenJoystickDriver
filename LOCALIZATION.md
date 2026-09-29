@@ -30,11 +30,11 @@ not restore retired catalogs.
 ## Translate
 
 1. Copy the template key shape into the target `.lproj` pair.
-2. Translate values. Keep keys, placeholders (`%@`, `%d`, `%#@count@`), and
+1. Translate values. Keep keys, placeholders (`%@`, `%d`, `%#@count@`), and
    runtime identifiers (names, VID/PID, paths).
-3. One key per label. Sentence case. Native ellipsis when the action opens
+1. One key per label. Sentence case. Native ellipsis when the action opens
    another surface.
-4. RTL: check mixed-direction names and paths.
+1. RTL: check mixed-direction names and paths.
 
 Capability messages describe the controller or active protocol, not a permanent profile error.
 Compact symbol actions still require localized text because that text is used for older-system

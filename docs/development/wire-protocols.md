@@ -17,7 +17,7 @@ PlayStation controller-port serial bus, not USB HID.
 Every family publishes through `VirtualHIDProfileSelector`, which picks one of
 exactly two virtual profiles per controller: `hid-xbox-one-s-bt` (`045E:02FD`,
 the Bluetooth-style Xbox One S layout) when the controller's primary controls
-fit it, else `hid-generic` (`4F4A:4449`). A per-model Advanced override can
+fit it, else `hid-generic` (`4F4A:4447`, input-only). A per-model Advanced override can
 pin either profile; selection falls back to automatic when the controller
 can't satisfy the override. Catalog membership still comes from pinned Linux sources, HID
 tables, and local overrides. Apple GameController MobileAsset is diagnostic

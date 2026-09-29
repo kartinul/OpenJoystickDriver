@@ -7,7 +7,8 @@
 
 ## Decision
 
-Keep the UI in the existing `OpenJoystickDriver` executable.
+The UI lives in the `OpenJoystickDriverPresentation` library, which depends on
+`OpenJoystickDriverKit` only. The `OpenJoystickDriver` executable composes it with the runtime.
 
 - `NSStatusItem` and a shallow `NSMenu` provide the menu-bar surface.
 - One `NSWindowController` owns the settings window, activation, pane restoration, and close/reopen
@@ -17,13 +18,13 @@ Keep the UI in the existing `OpenJoystickDriver` executable.
   `ApplicationServiceGateway` backed by `ApplicationServiceClient`.
 - The UI never starts a CLI subprocess, creates another runtime, or opens another RPC server.
 - macOS 10.15 is the deployment floor. Newer APIs require an availability check and an older path.
-- The consumer UI covers ordinary button, D-pad, axis, trigger, keyboard, mouse, pointer, scroll, and
-  axis-tuning workflows. Advanced automation remains CLI-only.
+- The consumer UI covers ordinary button, D-pad, axis, trigger, keyboard, mouse, pointer, scroll,
+  and axis-tuning workflows. Advanced automation remains CLI-only.
 
 ## Runtime Boundary
 
-`ApplicationServiceRuntime` is the `@MainActor` composition and process-lifecycle owner. It starts and
-stops the service actors but does not perform controller I/O or serve as a presentation gateway.
+`ApplicationServiceRuntime` is the `@MainActor` composition and process-lifecycle owner. It starts
+and stops the service actors but does not perform controller I/O or serve as a presentation gateway.
 `DeviceManager` owns physical discovery and sessions; the remapping router, permission manager, and
 application server retain their existing isolated responsibilities.
 
@@ -52,8 +53,8 @@ runtime. Releasing a preview token restores the next authoritative physical-colo
 
 ## Presentation Ownership
 
-Feature and screen ViewModels are `@MainActor` and own asynchronous workflow state. Store service payloads
-once and derive presentation values from them. Views own only transient visual state;
+Feature and screen ViewModels are `@MainActor` and own asynchronous workflow state. Store service
+payloads once and derive presentation values from them. Views own only transient visual state;
 coordinators own AppKit lifecycle and panels.
 
 `RuntimeViewModel` is the single controller-inventory refresh coordinator for settings and the menu
@@ -70,16 +71,16 @@ lifecycle only.
 
 | Area | Owner | Boundary |
 | --- | --- | --- |
-| App lifecycle and status item | `App/Presentation/MenuBar/Coordinator.swift` | AppKit activation, status menu, and termination only |
-| Settings window lifecycle | `App/Presentation/Settings/WindowController.swift` | One reusable window, toolbar selection, geometry persistence, and pane activation |
-| Settings panes and access summary | `App/Presentation/Settings/Shell.swift` | Pane navigation, native toolbar symbols, permission presentation, and shared accessibility compatibility |
-| Developer diagnostics | `App/Presentation/Settings/Developer*.swift` | Replaceable diagnostic operation, compact controller facts, bounded capture presentation, and virtualized packet rows |
-| Shared settings primitives | `App/Presentation/Settings/Support.swift` | Headers, rows, loading, empty, and error states |
-| Controller details and identity | `App/Presentation/Controllers/{ControllerViews,OutputViews}.swift` | Connected devices, identity selection, loading, failure, and retry |
-| Profiles and editor | `App/Presentation/Profiles/{MappingViews,ProfileEditorViews}.swift` | Selection, drafts, assignments, save/conflict flow, and profile actions |
-| Mapping capture | `App/Presentation/Profiles/MappingCaptureViews.swift`, `App/Presentation/InputCapture/KeyboardCaptureViews.swift` | Controller and keyboard capture plus axis adjustment |
-| Presentation state | `App/Presentation/Runtime/{State,SupportState}.swift` | Loading, permission, input, virtual HID profile override, mutation, diagnostics, and conflict state |
-| Service adapter | `App/Presentation/Runtime/Gateway.swift` | Typed `ApplicationServiceClient` calls and stable presentation errors |
+| App lifecycle and status item | `Sources/OpenJoystickDriverPresentation/MenuBar/MenuBarCoordinator.swift` | AppKit activation, status menu, and termination only |
+| Settings window lifecycle | `Sources/OpenJoystickDriverPresentation/Settings/Shell/WindowController.swift` | One reusable window, toolbar selection, geometry persistence, and pane activation |
+| Settings panes and access summary | `Sources/OpenJoystickDriverPresentation/Settings/Shell/SettingsNavigation.swift` | Pane navigation, native toolbar symbols, permission presentation, and shared accessibility compatibility |
+| Developer diagnostics | `Sources/OpenJoystickDriverPresentation/Settings/Developer/` | Replaceable diagnostic operation, compact controller facts, bounded capture presentation, and virtualized packet rows |
+| Shared settings primitives | `Sources/OpenJoystickDriverPresentation/Components/{SettingsRows,StateViews}.swift` | Headers, rows, loading, empty, and error states |
+| Controller details and identity | `Sources/OpenJoystickDriverPresentation/Controllers/Inventory/ControllersView.swift` | Connected devices, identity selection, loading, failure, and retry |
+| Profiles and editor | `Sources/OpenJoystickDriverPresentation/Profiles/{List/ProfilesView,Editor/ProfileEditorViews}.swift` | Selection, drafts, assignments, save/conflict flow, and profile actions |
+| Mapping capture | `Sources/OpenJoystickDriverPresentation/Profiles/Editor/MappingCaptureViews.swift`, `Sources/OpenJoystickDriverPresentation/InputCapture/KeyboardCaptureViews.swift` | Controller and keyboard capture plus axis adjustment |
+| Presentation state | `Sources/OpenJoystickDriverPresentation/Runtime/{RuntimeViewModel,SupportState}.swift` | Loading, permission, input, virtual HID profile override, mutation, diagnostics, and conflict state |
+| Service adapter | `Sources/OpenJoystickDriverPresentation/Runtime/ApplicationServiceGateway.swift` | Typed `ApplicationServiceClient` calls and stable presentation errors |
 
 Add files only for focused, independently testable capabilities. Group related helpers rather than
 splitting by individual control or visual role.
@@ -100,8 +101,9 @@ support tests, contributor diagnostics, or metrics dashboards in the menu.
 
 ### Settings Window
 
-Use one visible native `NSToolbarItemGroup` for the four panes. The selected pane and window geometry
-persist across launches. Dirty profile edits intercept pane changes and offer Cancel or Discard.
+Use one visible native `NSToolbarItemGroup` for the four panes. The selected pane and window
+geometry persist across launches. Dirty profile edits intercept pane changes and offer Cancel or
+Discard.
 
 1. **Overview:** readiness, controller count, and the Access & readiness summary. Input Monitoring,
    controller publication, and Keyboard & pointer each have an explicit request action.
@@ -153,18 +155,19 @@ stable presentation errors. It does not expose socket paths, CLI text, or raw RP
 ## State And Permission Rules
 
 - Loading, unavailable, empty, denied, requesting, saving, conflict, and failed states are explicit.
-- A stale async response cannot replace newer permission, post-event, virtual HID profile, or input state.
+- A stale async response cannot replace newer permission, post-event, virtual HID profile, or input
+  state.
 - A superseded permission request does not open a Privacy & Security pane.
 - A denied result opens the matching native recovery destination. Only the authoritative
   follow-up read establishes a grant.
 - Controller publication and CoreGraphics keyboard/pointer posting remain separate permission paths.
-- Failed controller-identity requests remain retry intent only; the picker and accessibility value use
-  the last authoritative identity.
+- Failed controller-identity requests remain retry intent only; the picker and accessibility value
+  use the last authoritative identity.
 
 ## Compatibility And Accessibility
 
-- Keep newer APIs behind `#available`; use AppKit template images and SwiftUI compatibility modifiers
-  for macOS 10.15.
+- Keep newer APIs behind `#available`; use AppKit template images and SwiftUI compatibility
+  modifiers for macOS 10.15.
 - Prefer 28-point controls and never make an interactive target smaller than 20 points.
 - Use semantic system colors, system typography, and text plus icon/shape for state. Never rely on
   color alone.
@@ -197,5 +200,7 @@ and settings navigation. Runtime acceptance still requires a signed app on suppo
 ## Design References
 
 - [Apple Settings HIG](https://developer.apple.com/design/human-interface-guidelines/settings)
-- [Apple Accessibility HIG](https://developer.apple.com/design/human-interface-guidelines/accessibility)
-- [Apple Designing for macOS HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos/)
+- [Apple Accessibility
+  HIG](https://developer.apple.com/design/human-interface-guidelines/accessibility)
+- [Apple Designing for macOS
+  HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos/)
