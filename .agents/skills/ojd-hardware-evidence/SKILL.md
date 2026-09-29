@@ -69,6 +69,10 @@ in for a physical observation.
   startup write succeeds; a failed write prints only `ERROR:` on stderr and
   exits 1. Quote the handshake line or name its absence, because a report that
   quotes only `RECORD_SUMMARY` loses whether the declared startup was accepted.
+- Write marker names literally (`RECORD_HANDSHAKE`, `RECORD_SUMMARY`), also
+  when listing evidence still to collect before any probe has run. "The
+  handshake line" does not tell the user which line to search for in the
+  output.
 - There is no `--detach` option. Free a busy interface by quitting its owner
   (the app, Steam, or another probe), then record which owner it was.
 
