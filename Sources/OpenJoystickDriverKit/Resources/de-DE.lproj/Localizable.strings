@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Der Dienst wurde beendet. Die Überschreibung ist unverändert.";
 "virtualProfile.failure.persistenceFailed" = "Die Überschreibung konnte nicht gespeichert werden. Es wurde nichts gespeichert.";
 "virtualProfile.storeError" = "Überschreibungen virtueller HID-Profile können nicht gelesen werden (%@). Controller wählen automatisch.";
-"virtualProfile.legacyIdentityRejected" = "Die ausgemusterte Einstellung für die Controller-Identität %@ wird nicht mehr angewendet. Führe controller virtual reset --all aus, um sie zu entfernen.";
 "keyboard.noKey" = "Keine Taste ausgewählt";
 "keyboard.pressKey" = "Taste drücken…";
 "keyboard.captureKey" = "Taste erfassen";

@@ -146,7 +146,7 @@ struct ReportSenderTests {
   func hostSetReportReturnsAfterOrderedEnqueue() async throws {
     let gate = ReportSendGate()
     let backend = OrderedReportBackend(gate: gate)
-    let input = UserSpaceInputReportState(format: OJDGenericGamepadFormat())
+    let input = UserSpaceInputReportState(format: try XboxGeckoHIDReportFormat())
     let entry = UserSpaceOutputDispatcher.Entry(backend: backend, inputReportState: input)
     let outputs = OutputRecorder()
     let isOpen: @Sendable () -> Bool = { true }
@@ -161,8 +161,8 @@ struct ReportSenderTests {
     let blocking = entry.sender.submit { [[1]] }
     await gate.waitForEntry()
 
-    _ = try handler.setReport(type: .output, reportID: 0, bytes: [0x4F, 10, 20, 0, 0])
-    _ = try handler.setReport(type: .output, reportID: 0, bytes: [0x4F, 30, 40, 0, 0])
+    _ = try handler.setReport(type: .output, reportID: 3, bytes: Self.xboxRumble(10, 20))
+    _ = try handler.setReport(type: .output, reportID: 3, bytes: Self.xboxRumble(30, 40))
     #expect(outputs.snapshot().isEmpty)
     await gate.open()
     try await blocking.value()
@@ -202,7 +202,7 @@ struct ReportSenderTests {
   func eventsRepublishedStateAndHostOutputShareOneOrder() async throws {
     let gate = ReportSendGate()
     let backend = OrderedReportBackend(gate: gate)
-    let format = OJDGenericGamepadFormat()
+    let format = try XboxGeckoHIDReportFormat()
     let input = UserSpaceInputReportState(format: format)
     let entry = UserSpaceOutputDispatcher.Entry(backend: backend, inputReportState: input)
     let first = entry.sender.submit { [input] in [input.update { $0.buttons = 1 }] }
@@ -221,7 +221,7 @@ struct ReportSenderTests {
       },
       onRumbleStatus: { _ in }
     )
-    let output = try handler.setReport(type: .output, reportID: 0, bytes: [0x4F, 10, 20, 0, 0])
+    let output = try handler.setReport(type: .output, reportID: 3, bytes: Self.xboxRumble(10, 20))
     await gate.open()
     try await first.value()
     try await second.value()
@@ -284,6 +284,26 @@ struct ReportSenderTests {
   }
 
   @Test(.timeLimit(.minutes(1)))
+  func nativeSendThatNeverFinishesTimesOutAtTheDeadline() async {
+    let backend = NonCooperativeReportBackend()
+    let deadline: UInt64 = 50_000_000
+    let sender = UserSpaceReportSender(nativeSendDeadlineNanoseconds: deadline)
+    sender.attach(backend)
+    let start = DispatchTime.now().uptimeNanoseconds
+
+    await #expect(throws: UserSpaceReportSender.Failure.sendTimedOut) {
+      try await sender.submit { [[1]] }.value()
+    }
+    let elapsed = DispatchTime.now().uptimeNanoseconds - start
+    #expect(elapsed >= deadline)
+    #expect(elapsed < UserSpaceReportSender.defaultNativeSendDeadlineNanoseconds)
+    #expect(backend.closeCount() == 1)
+
+    await backend.gate.release()
+    await sender.beginClose().value
+  }
+
+  @Test(.timeLimit(.minutes(1)))
   func stalledControllerPublicationDoesNotBlockAnotherController() async throws {
     let gate = ReportSendGate()
     let stalledBackend = OrderedReportBackend(gate: gate)
@@ -302,5 +322,10 @@ struct ReportSenderTests {
     try await blocked.value()
     await stalled.beginClose().value
     await ready.beginClose().value
+  }
+
+  /// An Xbox One rumble report (ID 3) for the main motors, lasting the default 250 ms.
+  private static func xboxRumble(_ left: UInt8, _ right: UInt8) -> [UInt8] {
+    [0x03, 0x0C, 0, 0, left, right, 25, 0, 0]
   }
 }

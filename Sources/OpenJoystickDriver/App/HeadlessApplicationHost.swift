@@ -1,6 +1,8 @@
 import Dispatch
 import Foundation
 import OpenJoystickDriverKit
+import OpenJoystickDriverPresentation
+import OpenJoystickDriverService
 
 #if canImport(AppKit) && canImport(SwiftUI)
   import AppKit
@@ -46,8 +48,9 @@ final class HeadlessApplicationHost {
     }
     #if canImport(AppKit) && canImport(SwiftUI)
       presentation = MenuBarCoordinator(
-        runtime: runtime,
-        gateway: ApplicationServiceClientGateway()
+        stopRuntime: { [runtime] in await runtime.stop() },
+        gateway: ApplicationServiceClientGateway(),
+        systemExtensionSetup: DefaultSystemExtensionSetupClient()
       )
       guard let presentation else { dispatchMain() }
       presentation.run()
@@ -66,3 +69,5 @@ final class HeadlessApplicationHost {
     }
   }
 }
+
+extension DefaultSystemExtensionSetupClient: SystemExtensionSetupClient {}

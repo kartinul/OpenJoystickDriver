@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Zerbitzua gelditu da. Gainidazketa ez da aldatu.";
 "virtualProfile.failure.persistenceFailed" = "Ezin izan da gainidazketa gorde. Ez da ezer gorde.";
 "virtualProfile.storeError" = "Ezin dira HID profil birtualaren gainidazketak irakurri (%@). Aginteek automatikoki hautatzen dute.";
-"virtualProfile.legacyIdentityRejected" = "Agintearen identitatearen %@ ezarpen erretiratua ez da gehiago aplikatzen. Exekutatu controller virtual reset --all hura garbitzeko.";
 "keyboard.noKey" = "Ez da teklarik hautatu";
 "keyboard.pressKey" = "Sakatu tekla bat…";
 "keyboard.captureKey" = "Atzeman tekla";

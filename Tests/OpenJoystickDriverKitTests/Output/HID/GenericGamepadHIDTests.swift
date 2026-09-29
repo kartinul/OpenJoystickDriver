@@ -15,13 +15,13 @@ struct GenericGamepadHIDTests {
 
     // Assert
     #expect(profile.vendorID == 0x4F4A)
-    #expect(profile.productID == 0x4449)
+    #expect(profile.productID == 0x4447)
     #expect(profile.versionNumber == 0x0408)
     #expect(profile.productName == "OpenJoystickDriver Generic HID Gamepad")
     #expect(profile.manufacturer == "OpenJoystickDriver")
     #expect(profile.transport == "USB")
-    #expect(GamepadHIDDescriptor.descriptor.count == 76)
-    #expect(descriptorHash == 0xBAFF_6512_BC5D_D7F3)
+    #expect(GamepadHIDDescriptor.descriptor.count == 60)
+    #expect(descriptorHash == 0x1ECB_8E98_9A22_47A8)
   }
 
   @Test
@@ -129,17 +129,31 @@ struct GenericGamepadHIDTests {
   }
 
   @Test
-  func descriptorRetainsSevenByteVendorRumbleReport() {
-    // Arrange and act
+  func descriptorAndFormatAreInputOnly() throws {
+    // Arrange
     let format = OJDGenericGamepadFormat()
+    let parsed = try #require(HIDReportDescriptorParser.parse(descriptor: format.descriptor))
+
+    // Act
+    let outputItems = Self.mainItemCount(tag: 0x9, in: format.descriptor)
 
     // Assert
-    #expect(format.outputReportPayloadSize == 7)
-    #expect(
-      format.descriptor.containsSequence([
-        0x06, 0x00, 0xFF, 0x09, 0x01, 0x15, 0x00, 0x26, 0xFF, 0x00, 0x75, 0x08, 0x95, 0x07, 0x91,
-        0x02,
-      ])
-    )
+    #expect(outputItems == 0)
+    #expect(!parsed.containsFeatureItem)
+    #expect(format.outputReportPayloadSize == nil)
+    #expect(format.outputReportID == nil)
+  }
+
+  /// Counts short main items with `tag` (0x9 is Output) by walking the descriptor's items.
+  private static func mainItemCount(tag: UInt8, in descriptor: [UInt8]) -> Int {
+    var count = 0
+    var index = 0
+    while index < descriptor.count {
+      let prefix = descriptor[index]
+      let size = prefix & 0x03 == 0x03 ? 4 : Int(prefix & 0x03)
+      if (prefix >> 2) & 0x03 == 0, prefix >> 4 == tag { count += 1 }
+      index += 1 + size
+    }
+    return count
   }
 }

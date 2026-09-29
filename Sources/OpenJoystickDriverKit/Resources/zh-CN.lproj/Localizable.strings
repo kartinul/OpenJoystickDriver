@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "服务已停止。覆盖未更改。";
 "virtualProfile.failure.persistenceFailed" = "无法保存覆盖。未存储任何内容。";
 "virtualProfile.storeError" = "无法读取虚拟 HID 配置覆盖（%@）。控制器将自动选择。";
-"virtualProfile.legacyIdentityRejected" = "已停用的控制器标识设置 %@ 不再应用。运行 controller virtual reset --all 以清除它。";
 "keyboard.noKey" = "未选择按键";
 "keyboard.pressKey" = "请按一个键…";
 "keyboard.captureKey" = "捕捉按键";

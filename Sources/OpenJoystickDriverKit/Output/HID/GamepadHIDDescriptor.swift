@@ -14,7 +14,10 @@ import Foundation
 ///   Bytes 10–11: Left Trigger  (Int16 LE, 0...32767) — Usage: Ry (0x34)
 ///   Bytes 12–13: Right Trigger (Int16 LE, 0...32767) — Usage: Rz (0x35)
 ///
-/// This layout is the published contract for OJD VID/PID `4F4A:4449`. An incompatible
+/// The device is input-only: the descriptor declares no output or feature report, so no
+/// consumer output (rumble or otherwise) reaches the controller through it.
+///
+/// This layout is the published contract for OJD VID/PID `4F4A:4447`. An incompatible
 /// descriptor or report-layout change must use a new product ID.
 public enum GamepadHIDDescriptor {
   // MARK: - Report descriptor bytes
@@ -63,15 +66,6 @@ public enum GamepadHIDDescriptor {
     0x95, 0x06,  // Report Count: 6
     0x81, 0x02,  // Input: Data, Variable, Absolute
 
-    // --- 7-byte vendor output report for rumble delivery ---
-    // marker 0x4F, left, right, left-trigger, right-trigger, duration LE.
-    0x06, 0x00, 0xFF,  // Usage Page: Vendor-defined
-    0x09, 0x01, 0x15, 0x00,  // Logical Minimum: 0
-    0x26, 0xFF, 0x00,  // Logical Maximum: 255
-    0x75, 0x08,  // Report Size: 8
-    0x95, 0x07,  // Report Count: 7
-    0x91, 0x02,  // Output: Data, Variable, Absolute
-
     0xC0,  // End Collection (Physical)
     0xC0,  // End Collection (Application)
   ]
@@ -80,7 +74,6 @@ public enum GamepadHIDDescriptor {
 
   /// Total byte length of one input report.
   public static let reportSize = 14
-  public static let maxOutputReportPayloadSize = 7
 
   // MARK: - Hat switch values
 

@@ -140,40 +140,40 @@ func printHIDSupport() -> Bool? {
   return observedSupport.isEmpty ? nil : observedSupport.contains(true)
 }
 
-final class ProbeEvidence: @unchecked Sendable {
-  private let lock = NSLock()
-  private var values = (
-    connected: false, extended: false, input: false, disconnected: false, reconnected: false,
-    sawDisconnect: false
-  )
+final class ProbeEvidence: Sendable {
+  private struct Values {
+    var connected = false
+    var extended = false
+    var input = false
+    var disconnected = false
+    var reconnected = false
+    var sawDisconnect = false
+  }
+
+  private let values = Locked(Values())
 
   func markConnected(_ controller: GCController) {
-    lock.lock()
-    defer { lock.unlock() }
-    values.connected = true
-    if values.sawDisconnect { values.reconnected = true }
-    if controller.extendedGamepad != nil { values.extended = true }
+    let isExtended = controller.extendedGamepad != nil
+    values.withLock { values in
+      values.connected = true
+      if values.sawDisconnect { values.reconnected = true }
+      if isExtended { values.extended = true }
+    }
   }
 
-  func markInput() {
-    lock.lock()
-    values.input = true
-    lock.unlock()
-  }
+  func markInput() { values.withLock { $0.input = true } }
 
   func markDisconnected() {
-    lock.lock()
-    values.disconnected = true
-    values.sawDisconnect = true
-    lock.unlock()
+    values.withLock { values in
+      values.disconnected = true
+      values.sawDisconnect = true
+    }
   }
 
   func snapshot() -> (Bool, Bool, Bool, Bool, Bool) {
-    lock.lock()
-    defer { lock.unlock() }
-    return (
-      values.connected, values.extended, values.input, values.disconnected, values.reconnected
-    )
+    values.withLock { values in
+      (values.connected, values.extended, values.input, values.disconnected, values.reconnected)
+    }
   }
 }
 

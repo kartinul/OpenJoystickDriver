@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Þjónustan stöðvaðist. Hnekkingin er óbreytt.";
 "virtualProfile.failure.persistenceFailed" = "Ekki tókst að vista hnekkinguna. Ekkert var vistað.";
 "virtualProfile.storeError" = "Ekki er hægt að lesa hnekkingar sýndar-HID-sniðs (%@). Stýringar velja sjálfvirkt.";
-"virtualProfile.legacyIdentityRejected" = "Úrelta auðkennisstilling stýringar %@ er ekki lengur notuð. Keyrðu controller virtual reset --all til að hreinsa hana.";
 "keyboard.noKey" = "Enginn lykill valinn";
 "keyboard.pressKey" = "Ýttu á lykil…";
 "keyboard.captureKey" = "Fanga lykil";

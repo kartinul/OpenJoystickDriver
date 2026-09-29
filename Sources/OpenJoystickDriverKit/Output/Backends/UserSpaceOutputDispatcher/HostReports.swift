@@ -2,7 +2,8 @@ import Foundation
 import IOKit.hid
 
 /// Request contract for `IOHIDUserDevice`'s synchronous report callbacks.
-final class UserSpaceHostReportHandler: @unchecked Sendable {
+final class UserSpaceHostReportHandler: Sendable {
+  /// Serializes consuming a request with enqueueing it, so publication follows callback order.
   private let lock = NSLock()
   private let identifier: DeviceIdentifier
   private let input: UserSpaceInputReportState

@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Die diens het gestop. Die oorskrywing is onveranderd.";
 "virtualProfile.failure.persistenceFailed" = "Die oorskrywing kon nie gestoor word nie. Niks is gestoor nie.";
 "virtualProfile.storeError" = "Virtuele HID-profieloorskrywings kan nie gelees word nie (%@). Kontroleerders kies outomaties.";
-"virtualProfile.legacyIdentityRejected" = "Die uitgetrede kontroleerderidentiteit-instelling %@ word nie meer toegepas nie. Voer controller virtual reset --all uit om dit uit te vee.";
 "keyboard.noKey" = "Geen sleutel gekies nie";
 "keyboard.pressKey" = "Druk ’n sleutel…";
 "keyboard.captureKey" = "Vang sleutel";

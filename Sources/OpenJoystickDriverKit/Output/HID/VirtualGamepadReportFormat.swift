@@ -74,13 +74,12 @@ extension VirtualGamepadReportFormat {
   public var outputReportID: UInt8? { nil }
 }
 
-/// Generic OJD HID GamePad format (matches ``GamepadHIDDescriptor``).
+/// Generic OJD HID GamePad format (matches ``GamepadHIDDescriptor``). Input-only: it declares no
+/// output report.
 public struct OJDGenericGamepadFormat: VirtualGamepadReportFormat {
   public let descriptor: [UInt8] = GamepadHIDDescriptor.descriptor
   public let inputReportPayloadSize: Int = GamepadHIDDescriptor.reportSize
   public let inputReportID: UInt8? = nil
-  public let outputReportPayloadSize: Int? = GamepadHIDDescriptor.maxOutputReportPayloadSize
-  public let outputReportID: UInt8? = nil
 
   public init() {}
 

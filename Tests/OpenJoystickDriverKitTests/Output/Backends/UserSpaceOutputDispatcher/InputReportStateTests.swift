@@ -35,7 +35,7 @@ struct UserSpaceInputReportStateTests {
   }
 
   @Test
-  func genericCompatibilityTriggersReturnToTheirExactPreActuationReport() {
+  func genericVirtualOutputTriggersReturnToTheirExactPreActuationReport() {
     let format = OJDGenericGamepadFormat()
     let firstSession = UserSpaceInputReportState(format: format)
     let neutral = firstSession.currentReport()

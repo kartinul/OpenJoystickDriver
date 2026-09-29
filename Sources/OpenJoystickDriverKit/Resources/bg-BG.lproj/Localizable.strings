@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Услугата спря. Замяната не е променена.";
 "virtualProfile.failure.persistenceFailed" = "Замяната не можа да бъде запазена. Нищо не е запазено.";
 "virtualProfile.storeError" = "Замените на виртуалния HID профил не могат да бъдат прочетени (%@). Контролерите избират автоматично.";
-"virtualProfile.legacyIdentityRejected" = "Оттеглената настройка за идентичност на контролера %@ вече не се прилага. Изпълнете controller virtual reset --all, за да я изчистите.";
 "keyboard.noKey" = "Няма избрана клавиша";
 "keyboard.pressKey" = "Натиснете клавиш…";
 "keyboard.captureKey" = "Заснеми клавиш";

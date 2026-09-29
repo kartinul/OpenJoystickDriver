@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Ծառայությունը դադարեց։ Վերասահմանումը չի փոխվել։";
 "virtualProfile.failure.persistenceFailed" = "Վերասահմանումը հնարավոր չեղավ պահպանել։ Ոչինչ չի պահպանվել։";
 "virtualProfile.storeError" = "Վիրտուալ HID պրոֆիլի վերասահմանումները հնարավոր չէ կարդալ (%@)։ Կարգավորիչներն ընտրում են ավտոմատ։";
-"virtualProfile.legacyIdentityRejected" = "Կարգավորիչի ինքնության %@ հնացած կարգավորումն այլևս չի կիրառվում։ Այն մաքրելու համար գործարկեք controller virtual reset --all։";
 "keyboard.noKey" = "Ստեղն ընտրված չէ";
 "keyboard.pressKey" = "Սեղմեք ստեղն…";
 "keyboard.captureKey" = "Գրանցել ստեղն";

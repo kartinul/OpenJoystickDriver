@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Pakalpojums apstājās. Ignorēšana nav mainīta.";
 "virtualProfile.failure.persistenceFailed" = "Ignorēšanu neizdevās saglabāt. Nekas netika saglabāts.";
 "virtualProfile.storeError" = "Virtuālā HID profila ignorēšanas nevar nolasīt (%@). Kontrolieri izvēlas automātiski.";
-"virtualProfile.legacyIdentityRejected" = "Novecojušais kontroliera identitātes iestatījums %@ vairs netiek lietots. Palaidiet controller virtual reset --all, lai to notīrītu.";
 "keyboard.noKey" = "Nav atlasīts taustiņš";
 "keyboard.pressKey" = "Nospiediet taustiņu…";
 "keyboard.captureKey" = "Tvert taustiņu";

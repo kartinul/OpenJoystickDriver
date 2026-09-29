@@ -5,12 +5,18 @@ import Testing
 
 struct PacketLogBufferTests {
   @Test
+  func directionRawValuesAreTheWireStrings() {
+    #expect(PacketLogDirection.received.rawValue == "rx")
+    #expect(PacketLogDirection.transmitted.rawValue == "tx")
+  }
+
+  @Test
   func classifiesGIPAnnounceAndStatusAsHousekeepingInEitherDirection() {
     let buffer = armedBuffer(maxEntries: 4)
-    buffer.append(bytes: [0x02, 0x20], direction: "rx", timestamp: 1)
-    buffer.append(bytes: [0x03, 0x20], direction: "tx", timestamp: 2)
-    buffer.append(bytes: [0x20, 0x00], direction: "rx", timestamp: 3)
-    buffer.append(bytes: [], direction: "tx", timestamp: 4)
+    buffer.append(bytes: [0x02, 0x20], direction: .received, timestamp: 1)
+    buffer.append(bytes: [0x03, 0x20], direction: .transmitted, timestamp: 2)
+    buffer.append(bytes: [0x20, 0x00], direction: .received, timestamp: 3)
+    buffer.append(bytes: [], direction: .transmitted, timestamp: 4)
 
     #expect(
       buffer.entries().map(\.classification) == [
@@ -22,17 +28,17 @@ struct PacketLogBufferTests {
   @Test
   func materializesTheExistingPacketLogContractOnRead() {
     let buffer = armedBuffer(maxEntries: 3)
-    buffer.append(bytes: [0x00, 0x0A, 0xFF], direction: "rx", timestamp: 10)
-    buffer.append(bytes: [], direction: "tx", timestamp: 11)
+    buffer.append(bytes: [0x00, 0x0A, 0xFF], direction: .received, timestamp: 10)
+    buffer.append(bytes: [], direction: .transmitted, timestamp: 11)
 
     let entries = buffer.entries()
     #expect(entries.count == 2)
     #expect(entries[0].timestamp == 10)
-    #expect(entries[0].direction == "rx")
+    #expect(entries[0].direction == .received)
     #expect(entries[0].length == 3)
     #expect(entries[0].hex == "00 0A FF")
     #expect(entries[1].timestamp == 11)
-    #expect(entries[1].direction == "tx")
+    #expect(entries[1].direction == .transmitted)
     #expect(entries[1].length == 0)
     #expect(entries[1].hex.isEmpty)
   }
@@ -40,9 +46,9 @@ struct PacketLogBufferTests {
   @Test
   func keepsOnlyTheNewestBoundedEntries() {
     let buffer = armedBuffer(maxEntries: 2)
-    buffer.append(bytes: [1], direction: "rx", timestamp: 1)
-    buffer.append(bytes: [2], direction: "rx", timestamp: 2)
-    buffer.append(bytes: [3], direction: "rx", timestamp: 3)
+    buffer.append(bytes: [1], direction: .received, timestamp: 1)
+    buffer.append(bytes: [2], direction: .received, timestamp: 2)
+    buffer.append(bytes: [3], direction: .received, timestamp: 3)
 
     let entries = buffer.entries()
     #expect(entries.map(\.timestamp) == [2, 3])
@@ -55,7 +61,7 @@ struct PacketLogBufferTests {
     DispatchQueue.concurrentPerform(iterations: 1_000) { value in
       buffer.append(
         bytes: [UInt8(truncatingIfNeeded: value)],
-        direction: "rx",
+        direction: .received,
         timestamp: TimeInterval(value)
       )
     }
@@ -66,11 +72,11 @@ struct PacketLogBufferTests {
   @Test
   func recordsNothingUntilADiagnosticReaderArmsCapture() {
     let buffer = PacketLogBuffer(maxEntries: 4) { 1 }
-    buffer.append(bytes: [0x01], direction: "rx", timestamp: 1)
+    buffer.append(bytes: [0x01], direction: .received, timestamp: 1)
     #expect(buffer.entries().isEmpty)
 
     buffer.armCapture()
-    buffer.append(bytes: [0x02], direction: "rx", timestamp: 2)
+    buffer.append(bytes: [0x02], direction: .received, timestamp: 2)
     #expect(buffer.entries().map(\.hex) == ["02"])
   }
 
@@ -79,17 +85,17 @@ struct PacketLogBufferTests {
     let clock = PacketLogClock()
     let buffer = PacketLogBuffer(maxEntries: 4, captureLeaseNanoseconds: 10) { clock.now }
     buffer.armCapture()
-    buffer.append(bytes: [0x01], direction: "rx", timestamp: 1)
+    buffer.append(bytes: [0x01], direction: .received, timestamp: 1)
     clock.now = 5
     buffer.armCapture()  // Renewing within the lease keeps the ring.
-    buffer.append(bytes: [0x02], direction: "rx", timestamp: 2)
+    buffer.append(bytes: [0x02], direction: .received, timestamp: 2)
     #expect(buffer.entries().map(\.hex) == ["01", "02"])
 
     clock.now = 15
-    buffer.append(bytes: [0x03], direction: "rx", timestamp: 3)
+    buffer.append(bytes: [0x03], direction: .received, timestamp: 3)
     #expect(buffer.entries().isEmpty)
 
-    buffer.append(bytes: [0x04], direction: "rx", timestamp: 4)
+    buffer.append(bytes: [0x04], direction: .received, timestamp: 4)
     buffer.armCapture()
     #expect(buffer.entries().isEmpty)
   }
@@ -99,7 +105,7 @@ struct PacketLogBufferTests {
     let clock = PacketLogClock()
     let buffer = PacketLogBuffer(maxEntries: 4, captureLeaseNanoseconds: 10) { clock.now }
     buffer.armCapture()
-    buffer.append(bytes: [0x01], direction: "rx", timestamp: 1)
+    buffer.append(bytes: [0x01], direction: .received, timestamp: 1)
     clock.now = 20
     buffer.armCapture()
     #expect(buffer.entries().isEmpty)
@@ -110,7 +116,7 @@ struct PacketLogBufferTests {
     let clock = PacketLogClock()
     let buffer = PacketLogBuffer(maxEntries: 4, captureLeaseNanoseconds: 10) { clock.now }
     buffer.armCapture()
-    buffer.append(bytes: [0x01], direction: "rx", timestamp: 1)
+    buffer.append(bytes: [0x01], direction: .received, timestamp: 1)
 
     clock.now = 9
     buffer.expireIfLapsed()

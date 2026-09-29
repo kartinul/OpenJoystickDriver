@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "O serviço parou. A substituição não mudou.";
 "virtualProfile.failure.persistenceFailed" = "Não foi possível salvar a substituição. Nada foi salvo.";
 "virtualProfile.storeError" = "Não é possível ler as substituições do perfil HID virtual (%@). Os controles escolhem automaticamente.";
-"virtualProfile.legacyIdentityRejected" = "A configuração descontinuada de identidade do controle %@ não é mais aplicada. Execute controller virtual reset --all para limpá-la.";
 "keyboard.noKey" = "Nenhuma tecla selecionada";
 "keyboard.pressKey" = "Pressione uma tecla…";
 "keyboard.captureKey" = "Capturar tecla";

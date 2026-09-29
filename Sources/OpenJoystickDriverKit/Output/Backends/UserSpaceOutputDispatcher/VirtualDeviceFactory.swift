@@ -132,8 +132,8 @@ extension UserSpaceOutputDispatcher {
     let primaryUsage = Int(kHIDUsage_GD_GamePad)
     var properties: [String: Any] = [
       kIOHIDReportDescriptorKey as String: Data(format.descriptor),
-      kIOHIDVendorIDKey as String: profile.vendorID,
-      kIOHIDProductIDKey as String: profile.productID,
+      kIOHIDVendorIDKey as String: Int(profile.vendorID),
+      kIOHIDProductIDKey as String: Int(profile.productID),
       kIOHIDVersionNumberKey as String: profile.versionNumber,
       kIOHIDProductKey as String: profile.productName,
       kIOHIDManufacturerKey as String: profile.manufacturer,

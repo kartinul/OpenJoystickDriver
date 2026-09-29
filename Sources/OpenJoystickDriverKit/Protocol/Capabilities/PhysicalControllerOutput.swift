@@ -61,10 +61,18 @@ public struct PhysicalAdaptiveTriggerEffect: Codable, Equatable, Hashable, Senda
     }
   }
 
-  private enum CodingKeys: String, CodingKey {
+  private enum CodingKeys: String, CodingKey, CaseIterable {
     case kind
     case startPosition
     case strength
+  }
+
+  public init(from decoder: any Decoder) throws {
+    try decoder.rejectUnknownKeys(CodingKeys.self)
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    kind = try values.decode(PhysicalAdaptiveTriggerEffectKind.self, forKey: .kind)
+    startPosition = try values.decode(Double.self, forKey: .startPosition)
+    strength = try values.decode(Double.self, forKey: .strength)
   }
 }
 

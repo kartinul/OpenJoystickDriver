@@ -5,10 +5,10 @@ import Testing
 // Pinned remapped-path transcripts; the rendering rules are on `OutputCharacterizationTests`.
 extension OutputCharacterizationTests {
   /// Remapped states reach the device with no stick deadzone on every controller, including the
-  /// `11C1:5600` rescaled transfer and the compatibility path's 0.15 deadzone: a passthrough 0.2
+  /// `11C1:5600` rescaled transfer and the virtual output path's 0.15 deadzone: a passthrough 0.2
   /// and a default-tuned 0.2 binding both stay non-zero.
   @Test
-  func remappedSmallSticksSkipTheCompatibilityTransfer() async throws {
+  func remappedSmallSticksSkipTheVirtualOutputTransfer() async throws {
     var lines: [String] = []
     for (name, device) in [("std", Self.standard), ("11c1", Self.rescaled)] {
       let passthrough = EngineSession(Self.profile(.passthrough), device: device)
@@ -47,7 +47,7 @@ extension OutputCharacterizationTests {
 
   /// Passthrough analog triggers (clamped to `0...1`; from half a pull they also set the digital
   /// flag), trigger clicks (the digital flag and the effective full-scale byte), the d-pad (hat
-  /// and bits) and both sticks. Unlike the compatibility path, a neutral hat leaves a d-pad
+  /// and bits) and both sticks. Unlike the virtual output path, a neutral hat leaves a d-pad
   /// direction held by a d-pad button source.
   @Test
   func remappedTriggersDpadAndSticks() async throws {

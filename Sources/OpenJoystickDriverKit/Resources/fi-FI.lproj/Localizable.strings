@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Palvelu pysähtyi. Ohitus on ennallaan.";
 "virtualProfile.failure.persistenceFailed" = "Ohitusta ei voitu tallentaa. Mitään ei tallennettu.";
 "virtualProfile.storeError" = "Virtuaalisen HID-profiilin ohituksia ei voi lukea (%@). Ohjaimet valitsevat automaattisesti.";
-"virtualProfile.legacyIdentityRejected" = "Käytöstä poistettua ohjaimen identiteettiasetusta %@ ei enää käytetä. Tyhjennä se suorittamalla controller virtual reset --all.";
 "keyboard.noKey" = "Näppäintä ei ole valittu";
 "keyboard.pressKey" = "Paina näppäintä…";
 "keyboard.captureKey" = "Tallenna näppäin";

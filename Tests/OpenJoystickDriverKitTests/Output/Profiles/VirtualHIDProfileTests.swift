@@ -116,31 +116,20 @@ struct VirtualHIDProfileTests {
   }
 
   @Test
-  func genericProfileDecodesOnlyItsOwnRumbleReport() throws {
+  func genericProfileIsInputOnlyAndDecodesNoOutputReport() throws {
     let profile = try VirtualHIDProfileID.generic.makeProfile()
-    let expected = ControllerOutputCommand.consumerRumble(
-      left: 1,
-      right: 2,
-      leftTrigger: 3,
-      rightTrigger: 4,
-      durationMs: 500
-    )
-    #expect(
-      profile.consumerOutput(type: kIOHIDReportTypeOutput, reportID: 0, bytes: Self.ojdRumble)
-        == expected
-    )
-    #expect(try consumerOutput(0, Self.ojdRumble, in: OJDGenericGamepadFormat()) == expected)
-    #expect(
-      profile.consumerOutput(type: kIOHIDReportTypeOutput, reportID: 0, bytes: [0x4F, 1, 2, 3])
-        == nil
-    )
-    #expect(
-      profile.consumerOutput(
-        type: kIOHIDReportTypeOutput,
-        reportID: 3,
-        bytes: [0x03, 0x0F, 10, 20, 30, 40, 50, 0, 0]
-      ) == nil
-    )
+    #expect(profile.identity.vendorID == 0x4F4A)
+    #expect(profile.identity.productID == 0x4447)
+    #expect(profile.reportFormat.outputReportPayloadSize == nil)
+    let reports: [(UInt32, [UInt8])] = [
+      (0, Self.ojdRumble), (0, [0x08, 0x00, 10, 20]), (3, [0x03, 0x0F, 10, 20, 30, 40, 50, 0, 0]),
+    ]
+    for (reportID, bytes) in reports {
+      #expect(
+        profile.consumerOutput(type: kIOHIDReportTypeOutput, reportID: reportID, bytes: bytes)
+          == nil
+      )
+    }
   }
 
   @Test
@@ -177,6 +166,7 @@ struct VirtualHIDProfileTests {
     )
   }
 
-  /// OJD vendor rumble: marker, left, right, left trigger, right trigger, duration 500 ms LE.
+  /// The former OJD vendor rumble report: marker, left, right, left trigger, right trigger,
+  /// duration 500 ms LE.
   private static let ojdRumble: [UInt8] = [0x4F, 1, 2, 3, 4, 0xF4, 0x01]
 }

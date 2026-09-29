@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "El servicio se ha detenido. La anulación no ha cambiado.";
 "virtualProfile.failure.persistenceFailed" = "No se ha podido guardar la anulación. No se ha guardado nada.";
 "virtualProfile.storeError" = "No se pueden leer las anulaciones del perfil HID virtual (%@). Los mandos eligen automáticamente.";
-"virtualProfile.legacyIdentityRejected" = "El ajuste retirado de identidad del mando %@ ya no se aplica. Ejecuta controller virtual reset --all para borrarlo.";
 "keyboard.noKey" = "Ninguna tecla seleccionada";
 "keyboard.pressKey" = "Pulsa una tecla…";
 "keyboard.captureKey" = "Capturar tecla";

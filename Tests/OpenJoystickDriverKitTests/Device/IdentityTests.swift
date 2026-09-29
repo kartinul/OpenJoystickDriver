@@ -178,6 +178,7 @@ struct DeviceIdentifierTests {
       productID: identifier.controllerIdentity.productID,
       protocolBinding: ProtocolBindingID(.hidDescriptor),
       connection: "USB",
+      discoverySource: .rawUSB,
       serialNumber: nil,
       bindingResult: .hidDescriptorFixture,
       runtimeIdentifier: identifier.runtimeIdentifier

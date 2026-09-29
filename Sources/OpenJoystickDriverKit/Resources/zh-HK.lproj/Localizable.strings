@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "服務已停止。覆寫未變更。";
 "virtualProfile.failure.persistenceFailed" = "無法儲存覆寫。未儲存任何內容。";
 "virtualProfile.storeError" = "無法讀取虛擬 HID 設定檔覆寫（%@）。控制器將自動選擇。";
-"virtualProfile.legacyIdentityRejected" = "已停用的控制器識別設定 %@ 不再套用。執行 controller virtual reset --all 以清除它。";
 "keyboard.noKey" = "未選取按鍵";
 "keyboard.pressKey" = "請按一個鍵…";
 "keyboard.captureKey" = "擷取按鍵";

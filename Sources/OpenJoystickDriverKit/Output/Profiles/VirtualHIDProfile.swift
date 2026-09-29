@@ -3,7 +3,7 @@ import IOKit.hid
 /// Identifier of one exact published virtual HID ABI.
 ///
 /// These are the only two virtual profiles OJD recognizes. Decoding any other raw value fails,
-/// including the retired compatibility identity names.
+/// including the retired virtual HID identity names.
 public enum VirtualHIDProfileID: String, CaseIterable, Codable, Sendable {
   case xboxOneSBluetooth = "hid-xbox-one-s-bt"
   case generic = "hid-generic"
@@ -106,14 +106,12 @@ struct XboxOneSBluetoothHIDProfile: VirtualHIDProfile {
   }
 }
 
-/// `hid-generic` over today's OJD generic gamepad, an approximation of the specified ABI.
+/// `hid-generic` over the OJD generic gamepad, an approximation of the specified ABI.
 ///
-/// The identity is the existing `VirtualDeviceProfile.openJoystickDriverGenericHID`
-/// (4F4A:4449, whose vendor ID is not organization-controlled), and the descriptor and codec are
-/// `OJDGenericGamepadFormat`'s: 16 buttons with the d-pad as four of them, no hat, four stick
-/// axes and two trigger axes, plus a vendor rumble output report. It is an approximation
-/// until replaced by an input-only layout under an organization-controlled VID/PID, whose decoder
-/// accepts no report.
+/// The identity is `VirtualDeviceProfile.openJoystickDriverGenericHID` (4F4A:4447), and the
+/// descriptor is `OJDGenericGamepadFormat`'s input-only layout: 16 buttons with the d-pad as four
+/// of them, no hat, four stick axes and two trigger axes, and no output report, so the profile
+/// decodes no consumer output. The vendor ID is still not organization-controlled.
 struct OJDGenericHIDProfile: VirtualHIDProfile {
   let id = VirtualHIDProfileID.generic
   private let format = OJDGenericGamepadFormat()
@@ -130,9 +128,7 @@ struct OJDGenericHIDProfile: VirtualHIDProfile {
     type: IOHIDReportType,
     reportID: UInt32,
     bytes: [UInt8]
-  ) -> ControllerOutputCommand? {
-    ReportFormatCodec.consumerOutput(type: type, reportID: reportID, bytes: bytes, in: format)
-  }
+  ) -> ControllerOutputCommand? { nil }
 }
 
 /// The adapter from a profile's contract to the report format it wraps.

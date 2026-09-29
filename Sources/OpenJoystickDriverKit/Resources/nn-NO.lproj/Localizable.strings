@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Tenesta stoppa. Overstyringa er uendra.";
 "virtualProfile.failure.persistenceFailed" = "Overstyringa kunne ikkje lagrast. Ingenting vart lagra.";
 "virtualProfile.storeError" = "Overstyringar av virtuell HID-profil kan ikkje lesast (%@). Kontrollarar vel automatisk.";
-"virtualProfile.legacyIdentityRejected" = "Den utfasa innstillinga for kontrollaridentitet %@ blir ikkje brukt lenger. Køyr controller virtual reset --all for å fjerne henne.";
 "keyboard.noKey" = "Ingen tast vald";
 "keyboard.pressKey" = "Trykk på ein tast…";
 "keyboard.captureKey" = "Registrer tast";

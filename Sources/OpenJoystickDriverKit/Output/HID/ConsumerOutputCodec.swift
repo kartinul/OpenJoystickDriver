@@ -1,8 +1,8 @@
 import Foundation
 
-/// Decodes the output reports a consumer sends to a virtual format (the Xbox One report and the
-/// OJD vendor report, which also accepts the short Xbox 360 rumble forms) into the output command
-/// it requests.
+/// Decodes the output reports a consumer sends to a virtual format into the output command it
+/// requests. The Xbox One rumble report (report ID 3) is the only output report any format
+/// declares; the generic format is input-only.
 enum ConsumerOutputCodec {
   static let xboxOneReportID: UInt8 = 3
   static let xboxOneReportPayloadSize = 8
@@ -10,8 +10,6 @@ enum ConsumerOutputCodec {
   /// Duration of a rumble report that carries none.
   static let defaultRumbleDurationMs = 250
 
-  private static let xbox360RumbleHeaderByte: UInt8 = 0x08
-  private static let ojdRumbleMarker: UInt8 = 0x4F
   private static let rumbleActivationAllMotors: UInt8 = 0x0F
   private static let rumbleActivationLeftTrigger: UInt8 = 0x01
   private static let rumbleActivationRightTrigger: UInt8 = 0x02
@@ -35,7 +33,6 @@ enum ConsumerOutputCodec {
     case xboxOneReportID:
       guard payload.count == xboxOneReportPayloadSize else { throw .malformed }
       return activatedRumble(payload)
-    case 0: return try unnumberedRumble(payload)
     default: throw .unsupported
     }
   }
@@ -72,29 +69,5 @@ enum ConsumerOutputCodec {
       rightTrigger: channel(rumbleActivationRightTrigger, 2),
       durationMs: Int(bytes[5]) * rumbleDurationByteMultiplier
     )
-  }
-
-  /// Short Xbox 360 rumble (`08` form) and the OJD vendor report (marker,
-  /// left, right, left trigger, right trigger, then an optional little-endian duration in ms).
-  private static func unnumberedRumble(
-    _ payload: [UInt8]
-  ) throws(VirtualHostReportError) -> ControllerOutputCommand {
-    switch (payload.first, payload.count) {
-    case (xbox360RumbleHeaderByte, 4), (xbox360RumbleHeaderByte, 7):
-      return rumble(left: payload[2], right: payload[3])
-    case (ojdRumbleMarker, 5), (ojdRumbleMarker, 7):
-      let durationMs =
-        payload.count == 7
-        ? min(Int(UInt16(payload[5]) | (UInt16(payload[6]) << 8)), maxRumbleDurationMs)
-        : defaultRumbleDurationMs
-      return rumble(
-        left: payload[1],
-        right: payload[2],
-        leftTrigger: payload[3],
-        rightTrigger: payload[4],
-        durationMs: durationMs
-      )
-    default: throw .malformed
-    }
   }
 }

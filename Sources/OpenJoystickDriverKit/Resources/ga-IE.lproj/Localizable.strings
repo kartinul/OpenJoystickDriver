@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Stop an tseirbhís. Níor athraíodh an sárú.";
 "virtualProfile.failure.persistenceFailed" = "Níorbh fhéidir an sárú a shábháil. Níor stóráladh aon rud.";
 "virtualProfile.storeError" = "Ní féidir sáruithe na próifíle HID fíorúla a léamh (%@). Roghnaíonn rialaitheoirí go huathoibríoch.";
-"virtualProfile.legacyIdentityRejected" = "Ní chuirtear an socrú scortha aitheantais rialaitheora %@ i bhfeidhm a thuilleadh. Rith controller virtual reset --all chun é a ghlanadh.";
 "keyboard.noKey" = "Níl aon eochair roghnaithe";
 "keyboard.pressKey" = "Brúigh eochair…";
 "keyboard.captureKey" = "Gabh eochair";

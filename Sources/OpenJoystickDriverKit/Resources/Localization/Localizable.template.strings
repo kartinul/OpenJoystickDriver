@@ -190,7 +190,6 @@
 "virtualProfile.failure.serverStopped" = "The service stopped. The override is unchanged.";
 "virtualProfile.failure.persistenceFailed" = "The override couldn't be saved. Nothing was stored.";
 "virtualProfile.storeError" = "Virtual HID profile overrides can't be read (%@). Controllers select automatically.";
-"virtualProfile.legacyIdentityRejected" = "The retired controller identity setting %@ is no longer applied. Run controller virtual reset --all to clear it.";
 "keyboard.noKey" = "No key selected";
 "keyboard.pressKey" = "Press a key...";
 "keyboard.captureKey" = "Capture key";

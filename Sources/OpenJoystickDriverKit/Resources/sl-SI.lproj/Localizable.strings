@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Storitev se je ustavila. Preglasitev je nespremenjena.";
 "virtualProfile.failure.persistenceFailed" = "Preglasitve ni bilo mogoče shraniti. Nič ni bilo shranjeno.";
 "virtualProfile.storeError" = "Preglasitev navideznega profila HID ni mogoče prebrati (%@). Krmilniki izbirajo samodejno.";
-"virtualProfile.legacyIdentityRejected" = "Opuščena nastavitev identitete krmilnika %@ se ne uporablja več. Zaženite controller virtual reset --all, da jo počistite.";
 "keyboard.noKey" = "Ni izbrana nobena tipka";
 "keyboard.pressKey" = "Pritisnite tipko…";
 "keyboard.captureKey" = "Zajemi tipko";

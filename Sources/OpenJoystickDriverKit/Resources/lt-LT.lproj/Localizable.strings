@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Paslauga sustojo. Nepaisymas nepakito.";
 "virtualProfile.failure.persistenceFailed" = "Nepavyko išsaugoti nepaisymo. Nieko neišsaugota.";
 "virtualProfile.storeError" = "Nepavyksta nuskaityti virtualaus HID profilio nepaisymų (%@). Valdikliai pasirenka automatiškai.";
-"virtualProfile.legacyIdentityRejected" = "Nebenaudojamas valdiklio tapatybės nustatymas %@ nebetaikomas. Paleiskite controller virtual reset --all, kad jį išvalytumėte.";
 "keyboard.noKey" = "Klavišas nepasirinktas";
 "keyboard.pressKey" = "Paspauskite klavišą…";
 "keyboard.captureKey" = "Įrašyti klavišą";

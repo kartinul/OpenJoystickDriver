@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Serviciul s-a oprit. Suprascrierea nu s-a schimbat.";
 "virtualProfile.failure.persistenceFailed" = "Suprascrierea nu a putut fi salvată. Nu s-a salvat nimic.";
 "virtualProfile.storeError" = "Suprascrierile profilului HID virtual nu pot fi citite (%@). Controllerele aleg automat.";
-"virtualProfile.legacyIdentityRejected" = "Setarea retrasă de identitate a controllerului %@ nu mai este aplicată. Rulați controller virtual reset --all pentru a o șterge.";
 "keyboard.noKey" = "Nicio tastă selectată";
 "keyboard.pressKey" = "Apasă o tastă…";
 "keyboard.captureKey" = "Capturează tasta";

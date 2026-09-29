@@ -4,10 +4,10 @@ import IOKit.hid
 
 /// Builds input reports according to a HID report descriptor (subset parser).
 ///
-/// This is used for Compatibility identities where consumers switch behavior based on VID/PID
+/// This is used for virtual HID profiles where consumers switch behavior based on VID/PID
 /// (often SDL-based). In those cases, spoofing VID/PID alone is not enough: the descriptor and
 /// report bytes must match what the consumer expects.
-public struct HIDDescriptorReportFormat: VirtualGamepadReportFormat, @unchecked Sendable {
+public struct HIDDescriptorReportFormat: VirtualGamepadReportFormat, Sendable {
   public let descriptor: [UInt8]
   public let inputReportPayloadSize: Int
   public let inputReportID: UInt8?

@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Usluga se zaustavila. Nadjačavanje je nepromijenjeno.";
 "virtualProfile.failure.persistenceFailed" = "Nadjačavanje nije moguće spremiti. Ništa nije spremljeno.";
 "virtualProfile.storeError" = "Nadjačavanja virtualnog HID profila ne mogu se pročitati (%@). Kontroleri biraju automatski.";
-"virtualProfile.legacyIdentityRejected" = "Umirovljena postavka identiteta kontrolera %@ više se ne primjenjuje. Pokrenite controller virtual reset --all da biste ga izbrisali.";
 "keyboard.noKey" = "Nije odabrana nijedna tipka";
 "keyboard.pressKey" = "Pritisnite tipku…";
 "keyboard.captureKey" = "Uhvati tipku";

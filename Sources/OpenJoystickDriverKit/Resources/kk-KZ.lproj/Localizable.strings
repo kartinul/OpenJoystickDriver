@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Қызмет тоқтады. Қайта анықтау өзгерген жоқ.";
 "virtualProfile.failure.persistenceFailed" = "Қайта анықтауды сақтау мүмкін болмады. Ештеңе сақталмады.";
 "virtualProfile.storeError" = "Виртуалды HID профилінің қайта анықтамаларын оқу мүмкін емес (%@). Контроллерлер автоматты түрде таңдайды.";
-"virtualProfile.legacyIdentityRejected" = "Контроллер сәйкестігінің ескірген %@ параметрі енді қолданылмайды. Оны тазалау үшін controller virtual reset --all іске қосыңыз.";
 "keyboard.noKey" = "Перне таңдалмаған";
 "keyboard.pressKey" = "Пернені басыңыз…";
 "keyboard.captureKey" = "Пернені түсіру";

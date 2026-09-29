@@ -42,13 +42,6 @@ struct ConsumerOutputCodecTests {
       try consumerOutput(3, [0x03, 0x00, 10, 20, 30, 40, 5, 0, 0], in: XboxGeckoHIDReportFormat())
         == .stopRumble
     )
-    #expect(
-      try consumerOutput(0, [0x08, 0x00, 0, 0], in: OJDGenericGamepadFormat()) == .stopRumble
-    )
-    #expect(
-      try consumerOutput(0, [0x4F, 0, 0, 0, 0, 0xF4, 0x01], in: OJDGenericGamepadFormat())
-        == .stopRumble
-    )
   }
 
   @Test
@@ -61,22 +54,10 @@ struct ConsumerOutputCodecTests {
       try consumerOutput(3, [0x03, 0x0C, 0, 0, 1, 255, 0, 0, 0], in: XboxGeckoHIDReportFormat())
         == .setRumble(intensities, duration: .milliseconds(0))
     )
+    // The duration byte counts 10 ms units.
     #expect(
-      try consumerOutput(0, [0x4F, 1, 255, 0, 0, 0, 0], in: OJDGenericGamepadFormat())
-        == .setRumble(intensities, duration: .milliseconds(0))
-    )
-    // A longer OJD duration runs for the longest rumble a command may request.
-    #expect(
-      try consumerOutput(0, [0x4F, 1, 255, 0, 0, 0xFF, 0xFF], in: OJDGenericGamepadFormat())
-        == .setRumble(intensities, duration: .milliseconds(maxRumbleDurationMs))
-    )
-    // A report without a duration field runs for the default duration.
-    #expect(
-      try consumerOutput(0, [0x4F, 1, 255, 0, 0], in: OJDGenericGamepadFormat())
-        == .setRumble(
-          intensities,
-          duration: .milliseconds(ConsumerOutputCodec.defaultRumbleDurationMs)
-        )
+      try consumerOutput(3, [0x03, 0x0C, 0, 0, 1, 255, 50, 0, 0], in: XboxGeckoHIDReportFormat())
+        == .setRumble(intensities, duration: .milliseconds(500))
     )
   }
 
@@ -86,28 +67,29 @@ struct ConsumerOutputCodecTests {
     #expect(throws: VirtualHostReportError.malformed) {
       try consumerOutput(3, [0x03, 0x0F, 10, 20, 30, 40], in: xboxOne)
     }
-    #expect(throws: VirtualHostReportError.malformed) {
-      try consumerOutput(0, [0x08, 0x00, 128], in: OJDGenericGamepadFormat())
-    }
-    #expect(throws: VirtualHostReportError.malformed) {
-      try consumerOutput(0, [0x4F, 1, 2, 3], in: OJDGenericGamepadFormat())
-    }
-    #expect(throws: VirtualHostReportError.malformed) {
-      try consumerOutput(0, [0x4F, 1, 2, 3, 4, 0x2C], in: OJDGenericGamepadFormat())
-    }
-    // The short Xbox 360 form is four or seven bytes; five bytes match neither.
-    #expect(throws: VirtualHostReportError.malformed) {
-      try consumerOutput(0, [0x08, 0x00, 127, 255, 0], in: OJDGenericGamepadFormat())
-    }
   }
 
   @Test
   func oversizedAndUndeclaredReportsAreRejectedByTheCodec() throws {
     #expect(throws: VirtualHostReportError.tooLarge) {
-      try consumerOutput(0, [0x4F, 1, 2, 3, 4, 0xF4, 0x01, 0], in: OJDGenericGamepadFormat())
+      try consumerOutput(3, [0x03, 0x0F, 0, 0, 10, 20, 5, 0, 0, 0], in: XboxGeckoHIDReportFormat())
     }
     #expect(throws: VirtualHostReportError.unsupported) {
       try consumerOutput(9, [0x09, 0x0F, 0, 0, 10, 20, 5, 0, 0], in: XboxGeckoHIDReportFormat())
+    }
+  }
+
+  @Test
+  func theInputOnlyGenericFormatRejectsEveryOutputReport() {
+    // The former OJD vendor report, the short Xbox 360 forms, and a numbered Xbox One report.
+    let reports: [(UInt32, [UInt8])] = [
+      (0, [0x4F, 1, 2, 3, 4, 0xF4, 0x01]), (0, [0x4F, 1, 2, 3, 4]), (0, [0x08, 0x00, 10, 20]),
+      (0, [0x08, 0x00, 10, 20, 0, 0, 0]), (3, [0x03, 0x0F, 0, 0, 10, 20, 5, 0, 0]),
+    ]
+    for (reportID, bytes) in reports {
+      #expect(throws: VirtualHostReportError.unsupported) {
+        try consumerOutput(reportID, bytes, in: OJDGenericGamepadFormat())
+      }
     }
   }
 }

@@ -131,18 +131,4 @@ struct VirtualHIDProfileOverrideStoreTests {
       #expect(store.override(vendorID: 1, productID: 2) == .xboxOneSBluetooth)
     }
   }
-
-  @Test
-  func theLegacyCompatibilityIdentityIsReadableButNeverInterpreted() throws {
-    try withDefaults { defaults in
-      let store = Store(defaults: defaults)
-      #expect(store.legacyCompatibilityIdentity == nil)
-
-      defaults.set("generic-hid", forKey: "CompatibilityIdentity")
-
-      #expect(store.legacyCompatibilityIdentity == "generic-hid")
-      #expect(store.loadError == nil)
-      #expect(store.override(vendorID: 1, productID: 2) == nil)
-    }
-  }
 }

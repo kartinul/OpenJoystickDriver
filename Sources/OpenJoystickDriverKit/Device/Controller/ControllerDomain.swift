@@ -1,8 +1,5 @@
 import Foundation
 
-/// A digital control: `false` is released, `true` is pressed.
-public typealias ButtonValue = Bool
-
 /// An unsigned control value; `0` is released/minimum and `65535` is fully actuated.
 public struct UnipolarValue: Hashable, Codable, Sendable {
   public static let min = Self(0)

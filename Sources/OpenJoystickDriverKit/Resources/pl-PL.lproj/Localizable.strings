@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Usługa została zatrzymana. Nadpisanie nie uległo zmianie.";
 "virtualProfile.failure.persistenceFailed" = "Nie można zapisać nadpisania. Nic nie zostało zapisane.";
 "virtualProfile.storeError" = "Nie można odczytać nadpisań wirtualnego profilu HID (%@). Kontrolery wybierają automatycznie.";
-"virtualProfile.legacyIdentityRejected" = "Wycofane ustawienie tożsamości kontrolera %@ nie jest już stosowane. Uruchom controller virtual reset --all, aby je wyczyścić.";
 "keyboard.noKey" = "Nie wybrano klawisza";
 "keyboard.pressKey" = "Naciśnij klawisz…";
 "keyboard.captureKey" = "Przechwyć klawisz";

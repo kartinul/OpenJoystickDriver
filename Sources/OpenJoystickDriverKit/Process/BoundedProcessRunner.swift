@@ -98,21 +98,19 @@ public enum BoundedProcessRunner {
   }
 }
 
-private final class ProcessOutputCapture: @unchecked Sendable {
-  private let lock = NSLock()
+private final class ProcessOutputCapture: Sendable {
   private let maximumBytes: Int
-  private var data = Data()
-  private var wasTruncated = false
+  private let output = Locked((data: Data(), wasTruncated: false))
 
   init(maximumBytes: Int) { self.maximumBytes = maximumBytes }
 
   func append(_ chunk: Data) {
-    lock.withLock {
-      let remaining = max(0, maximumBytes - data.count)
-      if remaining > 0 { data.append(chunk.prefix(remaining)) }
-      if chunk.count > remaining { wasTruncated = true }
+    output.withLock { output in
+      let remaining = max(0, maximumBytes - output.data.count)
+      if remaining > 0 { output.data.append(chunk.prefix(remaining)) }
+      if chunk.count > remaining { output.wasTruncated = true }
     }
   }
 
-  func snapshot() -> (data: Data, wasTruncated: Bool) { lock.withLock { (data, wasTruncated) } }
+  func snapshot() -> (data: Data, wasTruncated: Bool) { output.withLock { $0 } }
 }

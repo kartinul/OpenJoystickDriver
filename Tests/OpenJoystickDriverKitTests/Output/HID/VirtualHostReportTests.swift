@@ -46,22 +46,44 @@ struct VirtualHostReportTests {
   }
 
   @Test
-  func genericRumbleAcceptsShortXbox360UnnumberedFraming() throws {
-    let input = UserSpaceInputReportState(format: OJDGenericGamepadFormat())
-    let request = try VirtualHostReportRequest(
+  func inputOnlyGenericFormatRejectsOutputWhileXboxDecodesItsReport() throws {
+    let generic = UserSpaceInputReportState(format: OJDGenericGamepadFormat())
+    for bytes: [UInt8] in [[8, 0, 127, 255, 0, 0, 0], [8, 0, 127, 255], [0x4F, 10, 20, 0, 0]] {
+      let request = try VirtualHostReportRequest(type: .output, reportID: 0, bytes: bytes)
+      #expect(throws: VirtualHostReportError.unsupported) { try generic.consumerOutput(request) }
+    }
+    let xbox = UserSpaceInputReportState(format: try XboxGeckoHIDReportFormat())
+    let rumble = try VirtualHostReportRequest(
       type: .output,
-      reportID: 0,
-      bytes: [8, 0, 127, 255, 0, 0, 0]
+      reportID: 3,
+      bytes: [3, 0x0C, 0, 0, 127, 255, 25, 0, 0]
     )
-    #expect(try input.consumerOutput(request) == .consumerRumble(left: 127, right: 255))
-    let malformed = try VirtualHostReportRequest(type: .output, reportID: 0, bytes: [8, 0, 127])
-    #expect(throws: VirtualHostReportError.malformed) { try input.consumerOutput(malformed) }
+    #expect(try xbox.consumerOutput(rumble) == .consumerRumble(left: 127, right: 255))
     let feature = try VirtualHostReportRequest(
       type: .feature,
-      reportID: 0,
-      bytes: [8, 0, 127, 255]
+      reportID: 3,
+      bytes: [3, 0x0C, 0, 0, 127, 255, 25, 0, 0]
     )
-    #expect(throws: VirtualHostReportError.unsupported) { try input.consumerOutput(feature) }
+    #expect(throws: VirtualHostReportError.unsupported) { try xbox.consumerOutput(feature) }
+  }
+
+  @Test
+  func setReportOnTheInputOnlyGenericFormatProducesNoCommand() async throws {
+    let input = UserSpaceInputReportState(format: OJDGenericGamepadFormat())
+    let sender = UserSpaceReportSender()
+    let isOpen: @Sendable () -> Bool = { true }
+    let handler = UserSpaceHostReportHandler(
+      identifier: DeviceIdentifier(vendorID: 1, productID: 2),
+      input: input,
+      sender: sender,
+      isOpen: isOpen,
+      onOutput: { _, command in Issue.record("Unexpected output command \(command)") },
+      onRumbleStatus: { _ in }
+    )
+    #expect(throws: VirtualHostReportError.unsupported) {
+      try handler.setReport(type: .output, reportID: 0, bytes: [0x4F, 10, 20, 0, 0])
+    }
+    await sender.beginClose().value
   }
 
   @Test

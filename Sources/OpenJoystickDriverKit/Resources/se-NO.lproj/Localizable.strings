@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Bálvalus bisánii. Badjelčállin ii leat rievdan.";
 "virtualProfile.failure.persistenceFailed" = "Badjelčállima ii sáhttán vurket. Mihkkege ii vurkejuvvon.";
 "virtualProfile.storeError" = "Virtuála HID-profiilla badjelčállimiid ii sáhte lohkat (%@). Stivrejeaddjit válljejit automáhtalaččat.";
-"virtualProfile.legacyIdentityRejected" = "Boares stivrejeaddji identitehta %@ heivehus ii šat geavahuvvo. Vuoje controller virtual reset --all sihkkut dan.";
 "keyboard.noKey" = "Ii leat válljejuvvon čoavddus";
 "keyboard.pressKey" = "Deaddilat nuppi…";
 "keyboard.captureKey" = "Váldde nuppi";

@@ -1,5 +1,13 @@
 import Foundation
 
+/// Transfer direction of a logged packet; raw values are the packet-log wire strings.
+public enum PacketLogDirection: String, Codable, Sendable {
+  /// Incoming from the controller.
+  case received = "rx"
+  /// Outgoing to the controller.
+  case transmitted = "tx"
+}
+
 public enum PacketLogClassification: Sendable, Equatable {
   case activity
   case gipHousekeeping
@@ -11,8 +19,8 @@ public enum PacketLogClassification: Sendable, Equatable {
 public struct PacketLogEntry: Codable, Sendable {
   /// Seconds since reference date when the packet was captured.
   public let timestamp: TimeInterval
-  /// Transfer direction: `"rx"` for incoming, `"tx"` for outgoing.
-  public let direction: String
+  /// Transfer direction of the packet.
+  public let direction: PacketLogDirection
   /// Packet payload as a hex-encoded string (e.g. `"05 20 00 01 00"`).
   public let hex: String
   /// Number of bytes in the packet.

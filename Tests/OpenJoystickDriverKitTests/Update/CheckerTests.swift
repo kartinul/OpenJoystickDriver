@@ -127,6 +127,27 @@ struct UpdateCheckerTests {
     #expect(failure.reason == .noValidTags)
   }
 
+  @Test("cancelling a check cancels the in-flight request", .timeLimit(.minutes(1)))
+  func cancellingCheckCancelsInFlightRequest() async throws {
+    let checker = try Self.checker(path: "/stalled")
+    let check = Task { await checker.check(currentVersion: "1.0.0") }
+    var started = UpdateURLProtocolStub.stalledRequests.stream.makeAsyncIterator()
+    _ = await started.next()
+
+    let cancelledAt = Date()
+    check.cancel()
+    let state = await check.value
+
+    // Without cancellation the stalled request only ends at the request timeout.
+    #expect(Date().timeIntervalSince(cancelledAt) < UpdateChecker.requestTimeoutSeconds)
+
+    guard case .failed(let failure) = state else {
+      Issue.record("Expected failed state, got \(state)")
+      return
+    }
+    #expect(failure.reason == .transport)
+  }
+
   private static func checker(path: String) throws -> UpdateChecker {
     UpdateChecker(
       tagsURL: try #require(URL(string: "https://api.example\(path)?per_page=100")),
@@ -146,9 +167,17 @@ private final class UpdateURLProtocolStub: URLProtocol, @unchecked Sendable {
   override static func canInit(with request: URLRequest) -> Bool { true }
   override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
+  /// Yields once each time a `/stalled` request starts loading; that request never finishes.
+  static let stalledRequests = AsyncStream<Void>.makeStream()
+
   override func startLoading() {
     guard let url = request.url else {
       client?.urlProtocol(self, didFailWithError: URLError(.badURL))
+      return
+    }
+
+    if url.path == "/stalled" {
+      Self.stalledRequests.continuation.yield()
       return
     }
 

@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Служба остановилась. Переопределение не изменилось.";
 "virtualProfile.failure.persistenceFailed" = "Не удалось сохранить переопределение. Ничего не сохранено.";
 "virtualProfile.storeError" = "Не удаётся прочитать переопределения виртуального профиля HID (%@). Контроллеры выбирают автоматически.";
-"virtualProfile.legacyIdentityRejected" = "Устаревшая настройка идентификатора контроллера %@ больше не применяется. Выполните controller virtual reset --all, чтобы очистить его.";
 "keyboard.noKey" = "Клавиша не выбрана";
 "keyboard.pressKey" = "Нажмите клавишу…";
 "keyboard.captureKey" = "Захватить клавишу";

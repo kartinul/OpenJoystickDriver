@@ -2,7 +2,7 @@ import Testing
 
 @testable import OpenJoystickDriverKit
 
-// Pinned compatibility-path transcripts; the rendering rules are on `OutputCharacterizationTests`.
+// Pinned virtual-output-path transcripts; the rendering rules are on `OutputCharacterizationTests`.
 extension OutputCharacterizationTests {
   /// Every former parser button pressed and released alone, in its former declaration order: the
   /// control it reported under the family that spelled it, and a d-pad button as its hat direction.

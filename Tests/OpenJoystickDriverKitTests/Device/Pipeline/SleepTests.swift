@@ -249,7 +249,7 @@ private final class ScriptedInputParser: PhysicalProtocolDriver {
   let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
   let sessionPlan = DriverSessionPlan()
   let outputCapabilities = PhysicalControllerOutputCapabilities.none
-  let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
+  let defaultColor: ControllerColor? = nil
   private var script = ScriptedState()
   func consumeInputConnectionStateChange() -> ControllerInputConnectionState? { nil }
   func parse(report data: Data, receivedAt: MonotonicTimestamp) throws -> ControllerEvent? {
@@ -275,7 +275,7 @@ private final class ScriptedLifecycleInputParser: PhysicalProtocolDriver {
   let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
   let sessionPlan = DriverSessionPlan(requiresInputConnectionBeforeOutput: true)
   let outputCapabilities = PhysicalControllerOutputCapabilities.none
-  let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
+  let defaultColor: ControllerColor? = nil
   private var connected = false
   private var pendingState: ControllerInputConnectionState?
   private var script = ScriptedState()

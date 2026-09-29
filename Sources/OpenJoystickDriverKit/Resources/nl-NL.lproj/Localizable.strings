@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "De dienst is gestopt. De overschrijving is ongewijzigd.";
 "virtualProfile.failure.persistenceFailed" = "De overschrijving kon niet worden opgeslagen. Er is niets opgeslagen.";
 "virtualProfile.storeError" = "Overschrijvingen van virtuele HID-profielen kunnen niet worden gelezen (%@). Controllers kiezen automatisch.";
-"virtualProfile.legacyIdentityRejected" = "De uitgefaseerde instelling voor controlleridentiteit %@ wordt niet meer toegepast. Voer controller virtual reset --all uit om haar te wissen.";
 "keyboard.noKey" = "Geen toets geselecteerd";
 "keyboard.pressKey" = "Druk op een toets…";
 "keyboard.captureKey" = "Leg toets vast";

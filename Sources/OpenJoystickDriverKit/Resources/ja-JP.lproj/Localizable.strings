@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "サービスが停止しました。上書きは変更されていません。";
 "virtualProfile.failure.persistenceFailed" = "上書きを保存できませんでした。何も保存されませんでした。";
 "virtualProfile.storeError" = "仮想HIDプロファイルの上書きを読み取れません（%@）。コントローラは自動で選択します。";
-"virtualProfile.legacyIdentityRejected" = "廃止されたコントローラ識別設定 %@ は適用されなくなりました。消去するには controller virtual reset --all を実行してください。";
 "keyboard.noKey" = "キーが選択されていません";
 "keyboard.pressKey" = "キーを押してください…";
 "keyboard.captureKey" = "キーを取得";

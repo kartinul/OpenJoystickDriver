@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Tjenesten stoppede. Tilsidesættelsen er uændret.";
 "virtualProfile.failure.persistenceFailed" = "Tilsidesættelsen kunne ikke gemmes. Intet blev gemt.";
 "virtualProfile.storeError" = "Tilsidesættelser af virtuel HID-profil kan ikke læses (%@). Controllere vælger automatisk.";
-"virtualProfile.legacyIdentityRejected" = "Den udfasede indstilling for controlleridentitet %@ anvendes ikke længere. Kør controller virtual reset --all for at rydde den.";
 "keyboard.noKey" = "Ingen tast valgt";
 "keyboard.pressKey" = "Tryk på en tast…";
 "keyboard.captureKey" = "Registrer tast";

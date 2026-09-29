@@ -3,7 +3,7 @@ import Foundation
 /// Resolves packaged `Localizable` strings and plurals for the app and CLI.
 ///
 /// Kit owns the resource bundle so the app cannot ship a second catalog.
-public struct Localization: @unchecked Sendable {
+public struct Localization: Sendable {
   public static let sourceLocalization = "en-US"
 
   /// SwiftPM resource bundle. Tests pin this instead of `Bundle.main`.

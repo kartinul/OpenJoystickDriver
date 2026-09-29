@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "توقفت الخدمة. لم يتغير التجاوز.";
 "virtualProfile.failure.persistenceFailed" = "تعذر حفظ التجاوز. لم يُحفظ أي شيء.";
 "virtualProfile.storeError" = "تتعذر قراءة تجاوزات ملف تعريف HID الافتراضي (%@). تختار وحدات التحكم تلقائيًا.";
-"virtualProfile.legacyIdentityRejected" = "لم يعد إعداد هوية وحدة التحكم المتقاعد %@ مطبقًا. شغّل controller virtual reset --all لمسحه.";
 "keyboard.noKey" = "لم يُحدد أي مفتاح";
 "keyboard.pressKey" = "اضغط مفتاحاً…";
 "keyboard.captureKey" = "التقاط مفتاح";

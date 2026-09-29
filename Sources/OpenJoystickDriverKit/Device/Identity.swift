@@ -4,14 +4,13 @@ import Foundation
 private enum RuntimeDeviceIdentity {
   /// Ephemeral by construction: this key is generated once per process and is never persisted.
   private static let key = SymmetricKey(size: .bits256)
-  private static let tokenLock = NSLock()
-  // Guarded by `tokenLock`. Output routing asks for tokens per input report, and each is an HMAC.
-  nonisolated(unsafe) private static var tokens: [DeviceIdentifier: String?] = [:]
+  // Output routing asks for tokens per input report, and each is an HMAC.
+  private static let tokens = Locked<[DeviceIdentifier: String?]>([:])
 
   static func token(for identifier: DeviceIdentifier) -> String? {
-    if let cached = tokenLock.withLock({ tokens[identifier] }) { return cached }
+    if let cached = tokens.withLock({ $0[identifier] }) { return cached }
     let token = computeToken(for: identifier)
-    tokenLock.withLock { tokens[identifier] = token }
+    tokens.withLock { $0[identifier] = token }
     return token
   }
 

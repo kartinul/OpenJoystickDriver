@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "A szolgáltatás leállt. A felülbírálás nem változott.";
 "virtualProfile.failure.persistenceFailed" = "A felülbírálást nem sikerült menteni. Semmi sem lett mentve.";
 "virtualProfile.storeError" = "A virtuális HID-profil felülbírálásai nem olvashatók (%@). A vezérlők automatikusan választanak.";
-"virtualProfile.legacyIdentityRejected" = "A megszűnt %@ vezérlőazonosító-beállítás már nem érvényes. A törléshez futtasd a következőt: controller virtual reset --all.";
 "keyboard.noKey" = "Nincs kijelölt billentyű";
 "keyboard.pressKey" = "Nyomjon meg egy billentyűt…";
 "keyboard.captureKey" = "Billentyű rögzítése";

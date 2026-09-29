@@ -27,7 +27,10 @@ struct ControllerOutputCommandCodableTests {
           + #""rightHaptic":0,"rightMain":0,"rightTrigger":0},"type":"set-rumble"}"#
       ), (.stopRumble, #"{"type":"stop-rumble"}"#),
       (.setPlayerIndicator(.player2), #"{"player":2,"type":"set-player-indicator"}"#),
-      (.setRGB(red: 17, green: 34, blue: 51), #"{"blue":51,"green":34,"red":17,"type":"set-rgb"}"#),
+      (
+        .setRGB(ControllerColor(red: 17, green: 34, blue: 51)),
+        #"{"blue":51,"green":34,"red":17,"type":"set-rgb"}"#
+      ),
       (
         .setLightBrightness(UnipolarValue(byte: 0x80)),
         #"{"brightness":32896,"type":"set-light-brightness"}"#

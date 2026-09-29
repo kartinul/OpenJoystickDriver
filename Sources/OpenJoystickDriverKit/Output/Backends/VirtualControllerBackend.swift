@@ -82,12 +82,16 @@ extension UserSpaceOutputDispatcher: VirtualControllerBackend {
   }
 
   public func startBackend() -> VirtualControllerBackendStatus {
-    VirtualControllerBackendStatus(id: backendID, isRunning: true, detail: status)
+    VirtualControllerBackendStatus(id: backendID, isRunning: true, detail: status.wireValue)
   }
 
   public func stopBackend() async { await close() }
 
   public func backendStatus() -> VirtualControllerBackendStatus {
-    VirtualControllerBackendStatus(id: backendID, isRunning: status != "off", detail: status)
+    VirtualControllerBackendStatus(
+      id: backendID,
+      isRunning: status != .off,
+      detail: status.wireValue
+    )
   }
 }

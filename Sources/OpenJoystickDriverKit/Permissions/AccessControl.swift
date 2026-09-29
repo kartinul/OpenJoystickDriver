@@ -51,7 +51,7 @@ public actor PermissionManager {
 
   public private(set) var inputMonitoringState: AccessState = .unknown
   public private(set) var accessibilityState: AccessState = .unknown
-  private var pollingTask: Task<Void, Never>?
+  private(set) var pollingTask: Task<Void, Never>?
 
   public init() {}
 
@@ -144,6 +144,7 @@ public actor PermissionManager {
   }
 
   public func startPolling() {
+    pollingTask?.cancel()
     pollingTask = Task { [weak self] in
       while !Task.isCancelled {
         try? await Task.sleep(nanoseconds: permissionPollNanoseconds)

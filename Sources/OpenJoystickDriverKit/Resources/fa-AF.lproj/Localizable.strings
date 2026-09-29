@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "سرویس متوقف شد. جایگزینی تغییر نکرد.";
 "virtualProfile.failure.persistenceFailed" = "جایگزینی ذخیره نشد. چیزی ذخیره نشد.";
 "virtualProfile.storeError" = "جایگزینی‌های نمایه HID مجازی قابل خواندن نیستند (%@). کنترلرها به‌طور خودکار انتخاب می‌کنند.";
-"virtualProfile.legacyIdentityRejected" = "تنظیم بازنشسته هویت کنترلر %@ دیگر اعمال نمی‌شود. برای پاک کردن آن controller virtual reset --all را اجرا کنید.";
 "keyboard.noKey" = "کلیدی انتخاب نشده";
 "keyboard.pressKey" = "یک کلید را فشار دهید…";
 "keyboard.captureKey" = "ثبت کلید";

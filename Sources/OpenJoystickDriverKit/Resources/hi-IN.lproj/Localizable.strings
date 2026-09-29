@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "सेवा रुक गई। ओवरराइड अपरिवर्तित है।";
 "virtualProfile.failure.persistenceFailed" = "ओवरराइड सहेजा नहीं जा सका। कुछ भी सहेजा नहीं गया।";
 "virtualProfile.storeError" = "वर्चुअल HID प्रोफ़ाइल ओवरराइड पढ़े नहीं जा सकते (%@)। कंट्रोलर स्वचालित रूप से चुनते हैं।";
-"virtualProfile.legacyIdentityRejected" = "सेवानिवृत्त कंट्रोलर पहचान सेटिंग %@ अब लागू नहीं होती। इसे हटाने के लिए controller virtual reset --all चलाएँ।";
 "keyboard.noKey" = "कोई कुंजी चयनित नहीं";
 "keyboard.pressKey" = "कोई कुंजी दबाएँ…";
 "keyboard.captureKey" = "कुंजी कैप्चर करें";

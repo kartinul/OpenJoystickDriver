@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Услуга се зауставила. Замена није промењена.";
 "virtualProfile.failure.persistenceFailed" = "Замена није могла да се сачува. Ништа није сачувано.";
 "virtualProfile.storeError" = "Замене виртуелног HID профила не могу да се прочитају (%@). Контролери бирају аутоматски.";
-"virtualProfile.legacyIdentityRejected" = "Повучено подешавање идентитета контролера %@ се више не примењује. Покрените controller virtual reset --all да бисте је обрисали.";
 "keyboard.noKey" = "Није изабран ниједан тастер";
 "keyboard.pressKey" = "Притисните тастер…";
 "keyboard.captureKey" = "Ухвати тастер";

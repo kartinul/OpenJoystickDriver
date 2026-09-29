@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Η υπηρεσία σταμάτησε. Η παράκαμψη δεν άλλαξε.";
 "virtualProfile.failure.persistenceFailed" = "Δεν ήταν δυνατή η αποθήκευση της παράκαμψης. Δεν αποθηκεύτηκε τίποτα.";
 "virtualProfile.storeError" = "Δεν είναι δυνατή η ανάγνωση των παρακάμψεων εικονικού προφίλ HID (%@). Τα χειριστήρια επιλέγουν αυτόματα.";
-"virtualProfile.legacyIdentityRejected" = "Η καταργημένη ρύθμιση ταυτότητας χειριστηρίου %@ δεν εφαρμόζεται πλέον. Εκτελέστε controller virtual reset --all για να την απαλείψετε.";
 "keyboard.noKey" = "Δεν έχει επιλεγεί πλήκτρο";
 "keyboard.pressKey" = "Πατήστε ένα πλήκτρο…";
 "keyboard.captureKey" = "Καταγραφή πλήκτρου";

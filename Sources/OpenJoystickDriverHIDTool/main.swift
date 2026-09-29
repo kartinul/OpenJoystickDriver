@@ -46,7 +46,7 @@ func runRawUSBMonitor() {
   let length = min(max(intArg("--length", default: 64), 1), 1024)
   let seconds = min(max(intArg("--seconds", default: 20), 1), 300)
   let timeout: UInt32 = explicitEndpoint == nil ? 100 : 250
-  let exitCode = ExitCodeBox()
+  let exitCode = Locked<Int32>(0)
   let done = DispatchSemaphore(value: 0)
 
   Task {
@@ -62,7 +62,7 @@ func runRawUSBMonitor() {
       )
       guard let device = matches.first else {
         fputs("ERROR: no matching raw USB service found\n", stderr)
-        exitCode.value = 2
+        exitCode.withLock { $0 = 2 }
         return
       }
       print(
@@ -96,34 +96,32 @@ func runRawUSBMonitor() {
       }
       await session.close()
       print("USB_SUMMARY packets=\(packets) disabled_endpoints=\(disabledEndpoints.count)")
-      exitCode.value = packets > 0 ? 0 : 3
+      exitCode.withLock { $0 = packets > 0 ? 0 : 3 }
     } catch {
       fputs("ERROR: raw USB monitor failed: \(error)\n", stderr)
-      exitCode.value = 1
+      exitCode.withLock { $0 = 1 }
     }
   }
 
   done.wait()
-  exit(exitCode.value)
+  exit(exitCode.withLock { $0 })
 }
 if usbMonitor { runRawUSBMonitor() }
 
 if monitor {
   let vid = intArg("--vid", default: 0x4F4A)
-  let pid = intArg("--pid", default: 0x4449)
+  let pid = intArg("--pid", default: 0x4447)
   let seconds = min(max(intArg("--seconds", default: 10), 1), 60)
 
   final class MonitorCounter {
-    private let lock = NSLock()
-    private(set) var values = 0
-    private(set) var reports = 0
+    private let counts = Locked((values: 0, reports: 0))
 
     func value(_ device: IOHIDDevice, _ value: IOHIDValue) {
       let element = IOHIDValueGetElement(value)
       let page = IOHIDElementGetUsagePage(element)
       let usage = IOHIDElementGetUsage(element)
       let intValue = IOHIDValueGetIntegerValue(value)
-      lock.withLock { values += 1 }
+      counts.withLock { $0.values += 1 }
       print(
         "VALUE page=0x\(String(page, radix: 16))"
           + " usage=0x\(String(usage, radix: 16)) value=\(intValue)"
@@ -137,7 +135,7 @@ if monitor {
       _ report: UnsafePointer<UInt8>?,
       _ reportLength: CFIndex
     ) {
-      lock.withLock { reports += 1 }
+      counts.withLock { $0.reports += 1 }
       print(
         "REPORT type=\(type.rawValue) id=\(reportID) len=\(reportLength)"
           + " bytes=\(hexString(report, count: reportLength))"
@@ -145,7 +143,7 @@ if monitor {
       fflush(stdout)
     }
 
-    func snapshot() -> (Int, Int) { lock.withLock { (values, reports) } }
+    func snapshot() -> (Int, Int) { counts.withLock { ($0.values, $0.reports) } }
   }
 
   let counter = MonitorCounter()

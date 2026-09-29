@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "El servei s’ha aturat. La substitució no ha canviat.";
 "virtualProfile.failure.persistenceFailed" = "No s’ha pogut desar la substitució. No s’ha desat res.";
 "virtualProfile.storeError" = "No es poden llegir les substitucions del perfil HID virtual (%@). Els comandaments trien automàticament.";
-"virtualProfile.legacyIdentityRejected" = "La configuració retirada d’identitat del comandament %@ ja no s’aplica. Executeu controller virtual reset --all per esborrar-la.";
 "keyboard.noKey" = "Cap tecla seleccionada";
 "keyboard.pressKey" = "Prem una tecla…";
 "keyboard.captureKey" = "Captura la tecla";

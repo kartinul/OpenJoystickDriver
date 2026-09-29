@@ -7,7 +7,7 @@ import Testing
 /// events to full state snapshots.
 ///
 /// Each step applies one batch of changes to the controller's previous snapshot and feeds the
-/// resulting snapshot (compatibility path), or one engine transition (remapped path), to two
+/// resulting snapshot (virtual output path), or one engine transition (remapped path), to two
 /// `UserSpaceOutputDispatcher`s over test backends: one publishes a
 /// `ContinuitySnapshotReportFormat` report, decoded back into the dispatcher's
 /// `VirtualGamepadState`, and one publishes the production `OJDGenericGamepadFormat` report.

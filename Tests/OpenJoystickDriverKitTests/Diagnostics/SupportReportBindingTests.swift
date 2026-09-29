@@ -86,6 +86,7 @@ struct SupportReportBindingTests {
       productID: 0x5678,
       protocolBinding: binding.id,
       connection: "USB",
+      discoverySource: .rawUSB,
       serialNumber: secretSerial,
       bindingResult: result
     )
@@ -176,7 +177,10 @@ struct SupportReportBindingTests {
     let rejectedCandidates = try #require(unbound.first).bindingResult.rejectedCandidates
     #expect(!rejectedCandidates.isEmpty)
 
-    let encoded = try report(connected: connected, unbound: unbound).encodedJSON()
+    let encoded = try report(
+      connected: connected.map(ApplicationServiceDeviceDescription.init(snapshot:)),
+      unbound: unbound.map(ApplicationServiceUnboundDevice.init(snapshot:))
+    ).encodedJSON()
     try assertMatchesFixture(encoded)
   }
 
@@ -217,6 +221,7 @@ struct SupportReportBindingTests {
       productID: 0x028E,
       protocolBinding: binding.id,
       connection: "USB",
+      discoverySource: .rawUSB,
       serialNumber: nil,
       bindingResult: result
     )

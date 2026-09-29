@@ -67,7 +67,7 @@ public enum ControllerOutputCommand: Equatable, Hashable, Sendable {
   case setRumble(RumbleIntensities, duration: RumbleDuration)
   case stopRumble
   case setPlayerIndicator(PhysicalPlayerIndicator)
-  case setRGB(red: UInt8, green: UInt8, blue: UInt8)
+  case setRGB(ControllerColor)
   case setLightBrightness(UnipolarValue)
   case setAdaptiveTrigger(PhysicalAdaptiveTrigger, PhysicalAdaptiveTriggerEffect)
 
@@ -134,4 +134,12 @@ extension UnipolarValue {
 
   /// The nearest protocol byte `0...255`.
   public var byte: UInt8 { UInt8((Double(rawValue) * 255 / 65_535).rounded()) }
+
+  /// Converts a saved-profile intensity in `0...1`, clamping values outside that range.
+  public init(unitInterval: Double) {
+    self.init(UInt16((Swift.min(Swift.max(unitInterval, 0), 1) * Double(UInt16.max)).rounded()))
+  }
+
+  /// This value as a saved-profile intensity in `0...1`.
+  public var unitInterval: Double { Double(rawValue) / Double(UInt16.max) }
 }

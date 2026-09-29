@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Үйлчилгээ зогсов. Дарж тохируулга өөрчлөгдөөгүй.";
 "virtualProfile.failure.persistenceFailed" = "Дарж тохируулгыг хадгалж чадсангүй. Юу ч хадгалагдсангүй.";
 "virtualProfile.storeError" = "Виртуал HID профайлын дарж тохируулгыг унших боломжгүй (%@). Удирдлагууд автоматаар сонгоно.";
-"virtualProfile.legacyIdentityRejected" = "Хуучирсан удирдлагын өвөрмөц байдлын %@ тохиргоог цаашид хэрэглэхгүй. Үүнийг арилгахын тулд controller virtual reset --all-г ажиллуулна уу.";
 "keyboard.noKey" = "Товчлуур сонгоогүй";
 "keyboard.pressKey" = "Товчлуур дарна уу…";
 "keyboard.captureKey" = "Товчлуур барих";

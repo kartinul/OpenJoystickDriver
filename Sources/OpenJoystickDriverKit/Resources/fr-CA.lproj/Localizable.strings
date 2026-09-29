@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Le service s’est arrêté. Le remplacement est inchangé.";
 "virtualProfile.failure.persistenceFailed" = "Impossible d’enregistrer le remplacement. Rien n’a été enregistré.";
 "virtualProfile.storeError" = "Impossible de lire les remplacements de profil HID virtuel (%@). Les manettes choisissent automatiquement.";
-"virtualProfile.legacyIdentityRejected" = "Le réglage retiré d’identité de manette %@ n’est plus appliqué. Exécutez controller virtual reset --all pour l’effacer.";
 "keyboard.noKey" = "Aucune touche sélectionnée";
 "keyboard.pressKey" = "Appuyez sur une touche…";
 "keyboard.captureKey" = "Capturer une touche";

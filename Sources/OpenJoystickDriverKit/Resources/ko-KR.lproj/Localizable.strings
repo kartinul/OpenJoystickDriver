@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "서비스가 중지되었습니다. 재정의는 변경되지 않았습니다.";
 "virtualProfile.failure.persistenceFailed" = "재정의를 저장할 수 없습니다. 저장된 항목이 없습니다.";
 "virtualProfile.storeError" = "가상 HID 프로필 재정의를 읽을 수 없습니다(%@). 컨트롤러가 자동으로 선택합니다.";
-"virtualProfile.legacyIdentityRejected" = "폐기된 컨트롤러 식별 설정 %@은(는) 더 이상 적용되지 않습니다. 지우려면 controller virtual reset --all을(를) 실행하세요.";
 "keyboard.noKey" = "선택된 키 없음";
 "keyboard.pressKey" = "키를 누르십시오…";
 "keyboard.captureKey" = "키 캡처";

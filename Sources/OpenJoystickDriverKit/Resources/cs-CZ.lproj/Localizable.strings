@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Služba se zastavila. Přepsání se nezměnilo.";
 "virtualProfile.failure.persistenceFailed" = "Přepsání nelze uložit. Nic nebylo uloženo.";
 "virtualProfile.storeError" = "Přepsání virtuálního profilu HID nelze načíst (%@). Ovladače vybírají automaticky.";
-"virtualProfile.legacyIdentityRejected" = "Vyřazené nastavení identity ovladače %@ se již nepoužívá. Spusťte controller virtual reset --all a vymažte ho.";
 "keyboard.noKey" = "Není vybrána žádná klávesa";
 "keyboard.pressKey" = "Stiskněte klávesu…";
 "keyboard.captureKey" = "Zachytit klávesu";

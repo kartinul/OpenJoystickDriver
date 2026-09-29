@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Teenus peatus. Alistus on muutmata.";
 "virtualProfile.failure.persistenceFailed" = "Alistust ei saanud salvestada. Midagi ei salvestatud.";
 "virtualProfile.storeError" = "Virtuaalse HID-profiili alistusi ei saa lugeda (%@). Kontrollerid valivad automaatselt.";
-"virtualProfile.legacyIdentityRejected" = "Kasutusest kõrvaldatud kontrolleri identiteedi sätet %@ enam ei rakendata. Selle tühjendamiseks käivita controller virtual reset --all.";
 "keyboard.noKey" = "Klahvi pole valitud";
 "keyboard.pressKey" = "Vajuta klahvi…";
 "keyboard.captureKey" = "Tuvasta klahv";

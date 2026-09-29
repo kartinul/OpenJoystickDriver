@@ -149,7 +149,7 @@ public protocol PhysicalProtocolDriver: AnyObject {
   var outputCapabilities: PhysicalControllerOutputCapabilities { get }
 
   /// Lightbar colour restored when no owner claims colour; nil when the protocol has none.
-  var defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? { get }
+  var defaultColor: ControllerColor? { get }
 
   /// Writes that carry `command`. Encoding may advance protocol state (sequence numbers, the
   /// last rumble a combined report repeats). Throws `unsupportedCapability` for a command the

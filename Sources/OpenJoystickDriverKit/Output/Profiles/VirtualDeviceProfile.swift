@@ -18,8 +18,8 @@ public enum VirtualDeviceIdentityConstants {
 /// Physical input is normalized to the internal virtual-gamepad state; the
 /// profile controls the selected HID descriptor and consumer identity.
 public struct VirtualDeviceProfile: Equatable, Sendable {
-  public let vendorID: Int
-  public let productID: Int
+  public let vendorID: UInt16
+  public let productID: UInt16
   /// Value used for `kIOHIDVersionNumberKey` / SDL "product version".
   ///
   /// SDL includes this 16-bit value in the GUID it uses to look up controller mappings.
@@ -34,7 +34,7 @@ public struct VirtualDeviceProfile: Equatable, Sendable {
   /// layout form one consumer contract; incompatible layouts require a new product ID.
   public static let openJoystickDriverGenericHID = Self(
     vendorID: 0x4F4A,
-    productID: 0x4449,
+    productID: 0x4447,
     versionNumber: 0x0408,
     productName: "OpenJoystickDriver Generic HID Gamepad",
     manufacturer: "OpenJoystickDriver",
@@ -54,8 +54,4 @@ public struct VirtualDeviceProfile: Equatable, Sendable {
     manufacturer: "Microsoft",
     transport: "Bluetooth"
   )
-
-  /// Placeholder for `HIDDeviceStream`'s discarded `virtualProfile` parameter default; nothing
-  /// publishes or matches it.
-  public static let `default` = openJoystickDriverGenericHID
 }

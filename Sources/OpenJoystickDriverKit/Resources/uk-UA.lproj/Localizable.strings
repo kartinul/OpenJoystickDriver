@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Служба зупинилася. Перевизначення не змінилося.";
 "virtualProfile.failure.persistenceFailed" = "Не вдалося зберегти перевизначення. Нічого не збережено.";
 "virtualProfile.storeError" = "Не вдається прочитати перевизначення віртуального профілю HID (%@). Контролери вибирають автоматично.";
-"virtualProfile.legacyIdentityRejected" = "Застаріле налаштування ідентифікатора контролера %@ більше не застосовується. Виконайте controller virtual reset --all, щоб очистити його.";
 "keyboard.noKey" = "Клавіша не вибрано";
 "keyboard.pressKey" = "Натисніть клавішу…";
 "keyboard.captureKey" = "Захопити клавішу";

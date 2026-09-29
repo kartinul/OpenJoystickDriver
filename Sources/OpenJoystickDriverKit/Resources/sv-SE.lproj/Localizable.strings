@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Tjänsten stoppades. Åsidosättningen är oförändrad.";
 "virtualProfile.failure.persistenceFailed" = "Åsidosättningen kunde inte sparas. Inget sparades.";
 "virtualProfile.storeError" = "Åsidosättningar av virtuell HID-profil kan inte läsas (%@). Kontroller väljer automatiskt.";
-"virtualProfile.legacyIdentityRejected" = "Den utfasade inställningen för kontrollidentitet %@ tillämpas inte längre. Kör controller virtual reset --all för att rensa den.";
 "keyboard.noKey" = "Ingen tangent vald";
 "keyboard.pressKey" = "Tryck på en tangent…";
 "keyboard.captureKey" = "Fånga tangent";

@@ -11,7 +11,7 @@ struct HIDInputUsage: Hashable, Sendable {
   let usage: Int
 }
 
-struct HIDReportPacker: @unchecked Sendable {
+struct HIDReportPacker: Sendable {
   private static let buttonUsagePage = 0x09
   private static let genericDesktopUsagePage = 0x01
   private static let buttonUsageRange = 1...32

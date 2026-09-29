@@ -19,8 +19,6 @@ public enum VirtualHIDProfileOverrideError: Error, Equatable, Sendable {
 /// Unchecked because the only stored state is `UserDefaults`, which is thread-safe.
 public struct VirtualHIDProfileOverrideStore: @unchecked Sendable {
   public static let defaultsKey = "VirtualHIDProfileOverrides"
-  /// The retired global compatibility identity setting, readable only for diagnostics.
-  public static let legacyCompatibilityIdentityKey = "CompatibilityIdentity"
 
   private struct Entry: Codable {
     let vendorID: Int
@@ -44,11 +42,6 @@ public struct VirtualHIDProfileOverrideStore: @unchecked Sendable {
   public var loadError: VirtualHIDProfileOverrideError? {
     if case .failure(let error) = load() { return error }
     return nil
-  }
-
-  /// The raw value of the retired global compatibility identity setting. It is never interpreted.
-  public var legacyCompatibilityIdentity: String? {
-    defaults.string(forKey: Self.legacyCompatibilityIdentityKey)
   }
 
   /// The override for one controller model; nil when it selects automatically, including while

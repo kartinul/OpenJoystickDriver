@@ -59,7 +59,7 @@ extension OutputCharacterizationTests {
     let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
     let sessionPlan = DriverSessionPlan()
     let outputCapabilities = PhysicalControllerOutputCapabilities.none
-    let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
+    let defaultColor: ControllerColor? = nil
     let batches: [[InputChange]]
     private var script = ScriptedState()
 

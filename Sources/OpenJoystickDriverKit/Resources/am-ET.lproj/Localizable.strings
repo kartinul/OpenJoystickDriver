@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "አገልግሎቱ ቆሟል። መሻሪያው አልተቀየረም።";
 "virtualProfile.failure.persistenceFailed" = "መሻሪያው ሊቀመጥ አልቻለም። ምንም አልተቀመጠም።";
 "virtualProfile.storeError" = "የምናባዊ HID መገለጫ መሻሪያዎች ሊነበቡ አይችሉም (%@)። መቆጣጠሪያዎች በራስ-ሰር ይመርጣሉ።";
-"virtualProfile.legacyIdentityRejected" = "የተቋረጠው የመቆጣጠሪያ ማንነት ቅንብር %@ ከእንግዲህ አይተገበርም። ለማጽዳት controller virtual reset --all ያሂዱ።";
 "keyboard.noKey" = "ምንም ቁልፍ አልተመረጠም";
 "keyboard.pressKey" = "ቁልፍ ይጫኑ…";
 "keyboard.captureKey" = "ቁልፍ ቀረጽ";

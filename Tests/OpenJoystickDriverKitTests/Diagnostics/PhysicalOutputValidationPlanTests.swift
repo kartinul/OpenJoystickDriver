@@ -11,6 +11,7 @@ struct PhysicalOutputValidationPlanTests {
       productID: 5678,
       protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
       connection: "USB",
+      discoverySource: .rawUSB,
       serialNumber: "SERIAL-SECRET",
       bindingResult: .hidDescriptorFixture,
       physicalOutputCapabilities: PhysicalControllerOutputCapabilities(

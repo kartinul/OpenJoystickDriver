@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "השירות הפסיק. העקיפה לא השתנתה.";
 "virtualProfile.failure.persistenceFailed" = "לא ניתן היה לשמור את העקיפה. דבר לא נשמר.";
 "virtualProfile.storeError" = "לא ניתן לקרוא את עקיפות פרופיל ה־HID הווירטואלי (%@). הבקרים בוחרים אוטומטית.";
-"virtualProfile.legacyIdentityRejected" = "הגדרת זהות הבקר שהוצאה משימוש %@ אינה מוחלת עוד. הרץ את controller virtual reset --all כדי לנקות אותה.";
 "keyboard.noKey" = "לא נבחר מקש";
 "keyboard.pressKey" = "לחץ על מקש…";
 "keyboard.captureKey" = "לכידת מקש";

@@ -34,7 +34,7 @@ private actor ControllerRecordProbeIsolation {
 }
 
 func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bool) -> Never {
-  let exitCode = ExitCodeBox()
+  let exitCode = Locked<Int32>(0)
   let done = DispatchSemaphore(value: 0)
 
   Task {
@@ -57,7 +57,7 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
       print("USB_MATCHES count=\(devices.count)")
       guard let device = devices.first else {
         fputs("ERROR: no raw USB transport matches the record VID/PID\n", stderr)
-        exitCode.value = 2
+        exitCode.withLock { $0 = 2 }
         return
       }
 
@@ -122,22 +122,22 @@ func runControllerRecordProbe(recordPath: String, seconds: Int, validateOnly: Bo
         "RECORD_SUMMARY packets=\(summary.packets)"
           + " events=\(summary.events) parse_errors=\(summary.parseErrors)"
       )
-      exitCode.value = summary.packets > 0 ? 0 : 3
+      exitCode.withLock { $0 = summary.packets > 0 ? 0 : 3 }
     } catch {
       fputs("ERROR: record probe failed: \(error.localizedDescription)\n", stderr)
-      exitCode.value = 1
+      exitCode.withLock { $0 = 1 }
     }
   }
 
   done.wait()
-  exit(exitCode.value)
+  exit(exitCode.withLock { $0 })
 }
 
 /// Refuses a device before any write, when its claimed interface cannot be validated.
-private func refuseProbeDevice(reason: String, message: String, exitCode: ExitCodeBox) {
+private func refuseProbeDevice(reason: String, message: String, exitCode: Locked<Int32>) {
   print("RECORD_BINDING result=refused reason=\(reason)")
   fputs("ERROR: \(message) (\(reason))\n", stderr)
-  exitCode.value = 4
+  exitCode.withLock { $0 = 4 }
 }
 
 private func renderProbeRecord(

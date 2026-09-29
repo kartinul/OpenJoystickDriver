@@ -1,0 +1,56 @@
+import ApplicationServices
+import CoreGraphics
+import OpenJoystickDriverKit
+
+protocol CoreGraphicsPostEventAccessProbing: Sendable {
+  func preflight() -> Bool
+  @discardableResult
+  func request() -> Bool
+}
+
+/// The SDK marks the CoreGraphics post-event access calls available from macOS 10.15, but
+/// 10.15's CoreGraphics does not export them and calling one aborts the process. There,
+/// event posting is gated by Accessibility, which `AXIsProcessTrusted` reads.
+private struct PlatformPostEventAccessProbe: CoreGraphicsPostEventAccessProbing {
+  func preflight() -> Bool {
+    guard #available(macOS 11, *) else { return AXIsProcessTrusted() }
+    return CGPreflightPostEventAccess()
+  }
+
+  @discardableResult
+  func request() -> Bool {
+    guard #available(macOS 11, *) else {
+      // The value of `kAXTrustedCheckOptionPrompt`, whose global Swift 6 rejects as mutable.
+      return AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
+    }
+    return CGRequestPostEventAccess()
+  }
+}
+
+/// Reads and requests the CoreGraphics permission used for keyboard and pointer injection.
+///
+/// This is deliberately separate from the IOHID post-event permission used to
+/// create a virtual output controller.
+public struct CoreGraphicsPostEventAccess: Sendable {
+  private let probe: any CoreGraphicsPostEventAccessProbing
+
+  public init() { probe = PlatformPostEventAccessProbe() }
+
+  init(probe: any CoreGraphicsPostEventAccessProbing) { self.probe = probe }
+
+  public func currentState() -> RemappingPostEventAccessState {
+    probe.preflight() ? .granted : .notAuthorized
+  }
+
+  /// Requests access and then reads the authoritative state back from preflight.
+  ///
+  /// The return value from `CGRequestPostEventAccess` is intentionally ignored;
+  /// it is not accepted as evidence that event posting is now authorized.
+  @discardableResult
+  public func requestAccess() -> RemappingPostEventAccessState {
+    let initialState = currentState()
+    guard initialState != .granted else { return initialState }
+    _ = probe.request()
+    return currentState()
+  }
+}

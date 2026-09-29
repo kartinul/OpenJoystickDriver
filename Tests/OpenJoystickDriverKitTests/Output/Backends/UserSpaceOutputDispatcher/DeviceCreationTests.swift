@@ -69,11 +69,11 @@ struct UserSpaceDeviceCreationTests {
   @Test(arguments: [
     (
       VirtualHIDProfileID.xboxOneSBluetooth, 0x045E, 0x02FD, 0x0000, "Xbox Wireless Controller",
-      "Microsoft", "Bluetooth", UInt64(0x935B_ACB9_7A71_52E8)
+      "Microsoft", "Bluetooth", UInt64(0x935B_ACB9_7A71_52E8), Int?(9)
     ),
     (
-      VirtualHIDProfileID.generic, 0x4F4A, 0x4449, 0x0408, "OpenJoystickDriver Generic HID Gamepad",
-      "OpenJoystickDriver", "USB", UInt64(0xBAFF_6512_BC5D_D7F3)
+      VirtualHIDProfileID.generic, 0x4F4A, 0x4447, 0x0408, "OpenJoystickDriver Generic HID Gamepad",
+      "OpenJoystickDriver", "USB", UInt64(0x1ECB_8E98_9A22_47A8), Int?.none
     ),
   ])
   func publishedIdentityIsPinnedPerProfile(
@@ -84,7 +84,8 @@ struct UserSpaceDeviceCreationTests {
     _ product: String,
     _ manufacturer: String,
     _ transport: String,
-    _ descriptorFNV1a: UInt64
+    _ descriptorFNV1a: UInt64,
+    _ maxOutputReportSize: Int?
   ) throws {
     let profile = try profileID.makeProfile()
     let properties = UserSpaceOutputDispatcher.deviceProperties(
@@ -103,6 +104,8 @@ struct UserSpaceDeviceCreationTests {
       ($0 ^ UInt64($1)) &* 0x0000_0100_0000_01B3
     }
     #expect(hash == descriptorFNV1a)
+    // The generic profile is input-only, so it publishes no output report size.
+    #expect(properties[kIOHIDMaxOutputReportSizeKey as String] as? Int == maxOutputReportSize)
   }
 
   @Test(arguments: VirtualHIDProfileID.allCases)
@@ -120,8 +123,8 @@ struct UserSpaceDeviceCreationTests {
       identifier: identifier
     )
 
-    #expect(properties[kIOHIDVendorIDKey as String] as? Int == identity.vendorID)
-    #expect(properties[kIOHIDProductIDKey as String] as? Int == identity.productID)
+    #expect(properties[kIOHIDVendorIDKey as String] as? Int == Int(identity.vendorID))
+    #expect(properties[kIOHIDProductIDKey as String] as? Int == Int(identity.productID))
     #expect(properties[kIOHIDVersionNumberKey as String] as? Int == identity.versionNumber)
     #expect(properties[kIOHIDProductKey as String] as? String == identity.productName)
     #expect(properties[kIOHIDManufacturerKey as String] as? String == identity.manufacturer)

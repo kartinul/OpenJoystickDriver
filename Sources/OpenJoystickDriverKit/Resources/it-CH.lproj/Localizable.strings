@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Il servizio si è interrotto. La sostituzione non è cambiata.";
 "virtualProfile.failure.persistenceFailed" = "Impossibile salvare la sostituzione. Non è stato salvato nulla.";
 "virtualProfile.storeError" = "Impossibile leggere le sostituzioni del profilo HID virtuale (%@). I controller scelgono automaticamente.";
-"virtualProfile.legacyIdentityRejected" = "L’impostazione dismessa dell’identità del controller %@ non viene più applicata. Esegui controller virtual reset --all per cancellarla.";
 "keyboard.noKey" = "Nessun tasto selezionato";
 "keyboard.pressKey" = "Premi un tasto…";
 "keyboard.captureKey" = "Acquisisci tasto";

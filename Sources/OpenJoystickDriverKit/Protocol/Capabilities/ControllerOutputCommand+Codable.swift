@@ -164,9 +164,11 @@ extension ControllerOutputCommand: Codable {
       )
     case .setRGB:
       self = .setRGB(
-        red: try container.decode(UInt8.self, forKey: .red),
-        green: try container.decode(UInt8.self, forKey: .green),
-        blue: try container.decode(UInt8.self, forKey: .blue)
+        ControllerColor(
+          red: try container.decode(UInt8.self, forKey: .red),
+          green: try container.decode(UInt8.self, forKey: .green),
+          blue: try container.decode(UInt8.self, forKey: .blue)
+        )
       )
     case .setLightBrightness:
       self = .setLightBrightness(try container.decode(UnipolarValue.self, forKey: .brightness))
@@ -189,11 +191,11 @@ extension ControllerOutputCommand: Codable {
     case .setPlayerIndicator(let indicator):
       try container.encode(Kind.setPlayerIndicator, forKey: .type)
       try container.encode(indicator, forKey: .player)
-    case .setRGB(let red, let green, let blue):
+    case .setRGB(let color):
       try container.encode(Kind.setRGB, forKey: .type)
-      try container.encode(red, forKey: .red)
-      try container.encode(green, forKey: .green)
-      try container.encode(blue, forKey: .blue)
+      try container.encode(color.red, forKey: .red)
+      try container.encode(color.green, forKey: .green)
+      try container.encode(color.blue, forKey: .blue)
     case .setLightBrightness(let brightness):
       try container.encode(Kind.setLightBrightness, forKey: .type)
       try container.encode(brightness, forKey: .brightness)

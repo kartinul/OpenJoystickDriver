@@ -48,16 +48,39 @@ let package = Package(
       exclude: ["Entitlements"]
     ),
 
-    .executableTarget(
-      name: "OpenJoystickDriver",
+    .target(
+      name: "OpenJoystickDriverService",
       dependencies: ["OpenJoystickDriverKit", "OpenJoystickDriverUSB"],
-      path: "Sources/OpenJoystickDriver",
-      exclude: ["App/Host.entitlements", "App/Info.plist"],
-      resources: [.copy("Resources")],
+      path: "Sources/OpenJoystickDriverService",
       linkerSettings: [
         .linkedFramework("GameController"), .linkedFramework("IOBluetooth"),
         .linkedFramework("SystemExtensions"),
       ]
+    ),
+
+    .target(
+      name: "OpenJoystickDriverCLI",
+      dependencies: [
+        "OpenJoystickDriverKit", "OpenJoystickDriverUSB", "OpenJoystickDriverService",
+      ],
+      path: "Sources/OpenJoystickDriverCLI"
+    ),
+
+    .target(
+      name: "OpenJoystickDriverPresentation",
+      dependencies: ["OpenJoystickDriverKit"],
+      path: "Sources/OpenJoystickDriverPresentation"
+    ),
+
+    .executableTarget(
+      name: "OpenJoystickDriver",
+      dependencies: [
+        "OpenJoystickDriverKit", "OpenJoystickDriverService", "OpenJoystickDriverCLI",
+        "OpenJoystickDriverPresentation",
+      ],
+      path: "Sources/OpenJoystickDriver",
+      exclude: ["App/Host.entitlements", "App/Info.plist"],
+      resources: [.copy("Resources")]
     ),
 
     .executableTarget(
@@ -103,10 +126,39 @@ let package = Package(
       swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
       linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
     ),
+    .target(
+      name: "OpenJoystickDriverTestSupport",
+      dependencies: ["OpenJoystickDriverKit"],
+      path: "Tests/OpenJoystickDriverTestSupport",
+      swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
+      linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
+    ),
     .testTarget(
-      name: "OpenJoystickDriverTests",
-      dependencies: ["OpenJoystickDriver"],
-      path: "Tests/OpenJoystickDriverTests",
+      name: "OpenJoystickDriverServiceTests",
+      dependencies: [
+        "OpenJoystickDriverKit", "OpenJoystickDriverService", "OpenJoystickDriverTestSupport",
+      ],
+      path: "Tests/OpenJoystickDriverServiceTests",
+      swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
+      linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
+    ),
+    .testTarget(
+      name: "OpenJoystickDriverCLITests",
+      dependencies: [
+        "OpenJoystickDriverKit", "OpenJoystickDriverService", "OpenJoystickDriverCLI",
+        "OpenJoystickDriverTestSupport",
+      ],
+      path: "Tests/OpenJoystickDriverCLITests",
+      swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
+      linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
+    ),
+    .testTarget(
+      name: "OpenJoystickDriverPresentationTests",
+      dependencies: [
+        "OpenJoystickDriverKit", "OpenJoystickDriverUSB", "OpenJoystickDriverCLI",
+        "OpenJoystickDriverPresentation", "OpenJoystickDriverTestSupport",
+      ],
+      path: "Tests/OpenJoystickDriverPresentationTests",
       swiftSettings: [.unsafeFlags(["-target", testTargetTriple])],
       linkerSettings: [.unsafeFlags(["-target", testTargetTriple])]
     ),

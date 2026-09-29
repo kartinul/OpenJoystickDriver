@@ -218,7 +218,7 @@ private final class StartupInputParser: PhysicalProtocolDriver {
   let capabilities = ControllerCapabilities(controls: ControlID.xboxLayout)
   let sessionPlan = DriverSessionPlan()
   let outputCapabilities = PhysicalControllerOutputCapabilities.none
-  let defaultColor: (red: UInt8, green: UInt8, blue: UInt8)? = nil
+  let defaultColor: ControllerColor? = nil
   func consumeInputConnectionStateChange() -> ControllerInputConnectionState? { nil }
   func parse(report _: Data, receivedAt _: MonotonicTimestamp) throws -> ControllerEvent? { nil }
 }

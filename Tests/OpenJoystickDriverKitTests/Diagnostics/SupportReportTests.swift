@@ -30,6 +30,7 @@ struct SupportReportTests {
           productID: 5678,
           protocolBinding: ProtocolBindingID(.xboxGIP, variant: .usb),
           connection: "USB",
+          discoverySource: .rawUSB,
           serialNumber: secretSerial,
           quirks: ["swapAB"],
           bindingResult: .hidDescriptorFixture,
@@ -54,11 +55,11 @@ struct SupportReportTests {
         )
       ],
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "error: \(secretPath)"
+      userSpaceVirtualDeviceStatus: .error(secretPath)
     )
     let diagnostics = ApplicationServiceVirtualDeviceDiagnosticsPayload(
       userSpaceVirtualDeviceEnabled: true,
-      userSpaceVirtualDeviceStatus: "error: \(secretPath)",
+      userSpaceVirtualDeviceStatus: .error(secretPath),
       hidGamepads: [
         ApplicationServiceHIDGamepadSnapshot(
           vendorID: 1234,

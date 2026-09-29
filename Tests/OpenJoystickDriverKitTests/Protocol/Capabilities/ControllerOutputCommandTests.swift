@@ -9,13 +9,23 @@ struct ControllerOutputCommandTests {
     for byte in UInt8.min...UInt8.max {
       #expect(UnipolarValue(byte: byte).rawValue == UInt16(byte) * 257)
       #expect(UnipolarValue(byte: byte).byte == byte)
-      // Ownership keeps a Double intensity and arbitration rounds it to the protocol byte.
-      let intensity = Double(byte) / 255
-      #expect(UnipolarValue(byte: UInt8((intensity * 255).rounded())).byte == byte)
+      // Ownership keeps the saved-profile intensity and arbitration converts it back.
+      let value = UnipolarValue(byte: byte)
+      #expect(UnipolarValue(unitInterval: value.unitInterval) == value)
     }
     #expect(UnipolarValue.max.byte == 255)
     #expect(UnipolarValue(128).byte == 0)
     #expect(UnipolarValue(129).byte == 1)
+  }
+
+  @Test
+  func unitIntervalIntensitiesSpanTheFullRangeAndClamp() {
+    #expect(UnipolarValue(unitInterval: 0) == .min)
+    #expect(UnipolarValue(unitInterval: 1) == .max)
+    #expect(UnipolarValue(unitInterval: 0.5).rawValue == 32_768)
+    #expect(UnipolarValue(unitInterval: -0.25) == .min)
+    #expect(UnipolarValue(unitInterval: 1.5) == .max)
+    #expect(UnipolarValue.max.unitInterval == 1)
   }
 
   @Test
@@ -48,7 +58,8 @@ struct ControllerOutputCommandTests {
     let cases: [(ControllerOutputCommand, ControllerOutputCapability)] = [
       (.setRumble(rumble, duration: .held), .rumble(.rightTrigger)),
       (.setRumble(.off, duration: .held), .rumble(.leftMain)), (.stopRumble, .rumble(.leftMain)),
-      (.setPlayerIndicator(.player1), .playerIndicator), (.setRGB(red: 1, green: 2, blue: 3), .rgb),
+      (.setPlayerIndicator(.player1), .playerIndicator),
+      (.setRGB(ControllerColor(red: 1, green: 2, blue: 3)), .rgb),
       (.setLightBrightness(.max), .lightBrightness),
       (.setAdaptiveTrigger(.right, .off), .adaptiveTrigger(.right)),
     ]
@@ -67,7 +78,7 @@ struct ControllerOutputCommandTests {
   @Test
   func driversWithoutAnOutputThrowUnsupportedCapability() {
     #expect(throws: ControllerOutputError.unsupportedCapability(.rgb)) {
-      try XIDDriver().encode(.setRGB(red: 1, green: 2, blue: 3))
+      try XIDDriver().encode(.setRGB(ControllerColor(red: 1, green: 2, blue: 3)))
     }
     #expect(throws: ControllerOutputError.unsupportedCapability(.rumble(.leftMain))) {
       try FlydigiDriver().encode(.stopRumble)

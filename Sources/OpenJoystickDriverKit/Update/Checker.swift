@@ -148,7 +148,7 @@ public struct UpdateChecker: Sendable {
     request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
     request.setValue("OpenJoystickDriver", forHTTPHeaderField: "User-Agent")
 
-    let (data, response) = try await data(for: request)
+    let (data, response) = try await session.data(for: request)
     guard let http = response as? HTTPURLResponse else {
       throw UpdateCheckerError(.invalidResponse, "GitHub returned a non-HTTP response")
     }
@@ -194,23 +194,6 @@ public struct UpdateChecker: Sendable {
 
   private func tagURL(_ tagName: String) -> URL {
     repositoryURL.appendingPathComponent("tree").appendingPathComponent(tagName)
-  }
-
-  private func data(for request: URLRequest) async throws -> (Data, URLResponse) {
-    try await withCheckedThrowingContinuation { continuation in
-      let task = session.dataTask(with: request) { data, response, error in
-        if let error {
-          continuation.resume(throwing: error)
-          return
-        }
-        guard let data, let response else {
-          continuation.resume(throwing: URLError(.badServerResponse))
-          return
-        }
-        continuation.resume(returning: (data, response))
-      }
-      task.resume()
-    }
   }
 }
 

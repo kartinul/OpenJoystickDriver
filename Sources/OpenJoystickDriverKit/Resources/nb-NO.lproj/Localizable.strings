@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Tjenesten stoppet. Overstyringen er uendret.";
 "virtualProfile.failure.persistenceFailed" = "Overstyringen kunne ikke lagres. Ingenting ble lagret.";
 "virtualProfile.storeError" = "Overstyringer av virtuell HID-profil kan ikke leses (%@). Kontrollere velger automatisk.";
-"virtualProfile.legacyIdentityRejected" = "Den utfasede innstillingen for kontrolleridentitet %@ brukes ikke lenger. Kjør controller virtual reset --all for å fjerne den.";
 "keyboard.noKey" = "Ingen tast valgt";
 "keyboard.pressKey" = "Trykk på en tast…";
 "keyboard.captureKey" = "Registrer tast";

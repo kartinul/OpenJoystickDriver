@@ -188,7 +188,6 @@
 "virtualProfile.failure.serverStopped" = "Hizmet durdu. Geçersiz kılma değişmedi.";
 "virtualProfile.failure.persistenceFailed" = "Geçersiz kılma kaydedilemedi. Hiçbir şey kaydedilmedi.";
 "virtualProfile.storeError" = "Sanal HID profili geçersiz kılmaları okunamıyor (%@). Kumandalar otomatik olarak seçer.";
-"virtualProfile.legacyIdentityRejected" = "Kullanımdan kaldırılan kumanda kimliği ayarı %@ artık uygulanmıyor. Temizlemek için controller virtual reset --all komutunu çalıştırın.";
 "keyboard.noKey" = "Tuş seçilmedi";
 "keyboard.pressKey" = "Bir tuşa bas…";
 "keyboard.captureKey" = "Tuşu yakala";
