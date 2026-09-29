@@ -1,0 +1,49 @@
+{
+	"skill_name": "ojd-hardware-evidence",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "Check whether my GameSir controller record works before I file an issue.",
+			"expected_output": "Runs the record probe with --validate-only first, asks before a live probe, then a bounded --seconds run, and reports markers.",
+			"assertions": [
+				"Runs --validate-only before any live probe",
+				"Asks for approval before USB traffic or output",
+				"Reports RECORD_HANDSHAKE and RECORD_SUMMARY lines"
+			]
+		},
+		{
+			"id": 2,
+			"prompt": "Confirm both rumble motors work on the Xbox pad.",
+			"expected_output": "Uses controller output list and plan, then one bounded step per actuator with approval, recording each observation.",
+			"assertions": [
+				"Runs controller output plan before sending output",
+				"Uses a bounded intensity and duration",
+				"Classifies each actuator claim separately"
+			]
+		},
+		{
+			"id": 3,
+			"prompt": "Write the docs/testing page for the new controller.",
+			"expected_output": "An evidence ledger with a class per claim and redacted identifiers.",
+			"assertions": [
+				"Redacts serial numbers and --device identifiers",
+				"Gives each claim an evidence class"
+			]
+		},
+		{
+			"id": 4,
+			"prompt": "Probe this Bluetooth DualShock 4 with the record probe.",
+			"expected_output": "Explains the probe supports raw-USB GIP and XUSB records only and chooses another probe.",
+			"assertions": [
+				"Does not run the record probe on a Bluetooth HID controller",
+				"Names an applicable probe or states none exists"
+			]
+		},
+		{
+			"id": 5,
+			"prompt": "add the controller's VID/PID to the catalog.",
+			"expected_output": "Near miss. Routes to ojd-controller-catalog.",
+			"assertions": ["Does not run a probe", "Names ojd-controller-catalog"]
+		}
+	]
+}

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Hardware Evidence"
+  short_description: "Probe a physical controller and record honest evidence"
+  default_prompt: "Use $ojd-hardware-evidence to validate this controller record, run a bounded probe with my approval, and write the evidence ledger."
+policy:
+  allow_implicit_invocation: false
