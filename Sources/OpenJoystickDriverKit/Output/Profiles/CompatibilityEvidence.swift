@@ -113,7 +113,7 @@ public enum AutomaticCompatibilityResolver {
     case .xbox360, .xbox360Wireless, .gameSirG7ProUSB: return .xusb
     case .xboxOne, .xboxAdaptiveJoystick: return .gip
     case .dualShock3, .dualShock4, .dualSense, .switchPro, .steamController, .flydigi,
-      .gameSirEnhancedHID, .genericHID, .unknown:
+      .gameSirEnhancedHID, .genericHID, .genericByteLayout, .unknown:
       return .hid
     }
   }
@@ -157,7 +157,8 @@ public enum AutomaticCompatibilityResolver {
     case .dualShock4: return consumer == .unknownBrowserGamepad ? .appleGameController : .dualShock4
     case .dualSense: return consumer == .unknownBrowserGamepad ? .appleGameController : .dualSense
     case .xid, .xbox360, .xbox360Wireless, .xboxOne, .xboxAdaptiveJoystick, .dualShock3, .switchPro,
-      .steamController, .flydigi, .gameSirG7ProUSB, .gameSirEnhancedHID, .genericHID, .unknown:
+      .steamController, .flydigi, .gameSirG7ProUSB, .gameSirEnhancedHID, .genericHID,
+      .genericByteLayout, .unknown:
       return xboxFallback
     }
   }

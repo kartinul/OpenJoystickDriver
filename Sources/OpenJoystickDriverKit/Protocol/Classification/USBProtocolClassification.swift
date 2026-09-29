@@ -231,7 +231,7 @@ public enum KnownRecordProtocolReconciler {
       case .genericHID, .dualShock3, .dualShock4, .dualSense, .steamController, .switchPro,
         .flydigi, .gameSirEnhancedHID:
         .genericHID
-      case .gameSirG7ProUSB, .unknown: nil
+      case .gameSirG7ProUSB, .genericByteLayout, .unknown: nil
       }
     let match = expected != nil && classification.selected == expected
     return ProtocolReconciliation(

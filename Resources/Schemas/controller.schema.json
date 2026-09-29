@@ -47,7 +47,8 @@
 						"XboxAdaptiveJoystick",
 						"Flydigi",
 						"GameSir",
-						"GenericHID"
+						"GenericHID",
+						"GenericByteLayout"
 					]
 				},
 				"variant": {
@@ -66,6 +67,7 @@
 						"gameSirG7ProUSB",
 						"gameSirEnhancedHID",
 						"genericHID",
+						"genericByteLayout",
 						"unknown"
 					]
 				},
@@ -425,6 +427,26 @@
 						"properties": {
 							"variant": {
 								"enum": ["genericHID"]
+							}
+						},
+						"not": {
+							"required": ["quirks"]
+						}
+					}
+				},
+				{
+					"if": {
+						"properties": {
+							"driver": {
+								"const": "GenericByteLayout"
+							}
+						},
+						"required": ["driver"]
+					},
+					"then": {
+						"properties": {
+							"variant": {
+								"enum": ["genericByteLayout"]
 							}
 						},
 						"not": {

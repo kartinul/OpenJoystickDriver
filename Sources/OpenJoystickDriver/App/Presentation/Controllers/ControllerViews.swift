@@ -263,6 +263,7 @@
           fallback: "Xbox Adaptive Joystick"
         )
       case .genericHID: return OJDLocalized.string("controller.genericHID", fallback: "Generic HID")
+      case .genericByteLayout: return "Generic byte layout"
       case .unknown: return OJDLocalized.string("common.unknown", fallback: "Unknown")
       }
     }

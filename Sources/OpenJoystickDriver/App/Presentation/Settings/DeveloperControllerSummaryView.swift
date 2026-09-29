@@ -147,6 +147,7 @@
         )
       case .genericHID:
         return OJDLocalized.string("controller.standardHID", fallback: "Standard HID")
+      case .genericByteLayout: return "Generic byte layout"
       case .unknown: return OJDLocalized.string("common.unknown", fallback: "Unknown")
       }
     }

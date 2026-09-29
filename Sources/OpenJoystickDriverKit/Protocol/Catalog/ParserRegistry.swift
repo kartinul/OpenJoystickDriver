@@ -98,6 +98,7 @@ public final class ParserRegistry: Sendable {
         isWirelessReceiver: runtimeProfile.protocolVariant == .xbox360Wireless
       )
     case "XID": return XIDParser(outEndpoint: transportProfile.outputEndpoint)
+    case "GenericByteLayout": return GenericByteLayoutParser()
     default: return GenericHIDParser(identifier: identifier)
     }
   }

@@ -62,6 +62,7 @@ public enum ControllerProtocolVariant: String, Codable, Hashable, Sendable {
   case gameSirG7ProUSB
   case gameSirEnhancedHID
   case genericHID
+  case genericByteLayout
   case unknown
 }
 
